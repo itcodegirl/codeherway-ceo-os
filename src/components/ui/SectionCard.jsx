@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom';
 import Icon from './Icon';
 
-const renderSectionTitleIcon = () => <Icon name="section" size={16} className="section-card__title-icon" />;
-const renderSectionActionIcon = () => <Icon name="action" size={14} className="action-button__icon" />;
-
 function SectionCard({
   title,
   children,
@@ -22,7 +19,7 @@ function SectionCard({
             aria-label={actionLabel || actionText}
           >
             {actionText}
-            {renderSectionActionIcon()}
+            <Icon name="action" size={14} className="action-button__icon" />
           </Link>
         )
       : (
@@ -33,7 +30,7 @@ function SectionCard({
             aria-label={actionLabel || actionText}
           >
             {actionText}
-            {renderSectionActionIcon()}
+            <Icon name="action" size={14} className="action-button__icon" />
           </button>
         )
     : null;
@@ -42,7 +39,7 @@ function SectionCard({
     <section className="section-card">
       <div className="section-card__header">
         <h2 className="section-card__title">
-          {renderSectionTitleIcon()}
+          <Icon name="section" size={16} className="section-card__title-icon" />
           <span>{title}</span>
         </h2>
         {action}
