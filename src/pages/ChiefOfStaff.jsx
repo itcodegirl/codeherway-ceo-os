@@ -166,7 +166,12 @@ function ChiefOfStaff() {
             </div>
 
             <AIPromptBox
-              onSubmit={(value) => setNotes((existing) => `${existing}\n\n${value}`)}
+              onSubmit={(value) =>
+                setNotes((existing) => {
+                  const normalizedExisting = existing.trimEnd();
+                  return normalizedExisting ? `${normalizedExisting}\n\n${value}` : value;
+                })
+              }
               placeholder="Ask for a specific rewrite, tone, or structure..."
               isDisabled={isGenerating}
             />
