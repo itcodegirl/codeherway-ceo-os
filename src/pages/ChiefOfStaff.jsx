@@ -48,6 +48,8 @@ function ChiefOfStaff() {
 
   const hasHistory = useMemo(() => responses && responses.length > 0, [responses]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const hasNotes = notes.trim().length > 0;
+  const canGenerate = hasNotes && !isGenerating;
 
   useEffect(() => {
     if (!notes) return;
@@ -64,14 +66,10 @@ function ChiefOfStaff() {
   }, []);
 
   const handleAction = (actionKey) => {
-    if (isGenerating) {
-      return;
-    }
-
-    const hasNotes = notes.trim().length > 0;
-
-    if (!hasNotes) {
-      setFeedback('Paste notes first so we can produce a relevant draft or recommendation.');
+    if (!canGenerate) {
+      if (!hasNotes) {
+        setFeedback('Paste notes first so we can produce a relevant draft or recommendation.');
+      }
       return;
     }
 
@@ -131,7 +129,8 @@ function ChiefOfStaff() {
                 type="button"
                 className="action-button"
                 onClick={() => handleAction('summarize')}
-                disabled={isGenerating}
+                disabled={!canGenerate}
+                aria-label="Generate an executive summary from current notes"
               >
                 Summarize This Week
               </button>
@@ -139,7 +138,8 @@ function ChiefOfStaff() {
                 type="button"
                 className="action-button"
                 onClick={() => handleAction('draft')}
-                disabled={isGenerating}
+                disabled={!canGenerate}
+                aria-label="Generate a LinkedIn post draft from current notes"
               >
                 Draft LinkedIn Post
               </button>
@@ -147,7 +147,8 @@ function ChiefOfStaff() {
                 type="button"
                 className="action-button"
                 onClick={() => handleAction('actions')}
-                disabled={isGenerating}
+                disabled={!canGenerate}
+                aria-label="Generate action items from current notes"
               >
                 Convert to Action Items
               </button>
@@ -155,7 +156,8 @@ function ChiefOfStaff() {
                 type="button"
                 className="action-button"
                 onClick={() => handleAction('priorities')}
-                disabled={isGenerating}
+                disabled={!canGenerate}
+                aria-label="Generate next-priority recommendations from current notes"
               >
                 Suggest Next Priorities
               </button>
