@@ -35,7 +35,10 @@ function WeeklyBrief() {
           <ul className="weekly-list">
             {weeklyPriorities.map((item) => (
               <li key={item.id} className="weekly-list__item">
-                <span className={`weekly-list__dot ${item.status === 'In Progress' ? 'weekly-list__dot--success' : ''}`} />
+                <span
+                  className={`weekly-list__dot ${item.status === 'In Progress' ? 'weekly-list__dot--success' : ''}`}
+                  aria-hidden="true"
+                />
                 <div>
                   <p className="weekly-note">{item.title}</p>
                   <p className="helper-text helper-text--offset">
@@ -51,7 +54,7 @@ function WeeklyBrief() {
           <ul className="weekly-list">
             {weeklyWins.map((item) => (
               <li key={item.id} className="weekly-list__item">
-                <span className="weekly-list__dot weekly-list__dot--success" />
+                <span className="weekly-list__dot weekly-list__dot--success" aria-hidden="true" />
                 <div>
                   <p className="weekly-note">{item.text}</p>
                   <p className="helper-text helper-text--offset">
@@ -67,7 +70,7 @@ function WeeklyBrief() {
           <ul className="weekly-list">
             {weeklyBlockers.map((item) => (
               <li key={item.id} className="weekly-list__item">
-                <span className={`weekly-list__dot weekly-list__dot--${item.severity}`} />
+                <span className={`weekly-list__dot weekly-list__dot--${item.severity}`} aria-hidden="true" />
                 <p className="weekly-note">{item.text}</p>
               </li>
             ))}
