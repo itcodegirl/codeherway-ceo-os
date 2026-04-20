@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import Icon from './Icon';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -26,9 +27,11 @@ class ErrorBoundary extends Component {
           <div className="chief-actions">
             <button type="button" className="action-button" onClick={() => window.location.reload()}>
               Reload App
+              <Icon name="action" size={14} className="action-button__icon" />
             </button>
             <button type="button" className="action-button action-button--ghost" onClick={() => window.history.back()}>
               Go Back
+              <Icon name="action" size={14} className="action-button__icon" />
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import Icon from '../ui/Icon';
 
 function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...' }) {
   const [value, setValue] = useState('');
@@ -37,6 +38,7 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
       <div className="chief-actions">
         <button type="submit" className="action-button">
           Generate
+          <Icon name="action" size={14} className="action-button__icon" />
         </button>
       </div>
     </form>

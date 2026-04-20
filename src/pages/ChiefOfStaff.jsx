@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
+import Icon from '../components/ui/Icon';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 
@@ -134,6 +135,7 @@ function ChiefOfStaff() {
                 disabled={isGenerating}
               >
                 Summarize This Week
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
               <button
                 type="button"
@@ -142,6 +144,7 @@ function ChiefOfStaff() {
                 disabled={isGenerating}
               >
                 Draft LinkedIn Post
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
               <button
                 type="button"
@@ -150,6 +153,7 @@ function ChiefOfStaff() {
                 disabled={isGenerating}
               >
                 Convert to Action Items
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
               <button
                 type="button"
@@ -158,6 +162,7 @@ function ChiefOfStaff() {
                 disabled={isGenerating}
               >
                 Suggest Next Priorities
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
             </div>
 
