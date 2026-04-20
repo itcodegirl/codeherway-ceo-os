@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react';
 
+function resolveInitialValue(initialValue) {
+  return typeof initialValue === 'function' ? initialValue() : initialValue;
+}
+
 function loadValue(key, initialValue) {
   if (typeof window === 'undefined') {
-    return initialValue;
+    return resolveInitialValue(initialValue);
   }
 
   try {
     const item = window.localStorage.getItem(key);
     if (item === null) {
-      return initialValue;
+      return resolveInitialValue(initialValue);
     }
 
     return JSON.parse(item);
   } catch (error) {
-    return initialValue;
+    return resolveInitialValue(initialValue);
   }
 }
 
@@ -54,14 +58,14 @@ export function usePersistentState(key, initialValue) {
       }
 
       if (event.key === null || event.newValue === null) {
-        setValue(initialValue);
+        setValue(resolveInitialValue(initialValue));
         return;
       }
 
       try {
         setValue(JSON.parse(event.newValue));
       } catch (error) {
-        setValue(initialValue);
+        setValue(resolveInitialValue(initialValue));
       }
     };
 
