@@ -18,14 +18,9 @@ function Topbar() {
         <time className="topbar__meta" dateTime={isoDate}>
           {today}
         </time>
-        <button
-          type="button"
-          className="topbar__action action-button"
-          aria-label="Current period filter is disabled in this version"
-          disabled
-        >
+        <span className="topbar__status" aria-label="Current period set to this week">
           This Week
-        </button>
+        </span>
         <span className="topbar__status">Live Preview</span>
       </div>
     </header>
