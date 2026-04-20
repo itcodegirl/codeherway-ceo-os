@@ -31,8 +31,8 @@ function Settings() {
   };
 
   const handleSubmit = (event) => {
-    markSave();
     event.preventDefault();
+    markSave();
   };
 
   return (
@@ -54,7 +54,11 @@ function Settings() {
             <input
               id={teamNameFieldId}
               type="text"
+              name="teamName"
+              autoComplete="organization"
               value={settings.teamName}
+              required
+              minLength={2}
               onChange={(e) => handleChange('teamName', e.target.value)}
               className="settings-input"
             />
@@ -67,7 +71,11 @@ function Settings() {
             <input
               id={timezoneFieldId}
               type="text"
+              name="timezone"
+              autoComplete="off"
               value={settings.timezone}
+              required
+              minLength={2}
               onChange={(e) => handleChange('timezone', e.target.value)}
               className="settings-input"
             />
