@@ -8,6 +8,7 @@ function Toast({ isVisible, message, label = 'Status message', className = '' })
       className={`toast ${className}`.trim()}
       role="status"
       aria-live="polite"
+      aria-atomic="true"
       aria-label={label}
     >
       {message}
