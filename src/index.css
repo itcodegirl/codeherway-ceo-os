@@ -66,6 +66,36 @@ body {
   box-sizing: border-box;
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+}
+
+.sidebar {
+  background: #151924;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2rem 1.25rem;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebar__link {
+  color: #b8c0cc;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  transition: 0.2s ease;
+}
+
+.sidebar__link--active {
+  background: #6d5dfc;
+  color: #ffffff;
+}
+
 h1,
 h2 {
   font-family: var(--heading);
