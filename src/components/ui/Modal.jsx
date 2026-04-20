@@ -27,8 +27,7 @@ function Modal({ isOpen, title, onClose, children }) {
       return;
     }
 
-    const previousFocus = document.activeElement;
-    focusReturnRef.current = previousFocus;
+    focusReturnRef.current = document.activeElement;
     const previousBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
