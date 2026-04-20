@@ -21,6 +21,10 @@ export function usePersistentState(key, initialValue) {
   const [value, setValue] = useState(() => loadValue(key, initialValue));
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
@@ -32,16 +36,24 @@ export function usePersistentState(key, initialValue) {
   }, [key, value]);
 
   useEffect(() => {
+    setValue(loadValue(key, initialValue));
+  }, [key, initialValue]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
     }
 
     const handleStorageChange = (event) => {
-      if (event.key !== key) {
+      if (event.storageArea !== window.localStorage) {
         return;
       }
 
-      if (event.newValue === null) {
+      if (event.key !== key && event.key !== null) {
+        return;
+      }
+
+      if (event.key === null || event.newValue === null) {
         setValue(initialValue);
         return;
       }
