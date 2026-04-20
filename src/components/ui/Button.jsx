@@ -36,7 +36,7 @@ function Button({
       {...props}
     >
       {children}
-      {showIcon ? <Icon name={iconName} size={iconSize} className="action-button__icon" /> : null}
+      {showIcon && <Icon name={iconName} size={iconSize} className="action-button__icon" />}
     </button>
   );
 }
