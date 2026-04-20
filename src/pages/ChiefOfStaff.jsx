@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
@@ -46,7 +46,7 @@ function ChiefOfStaff() {
   );
   const generationTimerRef = useRef(null);
 
-  const hasHistory = useMemo(() => responses && responses.length > 0, [responses]);
+  const hasHistory = Array.isArray(responses) && responses.length > 0;
   const [isGenerating, setIsGenerating] = useState(false);
   const hasNotes = notes.trim().length > 0;
   const canGenerate = hasNotes && !isGenerating;
@@ -176,7 +176,7 @@ function ChiefOfStaff() {
             <h2>AI Output</h2>
           </div>
 
-          <div className="section-card__body">
+          <div className="section-card__body" aria-busy={isGenerating}>
             <p className="helper-text" role="status" aria-live="polite">
               {feedback}
             </p>
