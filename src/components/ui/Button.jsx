@@ -9,9 +9,7 @@ function Button({
   children,
   ariaLabel,
   className = '',
-  showIcon = false,
-  iconName = 'action',
-  iconSize = 14,
+  icon = null,
   ...props
 }) {
   const classList = [
@@ -36,7 +34,7 @@ function Button({
       {...props}
     >
       {children}
-      {showIcon && <Icon name={iconName} size={iconSize} className="action-button__icon" />}
+      {icon ? <Icon name={icon.name || 'action'} size={icon.size || 14} className="action-button__icon" /> : null}
     </button>
   );
 }
