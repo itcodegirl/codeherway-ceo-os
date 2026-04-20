@@ -41,12 +41,7 @@
 }
 
 .chief-action-btn {
-	border: 0;
-	background: rgba(109, 93, 252, 0.14);
-	color: #c8c2ff;
-	padding: 0.7rem 0.95rem;
-	border-radius: 12px;
-	cursor: pointer;
+	/* semantic hook for Chief-staff-specific actions */
 }
 
 .chief-response {

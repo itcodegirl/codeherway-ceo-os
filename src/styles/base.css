@@ -6,6 +6,14 @@
   --border: rgba(255, 255, 255, 0.08);
   --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.22);
   --radius-lg: 22px;
+  --radius-action: 12px;
+  --action-height: 2.5rem;
+  --action-font-size: var(--fs-helper);
+  --action-padding-x: 1rem;
+  --radius-action: 12px;
+  --action-height: 2.5rem;
+  --action-font-size: var(--fs-helper);
+  --action-padding-x: 1rem;
 
   --font-display: Inter, Arial, sans-serif;
   --fs-page-title: 2rem;
@@ -59,6 +67,36 @@ button,
 input,
 textarea {
 	font: inherit;
+}
+
+.action-button {
+	font-size: var(--action-font-size);
+	height: var(--action-height);
+	padding: 0 var(--action-padding-x);
+	border-radius: var(--radius-action);
+	border: 1px solid transparent;
+	background: rgba(109, 93, 252, 0.14);
+	color: #c8c2ff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	text-decoration: none;
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+	cursor: pointer;
+}
+
+.action-button:hover,
+.action-button:focus-visible {
+	border-color: rgba(200, 194, 255, 0.42);
+	color: #f6f3ff;
+	transform: translateY(-1px);
+	background: rgba(109, 93, 252, 0.22);
+	outline: none;
+}
+
+.action-button:active {
+	transform: translateY(0);
 }
 
 .page-intro {
@@ -133,12 +171,7 @@ textarea {
 }
 
 .section-card__action {
-	border: 0;
-	background: rgba(109, 93, 252, 0.14);
-	color: #c8c2ff;
-	padding: 0.65rem 0.9rem;
-	border-radius: 12px;
-	cursor: pointer;
+	/* preserved for semantic context only */
 }
 
 .section-card__body {

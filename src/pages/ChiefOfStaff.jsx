@@ -31,7 +31,7 @@ function ChiefOfStaff() {
 
             <div className="chief-actions">
               {actions.map((action) => (
-                <button key={action} className="chief-action-btn">
+                <button key={action} className="chief-action-btn action-button">
                   {action}
                 </button>
               ))}
