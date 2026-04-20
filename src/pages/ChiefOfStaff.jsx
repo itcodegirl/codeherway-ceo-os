@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
@@ -37,6 +37,8 @@ const actionPrompts = {
 };
 
 function ChiefOfStaff() {
+  const notesFieldId = useId();
+
   const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);
   const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', INITIAL_RESPONSES);
   const [feedback, setFeedback] = useState(
@@ -112,15 +114,15 @@ function ChiefOfStaff() {
           </div>
 
           <div className="section-card__body">
-            <label className="settings-field">
+            <label className="settings-field" htmlFor={notesFieldId}>
               <span className="settings-field__label">Paste notes and context</span>
               <textarea
+                id={notesFieldId}
                 className="chief-textarea"
                 placeholder="Paste notes, priorities, meeting takeaways, or rough ideas..."
                 rows="10"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                aria-label="Notes input for Chief of Staff actions"
               />
             </label>
 
@@ -198,4 +200,3 @@ function ChiefOfStaff() {
 }
 
 export default ChiefOfStaff;
-
