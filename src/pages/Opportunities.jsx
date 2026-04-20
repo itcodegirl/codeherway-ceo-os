@@ -86,12 +86,7 @@ function Opportunities() {
         </div>
       )}
 
-      <SectionCard
-        title="Pipeline Overview"
-        actionText="Add Opportunity"
-        actionTo="/opportunities"
-        actionLabel="Open the opportunities pipeline creator"
-      >
+      <SectionCard title="Pipeline Overview">
         {isLoading ? (
           <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
             <p className="sr-only" role="status" aria-live="polite">

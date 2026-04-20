@@ -63,12 +63,7 @@ function ContentOS() {
         </div>
       )}
 
-      <SectionCard
-        title="Publishing Workflow"
-        actionText="Add Content"
-        actionTo="/content"
-        actionLabel="Open content publishing workflow"
-      >
+      <SectionCard title="Publishing Workflow">
         {isLoading ? (
           <div className="content-board">
             <p className="sr-only" role="status" aria-live="polite">
