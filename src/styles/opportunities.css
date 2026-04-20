@@ -22,6 +22,10 @@
 	grid-template-columns: 1.4fr 0.9fr 0.8fr 1.2fr;
 	gap: var(--space-list-gap);
 	align-items: center;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: #151924;
+	box-shadow: var(--shadow-soft);
 }
 
 .crm-table__header {

@@ -17,13 +17,14 @@
 }
 
 .content-card {
-	background: rgba(255, 255, 255, 0.03);
-	border: 1px solid rgba(255, 255, 255, 0.06);
-	border-radius: 20px;
+	background: #151924;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-card-inner-gap);
+	box-shadow: var(--shadow-soft);
 }
 
 .content-card__header {
@@ -31,12 +32,13 @@
 	justify-content: space-between;
 	gap: var(--space-card-inner-gap);
 	align-items: flex-start;
+	margin-bottom: var(--space-title-to-content);
 }
 
 .content-card__title {
 	font-size: var(--fs-section-title);
 	font-weight: var(--fw-section-title);
-	margin-bottom: var(--space-stack-gap);
+	margin-bottom: 0;
 }
 
 .content-card__platform {

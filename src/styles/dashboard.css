@@ -18,11 +18,11 @@
 }
 
 .stat-card {
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 20px;
+	background: #151924;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+	box-shadow: var(--shadow-soft);
 }
 
 .stat-card__label {
@@ -98,8 +98,10 @@
 	align-items: center;
 	gap: var(--space-card-inner-gap);
 	padding: var(--space-card-padding);
-	border-radius: 16px;
-	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: #151924;
+	box-shadow: var(--shadow-soft);
 }
 
 .mini-table__title {

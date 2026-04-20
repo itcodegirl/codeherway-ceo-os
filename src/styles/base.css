@@ -94,9 +94,10 @@ textarea {
 
 .summary-card {
 	background: #151924;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 20px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
+	box-shadow: var(--shadow-soft);
 }
 
 .summary-card__label {
@@ -111,10 +112,11 @@ textarea {
 
 .section-card {
 	background: #151924;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 22px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
 	min-height: 260px;
+	box-shadow: var(--shadow-soft);
 }
 
 .section-card__header {
