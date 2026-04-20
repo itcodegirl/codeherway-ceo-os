@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 function Input({
   id,
   label,
@@ -6,7 +8,8 @@ function Input({
   className = '',
   ...props
 }) {
-  const inputId = id || `input-${Math.random().toString(36).slice(2, 9)}`;
+  const generatedId = useId();
+  const inputId = id || `input-${generatedId}`;
 
   return (
     <div className={`input-field ${className}`.trim()}>

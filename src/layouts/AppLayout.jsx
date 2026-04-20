@@ -11,7 +11,7 @@ function AppLayout() {
       <Sidebar />
       <div className="app-main">
         <Topbar />
-        <main className="app-content" id="main-content">
+        <main className="app-content" id="main-content" tabIndex="-1">
           <Outlet />
         </main>
       </div>

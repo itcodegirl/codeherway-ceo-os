@@ -1,5 +1,6 @@
 import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
+import '../styles/weekly.css';
 
 function WeeklyBrief() {
   return (

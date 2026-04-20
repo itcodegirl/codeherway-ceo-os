@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
+import '../styles/chief-of-staff.css';
 
 const actionPrompts = {
   summarize: {

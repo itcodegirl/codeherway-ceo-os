@@ -15,7 +15,12 @@ function Topbar() {
 
       <div className="topbar__right">
         <p className="topbar__meta">{today}</p>
-        <button type="button" className="topbar__action action-button">
+        <button
+          type="button"
+          className="topbar__action action-button"
+          aria-label="Current period filter is disabled in this version"
+          disabled
+        >
           This Week
         </button>
         <span className="topbar__status">Live Preview</span>

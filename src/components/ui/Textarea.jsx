@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 function Textarea({
   id,
   label,
@@ -6,7 +8,8 @@ function Textarea({
   className = '',
   ...props
 }) {
-  const textareaId = id || `textarea-${Math.random().toString(36).slice(2, 9)}`;
+  const generatedId = useId();
+  const textareaId = id || `textarea-${generatedId}`;
 
   return (
     <div className={`input-field ${className}`.trim()}>

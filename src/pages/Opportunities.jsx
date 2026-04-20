@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { opportunities } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
+import '../styles/opportunities.css';
 
 const priorityTone = {
   High: 'high',

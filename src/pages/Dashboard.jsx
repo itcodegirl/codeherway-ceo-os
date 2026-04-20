@@ -3,6 +3,7 @@ import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
 import { stats, priorities, opportunities, contentItems } from '../data/mockData';
+import '../styles/dashboard.css';
 
 function Dashboard() {
   const [toastMessage, setToastMessage] = useState('');

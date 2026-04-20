@@ -1,5 +1,6 @@
 import { contentItems } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
+import '../styles/content.css';
 
 function ContentOS() {
   const statusCounts = {
