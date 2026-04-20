@@ -2,6 +2,7 @@ import { opportunities as mockOpportunities } from '../../data/mockData';
 
 function OpportunityTable({ items, onSelect }) {
   const rows = items && items.length ? items : mockOpportunities;
+  const hasHandler = typeof onSelect === 'function';
 
   return (
     <div className="crm-table">
@@ -17,7 +18,12 @@ function OpportunityTable({ items, onSelect }) {
           key={item.id}
           type="button"
           className="crm-table__row crm-table__row--button"
-          aria-label={`Open ${item.name} opportunity from ${item.company}`}
+          aria-label={
+            hasHandler
+              ? `Open ${item.name} opportunity from ${item.company}`
+              : `No action available for ${item.name} opportunity from ${item.company}`
+          }
+          disabled={!hasHandler}
           onClick={() => onSelect?.(item)}
         >
           <p className="crm-table__title">{item.name}</p>
