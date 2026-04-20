@@ -91,27 +91,65 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 1.5rem 2rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	padding: 1.35rem 2rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 	background: #11141d;
+	gap: 1rem;
+	min-height: 6rem;
 }
 
 .topbar__label {
 	color: #9aa4b2;
 	font-size: var(--fs-helper);
+	line-height: 1.15;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
-	margin-bottom: 0.35rem;
+	margin-bottom: 0;
 }
 
 .topbar__title {
 	font-size: var(--fs-topbar-title);
 	font-weight: var(--fw-topbar-title);
+	margin: 0;
+	line-height: 1.2;
+}
+
+.topbar__left {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.42rem;
+}
+
+.topbar__right {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.topbar__action {
+	height: 2rem;
+	padding: 0 0.8rem;
+	font-size: 0.8rem;
 }
 
 .topbar__meta {
 	color: #b8c0cc;
 	font-size: var(--fs-meta);
+	line-height: 1.2;
+	margin: 0;
+}
+
+.topbar__status {
+	padding: 0.28rem 0.65rem;
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: #d9e0ec;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 999px;
+	background: rgba(109, 93, 252, 0.14);
 }
 
 .app-content {
