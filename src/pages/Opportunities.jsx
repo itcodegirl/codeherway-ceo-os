@@ -92,8 +92,14 @@ function Opportunities() {
             <p className="sr-only" role="status" aria-live="polite">
               Loading pipeline rows.
             </p>
+            <div className="crm-table__header" role="row">
+              <p role="columnheader">Opportunity</p>
+              <p role="columnheader">Company</p>
+              <p role="columnheader">Priority</p>
+              <p role="columnheader">Stage / Next Step</p>
+            </div>
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="crm-table__row">
+              <div key={index} className="crm-table__row" role="row">
                 <div className="crm-table__cell" role="cell" data-label="Opportunity">
                   <div className="skeleton-line" />
                 </div>
