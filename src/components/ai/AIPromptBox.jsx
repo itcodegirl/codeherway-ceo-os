@@ -3,6 +3,7 @@ import { useId, useState } from 'react';
 function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...' }) {
   const [value, setValue] = useState('');
   const promptLabelId = useId();
+  const promptFieldId = useId();
   const promptHintId = useId();
 
   const handleSubmit = (event) => {
@@ -18,11 +19,11 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
 
   return (
     <form className="section-card" onSubmit={handleSubmit}>
-      <label htmlFor={promptLabelId} id={promptLabelId} className="sr-only">
+      <label htmlFor={promptFieldId} id={promptLabelId} className="sr-only">
         Additional prompt input
       </label>
       <textarea
-        id={promptLabelId}
+        id={promptFieldId}
         className="chief-textarea"
         placeholder={placeholder}
         aria-labelledby={promptLabelId}
