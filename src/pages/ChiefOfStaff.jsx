@@ -166,6 +166,7 @@ function ChiefOfStaff() {
             <AIPromptBox
               onSubmit={(value) => setNotes((existing) => `${existing}\n\n${value}`)}
               placeholder="Ask for a specific rewrite, tone, or structure..."
+              isDisabled={isGenerating}
             />
           </div>
         </section>

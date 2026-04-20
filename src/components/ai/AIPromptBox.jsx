@@ -1,16 +1,17 @@
 import { useId, useState } from 'react';
 
-function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...' }) {
+function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...', isDisabled = false }) {
   const [value, setValue] = useState('');
   const trimmedValue = value.trim();
   const promptLabelId = useId();
   const promptFieldId = useId();
   const promptHintId = useId();
+  const canSubmit = Boolean(trimmedValue) && !isDisabled;
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!trimmedValue) {
+    if (!canSubmit) {
       return;
     }
 
@@ -29,11 +30,15 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
         placeholder={placeholder}
         aria-labelledby={promptLabelId}
         aria-describedby={promptHintId}
+        disabled={isDisabled}
+        aria-disabled={isDisabled}
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
       <p id={promptHintId} className="helper-text helper-text--offset">
-        {trimmedValue
+        {isDisabled
+          ? 'Wait for the current generation to finish before adding another prompt.'
+          : trimmedValue
           ? 'Add a short instruction and press Generate to append a direction to your notes.'
           : 'Enter at least one character to enable Generate.'}
       </p>
@@ -41,8 +46,8 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
         <button
           type="submit"
           className="action-button"
-          disabled={!trimmedValue}
-          aria-disabled={!trimmedValue}
+          disabled={!canSubmit}
+          aria-disabled={!canSubmit}
         >
           Generate
         </button>
