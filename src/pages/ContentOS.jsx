@@ -65,12 +65,12 @@ function ContentOS() {
 
       <SectionCard title="Publishing Workflow">
         {isLoading ? (
-          <div className="content-board">
+          <div className="content-board" role="list" aria-label="Publishing workflow cards" aria-busy={isLoading}>
             <p className="sr-only" role="status" aria-live="polite">
               Loading content cards.
             </p>
             {Array.from({ length: 3 }).map((_, index) => (
-              <article className="content-card" key={index}>
+              <article className="content-card" key={index} role="listitem">
                 <div className="content-card__header">
                   <div>
                     <div className="skeleton-line skeleton-line--value" />
@@ -88,9 +88,9 @@ function ContentOS() {
         ) : contentItems.length === 0 ? (
           <EmptyState title="No content items yet" description="Add your first draft, and your workflow cards will appear here." />
         ) : (
-          <div className="content-board">
+          <div className="content-board" role="list" aria-label="Publishing workflow cards">
             {contentItems.map((item) => (
-              <article key={item.id} className="content-card">
+              <article key={item.id} className="content-card" role="listitem">
                 <div className="content-card__header">
                   <div>
                     <h3 className="content-card__title">{item.title}</h3>
