@@ -1,8 +1,10 @@
 function Opportunities() {
   return (
-    <section>
-      <h1>Opportunities</h1>
-      <p>Your CRM-style opportunities pipeline will live here.</p>
+    <section className="opportunities-page">
+      <div className="page-intro">
+        <h1 className="page-title">Opportunities</h1>
+        <p className="helper-text">Your CRM-style opportunities pipeline will live here.</p>
+      </div>
     </section>
   );
 }

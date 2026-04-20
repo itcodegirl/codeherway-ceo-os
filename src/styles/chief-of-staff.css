@@ -48,8 +48,8 @@
 }
 
 .chief-response__label {
-	color: #9aa4b2;
-	font-size: 0.82rem;
+	color: var(--text-muted);
+	font-size: var(--fs-helper);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	margin-bottom: 0.75rem;

@@ -26,8 +26,8 @@
 }
 
 .stat-card__label {
-	color: #9aa4b2;
-	font-size: 0.85rem;
+	color: var(--text-muted);
+	font-size: var(--fs-helper);
 	margin-bottom: 0.85rem;
 }
 
@@ -52,7 +52,7 @@
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-	color: #dbe2ea;
+	color: #eef1f6;
 }
 
 .priority-list__dot {
@@ -78,7 +78,7 @@
 }
 
 .snapshot-row span {
-	color: #9aa4b2;
+	color: var(--text-muted);
 }
 
 .snapshot-row strong {
@@ -103,13 +103,15 @@
 }
 
 .mini-table__title {
+	font-size: var(--fs-helper);
+	color: var(--text);
 	font-weight: 600;
 	margin-bottom: 0.25rem;
 }
 
 .mini-table__subtitle {
-	color: #9aa4b2;
-	font-size: 0.92rem;
+	color: var(--text-muted);
+	font-size: var(--fs-helper);
 }
 
 .mini-table__meta {
@@ -122,7 +124,7 @@
 
 .mini-table__stage {
 	color: #c8d0db;
-	font-size: 0.9rem;
+	font-size: var(--fs-helper);
 }
 
 @media (max-width: 1100px) {

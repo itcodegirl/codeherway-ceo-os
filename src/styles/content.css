@@ -34,13 +34,14 @@
 }
 
 .content-card__title {
-	font-size: 1rem;
+	font-size: var(--fs-section-title);
+	font-weight: var(--fw-section-title);
 	margin-bottom: 0.35rem;
 }
 
 .content-card__platform {
-	color: #9aa4b2;
-	font-size: 0.92rem;
+	color: var(--text-muted);
+	font-size: var(--fs-helper);
 }
 
 .content-card__footer {
@@ -52,8 +53,8 @@
 }
 
 .content-card__meta-label {
-	color: #9aa4b2;
-	font-size: 0.85rem;
+	color: var(--text-muted);
+	font-size: var(--fs-helper);
 }
 
 .content-status {

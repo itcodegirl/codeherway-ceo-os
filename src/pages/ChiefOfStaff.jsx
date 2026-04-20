@@ -9,8 +9,8 @@ function ChiefOfStaff() {
   return (
     <section className="chief-page">
       <div className="page-intro">
-        <h1>Chief of Staff</h1>
-        <p>
+        <h1 className="page-title">Chief of Staff</h1>
+        <p className="helper-text">
           An AI-assisted workspace for executive summaries, planning prompts, and
           high-leverage drafting.
         </p>

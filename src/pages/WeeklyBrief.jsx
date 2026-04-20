@@ -1,8 +1,10 @@
 function WeeklyBrief() {
   return (
-    <section>
-      <h1>Weekly Brief</h1>
-      <p>Your weekly planning and review system will live here.</p>
+    <section className="weekly-page">
+      <div className="page-intro">
+        <h1 className="page-title">Weekly Brief</h1>
+        <p className="helper-text">Your weekly planning and review system will live here.</p>
+      </div>
     </section>
   );
 }

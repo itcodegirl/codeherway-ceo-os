@@ -51,6 +51,11 @@ function Dashboard() {
 
   return (
     <section className="dashboard-page">
+      <div className="page-intro">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="helper-text">Track opportunities, content, and priorities from one executive view.</p>
+      </div>
+
       <div className="dashboard-grid dashboard-grid--stats">
         {stats.map((stat) => (
           <StatCard

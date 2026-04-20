@@ -11,8 +11,8 @@ function ContentOS() {
   return (
     <section className="content-page">
       <div className="page-intro">
-        <h1>Content OS</h1>
-        <p>
+        <h1 className="page-title">Content OS</h1>
+        <p className="helper-text">
           Plan, track, and ship founder content across platforms with a clear publishing workflow.
         </p>
       </div>
