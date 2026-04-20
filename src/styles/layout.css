@@ -5,8 +5,8 @@
 }
 
 .sidebar {
-	background: #151924;
-	border-right: 1px solid rgba(255, 255, 255, 0.08);
+	background: var(--surface-sidebar);
+	border-right: 1px solid var(--border);
 	padding: 2rem 1.25rem;
 	display: flex;
 	flex-direction: column;
@@ -15,7 +15,7 @@
 .sidebar__brand {
 	margin-bottom: 1.5rem;
 	padding: 0.25rem 1rem 0.25rem 0.95rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	border-bottom: 1px solid var(--border);
 	display: flex;
 	flex-direction: column;
 	gap: 0.4rem;
@@ -163,7 +163,7 @@
 
 	.sidebar {
 		border-right: 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		border-bottom: 1px solid var(--border);
 	}
 }
 

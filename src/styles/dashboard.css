@@ -18,7 +18,7 @@
 }
 
 .stat-card {
-	background: #151924;
+	background: var(--surface-card);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
@@ -74,7 +74,7 @@
 	justify-content: space-between;
 	gap: var(--space-card-inner-gap);
 	padding-bottom: 0.85rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	border-bottom: 1px solid var(--border);
 }
 
 .snapshot-row span {
@@ -100,7 +100,7 @@
 	padding: var(--space-card-padding);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
-	background: #151924;
+	background: var(--surface-card);
 	box-shadow: var(--shadow-soft);
 }
 

@@ -24,7 +24,7 @@
 	align-items: center;
 	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
-	background: #151924;
+	background: var(--surface-card);
 	box-shadow: var(--shadow-soft);
 }
 
@@ -35,8 +35,8 @@
 }
 
 .crm-table__row {
-	background: rgba(255, 255, 255, 0.03);
-	border-radius: 18px;
+	background: var(--surface-card);
+	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
 }
 

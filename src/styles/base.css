@@ -1,15 +1,13 @@
 :root {
   --text: #f5f7fb;
   --bg: #0f1117;
-  --text-muted: #a0a8b4;
-  --text-soft: #8a93a1;
-  --border: rgba(255, 255, 255, 0.08);
+  --text-muted: #b0b9c8;
+  --text-soft: #90a0b7;
+  --surface-card: #181f2e;
+  --surface-sidebar: #151c2a;
+  --border: rgba(255, 255, 255, 0.12);
   --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.22);
   --radius-lg: 22px;
-  --radius-action: 12px;
-  --action-height: 2.5rem;
-  --action-font-size: var(--fs-helper);
-  --action-padding-x: 1rem;
   --radius-action: 12px;
   --action-height: 2.5rem;
   --action-font-size: var(--fs-helper);
@@ -53,7 +51,7 @@
 }
 
 body {
-	background: #0f1117;
+	background: var(--bg);
 	color: var(--text);
 	font-family: var(--font-display);
 }
@@ -131,7 +129,7 @@ textarea {
 }
 
 .summary-card {
-	background: #151924;
+	background: var(--surface-card);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
@@ -149,7 +147,7 @@ textarea {
 }
 
 .section-card {
-	background: #151924;
+	background: var(--surface-card);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
@@ -174,12 +172,6 @@ textarea {
 	/* preserved for semantic context only */
 }
 
-.section-card__body {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-stack-gap);
-}
-
 .pill {
 	display: inline-flex;
 	align-items: center;
@@ -188,19 +180,37 @@ textarea {
 	padding: 0.35rem 0.7rem;
 	font-size: 0.8rem;
 	font-weight: 600;
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	backdrop-filter: blur(6px);
+}
+
+.section-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-stack-gap);
+}
+
+.pill--high,
+.pill--medium,
+.pill--low,
+.content-status {
+	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.22);
 }
 
 .pill--high {
-	background: rgba(255, 107, 107, 0.14);
-	color: #ff9c9c;
+	background: rgba(255, 107, 107, 0.22);
+	color: #ffd2d2;
+	border-color: rgba(255, 156, 156, 0.4);
 }
 
 .pill--medium {
-	background: rgba(255, 193, 92, 0.14);
-	color: #ffd58f;
+	background: rgba(255, 193, 92, 0.22);
+	color: #ffe3b0;
+	border-color: rgba(255, 213, 137, 0.4);
 }
 
 .pill--low {
-	background: rgba(97, 218, 251, 0.14);
-	color: #9fe8ff;
+	background: rgba(97, 218, 251, 0.22);
+	color: #b4ecff;
+	border-color: rgba(159, 232, 255, 0.4);
 }
