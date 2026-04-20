@@ -108,11 +108,20 @@
 	justify-content: space-between;
 	align-items: stretch;
 	gap: var(--space-card-inner-gap);
-	padding: var(--space-card-padding);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
-	background: var(--surface-card);
-	box-shadow: var(--shadow-soft);
+	padding: 0.85rem 0;
+	border-bottom: 1px solid var(--border);
+	background: transparent;
+	box-shadow: none;
+	border-radius: 0;
+}
+
+.mini-table__row:first-child {
+	padding-top: 0;
+}
+
+.mini-table__row:last-child {
+	padding-bottom: 0;
+	border-bottom: 0;
 }
 
 .mini-table__title {
