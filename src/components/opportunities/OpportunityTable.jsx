@@ -17,6 +17,7 @@ function OpportunityTable({ items, onSelect }) {
           key={item.id}
           type="button"
           className="crm-table__row crm-table__row--button"
+          aria-label={`Open ${item.name} opportunity from ${item.company}`}
           onClick={() => onSelect?.(item)}
         >
           <p className="crm-table__title">{item.name}</p>

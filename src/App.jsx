@@ -11,7 +11,13 @@ const Settings = lazy(() => import('./pages/Settings'));
 
 function App() {
   return (
-    <Suspense fallback={<div className="app-shell-load">Loading CEO OS...</div>}>
+    <Suspense
+      fallback={
+        <div className="app-shell-load" role="status" aria-live="polite">
+          Loading CEO OS...
+        </div>
+      }
+    >
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Dashboard />} />

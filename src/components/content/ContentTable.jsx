@@ -14,6 +14,7 @@ function ContentTable({ onOpenItem }) {
           key={item.id}
           type="button"
           className="crm-table__row crm-table__row--button"
+          aria-label={`Open ${item.title} on ${item.platform}`}
           onClick={() => onOpenItem?.(item)}
         >
           <p className="crm-table__title">{item.title}</p>

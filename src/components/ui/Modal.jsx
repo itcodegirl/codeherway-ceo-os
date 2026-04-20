@@ -1,13 +1,17 @@
+import { useId } from 'react';
+
 function Modal({ isOpen, title, onClose, children }) {
+  const titleId = useId();
+
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <div className="modal-panel">
         <header className="modal-panel__header">
-          <h3>{title}</h3>
+          <h3 id={titleId}>{title}</h3>
           <button
             type="button"
             className="action-button action-button--small"
