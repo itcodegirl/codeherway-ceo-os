@@ -21,6 +21,10 @@ export function usePersistentState(key, initialValue) {
   const [value, setValue] = useState(() => loadValue(key, initialValue));
 
   useEffect(() => {
+    setValue(loadValue(key, initialValue));
+  }, [key, initialValue]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
@@ -34,10 +38,6 @@ export function usePersistentState(key, initialValue) {
       }
     }
   }, [key, value]);
-
-  useEffect(() => {
-    setValue(loadValue(key, initialValue));
-  }, [key, initialValue]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
