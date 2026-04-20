@@ -69,7 +69,12 @@ function Dashboard() {
       </div>
 
       <div className="dashboard-grid dashboard-grid--main">
-        <SectionCard title="Top Priorities" actionText="View Plan" actionTo="/weekly-brief">
+        <SectionCard
+          title="Top Priorities"
+          actionText="View Plan"
+          actionTo="/weekly-brief"
+          actionLabel="Open weekly plan and priority focus"
+        >
           <ul className="priority-list">
             {priorities.map((item) => (
               <li key={item} className="priority-list__item">
@@ -102,7 +107,12 @@ function Dashboard() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Opportunities Pipeline" actionText="Open CRM" actionTo="/opportunities">
+        <SectionCard
+          title="Opportunities Pipeline"
+          actionText="Open CRM"
+          actionTo="/opportunities"
+          actionLabel="Open opportunities pipeline dashboard"
+        >
           <div className="mini-table">
             {opportunities.map((item) => (
               <div key={item.id} className="mini-table__row">
@@ -121,7 +131,12 @@ function Dashboard() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Content Pipeline" actionText="Open Content OS" actionTo="/content">
+        <SectionCard
+          title="Content Pipeline"
+          actionText="Open Content OS"
+          actionTo="/content"
+          actionLabel="Open content operating system dashboard"
+        >
           <div className="mini-table">
             {contentItems.map((item) => (
               <div key={item.id} className="mini-table__row">

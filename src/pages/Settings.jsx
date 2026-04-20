@@ -15,6 +15,9 @@ function Settings() {
   const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', 0);
   const teamNameFieldId = useId();
   const timezoneFieldId = useId();
+  const autoSaveToggleId = useId();
+  const emailDigestToggleId = useId();
+  const shortcutsToggleId = useId();
 
   const handleChange = (key, value) => {
     setSettings((prev) => ({
@@ -71,8 +74,9 @@ function Settings() {
         </SectionCard>
 
         <SectionCard title="Experience" actionText="Apply" onAction={markSave}>
-          <label className="settings-toggle">
+          <label className="settings-toggle" htmlFor={autoSaveToggleId}>
             <input
+              id={autoSaveToggleId}
               type="checkbox"
               checked={settings.autoSave}
               onChange={(e) => handleChange('autoSave', e.target.checked)}
@@ -80,8 +84,9 @@ function Settings() {
             <span>Enable auto-save for drafts and notes</span>
           </label>
 
-          <label className="settings-toggle">
+          <label className="settings-toggle" htmlFor={emailDigestToggleId}>
             <input
+              id={emailDigestToggleId}
               type="checkbox"
               checked={settings.emailDigest}
               onChange={(e) => handleChange('emailDigest', e.target.checked)}
@@ -89,8 +94,9 @@ function Settings() {
             <span>Send weekly digest reminders</span>
           </label>
 
-          <label className="settings-toggle">
+          <label className="settings-toggle" htmlFor={shortcutsToggleId}>
             <input
+              id={shortcutsToggleId}
               type="checkbox"
               checked={settings.keyboardShortcuts}
               onChange={(e) => handleChange('keyboardShortcuts', e.target.checked)}
