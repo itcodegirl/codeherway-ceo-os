@@ -52,12 +52,12 @@ function ChiefOfStaff() {
   const canGenerate = hasNotes && !isGenerating;
 
   useEffect(() => {
-    if (!notes) return;
+    if (!notes || isGenerating) return;
     const timer = window.setTimeout(() => {
       setFeedback('Draft pipeline ready. Continue refining as needed.');
     }, 2500);
     return () => clearTimeout(timer);
-  }, [notes]);
+  }, [notes, isGenerating]);
 
   useEffect(() => () => {
     if (generationTimerRef.current !== null) {
