@@ -4,6 +4,11 @@
 	gap: var(--space-page-section-gap);
 }
 
+.content-page .crm-table__header,
+.content-page .crm-table__row {
+	grid-template-columns: 1.4fr 1fr 0.9fr;
+}
+
 .content-summary {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -111,6 +116,16 @@
 	.content-summary,
 	.content-board {
 		grid-template-columns: 1fr;
+	}
+
+	.content-page .crm-table__header,
+	.content-page .crm-table__row {
+		grid-template-columns: 1fr;
+	}
+
+	.content-page .crm-table__cell {
+		flex-direction: column;
+		align-items: flex-start;
 	}
 }
 
