@@ -109,7 +109,7 @@ function Opportunities() {
                 <div className="crm-table__cell" role="cell" data-label="Priority">
                   <div className="skeleton-line" />
                 </div>
-                <div className="crm-table__cell" role="cell" data-label="Stage / Next step">
+                <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
                   <div className="skeleton-line" />
                 </div>
               </div>
