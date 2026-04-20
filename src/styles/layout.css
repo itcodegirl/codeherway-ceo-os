@@ -2,6 +2,8 @@
 	min-height: 100vh;
 	display: grid;
 	grid-template-columns: 260px 1fr;
+	min-width: 0;
+	overflow-x: hidden;
 }
 
 .sidebar {
@@ -10,6 +12,7 @@
 	padding: 2rem 1.25rem;
 	display: flex;
 	flex-direction: column;
+	min-width: 0;
 }
 
 .sidebar__brand {
@@ -52,6 +55,9 @@
 	font-weight: 500;
 	color: #93a1b4;
 	letter-spacing: 0.01em;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .sidebar__link:hover {
@@ -85,13 +91,15 @@
 .app-main {
 	display: flex;
 	flex-direction: column;
+	min-width: 0;
+	overflow: hidden;
 }
 
 .topbar {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 1.35rem 2rem;
+	padding: clamp(1rem, 2vw, 1.35rem) clamp(1rem, 2.5vw, 2rem);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 	background: #11141d;
 	gap: 1rem;
@@ -112,6 +120,7 @@
 	font-weight: var(--fw-topbar-title);
 	margin: 0;
 	line-height: 1.2;
+	overflow-wrap: anywhere;
 }
 
 .topbar__left {
@@ -133,6 +142,7 @@
 	height: 2rem;
 	padding: 0 0.8rem;
 	font-size: 0.8rem;
+	white-space: nowrap;
 }
 
 .topbar__meta {
@@ -153,7 +163,26 @@
 }
 
 .app-content {
-	padding: 2rem;
+	padding: clamp(1rem, 2vw, 2rem);
+	min-width: 0;
+}
+
+.app-content > section,
+.app-content > div {
+	min-width: 0;
+}
+
+@media (min-width: 1680px) {
+	.app-content {
+		padding-left: 2.5rem;
+		padding-right: 2.5rem;
+	}
+}
+
+@media (max-width: 1100px) {
+	.app-shell {
+		grid-template-columns: 240px 1fr;
+	}
 }
 
 @media (max-width: 860px) {
@@ -164,18 +193,76 @@
 	.sidebar {
 		border-right: 0;
 		border-bottom: 1px solid var(--border);
+		padding: 1.25rem;
+	}
+
+	.topbar__left,
+	.topbar__right {
+		width: 100%;
+	}
+}
+
+@media (max-width: 768px) {
+	.sidebar__brand h1 {
+		font-size: 1.35rem;
+	}
+
+	.sidebar__eyebrow {
+		font-size: 0.7rem;
+		margin-bottom: 0.2rem;
+	}
+
+	.sidebar__link {
+		padding: 0.75rem 0.85rem;
+		font-size: 0.9rem;
+	}
+
+	.topbar__title {
+		font-size: 1.32rem;
 	}
 }
 
 @media (max-width: 640px) {
-
 	.topbar,
 	.app-content {
-		padding: 1.25rem;
+		padding: clamp(0.95rem, 4vw, 1.25rem);
 	}
 
 	.topbar {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+
+	.topbar__meta,
+	.topbar__status {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 100%;
+	}
+}
+
+@media (max-width: 420px) {
+	.sidebar__brand h1 {
+		font-size: 1.2rem;
+	}
+
+	.sidebar__link {
+		padding: 0.65rem 0.7rem;
+		border-radius: 10px;
+	}
+
+	.topbar__title {
+		font-size: 1.18rem;
+	}
+
+	.topbar__meta {
+		font-size: 0.82rem;
+		max-width: 100%;
+	}
+
+	.topbar__status {
+		padding: 0.22rem 0.56rem;
+		font-size: 0.73rem;
 	}
 }
