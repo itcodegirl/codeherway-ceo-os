@@ -20,10 +20,16 @@ function ContentTable({ onOpenItem }) {
           disabled={!hasHandler}
           onClick={() => onOpenItem?.(item)}
         >
-          <p className="crm-table__title">{item.title}</p>
-          <p className="crm-table__subtitle">{item.platform}</p>
-          <span className={`content-status content-status--${item.status.toLowerCase()}`}>
-            {item.status}
+          <span className="crm-table__cell" role="cell" data-label="Title">
+            <p className="crm-table__title">{item.title}</p>
+          </span>
+          <span className="crm-table__cell" role="cell" data-label="Platform">
+            <p className="crm-table__subtitle">{item.platform}</p>
+          </span>
+          <span className="crm-table__cell" role="cell" data-label="Status">
+            <span className={`content-status content-status--${item.status.toLowerCase()}`}>
+              {item.status}
+            </span>
           </span>
         </button>
       ))}

@@ -111,6 +111,7 @@
 	.crm-table__cell {
 		flex-direction: column;
 		align-items: flex-start;
+		justify-content: flex-start;
 	}
 
 	.crm-table__cell[role='cell']::before {
@@ -121,7 +122,6 @@
 	.crm-table__cell[role='cell'] .crm-table__title {
 		margin-top: 0;
 	}
-}
 
 	.crm-table__cell {
 		justify-content: flex-start;

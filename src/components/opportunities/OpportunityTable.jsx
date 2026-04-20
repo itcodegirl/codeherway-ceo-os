@@ -26,14 +26,20 @@ function OpportunityTable({ items, onSelect }) {
           disabled={!hasHandler}
           onClick={() => onSelect?.(item)}
         >
-          <p className="crm-table__title">{item.name}</p>
-          <p className="crm-table__subtitle">{item.company}</p>
-          <span className={`pill pill--${item.priority.toLowerCase()}`}>
-            {item.priority}
+          <span className="crm-table__cell" role="cell" data-label="Opportunity">
+            <p className="crm-table__title crm-table__title--row">{item.name}</p>
           </span>
-          <p className="crm-table__subtitle">
-            <span className="pill pill--low">{item.stage}</span> {item.nextStep}
-          </p>
+          <span className="crm-table__cell" role="cell" data-label="Company">
+            <p className="crm-table__subtitle">{item.company}</p>
+          </span>
+          <span className="crm-table__cell" role="cell" data-label="Priority">
+            <span className={`pill pill--${item.priority.toLowerCase()}`}>{item.priority}</span>
+          </span>
+          <span className="crm-table__cell" role="cell" data-label="Stage / Next Step">
+            <p className="crm-table__subtitle">
+              <span className="pill pill--low">{item.stage}</span> {item.nextStep}
+            </p>
+          </span>
         </button>
       ))}
     </div>
