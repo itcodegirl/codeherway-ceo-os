@@ -1,0 +1,77 @@
+.opportunities-page {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.opportunities-summary {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+.crm-table {
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+}
+
+.crm-table__header,
+.crm-table__row {
+	display: grid;
+	grid-template-columns: 1.4fr 0.9fr 0.8fr 1.2fr;
+	gap: 1rem;
+	align-items: center;
+}
+
+.crm-table__header {
+	color: #9aa4b2;
+	font-size: 0.85rem;
+	padding: 0 0.35rem 0.5rem;
+}
+
+.crm-table__row {
+	background: rgba(255, 255, 255, 0.03);
+	border-radius: 18px;
+	padding: 1rem;
+}
+
+.crm-table__title {
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+}
+
+.crm-table__subtitle {
+	color: #9aa4b2;
+	font-size: 0.92rem;
+}
+
+.crm-stage,
+.crm-next-step {
+	color: #dbe2ea;
+	font-size: 0.92rem;
+}
+
+.crm-table__cell {
+	display: flex;
+	align-items: center;
+}
+
+@media (max-width: 1100px) {
+	.opportunities-summary {
+		grid-template-columns: 1fr;
+	}
+
+	.crm-table__header {
+		display: none;
+	}
+
+	.crm-table__row {
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+	}
+
+	.crm-table__cell {
+		justify-content: flex-start;
+	}
+}
