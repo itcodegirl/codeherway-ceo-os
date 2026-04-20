@@ -46,7 +46,10 @@ function Dashboard() {
       showToast('Executive snapshot copied to clipboard.');
     } catch (error) {
       showToast('Unable to copy snapshot right now.');
-      console.error('Clipboard copy failed', error);
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('Clipboard copy failed', error);
+      }
     }
   };
 
