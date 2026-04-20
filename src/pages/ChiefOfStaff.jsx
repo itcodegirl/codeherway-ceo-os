@@ -79,6 +79,7 @@ function ChiefOfStaff() {
     };
 
     setIsGenerating(true);
+    setFeedback('Generating a new draft for your current notes.');
 
     if (generationTimerRef.current !== null) {
       clearTimeout(generationTimerRef.current);

@@ -50,8 +50,10 @@ function Opportunities() {
         <p className="helper-text">Track partnerships, roles, and outreach as an executive-grade pipeline.</p>
       </div>
 
+      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading opportunities data.</p> : null}
+
       {isLoading ? (
-        <div className="opportunities-summary">
+        <div className="opportunities-summary" aria-busy={isLoading}>
           <article className="summary-card">
             <div className="skeleton-line skeleton-line--label" />
             <div className="skeleton-line skeleton-line--value" />
@@ -87,6 +89,9 @@ function Opportunities() {
       <SectionCard title="Pipeline Overview" actionText="Add Opportunity">
         {isLoading ? (
           <div className="crm-table">
+            <p className="sr-only" role="status" aria-live="polite">
+              Loading pipeline rows.
+            </p>
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="crm-table__row">
                 <div className="crm-table__cell">

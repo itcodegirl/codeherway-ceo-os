@@ -1,4 +1,4 @@
-import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
+﻿import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import '../styles/weekly.css';
 
@@ -39,7 +39,7 @@ function WeeklyBrief() {
                 <div>
                   <p className="weekly-note">{item.title}</p>
                   <p className="helper-text" style={{ marginTop: '0.35rem' }}>
-                    Owner: {item.owner} • Status: {item.status}
+                    Owner: {item.owner} {'\u2022'} Status: {item.status}
                   </p>
                 </div>
               </li>
@@ -86,3 +86,4 @@ function WeeklyBrief() {
 }
 
 export default WeeklyBrief;
+

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...' }) {
   const [value, setValue] = useState('');
+  const promptId = useId();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -16,7 +17,11 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
 
   return (
     <form className="section-card" onSubmit={handleSubmit}>
+      <label htmlFor={promptId} className="sr-only">
+        Additional prompt input
+      </label>
       <textarea
+        id={promptId}
         className="chief-textarea"
         aria-label="AI prompt input"
         placeholder={placeholder}

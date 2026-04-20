@@ -11,13 +11,13 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" aria-label="Primary navigation">
       <div className="sidebar__brand">
         <p className="sidebar__eyebrow">CodeHerWay</p>
         <h1>CEO OS</h1>
       </div>
 
-      <nav className="sidebar__nav">
+      <nav className="sidebar__nav" aria-label="Main navigation">
         {navItems.map((item) => (
           <NavLink
             key={item.path}

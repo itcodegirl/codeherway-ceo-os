@@ -8,7 +8,8 @@ function SectionCard({
   onAction,
   actionLabel,
 }) {
-  const action = actionText
+  const hasAction = Boolean(actionText && (actionTo || onAction));
+  const action = actionText && hasAction
     ? actionTo
       ? (
           <Link

@@ -27,8 +27,10 @@ function ContentOS() {
         </p>
       </div>
 
+      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading content board data.</p> : null}
+
       {isLoading ? (
-        <div className="content-summary">
+        <div className="content-summary" aria-busy={isLoading}>
           <article className="summary-card">
             <div className="skeleton-line skeleton-line--label" />
             <div className="skeleton-line skeleton-line--value" />
@@ -64,6 +66,9 @@ function ContentOS() {
       <SectionCard title="Publishing Workflow" actionText="Add Content">
         {isLoading ? (
           <div className="content-board">
+            <p className="sr-only" role="status" aria-live="polite">
+              Loading content cards.
+            </p>
             {Array.from({ length: 3 }).map((_, index) => (
               <article className="content-card" key={index}>
                 <div className="content-card__header">
