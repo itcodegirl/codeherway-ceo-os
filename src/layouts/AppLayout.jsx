@@ -9,8 +9,16 @@ function AppLayout() {
   const mainRef = useRef(null);
 
   useEffect(() => {
-    if (mainRef.current) {
-      mainRef.current.focus({ preventScroll: true });
+    const mainElement = mainRef.current;
+
+    if (!mainElement || typeof mainElement.focus !== 'function') {
+      return;
+    }
+
+    try {
+      mainElement.focus({ preventScroll: true });
+    } catch (error) {
+      mainElement.focus();
     }
   }, [location.pathname]);
 
