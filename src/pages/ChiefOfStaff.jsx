@@ -5,6 +5,9 @@ import SectionCard from '../components/ui/SectionCard';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 
+const INITIAL_NOTES = '';
+const INITIAL_RESPONSES = [];
+
 const actionPrompts = {
   summarize: {
     title: 'Executive Summary',
@@ -34,8 +37,8 @@ const actionPrompts = {
 };
 
 function ChiefOfStaff() {
-  const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', '');
-  const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', []);
+  const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);
+  const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', INITIAL_RESPONSES);
   const [feedback, setFeedback] = useState(
     'Start by pasting notes. Then choose an action to transform them into executive-ready output.',
   );

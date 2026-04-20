@@ -88,22 +88,22 @@ function Opportunities() {
 
       <SectionCard title="Pipeline Overview" actionText="Add Opportunity">
         {isLoading ? (
-          <div className="crm-table">
+          <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
             <p className="sr-only" role="status" aria-live="polite">
               Loading pipeline rows.
             </p>
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="crm-table__row">
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Opportunity">
                   <div className="skeleton-line" />
                 </div>
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Company">
                   <div className="skeleton-line" />
                 </div>
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Priority">
                   <div className="skeleton-line" />
                 </div>
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Stage / Next step">
                   <div className="skeleton-line" />
                 </div>
               </div>
@@ -112,28 +112,31 @@ function Opportunities() {
         ) : opportunities.length === 0 ? (
           <EmptyState title="No opportunities yet" description="Add the first opportunity to populate this pipeline." />
         ) : (
-          <div className="crm-table">
-            <div className="crm-table__header">
-              <p>Opportunity</p>
-              <p>Company</p>
-              <p>Priority</p>
-              <p>Stage / Next Step</p>
+          <div className="crm-table" role="table" aria-label="Opportunity pipeline">
+            <p className="sr-only" role="status" aria-live="polite">
+              Showing {opportunities.length} opportunities.
+            </p>
+            <div className="crm-table__header" role="row">
+              <p role="columnheader">Opportunity</p>
+              <p role="columnheader">Company</p>
+              <p role="columnheader">Priority</p>
+              <p role="columnheader">Stage / Next Step</p>
             </div>
 
             {opportunities.map((item) => (
-              <div key={item.id} className="crm-table__row">
-                <div className="crm-table__cell">
+              <div key={item.id} className="crm-table__row" role="row">
+                <div className="crm-table__cell" role="cell" data-label="Opportunity">
                   <p className="crm-table__title">{item.name}</p>
                 </div>
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Company">
                   <p className="crm-table__subtitle">{item.company}</p>
                 </div>
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Priority">
                   <span className={`pill pill--${priorityTone[item.priority] || 'low'}`}>
                     {item.priority}
                   </span>
                 </div>
-                <div className="crm-table__cell">
+                <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
                   <p className="crm-table__subtitle">
                     <span className={`pill pill--${stageTone[item.stage] || 'low'}`}>{item.stage}</span>{' '}
                     {item.nextStep}

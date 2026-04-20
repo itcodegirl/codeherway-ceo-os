@@ -31,5 +31,34 @@ export function usePersistentState(key, initialValue) {
     }
   }, [key, value]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleStorageChange = (event) => {
+      if (event.key !== key) {
+        return;
+      }
+
+      if (event.newValue === null) {
+        setValue(initialValue);
+        return;
+      }
+
+      try {
+        setValue(JSON.parse(event.newValue));
+      } catch (error) {
+        setValue(initialValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key, initialValue]);
+
   return [value, setValue];
 }

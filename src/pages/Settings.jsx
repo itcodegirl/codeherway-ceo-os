@@ -1,15 +1,20 @@
+import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import { usePersistentState } from '../hooks/usePersistentState';
 
+const DEFAULT_SETTINGS = {
+  timezone: 'America/Chicago',
+  teamName: 'CodeHerWay',
+  emailDigest: true,
+  keyboardShortcuts: false,
+  autoSave: true,
+};
+
 function Settings() {
-  const [settings, setSettings] = usePersistentState('ceo-os-settings', {
-    timezone: 'America/Chicago',
-    teamName: 'CodeHerWay',
-    emailDigest: true,
-    keyboardShortcuts: false,
-    autoSave: true,
-  });
-  const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', '');
+  const [settings, setSettings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
+  const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', 0);
+  const teamNameFieldId = useId();
+  const timezoneFieldId = useId();
 
   const handleChange = (key, value) => {
     setSettings((prev) => ({
@@ -19,8 +24,7 @@ function Settings() {
   };
 
   const markSave = () => {
-    const now = new Date().toLocaleString();
-    setSavedAt(now);
+    setSavedAt(Date.now());
   };
 
   const handleSubmit = (event) => {
@@ -38,24 +42,30 @@ function Settings() {
       <form className="settings-grid" onSubmit={handleSubmit}>
         <SectionCard title="Workspace" actionText="Save Profile" onAction={markSave}>
           <label className="settings-field">
-            <span className="settings-field__label">Workspace name</span>
+            <span className="settings-field__label" id={`${teamNameFieldId}-label`}>
+              Workspace name
+            </span>
             <input
+              id={teamNameFieldId}
               type="text"
               value={settings.teamName}
               onChange={(e) => handleChange('teamName', e.target.value)}
               className="settings-input"
-              aria-label="Workspace name"
+              aria-labelledby={`${teamNameFieldId}-label`}
             />
           </label>
 
           <label className="settings-field">
-            <span className="settings-field__label">Timezone</span>
+            <span className="settings-field__label" id={`${timezoneFieldId}-label`}>
+              Timezone
+            </span>
             <input
+              id={timezoneFieldId}
               type="text"
               value={settings.timezone}
               onChange={(e) => handleChange('timezone', e.target.value)}
               className="settings-input"
-              aria-label="Workspace timezone"
+              aria-labelledby={`${timezoneFieldId}-label`}
             />
           </label>
         </SectionCard>
@@ -90,9 +100,14 @@ function Settings() {
         </SectionCard>
       </form>
 
-      <div className="helper-text">
+      <div className="helper-text" role="status" aria-live="polite">
         Changes persist in browser memory for now and will be synced to your account in the next release.
-        {savedAt ? <span className="settings-saved-indicator"> Last saved {savedAt}.</span> : null}
+        {savedAt ? (
+          <span className="settings-saved-indicator">
+            {' '}
+            Last saved <time dateTime={new Date(savedAt).toISOString()}>{new Date(savedAt).toLocaleString()}</time>.
+          </span>
+        ) : null}
       </div>
     </section>
   );

@@ -1,10 +1,11 @@
 function Topbar() {
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
+  const isoDate = new Date().toISOString().slice(0, 10);
 
   return (
     <header className="topbar">
@@ -14,7 +15,9 @@ function Topbar() {
       </div>
 
       <div className="topbar__right">
-        <p className="topbar__meta">{today}</p>
+        <time className="topbar__meta" dateTime={isoDate}>
+          {today}
+        </time>
         <button
           type="button"
           className="topbar__action action-button"
