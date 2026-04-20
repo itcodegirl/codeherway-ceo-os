@@ -111,7 +111,7 @@ function ChiefOfStaff() {
             <h2>Prompt Workspace</h2>
           </div>
 
-          <div className="section-card__body">
+          <div className="section-card__body" aria-busy={isGenerating}>
             <label className="settings-field" htmlFor={notesFieldId}>
               <span className="settings-field__label">Paste notes and context</span>
               <textarea
@@ -119,6 +119,8 @@ function ChiefOfStaff() {
                 className="chief-textarea"
                 placeholder="Paste notes, priorities, meeting takeaways, or rough ideas..."
                 rows="10"
+                disabled={isGenerating}
+                aria-disabled={isGenerating}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
               />
