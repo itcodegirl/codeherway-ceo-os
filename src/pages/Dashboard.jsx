@@ -94,16 +94,16 @@ function Dashboard() {
           onAction={handleCopySnapshot}
           actionLabel="Copy executive snapshot"
         >
-          <div className="snapshot-stack">
-            <div className="snapshot-row">
+          <div className="snapshot-stack" role="list" aria-label="Executive snapshot highlights">
+            <div className="snapshot-row" role="listitem">
               <span>Strategic Focus</span>
               <strong>Platform + Partnerships</strong>
             </div>
-            <div className="snapshot-row">
+            <div className="snapshot-row" role="listitem">
               <span>Top Risk</span>
               <strong>Follow-up delays</strong>
             </div>
-            <div className="snapshot-row">
+            <div className="snapshot-row" role="listitem">
               <span>Momentum</span>
               <strong>Strong this week</strong>
             </div>
