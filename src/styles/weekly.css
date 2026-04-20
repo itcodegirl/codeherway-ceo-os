@@ -20,7 +20,7 @@
 	list-style: none;
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-stack-gap);
+	gap: var(--space-list-gap);
 }
 
 .weekly-list__item {

@@ -29,6 +29,13 @@
   --space-page-intro-vertical: 1.5rem;
   --space-title-to-content: 1rem;
   --space-stack-gap: 1rem;
+  --space-list-gap: var(--space-list-gap-comfy);
+  --space-list-gap-comfy: 1rem;
+  --space-list-gap-compact: 0.75rem;
+}
+
+.list-compact {
+	--space-list-gap: var(--space-list-gap-compact);
 }
 
 * {

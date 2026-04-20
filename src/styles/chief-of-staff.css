@@ -29,7 +29,7 @@
 .chief-actions {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--space-card-inner-gap);
+	gap: var(--space-list-gap);
 }
 
 .chief-action-btn {
