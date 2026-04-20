@@ -5,12 +5,12 @@ function OpportunityTable({ items, onSelect }) {
   const hasHandler = typeof onSelect === 'function';
 
   return (
-    <div className="crm-table">
-      <div className="crm-table__header">
-        <p>Opportunity</p>
-        <p>Company</p>
-        <p>Priority</p>
-        <p>Stage / Next Step</p>
+    <div className="crm-table" role="table" aria-label="Opportunity pipeline">
+      <div className="crm-table__header" role="row">
+        <p role="columnheader">Opportunity</p>
+        <p role="columnheader">Company</p>
+        <p role="columnheader">Priority</p>
+        <p role="columnheader">Stage / Next Step</p>
       </div>
 
       {rows.map((item) => (
@@ -18,6 +18,7 @@ function OpportunityTable({ items, onSelect }) {
           key={item.id}
           type="button"
           className="crm-table__row crm-table__row--button"
+          role="row"
           aria-label={
             hasHandler
               ? `Open ${item.name} opportunity from ${item.company}`
