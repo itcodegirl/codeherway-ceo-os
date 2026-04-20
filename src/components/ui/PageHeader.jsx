@@ -1,19 +1,27 @@
 import { Link } from 'react-router-dom';
 
-function PageHeader({ title, description, actionText, actionTo, onAction }) {
-  const action = actionText
+function PageHeader({
+  title,
+  description,
+  actionText,
+  actionTo,
+  onAction,
+  actionLabel,
+}) {
+  const hasAction = Boolean(actionText && (actionTo || onAction));
+  const action = actionText && hasAction
     ? actionTo
       ? (
           <Link
             className="action-button"
             to={actionTo}
-            aria-label={actionText}
+            aria-label={actionLabel || actionText}
           >
             {actionText}
           </Link>
         )
       : (
-          <button type="button" className="action-button" onClick={onAction}>
+          <button type="button" className="action-button" onClick={onAction} aria-label={actionLabel || actionText}>
             {actionText}
           </button>
         )
