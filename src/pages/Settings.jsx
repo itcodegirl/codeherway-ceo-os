@@ -1,20 +1,31 @@
-import { useState } from 'react';
 import SectionCard from '../components/ui/SectionCard';
+import { usePersistentState } from '../hooks/usePersistentState';
 
 function Settings() {
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = usePersistentState('ceo-os-settings', {
     timezone: 'America/Chicago',
     teamName: 'CodeHerWay',
     emailDigest: true,
     keyboardShortcuts: false,
     autoSave: true,
   });
+  const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', '');
 
   const handleChange = (key, value) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,
     }));
+  };
+
+  const markSave = () => {
+    const now = new Date().toLocaleString();
+    setSavedAt(now);
+  };
+
+  const handleSubmit = (event) => {
+    markSave();
+    event.preventDefault();
   };
 
   return (
@@ -24,8 +35,8 @@ function Settings() {
         <p className="helper-text">Manage preferences that control your executive operating environment.</p>
       </div>
 
-      <div className="settings-grid">
-        <SectionCard title="Workspace" actionText="Save Profile">
+      <form className="settings-grid" onSubmit={handleSubmit}>
+        <SectionCard title="Workspace" actionText="Save Profile" onAction={markSave}>
           <label className="settings-field">
             <span className="settings-field__label">Workspace name</span>
             <input
@@ -49,7 +60,7 @@ function Settings() {
           </label>
         </SectionCard>
 
-        <SectionCard title="Experience" actionText="Apply">
+        <SectionCard title="Experience" actionText="Apply" onAction={markSave}>
           <label className="settings-toggle">
             <input
               type="checkbox"
@@ -77,10 +88,11 @@ function Settings() {
             <span>Enable keyboard shortcuts</span>
           </label>
         </SectionCard>
-      </div>
+      </form>
 
       <div className="helper-text">
         Changes persist in browser memory for now and will be synced to your account in the next release.
+        {savedAt ? <span className="settings-saved-indicator"> Last saved {savedAt}.</span> : null}
       </div>
     </section>
   );

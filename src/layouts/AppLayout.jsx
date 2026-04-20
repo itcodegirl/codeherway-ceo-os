@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
+import ErrorBoundary from '../components/ui/ErrorBoundary';
 
 function AppLayout() {
   return (
@@ -12,7 +13,9 @@ function AppLayout() {
       <div className="app-main">
         <Topbar />
         <main className="app-content" id="main-content" tabIndex="-1">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

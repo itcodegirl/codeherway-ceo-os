@@ -1,8 +1,9 @@
-import { useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
 import '../styles/chief-of-staff.css';
+import { usePersistentState } from '../hooks/usePersistentState';
 
 const actionPrompts = {
   summarize: {
@@ -33,13 +34,35 @@ const actionPrompts = {
 };
 
 function ChiefOfStaff() {
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', '');
+  const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', []);
   const [feedback, setFeedback] = useState(
     'Start by pasting notes. Then choose an action to transform them into executive-ready output.',
   );
-  const [responses, setResponses] = useState([]);
+  const generationTimerRef = useRef(null);
+
+  const hasHistory = useMemo(() => responses && responses.length > 0, [responses]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (!notes) return;
+    const timer = window.setTimeout(() => {
+      setFeedback('Draft pipeline ready. Continue refining as needed.');
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [notes]);
+
+  useEffect(() => () => {
+    if (generationTimerRef.current !== null) {
+      clearTimeout(generationTimerRef.current);
+    }
+  }, []);
 
   const handleAction = (actionKey) => {
+    if (isGenerating) {
+      return;
+    }
+
     const hasNotes = notes.trim().length > 0;
 
     if (!hasNotes) {
@@ -55,8 +78,18 @@ function ChiefOfStaff() {
       content: item,
     };
 
-    setResponses((current) => [next, ...current]);
-    setFeedback(`Created: ${responseFactory.title}. Review and edit before sending.`);
+    setIsGenerating(true);
+
+    if (generationTimerRef.current !== null) {
+      clearTimeout(generationTimerRef.current);
+    }
+
+    generationTimerRef.current = window.setTimeout(() => {
+      setResponses((current) => [next, ...current]);
+      setFeedback(`Created: ${responseFactory.title}. Review and edit before sending.`);
+      setIsGenerating(false);
+      generationTimerRef.current = null;
+    }, 420);
   };
 
   return (
@@ -88,16 +121,36 @@ function ChiefOfStaff() {
             </label>
 
             <div className="chief-actions">
-              <button type="button" className="action-button" onClick={() => handleAction('summarize')}>
+              <button
+                type="button"
+                className="action-button"
+                onClick={() => handleAction('summarize')}
+                disabled={isGenerating}
+              >
                 Summarize This Week
               </button>
-              <button type="button" className="action-button" onClick={() => handleAction('draft')}>
+              <button
+                type="button"
+                className="action-button"
+                onClick={() => handleAction('draft')}
+                disabled={isGenerating}
+              >
                 Draft LinkedIn Post
               </button>
-              <button type="button" className="action-button" onClick={() => handleAction('actions')}>
+              <button
+                type="button"
+                className="action-button"
+                onClick={() => handleAction('actions')}
+                disabled={isGenerating}
+              >
                 Convert to Action Items
               </button>
-              <button type="button" className="action-button" onClick={() => handleAction('priorities')}>
+              <button
+                type="button"
+                className="action-button"
+                onClick={() => handleAction('priorities')}
+                disabled={isGenerating}
+              >
                 Suggest Next Priorities
               </button>
             </div>
@@ -119,17 +172,19 @@ function ChiefOfStaff() {
               {feedback}
             </p>
 
-            {responses.length === 0 ? (
-              <SectionCard title="Starter Copy" actionText="Refresh">
-                <p className="chief-response__text">
-                  This week’s momentum is strong. Core product structure is in place, and the next move is to
-                  convert these notes into editable plans and content that can be shipped this week.
-                </p>
-              </SectionCard>
-            ) : (
+            {isGenerating ? (
+              <div className="skeleton-line" style={{ maxWidth: '100%', height: '88px' }} />
+            ) : hasHistory ? (
               responses.map((entry) => (
                 <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
               ))
+            ) : (
+              <SectionCard title="Starter Copy" actionText="Refresh">
+                <p className="chief-response__text">
+                  This week's momentum is strong. Core product structure is in place, and the next move is to
+                  convert these notes into editable plans and content that can be shipped this week.
+                </p>
+              </SectionCard>
             )}
           </div>
         </section>
@@ -139,3 +194,4 @@ function ChiefOfStaff() {
 }
 
 export default ChiefOfStaff;
+

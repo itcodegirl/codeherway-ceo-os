@@ -279,6 +279,60 @@ textarea {
 	gap: var(--space-stack-gap);
 }
 
+.skeleton-line {
+	height: 0.85rem;
+	width: 100%;
+	max-width: 280px;
+	border-radius: 10px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
+	background-size: 200% 100%;
+	animation: shimmer 1.2s infinite;
+}
+
+.skeleton-line--label {
+	height: 0.75rem;
+	max-width: 130px;
+}
+
+.skeleton-line--value {
+	height: 1.5rem;
+	max-width: 96px;
+}
+
+.error-boundary {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 1rem;
+	border: 1px solid rgba(255, 130, 130, 0.38);
+	background: rgba(255, 110, 110, 0.09);
+	border-radius: var(--radius-lg);
+}
+
+.error-boundary h2 {
+	font-size: 1.1rem;
+	line-height: 1.35;
+}
+
+.error-boundary p {
+	color: var(--text-muted);
+}
+
+.settings-saved-indicator {
+	display: inline;
+	color: #8ed6b5;
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 0% 0;
+	}
+
+	100% {
+		background-position: 180% 0;
+	}
+}
+
 .empty-state {
 	padding: 1.35rem;
 	border: 1px dashed var(--border);
