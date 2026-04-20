@@ -6,6 +6,25 @@
 	overflow-x: hidden;
 }
 
+.skip-link {
+	position: absolute;
+	left: 1rem;
+	top: 0.75rem;
+	transform: translateY(-200%);
+	background: #111;
+	color: #fff;
+	padding: 0.6rem 0.8rem;
+	border-radius: 8px;
+	z-index: 50;
+	border: 1px solid var(--border);
+}
+
+.skip-link:focus-visible {
+	transform: translateY(0);
+	outline: 2px solid rgba(142, 173, 255, 0.8);
+	outline-offset: 2px;
+}
+
 .sidebar {
 	background: var(--surface-sidebar);
 	border-right: 1px solid var(--border);
