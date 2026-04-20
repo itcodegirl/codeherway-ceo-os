@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { contentItems } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import EmptyState from '../components/ui/EmptyState';
@@ -7,11 +7,19 @@ import '../styles/content.css';
 function ContentOS() {
   const [isLoading, setIsLoading] = useState(true);
 
-  const statusCounts = {
-    Drafting: contentItems.filter((item) => item.status === 'Drafting').length,
-    Editing: contentItems.filter((item) => item.status === 'Editing').length,
-    Scheduled: contentItems.filter((item) => item.status === 'Scheduled').length,
-  };
+  const statusCounts = useMemo(
+    () =>
+      contentItems.reduce(
+        (counts, item) => {
+          if (counts[item.status] !== undefined) {
+            counts[item.status] += 1;
+          }
+          return counts;
+        },
+        { Drafting: 0, Editing: 0, Scheduled: 0 },
+      ),
+    [],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 280);
