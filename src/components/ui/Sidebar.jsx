@@ -18,18 +18,21 @@ function Sidebar() {
       </div>
 
       <nav className="sidebar__nav" aria-label="Main navigation">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === '/'}
-            className={({ isActive }) =>
-              isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+        <ul className="sidebar__list">
+          {navItems.map((item) => (
+            <li key={item.path} className="sidebar__item">
+              <NavLink
+                to={item.path}
+                end={item.path === '/'}
+                className={({ isActive }) =>
+                  isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
+                }
+              >
+                {item.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </nav>
     </aside>
   );
