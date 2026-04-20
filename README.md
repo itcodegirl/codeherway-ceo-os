@@ -221,7 +221,7 @@ cd codeherway-ceo-os
 npm install
 
 ```bash
-npm run drv
+npm run dev
 
 ----
 
@@ -298,4 +298,3 @@ cd codeherway-ceo-os
 npm install
 npm run dev
 ----
-
