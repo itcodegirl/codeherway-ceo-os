@@ -113,14 +113,14 @@ function Dashboard() {
           actionTo="/opportunities"
           actionLabel="Open opportunities pipeline dashboard"
         >
-          <div className="mini-table" role="table" aria-label="Opportunity pipeline snapshot">
+          <div className="mini-table" role="list" aria-label="Opportunity pipeline snapshot">
             {opportunities.map((item) => (
-              <div key={item.id} className="mini-table__row" role="row" aria-label={`${item.name} at ${item.company}`}>
-                <div role="cell">
+              <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.name} at ${item.company}`}>
+                <div>
                   <p className="mini-table__title">{item.name}</p>
                   <p className="mini-table__subtitle">{item.company}</p>
                 </div>
-                <div className="mini-table__meta" role="cell">
+                <div className="mini-table__meta">
                   <span className={`pill pill--${item.priority.toLowerCase()}`}>
                     {item.priority}
                   </span>
@@ -137,14 +137,14 @@ function Dashboard() {
           actionTo="/content"
           actionLabel="Open content operating system dashboard"
         >
-          <div className="mini-table" role="table" aria-label="Content pipeline snapshot">
+          <div className="mini-table" role="list" aria-label="Content pipeline snapshot">
             {contentItems.map((item) => (
-              <div key={item.id} className="mini-table__row" role="row" aria-label={`${item.title} on ${item.platform}`}>
-                <div role="cell">
+              <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.title} on ${item.platform}`}>
+                <div>
                   <p className="mini-table__title">{item.title}</p>
                   <p className="mini-table__subtitle">{item.platform}</p>
                 </div>
-                <div className="mini-table__meta" role="cell">
+                <div className="mini-table__meta">
                   <span className="mini-table__stage">{item.status}</span>
                 </div>
               </div>
