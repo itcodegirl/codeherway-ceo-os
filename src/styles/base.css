@@ -116,11 +116,21 @@ textarea {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	gap: 0.45rem;
 	line-height: 1;
 	text-decoration: none;
 	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 	cursor: pointer;
 	white-space: nowrap;
+}
+
+.ui-icon {
+	display: inline-block;
+	flex-shrink: 0;
+}
+
+.action-button__icon {
+	opacity: 0.9;
 }
 
 .action-button:hover,
@@ -274,11 +284,22 @@ textarea {
 	gap: var(--space-card-inner-gap);
 }
 
-.section-card__header h2 {
+.section-card__header h2,
+.section-card__title {
 	font-size: var(--fs-section-title);
 	font-weight: var(--fw-section-title);
 	margin: 0;
 	line-height: 1.2;
+}
+
+.section-card__title {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.section-card__title-icon {
+	color: #c8c2ff;
 }
 
 .pill {

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import Icon from './Icon';
 
 const FOCUSABLE_SELECTORS =
   'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
@@ -119,6 +120,7 @@ function Modal({ isOpen, title, onClose, children }) {
             aria-label="Close dialog"
           >
             Close
+            <Icon name="action" size={12} className="action-button__icon" />
           </button>
         </header>
         <div className="modal-panel__body">{children}</div>

@@ -1,3 +1,5 @@
+import Icon from './Icon';
+
 function Button({
   type = 'button',
   variant = 'default',
@@ -31,6 +33,7 @@ function Button({
       {...props}
     >
       {children}
+      <Icon name="action" size={14} className="action-button__icon" />
     </button>
   );
 }

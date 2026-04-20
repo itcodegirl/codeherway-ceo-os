@@ -1,3 +1,5 @@
+import Icon from './Icon';
+
 function Topbar() {
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -25,6 +27,7 @@ function Topbar() {
           disabled
         >
           This Week
+          <Icon name="weekly" size={14} className="action-button__icon" />
         </button>
         <span className="topbar__status">Live Preview</span>
       </div>
