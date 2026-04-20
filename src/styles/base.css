@@ -210,6 +210,10 @@ textarea {
 	font-size: var(--fs-helper);
 }
 
+.helper-text--offset {
+	margin-top: 0.35rem;
+}
+
 .sr-only {
 	position: absolute;
 	width: 1px;
@@ -309,6 +313,24 @@ textarea {
 .skeleton-line--value {
 	height: 1.5rem;
 	max-width: 96px;
+}
+
+.skeleton-line--offset {
+	margin-top: 0.55rem;
+	max-width: 58%;
+}
+
+.skeleton-line--meta-wide {
+	width: 90px;
+}
+
+.skeleton-line--meta-narrow {
+	width: 64px;
+}
+
+.skeleton-line--panel {
+	height: 88px;
+	max-width: 100%;
 }
 
 .error-boundary {

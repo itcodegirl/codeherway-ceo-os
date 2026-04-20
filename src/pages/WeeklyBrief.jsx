@@ -1,4 +1,4 @@
-﻿import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
+import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import '../styles/weekly.css';
 
@@ -38,7 +38,7 @@ function WeeklyBrief() {
                 <span className={`weekly-list__dot ${item.status === 'In Progress' ? 'weekly-list__dot--success' : ''}`} />
                 <div>
                   <p className="weekly-note">{item.title}</p>
-                  <p className="helper-text" style={{ marginTop: '0.35rem' }}>
+                  <p className="helper-text helper-text--offset">
                     Owner: {item.owner} {'\u2022'} Status: {item.status}
                   </p>
                 </div>
@@ -54,7 +54,7 @@ function WeeklyBrief() {
                 <span className="weekly-list__dot weekly-list__dot--success" />
                 <div>
                   <p className="weekly-note">{item.text}</p>
-                  <p className="helper-text" style={{ marginTop: '0.35rem' }}>
+                  <p className="helper-text helper-text--offset">
                     Category: {item.category}
                   </p>
                 </div>
@@ -86,4 +86,5 @@ function WeeklyBrief() {
 }
 
 export default WeeklyBrief;
+
 

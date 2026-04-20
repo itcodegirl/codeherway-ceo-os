@@ -74,13 +74,13 @@ function ContentOS() {
                 <div className="content-card__header">
                   <div>
                     <div className="skeleton-line skeleton-line--value" />
-                    <div className="skeleton-line skeleton-line--label" style={{ marginTop: '0.55rem', width: '58%' }} />
+                    <div className="skeleton-line skeleton-line--offset" />
                   </div>
-                  <div className="skeleton-line" style={{ width: '90px' }} />
+                  <div className="skeleton-line skeleton-line--meta-wide" />
                 </div>
                 <div className="content-card__footer">
-                  <div className="skeleton-line" style={{ width: '64px' }} />
-                  <div className="skeleton-line" style={{ width: '64px' }} />
+                  <div className="skeleton-line skeleton-line--meta-narrow" />
+                  <div className="skeleton-line skeleton-line--meta-narrow" />
                 </div>
               </article>
             ))}

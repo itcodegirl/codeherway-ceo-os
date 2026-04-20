@@ -174,7 +174,7 @@ function ChiefOfStaff() {
             </p>
 
             {isGenerating ? (
-              <div className="skeleton-line" style={{ maxWidth: '100%', height: '88px' }} />
+              <div className="skeleton-line skeleton-line--panel" />
             ) : hasHistory ? (
               responses.map((entry) => (
                 <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
