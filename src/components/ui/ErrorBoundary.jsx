@@ -24,10 +24,20 @@ class ErrorBoundary extends Component {
           <h2>Something went wrong in this view.</h2>
           <p>Try refreshing or go back to the Dashboard.</p>
           <div className="chief-actions">
-            <button type="button" className="action-button" onClick={() => window.location.reload()}>
+            <button
+              type="button"
+              className="action-button"
+              onClick={() => window.location.reload()}
+              aria-label="Reload the current view"
+            >
               Reload App
             </button>
-            <button type="button" className="action-button action-button--ghost" onClick={() => window.history.back()}>
+            <button
+              type="button"
+              className="action-button action-button--ghost"
+              onClick={() => window.history.back()}
+              aria-label="Go back to previous page"
+            >
               Go Back
             </button>
           </div>
