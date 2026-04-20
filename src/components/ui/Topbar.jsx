@@ -1,11 +1,14 @@
 function Topbar() {
-  const today = new Date().toLocaleDateString(undefined, {
+  const now = new Date();
+  const today = now.toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
-  const isoDate = new Date().toISOString().slice(0, 10);
+  const isoDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+    now.getDate(),
+  ).padStart(2, '0')}`;
 
   return (
     <header className="topbar">
