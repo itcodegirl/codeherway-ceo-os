@@ -39,9 +39,9 @@ export const opportunities = [
 ];
 
 export const contentItems = [
-	{
-		id: 1,
-		title: 'Why Women Belong in Tech Leadership',
+  {
+    id: 1,
+    title: 'Why Women Belong in Tech Leadership',
 		platform: 'LinkedIn',
 		status: 'Drafting',
 	},
@@ -57,4 +57,56 @@ export const contentItems = [
 		platform: 'LinkedIn',
 		status: 'Scheduled',
 	},
+];
+
+export const weeklyPriorities = [
+  {
+    id: 1,
+    title: 'Ship a meaningful progress update for XPAIRK partnership',
+    owner: 'Jenna',
+    status: 'In Progress',
+  },
+  {
+    id: 2,
+    title: 'Finalize this week’s founder narrative draft',
+    owner: 'You',
+    status: 'Planned',
+  },
+  {
+    id: 3,
+    title: 'Recruiter follow-up sequence for Studio North',
+    owner: 'Jenna',
+    status: 'Blocked',
+  },
+];
+
+export const weeklyWins = [
+  {
+    id: 1,
+    text: 'Shipped baseline dashboard and executive KPI surface with responsive cards.',
+    category: 'Product',
+  },
+  {
+    id: 2,
+    text: 'Built a clean side nav + top bar pattern with route-level shell consistency.',
+    category: 'Execution',
+  },
+  {
+    id: 3,
+    text: 'Established a modular style architecture for page-specific CSS refinements.',
+    category: 'Engineering',
+  },
+];
+
+export const weeklyBlockers = [
+  {
+    id: 1,
+    text: 'Opportunities and weekly brief workflows still need full CRUD interactions.',
+    severity: 'warning',
+  },
+  {
+    id: 2,
+    text: 'AI workspace is presenting static copy and lacks action wiring.',
+    severity: 'warning',
+  },
 ];
