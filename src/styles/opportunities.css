@@ -8,6 +8,12 @@
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: var(--space-list-gap);
+	align-items: stretch;
+	grid-auto-rows: 1fr;
+}
+
+.opportunities-summary .summary-card {
+	height: 100%;
 }
 
 .crm-table {
@@ -21,7 +27,7 @@
 	display: grid;
 	grid-template-columns: 1.4fr 0.9fr 0.8fr 1.2fr;
 	gap: var(--space-list-gap);
-	align-items: center;
+	align-items: baseline;
 	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
 	background: var(--surface-card);
@@ -31,13 +37,21 @@
 .crm-table__header {
 	color: var(--text-muted);
 	font-size: var(--fs-helper);
-	padding: 0 0.35rem 0.5rem;
+	padding: 0.75rem 0.85rem 0.7rem;
+	line-height: 1.35;
+}
+
+.crm-table__header > * {
+	margin: 0;
+	line-height: 1.2;
+	align-self: baseline;
 }
 
 .crm-table__row {
 	background: var(--surface-card);
 	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
+	line-height: 1.35;
 }
 
 .crm-table__title {
@@ -45,11 +59,15 @@
 	color: var(--text);
 	font-weight: 600;
 	margin-bottom: 0.35rem;
+	margin-top: 0;
+	line-height: 1.25;
 }
 
 .crm-table__subtitle {
 	color: var(--text-muted);
 	font-size: var(--fs-helper);
+	margin: 0;
+	line-height: 1.35;
 }
 
 .crm-stage,
@@ -61,6 +79,7 @@
 .crm-table__cell {
 	display: flex;
 	align-items: center;
+	line-height: 1.35;
 }
 
 @media (max-width: 1100px) {

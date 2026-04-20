@@ -134,16 +134,24 @@ textarea {
 	border-radius: var(--radius-lg);
 	padding: var(--space-card-padding);
 	box-shadow: var(--shadow-soft);
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	justify-content: center;
+	height: 100%;
 }
 
 .summary-card__label {
 	color: var(--text-muted);
 	font-size: var(--fs-helper);
-	margin-bottom: var(--space-stack-gap);
+	margin-bottom: 0;
+	line-height: 1.2;
 }
 
 .summary-card__value {
+	margin: 0;
 	font-size: 1.85rem;
+	line-height: 1.1;
 }
 
 .section-card {
@@ -166,6 +174,8 @@ textarea {
 .section-card__header h2 {
 	font-size: var(--fs-section-title);
 	font-weight: var(--fw-section-title);
+	margin: 0;
+	line-height: 1.2;
 }
 
 .section-card__action {
@@ -180,6 +190,7 @@ textarea {
 	padding: 0.35rem 0.7rem;
 	font-size: 0.8rem;
 	font-weight: 600;
+	line-height: 1;
 	border: 1px solid rgba(255, 255, 255, 0.16);
 	backdrop-filter: blur(6px);
 }

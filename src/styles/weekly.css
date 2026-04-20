@@ -25,7 +25,7 @@
 
 .weekly-list__item {
 	display: flex;
-	align-items: flex-start;
+	align-items: baseline;
 	gap: 0.75rem;
 	color: #dbe2ea;
 }
@@ -35,8 +35,10 @@
 	height: 10px;
 	border-radius: 999px;
 	background: #6d5dfc;
-	margin-top: 0.35rem;
+	margin-top: 0.12rem;
 	flex-shrink: 0;
+	line-height: 1;
+	align-self: baseline;
 }
 
 .weekly-list__dot--success {
