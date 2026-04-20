@@ -45,19 +45,21 @@ function ChiefOfStaff() {
     'Start by pasting notes. Then choose an action to transform them into executive-ready output.',
   );
   const generationTimerRef = useRef(null);
+  const notesText = typeof notes === 'string' ? notes : '';
+  const responseItems = Array.isArray(responses) ? responses : [];
 
-  const hasHistory = Array.isArray(responses) && responses.length > 0;
+  const hasHistory = responseItems.length > 0;
   const [isGenerating, setIsGenerating] = useState(false);
-  const hasNotes = notes.trim().length > 0;
+  const hasNotes = notesText.trim().length > 0;
   const canGenerate = hasNotes && !isGenerating;
 
   useEffect(() => {
-    if (!notes || isGenerating) return;
+    if (!notesText || isGenerating) return;
     const timer = window.setTimeout(() => {
       setFeedback('Draft pipeline ready. Continue refining as needed.');
     }, 2500);
     return () => clearTimeout(timer);
-  }, [notes, isGenerating]);
+  }, [notesText, isGenerating]);
 
   useEffect(() => () => {
     if (generationTimerRef.current !== null) {
@@ -74,7 +76,7 @@ function ChiefOfStaff() {
     }
 
     const responseFactory = actionPrompts[actionKey];
-    const item = responseFactory.make({ notes });
+    const item = responseFactory.make({ notes: notesText });
     const next = {
       id: `${Date.now()}-${actionKey}`,
       title: responseFactory.title,
@@ -89,7 +91,7 @@ function ChiefOfStaff() {
     }
 
     generationTimerRef.current = window.setTimeout(() => {
-      setResponses((current) => [next, ...current]);
+      setResponses((current) => [next, ...(Array.isArray(current) ? current : [])]);
       setFeedback(`Created: ${responseFactory.title}. Review and edit before sending.`);
       setIsGenerating(false);
       generationTimerRef.current = null;
@@ -121,7 +123,7 @@ function ChiefOfStaff() {
                 rows="10"
                 disabled={isGenerating}
                 aria-disabled={isGenerating}
-                value={notes}
+                value={notesText}
                 onChange={(event) => setNotes(event.target.value)}
               />
             </label>
@@ -168,7 +170,7 @@ function ChiefOfStaff() {
             <AIPromptBox
               onSubmit={(value) =>
                 setNotes((existing) => {
-                  const normalizedExisting = existing.trimEnd();
+                  const normalizedExisting = typeof existing === 'string' ? existing.trimEnd() : '';
                   return normalizedExisting ? `${normalizedExisting}\n\n${value}` : value;
                 })
               }
@@ -191,7 +193,7 @@ function ChiefOfStaff() {
             {isGenerating ? (
               <div className="skeleton-line skeleton-line--panel" />
             ) : hasHistory ? (
-              responses.map((entry) => (
+              responseItems.map((entry) => (
                 <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
               ))
             ) : (
