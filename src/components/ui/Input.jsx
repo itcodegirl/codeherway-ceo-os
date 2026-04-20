@@ -28,7 +28,7 @@ function Input({
         aria-describedby={hasError ? errorId : undefined}
         {...props}
       />
-      {hasError ? <span id={errorId} className="input-field__error">{error}</span> : null}
+      {hasError ? <span id={errorId} className="input-field__error" role="alert">{error}</span> : null}
     </div>
   );
 }
