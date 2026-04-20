@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 
 function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...' }) {
   const [value, setValue] = useState('');
+  const trimmedValue = value.trim();
   const promptLabelId = useId();
   const promptFieldId = useId();
   const promptHintId = useId();
@@ -9,11 +10,11 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!value.trim()) {
+    if (!trimmedValue) {
       return;
     }
 
-    onSubmit?.(value.trim());
+    onSubmit?.(trimmedValue);
     setValue('');
   };
 
@@ -32,10 +33,17 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
         onChange={(event) => setValue(event.target.value)}
       />
       <p id={promptHintId} className="helper-text helper-text--offset">
-        Add a short instruction and press Generate to append a direction to your notes.
+        {trimmedValue
+          ? 'Add a short instruction and press Generate to append a direction to your notes.'
+          : 'Enter at least one character to enable Generate.'}
       </p>
       <div className="chief-actions">
-        <button type="submit" className="action-button">
+        <button
+          type="submit"
+          className="action-button"
+          disabled={!trimmedValue}
+          aria-disabled={!trimmedValue}
+        >
           Generate
         </button>
       </div>
