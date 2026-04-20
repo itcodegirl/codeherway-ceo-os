@@ -1,26 +1,26 @@
 .opportunities-page {
 	display: flex;
 	flex-direction: column;
-	gap: 1.5rem;
+	gap: var(--space-page-section-gap);
 }
 
 .opportunities-summary {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 1rem;
+	gap: var(--space-stack-gap);
 }
 
 .crm-table {
 	display: flex;
 	flex-direction: column;
-	gap: 0.9rem;
+	gap: var(--space-stack-gap);
 }
 
 .crm-table__header,
 .crm-table__row {
 	display: grid;
 	grid-template-columns: 1.4fr 0.9fr 0.8fr 1.2fr;
-	gap: 1rem;
+	gap: var(--space-card-inner-gap);
 	align-items: center;
 }
 
@@ -33,14 +33,14 @@
 .crm-table__row {
 	background: rgba(255, 255, 255, 0.03);
 	border-radius: 18px;
-	padding: 1rem;
+	padding: var(--space-card-padding);
 }
 
 .crm-table__title {
 	font-size: var(--fs-helper);
 	color: var(--text);
 	font-weight: 600;
-	margin-bottom: 0.25rem;
+	margin-bottom: 0.35rem;
 }
 
 .crm-table__subtitle {
@@ -70,7 +70,7 @@
 
 	.crm-table__row {
 		grid-template-columns: 1fr;
-		gap: 0.75rem;
+		gap: var(--space-card-inner-gap);
 	}
 
 	.crm-table__cell {

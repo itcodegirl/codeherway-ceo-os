@@ -1,13 +1,13 @@
 .chief-page {
 	display: flex;
 	flex-direction: column;
-	gap: 1.5rem;
+	gap: var(--space-page-section-gap);
 }
 
 .chief-grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 1.5rem;
+	gap: var(--space-page-section-gap);
 }
 
 .chief-textarea {
@@ -17,7 +17,7 @@
 	background: rgba(255, 255, 255, 0.03);
 	color: #f5f7fb;
 	border-radius: 18px;
-	padding: 1rem;
+	padding: var(--space-card-padding);
 	resize: vertical;
 	outline: none;
 }
@@ -29,7 +29,7 @@
 .chief-actions {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.75rem;
+	gap: var(--space-card-inner-gap);
 }
 
 .chief-action-btn {
@@ -44,7 +44,7 @@
 .chief-response {
 	background: rgba(255, 255, 255, 0.03);
 	border-radius: 18px;
-	padding: 1rem;
+	padding: var(--space-card-padding);
 }
 
 .chief-response__label {

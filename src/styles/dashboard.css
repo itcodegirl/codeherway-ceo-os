@@ -1,12 +1,12 @@
 .dashboard-page {
 	display: flex;
 	flex-direction: column;
-	gap: 1.5rem;
+	gap: var(--space-page-section-gap);
 }
 
 .dashboard-grid {
 	display: grid;
-	gap: 1.5rem;
+	gap: var(--space-page-section-gap);
 }
 
 .dashboard-grid--stats {
@@ -21,14 +21,14 @@
 	background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: 20px;
-	padding: 1.25rem;
+	padding: var(--space-card-padding);
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
 }
 
 .stat-card__label {
 	color: var(--text-muted);
 	font-size: var(--fs-helper);
-	margin-bottom: 0.85rem;
+	margin-bottom: var(--space-stack-gap);
 }
 
 .stat-card__value {
@@ -45,7 +45,7 @@
 	list-style: none;
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: var(--space-stack-gap);
 }
 
 .priority-list__item {
@@ -66,13 +66,13 @@
 .snapshot-stack {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: var(--space-stack-gap);
 }
 
 .snapshot-row {
 	display: flex;
 	justify-content: space-between;
-	gap: 1rem;
+	gap: var(--space-card-inner-gap);
 	padding-bottom: 0.85rem;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -89,15 +89,15 @@
 .mini-table {
 	display: flex;
 	flex-direction: column;
-	gap: 0.85rem;
+	gap: var(--space-stack-gap);
 }
 
 .mini-table__row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	gap: 1rem;
-	padding: 0.95rem 1rem;
+	gap: var(--space-card-inner-gap);
+	padding: var(--space-card-padding);
 	border-radius: 16px;
 	background: rgba(255, 255, 255, 0.03);
 }
