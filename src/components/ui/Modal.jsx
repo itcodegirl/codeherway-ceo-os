@@ -29,6 +29,8 @@ function Modal({ isOpen, title, onClose, children }) {
 
     const previousFocus = document.activeElement;
     focusReturnRef.current = previousFocus;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -74,6 +76,7 @@ function Modal({ isOpen, title, onClose, children }) {
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow || '';
       if (focusReturnRef.current && focusReturnRef.current.focus) {
         focusReturnRef.current.focus();
       }
