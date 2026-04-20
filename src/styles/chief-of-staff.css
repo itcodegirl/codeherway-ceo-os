@@ -40,10 +40,6 @@
 	gap: var(--space-list-gap);
 }
 
-.chief-action-btn {
-	/* semantic hook for Chief-staff-specific actions */
-}
-
 .chief-response {
 	background: var(--surface-card);
 	border: 1px solid var(--border);

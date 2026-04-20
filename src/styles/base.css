@@ -178,10 +178,6 @@ textarea {
 	line-height: 1.2;
 }
 
-.section-card__action {
-	/* preserved for semantic context only */
-}
-
 .pill {
 	display: inline-flex;
 	align-items: center;

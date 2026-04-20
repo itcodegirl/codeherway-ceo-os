@@ -12,7 +12,7 @@ function SectionCard({
     ? actionTo
       ? (
           <Link
-            className="section-card__action action-button"
+            className="action-button"
             to={actionTo}
             aria-label={actionLabel || actionText}
           >
@@ -22,7 +22,7 @@ function SectionCard({
       : (
           <button
             type="button"
-            className="section-card__action action-button"
+            className="action-button"
             onClick={onAction || undefined}
             aria-label={actionLabel || actionText}
           >
