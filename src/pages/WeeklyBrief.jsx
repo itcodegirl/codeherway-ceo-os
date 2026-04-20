@@ -31,7 +31,12 @@ function WeeklyBrief() {
       </div>
 
       <div className="weekly-grid">
-        <SectionCard title="Priority Track" actionText="Edit Focus">
+        <SectionCard
+          title="Priority Track"
+          actionText="Edit Focus"
+          actionTo="/weekly-brief"
+          actionLabel="Open the weekly focus editor"
+        >
           <ul className="weekly-list">
             {weeklyPriorities.map((item) => (
               <li key={item.id} className="weekly-list__item">
@@ -47,7 +52,12 @@ function WeeklyBrief() {
           </ul>
         </SectionCard>
 
-        <SectionCard title="Wins / Momentum" actionText="Add Win">
+        <SectionCard
+          title="Wins / Momentum"
+          actionText="Add Win"
+          actionTo="/weekly-brief"
+          actionLabel="Add a new weekly win entry"
+        >
           <ul className="weekly-list">
             {weeklyWins.map((item) => (
               <li key={item.id} className="weekly-list__item">
@@ -63,7 +73,12 @@ function WeeklyBrief() {
           </ul>
         </SectionCard>
 
-        <SectionCard title="Top Blockers" actionText="Resolve Blocker">
+        <SectionCard
+          title="Top Blockers"
+          actionText="Resolve Blocker"
+          actionTo="/weekly-brief"
+          actionLabel="Open blocker details to resolve an item"
+        >
           <ul className="weekly-list">
             {weeklyBlockers.map((item) => (
               <li key={item.id} className="weekly-list__item">

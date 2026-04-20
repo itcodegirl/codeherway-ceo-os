@@ -185,7 +185,7 @@ function ChiefOfStaff() {
                 <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
               ))
             ) : (
-              <SectionCard title="Starter Copy" actionText="Refresh">
+              <SectionCard title="Starter Copy">
                 <p className="chief-response__text">
                   This week's momentum is strong. Core product structure is in place, and the next move is to
                   convert these notes into editable plans and content that can be shipped this week.
