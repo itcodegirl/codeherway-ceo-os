@@ -8,10 +8,17 @@
 	background: #151924;
 	border-right: 1px solid rgba(255, 255, 255, 0.08);
 	padding: 2rem 1.25rem;
+	display: flex;
+	flex-direction: column;
 }
 
 .sidebar__brand {
-	margin-bottom: 2rem;
+	margin-bottom: 1.5rem;
+	padding: 0.25rem 1rem 0.25rem 0.95rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
 }
 
 .sidebar__eyebrow {
@@ -31,29 +38,48 @@
 .sidebar__nav {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
+	gap: 0.6rem;
 }
 
 .sidebar__link {
 	color: #b8c0cc;
 	padding: 0.85rem 1rem;
 	border-radius: 12px;
+	position: relative;
 	transition: 0.2s ease;
 	text-decoration: none;
 	font-size: var(--fs-sidebar-link);
-	font-weight: var(--fw-sidebar-link);
-	color: #d5dbe6;
+	font-weight: 500;
+	color: #93a1b4;
+	letter-spacing: 0.01em;
 }
 
 .sidebar__link:hover {
-	background: rgba(255, 255, 255, 0.06);
-	color: #ffffff;
+	background: rgba(255, 255, 255, 0.05);
+	color: #dbe2ea;
 }
 
 .sidebar__link--active {
 	background: #6d5dfc;
-	color: #ffffff;
-	font-weight: var(--fw-sidebar-link);
+	color: #fff;
+	font-weight: 650;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.sidebar__link--active::before {
+	content: '';
+	position: absolute;
+	inset: 0.45rem 0 0.45rem auto;
+	left: 0;
+	width: 3px;
+	height: calc(100% - 0.9rem);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar__link:focus-visible {
+	outline: 2px solid rgba(142, 173, 255, 0.75);
+	outline-offset: 2px;
 }
 
 .app-main {
