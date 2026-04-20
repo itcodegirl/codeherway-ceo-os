@@ -43,23 +43,25 @@ function Settings() {
       </div>
 
       <form className="settings-grid" onSubmit={handleSubmit}>
-        <SectionCard title="Workspace" actionText="Save Profile" onAction={markSave}>
-          <label className="settings-field">
-            <span className="settings-field__label" id={`${teamNameFieldId}-label`}>
-              Workspace name
-            </span>
+        <SectionCard
+          title="Workspace"
+          actionText="Save Profile"
+          onAction={markSave}
+          actionLabel="Save workspace profile details"
+        >
+          <label className="settings-field" htmlFor={teamNameFieldId}>
+            <span className="settings-field__label">Workspace name</span>
             <input
               id={teamNameFieldId}
               type="text"
               value={settings.teamName}
               onChange={(e) => handleChange('teamName', e.target.value)}
               className="settings-input"
-              aria-labelledby={`${teamNameFieldId}-label`}
             />
           </label>
 
-          <label className="settings-field">
-            <span className="settings-field__label" id={`${timezoneFieldId}-label`}>
+          <label className="settings-field" htmlFor={timezoneFieldId}>
+            <span className="settings-field__label">
               Timezone
             </span>
             <input
@@ -68,12 +70,16 @@ function Settings() {
               value={settings.timezone}
               onChange={(e) => handleChange('timezone', e.target.value)}
               className="settings-input"
-              aria-labelledby={`${timezoneFieldId}-label`}
             />
           </label>
         </SectionCard>
 
-        <SectionCard title="Experience" actionText="Apply" onAction={markSave}>
+        <SectionCard
+          title="Experience"
+          actionText="Apply"
+          onAction={markSave}
+          actionLabel="Save workspace and accessibility settings"
+        >
           <label className="settings-toggle" htmlFor={autoSaveToggleId}>
             <input
               id={autoSaveToggleId}
