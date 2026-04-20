@@ -10,6 +10,8 @@ function Textarea({
 }) {
   const generatedId = useId();
   const textareaId = id || `textarea-${generatedId}`;
+  const hasError = Boolean(error);
+  const errorId = `${textareaId}-error`;
 
   return (
     <div className={`input-field ${className}`.trim()}>
@@ -22,9 +24,11 @@ function Textarea({
         id={textareaId}
         rows={rows}
         className={`textarea-field__control ${error ? 'textarea-field__control--error' : ''}`}
+        aria-invalid={hasError || undefined}
+        aria-describedby={hasError ? errorId : undefined}
         {...props}
       />
-      {error ? <span className="input-field__error">{error}</span> : null}
+      {hasError ? <span id={errorId} className="input-field__error">{error}</span> : null}
     </div>
   );
 }
