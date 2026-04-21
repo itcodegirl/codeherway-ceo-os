@@ -1,47 +1,72 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePersistentState } from '../../hooks/usePersistentState';
 
 const DEFAULT_SETTINGS = {
   teamName: 'CodeHerWay',
+  timezone: 'America/Chicago',
 };
+
+function resolveTimeZone(input) {
+  if (typeof input !== 'string' || !input.trim()) {
+    return '';
+  }
+
+  const candidate = input.trim();
+
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: candidate });
+    return candidate;
+  } catch {
+    return '';
+  }
+}
+
+function formatIsoDate(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timeZone || undefined,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === 'year')?.value || '0000';
+  const month = parts.find((part) => part.type === 'month')?.value || '01';
+  const day = parts.find((part) => part.type === 'day')?.value || '01';
+
+  return `${year}-${month}-${day}`;
+}
 
 function Topbar() {
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    let timerId;
-
-    const scheduleNextDayRollover = () => {
-      const currentTime = new Date();
-      const nextMidnight = new Date(currentTime);
-      nextMidnight.setHours(24, 0, 0, 0);
-      const delay = Math.max(1000, nextMidnight.getTime() - currentTime.getTime());
-
-      timerId = window.setTimeout(() => {
-        setNow(new Date());
-        scheduleNextDayRollover();
-      }, delay);
-    };
-
-    scheduleNextDayRollover();
+    const intervalId = window.setInterval(() => {
+      setNow(new Date());
+    }, 60 * 1000);
 
     return () => {
-      if (timerId) {
-        clearTimeout(timerId);
-      }
+      clearInterval(intervalId);
     };
   }, []);
 
-  const today = now.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  const isoDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-    now.getDate(),
-  ).padStart(2, '0')}`;
+  const resolvedTimeZone = useMemo(() => resolveTimeZone(settings?.timezone), [settings?.timezone]);
+
+  const todayFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: resolvedTimeZone || undefined,
+      }),
+    [resolvedTimeZone],
+  );
+
+  const today = todayFormatter.format(now);
+  const isoDate = formatIsoDate(now, resolvedTimeZone);
+  const timezoneLabel = resolvedTimeZone || 'Local Time';
   const teamName = typeof settings?.teamName === 'string' && settings.teamName.trim()
     ? settings.teamName.trim()
     : DEFAULT_SETTINGS.teamName;
@@ -60,7 +85,9 @@ function Topbar() {
         <span className="topbar__status" aria-label="Current period set to this week">
           This Week
         </span>
-        <span className="topbar__status">Live Preview</span>
+        <span className="topbar__status" title={`Date shown in ${timezoneLabel}`}>
+          {timezoneLabel}
+        </span>
       </div>
     </header>
   );

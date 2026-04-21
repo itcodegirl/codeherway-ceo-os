@@ -7,37 +7,10 @@ import Button from '../components/ui/Button';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { aiConfig, generateChiefOfStaffResponse, getChiefActionTitle } from '../lib/openai';
 
 const INITIAL_NOTES = '';
 const INITIAL_RESPONSES = [];
-
-const actionPrompts = {
-  summarize: {
-    title: 'Executive Summary',
-    make: ({ notes }) =>
-      `Executive Summary: ${notes
-        .split('.')
-        .filter(Boolean)
-        .slice(0, 2)
-        .join('. ')
-        .concat(notes.includes('.') ? '' : '.')}`,
-  },
-  draft: {
-    title: 'Draft Starter',
-    make: ({ notes }) =>
-      `Draft idea: ${notes.slice(0, 140) || 'Share context and goals, then we can draft a sharper version.'}`,
-  },
-  actions: {
-    title: 'Action Item List',
-    make: () =>
-      `Action items derived from your notes:\n- Confirm next owner for each critical point\n- Assign a target date for each blocked item\n- Define the top 3 priorities for the next 72 hours`,
-  },
-  priorities: {
-    title: 'Priority Recommendation',
-    make: () =>
-      `Priority recommendation: based on your current context, lead with high-urgency follow-ups, then lock a content artifact for this week, then clear one strategic blocker.`,
-  },
-};
 
 function ChiefOfStaff() {
   useDocumentTitle(
@@ -50,9 +23,11 @@ function ChiefOfStaff() {
   const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);
   const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', INITIAL_RESPONSES);
   const [feedback, setFeedback] = useState(
-    'Start by pasting notes. Then choose an action to transform them into executive-ready output.',
+    aiConfig.hasApiKey
+      ? 'Start by pasting notes. Then choose an action to transform them into executive-ready output.'
+      : 'OpenAI key not detected. Actions will run in local fallback mode.',
   );
-  const generationTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
   const notesText = typeof notes === 'string' ? notes : '';
   const responseItems = Array.isArray(responses) ? responses : [];
 
@@ -69,13 +44,14 @@ function ChiefOfStaff() {
     return () => clearTimeout(timer);
   }, [notesText, isGenerating]);
 
-  useEffect(() => () => {
-    if (generationTimerRef.current !== null) {
-      clearTimeout(generationTimerRef.current);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    [],
+  );
 
-  const handleAction = (actionKey) => {
+  const handleAction = async (actionKey) => {
     if (!canGenerate) {
       if (!hasNotes) {
         setFeedback('Paste notes first so we can produce a relevant draft or recommendation.');
@@ -83,27 +59,47 @@ function ChiefOfStaff() {
       return;
     }
 
-    const responseFactory = actionPrompts[actionKey];
-    const item = responseFactory.make({ notes: notesText });
-    const next = {
-      id: `${Date.now()}-${actionKey}`,
-      title: responseFactory.title,
-      content: item,
-    };
-
     setIsGenerating(true);
     setFeedback('Generating a new draft for your current notes.');
 
-    if (generationTimerRef.current !== null) {
-      clearTimeout(generationTimerRef.current);
-    }
+    try {
+      const nextResponse = await generateChiefOfStaffResponse({
+        actionKey,
+        notes: notesText,
+      });
 
-    generationTimerRef.current = window.setTimeout(() => {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      if (!nextResponse.content) {
+        setFeedback('No output generated. Add more context and try again.');
+        return;
+      }
+
+      const next = {
+        id: `${Date.now()}-${actionKey}`,
+        title: nextResponse.title || getChiefActionTitle(actionKey),
+        content: nextResponse.content,
+      };
+
       setResponses((current) => [next, ...(Array.isArray(current) ? current : [])]);
-      setFeedback(`Created: ${responseFactory.title}. Review and edit before sending.`);
-      setIsGenerating(false);
-      generationTimerRef.current = null;
-    }, 420);
+
+      if (nextResponse.source === 'openai') {
+        setFeedback(`Created: ${next.title}. Review and edit before sending.`);
+      } else {
+        setFeedback(`Created: ${next.title}. Using local fallback output.`);
+      }
+    } catch (error) {
+      setFeedback('Unable to generate output right now. Try again in a moment.');
+      if (import.meta.env.DEV) {
+        console.error('Chief of Staff generation failed', error);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsGenerating(false);
+      }
+    }
   };
 
   return (

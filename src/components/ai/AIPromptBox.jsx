@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import Icon from '../ui/Icon';
+import Button from '../ui/Button';
 
 function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...', isDisabled = false }) {
   const [value, setValue] = useState('');
@@ -44,15 +44,14 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
           : 'Enter at least one character to enable Generate.'}
       </p>
       <div className="chief-actions">
-        <button
+        <Button
           type="submit"
-          className="action-button"
           disabled={!canSubmit}
-          aria-disabled={!canSubmit}
+          ariaLabel="Generate follow-up instruction"
+          icon={{ name: 'action', size: 14 }}
         >
           Generate
-          <Icon name="action" size={14} className="action-button__icon" />
-        </button>
+        </Button>
       </div>
     </form>
   );

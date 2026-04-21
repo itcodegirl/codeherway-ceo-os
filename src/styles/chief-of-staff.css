@@ -59,6 +59,7 @@
 .chief-response__text {
 	color: #dbe2ea;
 	line-height: 1.7;
+	white-space: pre-wrap;
 }
 
 @media (max-width: 1100px) {
