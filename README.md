@@ -135,6 +135,26 @@ npm run typecheck
 - [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
 - [docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md) for final release-candidate verification.
 - [CHANGELOG.md](./CHANGELOG.md) for timestamped hardening and release-readiness updates.
+- [docs/assets/README.md](./docs/assets/README.md) for screenshot and demo asset structure.
+
+## Product visuals and proof
+
+The repository now includes stable paths for visual proof artifacts so portfolio updates can be made quickly without changing docs structure.
+
+### Screenshot targets
+
+| Product area | Asset path | Proof focus |
+| --- | --- | --- |
+| Dashboard | `docs/assets/screenshots/dashboard-overview.png` | Executive KPIs, snapshot card, momentum context |
+| Opportunities | `docs/assets/screenshots/opportunities-pipeline.png` | Pipeline clarity, status flow, action readiness |
+| Weekly Brief | `docs/assets/screenshots/weekly-brief-planning.png` | Priorities, blockers, and weekly operating rhythm |
+| Chief of Staff | `docs/assets/screenshots/chief-of-staff-structured-output.png` | AI output quality, structured acceptance workflow |
+| Settings | `docs/assets/screenshots/settings-workspace-profile.png` | Workspace defaults, persistence source alignment |
+
+### Demo target
+
+- Walkthrough capture: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`
+- Suggested scope: dashboard snapshot -> weekly planning -> chief-of-staff generation -> structured acceptance.
 
 ## Portfolio and production readiness
 
