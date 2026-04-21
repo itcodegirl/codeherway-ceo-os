@@ -12,19 +12,31 @@ vi.mock("../lib/contentRepository", () => ({
   listContentItems: vi.fn()
 }));
 
+vi.mock("../lib/weeklyRepository", () => ({
+  createWeeklyItem: vi.fn(),
+  getCurrentWeekStart: vi.fn(() => "2026-04-20"),
+  getWeeklyBriefByWeek: vi.fn(() => Promise.resolve({ priorities: [] }))
+}));
+
 import {
   createOpportunity,
   listOpportunities
 } from "../lib/opportunitiesRepository";
 import { createContentItem, listContentItems } from "../lib/contentRepository";
+import {
+  createWeeklyItem,
+  getWeeklyBriefByWeek
+} from "../lib/weeklyRepository";
 
 describe("useChiefDemoState acceptance wiring", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     listOpportunities.mockResolvedValue([]);
     listContentItems.mockResolvedValue([]);
+    getWeeklyBriefByWeek.mockResolvedValue({ priorities: [] });
     createOpportunity.mockResolvedValue({ id: "opp-1" });
     createContentItem.mockResolvedValue({ id: "content-1" });
+    createWeeklyItem.mockResolvedValue({ id: "weekly-1" });
   });
 
   it("saves accepted opportunity to repository", async () => {
@@ -76,6 +88,59 @@ describe("useChiefDemoState acceptance wiring", () => {
     expect(result.current.feedback).toBe("Saved content item to your system.");
   });
 
+  it("saves accepted priority to weekly repository", async () => {
+    const { result } = renderHook(() => useChiefDemoState());
+
+    const item = {
+      title: "Finalize hiring criteria",
+      owner: "Jenna",
+      status: "Planned"
+    };
+
+    await act(async () => {
+      await result.current.acceptPriority(item);
+    });
+
+    expect(createWeeklyItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weekStart: "2026-04-20",
+        itemType: "priority",
+        item: expect.objectContaining({
+          title: "Finalize hiring criteria",
+          owner: "Jenna",
+          status: "Planned"
+        })
+      })
+    );
+    expect(result.current.isPriorityAccepted(item)).toBe(true);
+    expect(result.current.feedback).toBe("Saved item to Weekly.");
+  });
+
+  it("saves accepted task to weekly repository", async () => {
+    const { result } = renderHook(() => useChiefDemoState());
+
+    const item = {
+      title: "Review partner follow-ups",
+      owner: "Jenna",
+      status: "Planned"
+    };
+
+    await act(async () => {
+      await result.current.acceptTask(item);
+    });
+
+    expect(createWeeklyItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weekStart: "2026-04-20",
+        itemType: "priority",
+        item: expect.objectContaining({
+          title: "Review partner follow-ups"
+        })
+      })
+    );
+    expect(result.current.isTaskAccepted(item)).toBe(true);
+  });
+
   it("skips malformed opportunity items safely", async () => {
     const { result } = renderHook(() => useChiefDemoState());
 
@@ -86,6 +151,36 @@ describe("useChiefDemoState acceptance wiring", () => {
     expect(createOpportunity).not.toHaveBeenCalled();
     expect(result.current.feedback).toBe(
       "Skipped malformed opportunity. Missing required details."
+    );
+  });
+
+  it("skips malformed weekly items safely", async () => {
+    const { result } = renderHook(() => useChiefDemoState());
+
+    await act(async () => {
+      await result.current.acceptTask({ owner: "Jenna" });
+    });
+
+    expect(createWeeklyItem).not.toHaveBeenCalled();
+    expect(result.current.feedback).toBe(
+      "Skipped malformed weekly item. Missing required details."
+    );
+  });
+
+  it("skips existing weekly priorities instead of saving duplicates", async () => {
+    getWeeklyBriefByWeek.mockResolvedValue({
+      priorities: [{ title: "Finalize hiring criteria" }]
+    });
+
+    const { result } = renderHook(() => useChiefDemoState());
+
+    await act(async () => {
+      await result.current.acceptPriority({ title: "Finalize hiring criteria" });
+    });
+
+    expect(createWeeklyItem).not.toHaveBeenCalled();
+    expect(result.current.feedback).toBe(
+      "Skipped existing weekly item. Already in this week."
     );
   });
 

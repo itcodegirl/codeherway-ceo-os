@@ -6,6 +6,12 @@ import {
   listOpportunities
 } from "../lib/opportunitiesRepository";
 import { createContentItem, listContentItems } from "../lib/contentRepository";
+import {
+  createWeeklyItem,
+  getCurrentWeekStart,
+  getWeeklyBriefByWeek
+} from "../lib/weeklyRepository";
+import { buildCreateId } from "../lib/utils";
 
 function normalizeComparableValue(value) {
   return String(value || "").trim().toLowerCase();
@@ -36,6 +42,13 @@ function buildContentSignature(value) {
   return normalizedTitle ? `${normalizedTitle}|${normalizedPlatform}` : "";
 }
 
+function buildPrioritySignature(value) {
+  const normalizedTitle = normalizeComparableValue(
+    value?.title || value?.name || value?.text || value?.summary || value?.task
+  );
+  return normalizedTitle;
+}
+
 function createStructuredItemKey(section, item) {
   const sectionKey = normalizeComparableValue(section);
   const itemValue = item && typeof item === "object" ? item : {};
@@ -48,6 +61,12 @@ function createStructuredItemKey(section, item) {
   if (sectionKey === "contentitems") {
     const signature = buildContentSignature(itemValue);
     return signature ? `${sectionKey}:${signature}` : "";
+  }
+
+  if (sectionKey === "priorities" || sectionKey === "tasks") {
+    const normalizedTitle = normalizeComparableValue(itemValue.title);
+    const normalizedOwner = normalizeComparableValue(itemValue.owner);
+    return normalizedTitle ? `${sectionKey}:${normalizedTitle}|${normalizedOwner}` : "";
   }
 
   return "";
@@ -93,6 +112,25 @@ function normalizeContentPayload(item) {
   };
 }
 
+function normalizeWeeklyPayload(item) {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const title = normalizeText(
+    item.title || item.name || item.text || item.summary || item.task
+  );
+  if (!title) {
+    return null;
+  }
+
+  return {
+    title,
+    owner: normalizeText(item.owner, "Team Member"),
+    status: normalizeText(item.status, "Planned")
+  };
+}
+
 const DEFAULT_FEEDBACK =
   "Paste notes and build an action plan, then save selected items into your system.";
 
@@ -106,6 +144,7 @@ export function useChiefDemoState() {
   const acceptingItemRef = useRef(new Set());
   const opportunitySignaturesRef = useRef(null);
   const contentSignaturesRef = useRef(null);
+  const weeklyPrioritySignaturesByWeekRef = useRef(new Map());
 
   const normalizedResult = useMemo(() => {
     return result ? normalizeChiefOutput(result) : null;
@@ -136,6 +175,22 @@ export function useChiefDemoState() {
       contentItems.map((entry) => buildContentSignature(entry)).filter(Boolean)
     );
     contentSignaturesRef.current = signatures;
+    return signatures;
+  }, []);
+
+  const getWeeklyPrioritySignatures = useCallback(async (weekStart) => {
+    if (weeklyPrioritySignaturesByWeekRef.current.has(weekStart)) {
+      return weeklyPrioritySignaturesByWeekRef.current.get(weekStart);
+    }
+
+    const weeklyBrief = await getWeeklyBriefByWeek(weekStart);
+    const signatures = new Set(
+      (Array.isArray(weeklyBrief.priorities) ? weeklyBrief.priorities : [])
+        .map((entry) => buildPrioritySignature(entry))
+        .filter(Boolean)
+    );
+
+    weeklyPrioritySignaturesByWeekRef.current.set(weekStart, signatures);
     return signatures;
   }, []);
 
@@ -258,15 +313,63 @@ export function useChiefDemoState() {
     [getContentSignatures, markItemAccepted, withAcceptingGuard]
   );
 
-  const acceptPriority = useCallback(async () => {
-    setFeedback("Weekly acceptance wiring is coming in the next pass.");
-    return false;
-  }, []);
+  const acceptWeeklyPriorityItem = useCallback(
+    async (item, section) => {
+      const normalizedPayload = normalizeWeeklyPayload(item);
+      const itemKey = createStructuredItemKey(section, normalizedPayload);
 
-  const acceptTask = useCallback(async () => {
-    setFeedback("Weekly acceptance wiring is coming in the next pass.");
-    return false;
-  }, []);
+      if (!normalizedPayload || !itemKey) {
+        setFeedback("Skipped malformed weekly item. Missing required details.");
+        return false;
+      }
+
+      return withAcceptingGuard(itemKey, async () => {
+        const weekStart = getCurrentWeekStart();
+        const signature = buildPrioritySignature(normalizedPayload);
+        const existingSignatures = await getWeeklyPrioritySignatures(weekStart);
+
+        if (signature && existingSignatures.has(signature)) {
+          markItemAccepted(itemKey);
+          setFeedback("Skipped existing weekly item. Already in this week.");
+          return false;
+        }
+
+        await createWeeklyItem({
+          weekStart,
+          itemType: "priority",
+          item: {
+            id: buildCreateId(),
+            title: normalizedPayload.title,
+            owner: normalizedPayload.owner,
+            status: normalizedPayload.status
+          }
+        });
+
+        if (signature) {
+          existingSignatures.add(signature);
+        }
+
+        markItemAccepted(itemKey);
+        setFeedback("Saved item to Weekly.");
+        return true;
+      });
+    },
+    [getWeeklyPrioritySignatures, markItemAccepted, withAcceptingGuard]
+  );
+
+  const acceptPriority = useCallback(
+    async (item) => {
+      return acceptWeeklyPriorityItem(item, "priorities");
+    },
+    [acceptWeeklyPriorityItem]
+  );
+
+  const acceptTask = useCallback(
+    async (item) => {
+      return acceptWeeklyPriorityItem(item, "tasks");
+    },
+    [acceptWeeklyPriorityItem]
+  );
 
   const acceptAll = useCallback(async () => {
     setFeedback("Add-all wiring is coming in the next pass.");
@@ -317,6 +420,44 @@ export function useChiefDemoState() {
     [acceptingItemMap]
   );
 
+  const isPriorityAccepted = useCallback(
+    (item) => {
+      const itemKey = createStructuredItemKey(
+        "priorities",
+        normalizeWeeklyPayload(item)
+      );
+      return itemKey ? Boolean(acceptedItemMap[itemKey]) : false;
+    },
+    [acceptedItemMap]
+  );
+
+  const isPriorityAccepting = useCallback(
+    (item) => {
+      const itemKey = createStructuredItemKey(
+        "priorities",
+        normalizeWeeklyPayload(item)
+      );
+      return itemKey ? Boolean(acceptingItemMap[itemKey]) : false;
+    },
+    [acceptingItemMap]
+  );
+
+  const isTaskAccepted = useCallback(
+    (item) => {
+      const itemKey = createStructuredItemKey("tasks", normalizeWeeklyPayload(item));
+      return itemKey ? Boolean(acceptedItemMap[itemKey]) : false;
+    },
+    [acceptedItemMap]
+  );
+
+  const isTaskAccepting = useCallback(
+    (item) => {
+      const itemKey = createStructuredItemKey("tasks", normalizeWeeklyPayload(item));
+      return itemKey ? Boolean(acceptingItemMap[itemKey]) : false;
+    },
+    [acceptingItemMap]
+  );
+
   async function handleBuildActionPlan() {
     if (!notes.trim()) return;
 
@@ -332,6 +473,7 @@ export function useChiefDemoState() {
     acceptingItemRef.current.clear();
     opportunitySignaturesRef.current = null;
     contentSignaturesRef.current = null;
+    weeklyPrioritySignaturesByWeekRef.current = new Map();
     setFeedback("Action plan ready. Add selected items to your system.");
   }
 
@@ -344,6 +486,7 @@ export function useChiefDemoState() {
     acceptingItemRef.current.clear();
     opportunitySignaturesRef.current = null;
     contentSignaturesRef.current = null;
+    weeklyPrioritySignaturesByWeekRef.current = new Map();
     setFeedback(DEFAULT_FEEDBACK);
   }
 
@@ -360,9 +503,13 @@ export function useChiefDemoState() {
     acceptContent,
     acceptTask,
     acceptAll,
+    isPriorityAccepted,
+    isPriorityAccepting,
     isOpportunityAccepted,
     isOpportunityAccepting,
     isContentAccepted,
-    isContentAccepting
+    isContentAccepting,
+    isTaskAccepted,
+    isTaskAccepting
   };
 }

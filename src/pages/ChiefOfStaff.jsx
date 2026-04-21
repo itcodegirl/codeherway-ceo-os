@@ -16,10 +16,14 @@ export default function ChiefOfStaff() {
     acceptContent,
     acceptTask,
     acceptAll,
+    isPriorityAccepted,
+    isPriorityAccepting,
     isOpportunityAccepted,
     isOpportunityAccepting,
     isContentAccepted,
-    isContentAccepting
+    isContentAccepting,
+    isTaskAccepted,
+    isTaskAccepting
   } = useChiefDemoState();
 
   return (
@@ -75,10 +79,14 @@ export default function ChiefOfStaff() {
           onAcceptContent={acceptContent}
           onAcceptTask={acceptTask}
           onAcceptAll={acceptAll}
+          isPriorityAccepted={isPriorityAccepted}
+          isPriorityAccepting={isPriorityAccepting}
           isOpportunityAccepted={isOpportunityAccepted}
           isOpportunityAccepting={isOpportunityAccepting}
           isContentAccepted={isContentAccepted}
           isContentAccepting={isContentAccepting}
+          isTaskAccepted={isTaskAccepted}
+          isTaskAccepting={isTaskAccepting}
         />
       </div>
     </section>
