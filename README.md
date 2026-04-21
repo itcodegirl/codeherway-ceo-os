@@ -1,110 +1,128 @@
 # CodeHerWay CEO OS
 
-CodeHerWay CEO OS is a product-minded React dashboard for founder and executive workflows.  
-It focuses on planning, pipeline visibility, and operational clarity across opportunities, content, and weekly execution.
+CodeHerWay CEO OS is a React + Vite executive operations workspace for managing:
 
-## Current State
+- opportunities pipeline
+- content pipeline
+- weekly planning and review
+- AI-assisted chief-of-staff outputs
+- user settings and workspace preferences
 
-This project is a polished frontend prototype with partial persistence:
+The project is built with a local-first architecture that upgrades to Supabase-backed persistence when configured.
 
-- Core pages, routing, and reusable UI system are implemented.
-- Settings and Chief of Staff notes use local persistence.
-- Supabase and OpenAI config scaffolding exists, but full backend/AI workflows are not yet wired end-to-end.
+## Product Snapshot
 
-## Implemented Features
+### What is implemented
 
-- Executive dashboard with:
-  - KPI cards
-  - top priorities
-  - opportunity/content snapshots
-  - momentum and activity widgets
-- Opportunities pipeline view with table + modal drill-down
-- Content OS workflow view with status tracking + modal drill-down
-- Weekly Brief view for priorities, wins, blockers, and review notes
-- Chief of Staff workspace for note-to-output drafting flows
-- Reusable UI components (`Button`, `Badge`, `SectionCard`, `Modal`, `PageHeader`, etc.)
-- Route-based metadata updates (`document.title`, description, OG/Twitter tags)
-- Responsive layout with accessible primitives (skip link, focus-trapped modal, semantic headings)
-- Automated UI regression coverage for key Chief of Staff generation paths (empty-input guard + successful response render)
-- Accessibility regression coverage for modal focus trapping and compact-sidebar Escape navigation behavior
-- Route-level accessibility smoke tests for single-page `h1` usage and app `main` landmark consistency
-- Dashboard regression coverage for derived KPI cards and focus score calculations from persisted workflow data
-- Dashboard hook coverage for no-op silent refreshes that avoid unnecessary rerenders
-- Topbar timing coverage for minute-boundary date updates near midnight
-- Dashboard hook coverage for stable event subscriptions while using the latest error callback on rerender
-- App layout regression coverage for skip-link targeting and main landmark focus restoration on navigation
-- CRM table interaction optimization using delegated `tbody` handlers to reduce per-row function churn
-- Large-dataset CRM table regression coverage for keyboard activation on high row counts
-- Semantic CRM row actions using explicit per-row `Open` buttons with delegated pointer row activation
-- Reduced non-essential live-region announcements for static source notes in CRUD and Weekly Brief pages
-- Supabase CRUD operations scoped to the authenticated user for opportunities and content
-- Supabase migrations for core schema, ownership defaults, and row-level security policies
+- Route-based app shell with lazy-loaded pages and metadata updates
+- Repository layer for core domains:
+  - opportunities
+  - content items
+  - weekly brief
+  - chief of staff sessions/outputs
+  - settings/profile
+- Hook layer for workflow orchestration:
+  - weekly brief state/actions
+  - chief of staff generation + structured acceptance flows
+  - dashboard insights and derived metrics
+  - settings load/save behavior
+- Supabase support with local fallback behavior where appropriate
+- Backend proxy path for AI requests (no API key in client bundle)
+- Accessibility and interaction polish:
+  - skip link
+  - focus-aware app shell/main navigation behavior
+  - keyboard-friendly modal and navigation interactions
+  - route-level heading/landmark consistency checks
 
-## Tech Stack
+### Current quality posture
 
-- React 19
-- React Router 7
-- Vite 8
-- ESLint 9
-- CSS (modularized by layout + feature)
+- Linting, build, typecheck, and test scripts are configured
+- Core route and workflow behavior has automated tests
+- The app is portfolio-ready and production-oriented in architecture
+- Remaining work is mostly operational hardening (auth depth, monitoring, broader integration tests)
 
-## Project Structure
+## Architecture
 
 ```text
 src/
-  components/
-    ai/
-    content/
-    dashboard/
-    opportunities/
-    ui/
-    weekly/
-  data/
-  hooks/
-  layouts/
-  lib/
-  pages/
-  styles/
+  components/      # reusable UI + feature components
+  hooks/           # workflow/state orchestration
+  layouts/         # app shell and route outlet framing
+  lib/             # repository layer + domain utilities
+  pages/           # route-level page composition
+  styles/          # feature and shared styles
 ```
 
-## Environment Variables
+### Design principles used in this repo
 
-Copy `.env.example` to `.env.local` and fill in values:
+- Local-first UX with Supabase upgrade path
+- Thin page components (view composition only)
+- Domain logic in hooks + repositories
+- Reusable UI primitives for consistency
+- Preserve accessibility and keyboard support by default
 
-- `VITE_OPENAI_PROXY_URL`
-- `OPENAI_API_KEY` (server-side only)
-- `OPENAI_MODEL` (optional, defaults to `gpt-4.1-mini`)
-- `CHIEF_STAFF_PROXY_TOKEN` (optional; recommended in production)
-- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional; positive integer to enable rate limiting)
+## Data and persistence modes
+
+The app supports two operating modes:
+
+1. `local` mode (default)
+- data persists in browser localStorage
+- useful for quick demos and local development
+
+2. `supabase` mode (when env vars are configured)
+- repositories read/write user-scoped data in Supabase
+- row-level security policies are expected in database schema
+
+Most pages expose a source note so you can see whether data is coming from local storage or Supabase.
+
+## AI Chief of Staff flow
+
+The AI workflow is proxied through server endpoints:
+
+- Vercel: `api/chief-of-staff.js`
+- Netlify: `netlify/functions/chief-of-staff.js`
+- Shared core handler: `server/chiefOfStaffProxyCore.js`
+
+The client calls `/api/chief-of-staff` by default via `src/lib/openai.js`.
+
+The response contract supports:
+
+- primary text output
+- optional structured payload:
+  - `priorities`
+  - `opportunities`
+  - `contentItems`
+  - `tasks`
+
+Structured items can be accepted into product domains (opportunities, content, weekly priorities) from the UI.
+
+## Environment variables
+
+Copy `.env.example` to `.env.local` and set the variables relevant to your environment.
+
+### Frontend
+
+- `VITE_OPENAI_PROXY_URL` (optional; defaults to `/api/chief-of-staff`)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-Keep `OPENAI_API_KEY` server-side only (do not prefix with `VITE_`).
+### Server/runtime
 
-## OpenAI Proxy
+- `OPENAI_API_KEY` (required for real AI responses; server-side only)
+- `OPENAI_MODEL` (optional; defaults to `gpt-4.1-mini`)
+- `CHIEF_STAFF_PROXY_TOKEN` (optional)
+- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
 
-This repo ships a backend proxy so OpenAI keys never touch the browser bundle:
+Do not expose `OPENAI_API_KEY` to the browser (`VITE_` prefix must not be used).
 
-- Vercel function: `api/chief-of-staff.js`
-- Netlify function: `netlify/functions/chief-of-staff.js`
-- Netlify route mapping: `netlify.toml` redirects `/api/chief-of-staff` to the function endpoint
-
-The frontend calls `/api/chief-of-staff` by default.
-
-Authentication and hardening options:
-- Set `CHIEF_STAFF_PROXY_TOKEN` to require a shared secret on every proxy request
-  (supported via `Authorization: Bearer <token>` or `X-Chief-Staff-Token` header).
-- Set `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` to a positive integer to apply lightweight
-  per-client request throttling in the shared proxy handler.
-
-## Local Development
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Useful commands:
+### Quality checks
 
 ```bash
 npm run lint
@@ -115,22 +133,29 @@ npm run test:run
 
 ## Supabase migrations
 
-SQL migrations are stored in `supabase/migrations/`.
-Apply them in order in your Supabase SQL editor (or via Supabase CLI) to create:
-- core product tables and indexes
-- `updated_at` triggers
+Migration SQL is in `supabase/migrations/`.
+
+Apply migrations in order (SQL editor or CLI) to create:
+
+- domain tables and indexes
+- `updated_at` trigger behavior
 - row-level security policies
-- `auth.uid()` ownership defaults for user-bound columns
+- ownership-safe defaults for user-scoped rows
 
-## Roadmap
+## Portfolio framing
 
-High-impact next steps:
+This repo demonstrates:
 
-1. Real Supabase CRUD for opportunities/content workflows
-2. Auth and user-scoped data
-3. Real OpenAI-powered Chief of Staff pipeline via backend endpoint
-4. Expand test coverage (more integration + route-level tests)
-5. Analytics and production observability
+- product architecture thinking (page/hook/repository separation)
+- maintainable React organization for multi-workflow apps
+- practical accessibility and interaction quality
+- incremental hardening across persistence, AI integration, and test coverage
+
+## Next recommended phase
+
+- deeper end-to-end integration tests around Supabase fallback behavior
+- stronger operational telemetry/monitoring for AI proxy paths
+- authentication/session UX hardening across all repository-backed flows
 
 ## Author
 
