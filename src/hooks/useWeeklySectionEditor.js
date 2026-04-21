@@ -27,8 +27,8 @@ export function useWeeklySectionEditor({ type, defaultItems, setItems }) {
     requestConfirm,
     closeConfirm: closeDeleteConfirm,
     confirm: handleConfirmDelete,
-  } = useConfirmDelete({
-    onConfirm: async (itemToDelete) => {
+  } = useConfirmDelete(
+    async (itemToDelete) => {
       const itemId = itemToDelete?.id;
       if (itemId === null || itemId === undefined) {
         return;
@@ -39,7 +39,15 @@ export function useWeeklySectionEditor({ type, defaultItems, setItems }) {
         return sourceItems.filter((item) => String(item.id) !== String(itemId));
       });
     },
-  });
+    (itemToDelete) => {
+      const itemName = getItemName(type, itemToDelete);
+      if (!itemName) {
+        return 'Delete this item? This cannot be undone.';
+      }
+
+      return `Delete "${itemName}"? This cannot be undone.`;
+    },
+  );
 
   const isEditing = Boolean(editorItemId);
 
@@ -79,18 +87,7 @@ export function useWeeklySectionEditor({ type, defaultItems, setItems }) {
   };
 
   const requestDelete = (item) => {
-    const itemId = item?.id;
-    const itemName = getItemName(type, item);
-    if (itemId === null || itemId === undefined || !itemName) {
-      return;
-    }
-
-    requestConfirm({
-      message: `Delete "${itemName}"? This cannot be undone.`,
-      payload: {
-        id: itemId,
-      },
-    });
+    requestConfirm(item);
   };
 
   const handleEditorSubmit = (event) => {

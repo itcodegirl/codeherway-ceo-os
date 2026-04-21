@@ -1,25 +1,61 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConfirmDelete } from './useConfirmDelete';
 
-export function useCrudPage({
-  defaultFormValues,
-  listItems,
-  createItem,
-  updateItem,
-  deleteItem,
-  mapItemToFormValues,
-  mapFormValuesToPayload,
-  validatePayload,
-  getDeleteLabel,
-  messages,
-  logPrefix,
-}) {
+export function useCrudPage(config) {
+  const {
+    listFn,
+    createFn,
+    updateFn,
+    deleteFn,
+    defaultForm,
+    defaultFormValues,
+    validate,
+    validatePayload,
+    listItems,
+    createItem,
+    updateItem,
+    deleteItem,
+    mapItemToFormValues,
+    mapFormValuesToPayload,
+    getDeleteLabel,
+    messages = {},
+    logPrefix = 'items',
+  } = config || {};
+
+  const listItemsFn = useMemo(() => listFn || listItems, [listFn, listItems]);
+  const createItemFn = useMemo(() => createFn || createItem, [createFn, createItem]);
+  const updateItemFn = useMemo(() => updateFn || updateItem, [updateFn, updateItem]);
+  const deleteItemFn = useMemo(() => deleteFn || deleteItem, [deleteFn, deleteItem]);
+  const mapItemToFormValuesFn = mapItemToFormValues;
+  const mapFormValuesToPayloadFn = mapFormValuesToPayload;
+  const validatePayloadFn = useMemo(() => (
+    typeof (validate ?? validatePayload) === 'function'
+      ? validate ?? validatePayload
+      : () => ''
+  ), [validate, validatePayload]);
+  const defaultFormValuesResolved = useMemo(
+    () => defaultFormValues ?? defaultForm ?? {},
+    [defaultFormValues, defaultForm],
+  );
+  const loadErrorMessage = messages.load || 'Unable to load items right now.';
+  const saveErrorMessage = messages.save || 'Unable to save item right now.';
+  const deleteErrorMessage = messages.delete || 'Unable to delete item right now.';
+  const resolveDeleteMessage = useCallback((itemToDelete) => {
+    if (!itemToDelete) {
+      return 'Delete this item? This cannot be undone.';
+    }
+
+    return typeof getDeleteLabel === 'function'
+      ? `Delete "${getDeleteLabel(itemToDelete)}"? This cannot be undone.`
+      : 'Delete this item? This cannot be undone.';
+  }, [getDeleteLabel]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [selectedItemState, setSelectedItemState] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [formValues, setFormValues] = useState(defaultFormValues);
+  const [formValues, setFormValues] = useState(defaultFormValuesResolved);
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
   const selectedItem = selectedItemState;
@@ -32,25 +68,26 @@ export function useCrudPage({
     closeConfirm: closeDeleteConfirm,
     resetConfirm,
     confirm: confirmDelete,
-  } = useConfirmDelete({
-    onConfirm: async (itemToDelete) => {
+  } = useConfirmDelete(
+    async (itemToDelete) => {
       if (!itemToDelete) {
         return;
       }
 
       try {
-        await deleteItem(itemToDelete.id);
+        await deleteItemFn(itemToDelete.id);
         setItems((current) => current.filter((item) => item.id !== itemToDelete.id));
         setSelectedItemState(null);
       } catch (error) {
-        setLoadError(messages.delete);
+        setLoadError(deleteErrorMessage);
         if (import.meta.env.DEV) {
           console.error(`Failed to delete ${logPrefix}`, error);
         }
         throw error;
       }
     },
-  });
+    resolveDeleteMessage,
+  );
 
   const setSelectedItem = useCallback((nextItem) => {
     setSelectedItemState(nextItem);
@@ -66,7 +103,11 @@ export function useCrudPage({
       setIsLoading(true);
       setLoadError('');
       try {
-        const nextItems = await listItems();
+        const nextItems = await listItemsFn();
+        if (!Array.isArray(nextItems)) {
+          setItems([]);
+          return;
+        }
         if (isActive) {
           setItems(nextItems);
         }
@@ -74,7 +115,7 @@ export function useCrudPage({
         if (!isActive) {
           return;
         }
-        setLoadError(messages.load);
+        setLoadError(loadErrorMessage);
         if (import.meta.env.DEV) {
           console.error(`Failed to load ${logPrefix}`, error);
         }
@@ -90,12 +131,12 @@ export function useCrudPage({
     return () => {
       isActive = false;
     };
-  }, [listItems, logPrefix, messages.load]);
+  }, [listItemsFn, loadErrorMessage, logPrefix]);
 
   const resetForm = useCallback(() => {
-    setFormValues(defaultFormValues);
+    setFormValues(defaultFormValuesResolved);
     setFormError('');
-  }, [defaultFormValues]);
+  }, [defaultFormValuesResolved]);
 
   const handleOpenCreateModal = useCallback(() => {
     setSelectedItem(null);
@@ -104,15 +145,15 @@ export function useCrudPage({
   }, [resetForm, setSelectedItem]);
 
   const handleOpenEditModal = useCallback(() => {
-    if (!selectedItem) {
+    if (!selectedItem || !mapItemToFormValuesFn) {
       return;
     }
 
-    setFormValues(mapItemToFormValues(selectedItem));
+    setFormValues(mapItemToFormValuesFn(selectedItem));
     setFormError('');
     closeDeleteConfirm();
     setIsFormOpen(true);
-  }, [closeDeleteConfirm, mapItemToFormValues, selectedItem]);
+  }, [closeDeleteConfirm, mapItemToFormValuesFn, selectedItem]);
 
   const handleCloseFormModal = useCallback(() => {
     if (isSaving) {
@@ -128,11 +169,8 @@ export function useCrudPage({
       return;
     }
 
-    requestConfirm({
-      message: `Delete "${getDeleteLabel(selectedItem)}"? This cannot be undone.`,
-      payload: selectedItem,
-    });
-  }, [getDeleteLabel, isDeleting, requestConfirm, selectedItem]);
+    requestConfirm(selectedItem);
+  }, [isDeleting, requestConfirm, selectedItem]);
 
   const handleCloseDeleteConfirm = useCallback(() => {
     closeDeleteConfirm();
@@ -147,8 +185,8 @@ export function useCrudPage({
 
   const handleFormSubmit = useCallback(async (event) => {
     event.preventDefault();
-    const payload = mapFormValuesToPayload(formValues);
-    const validationError = validatePayload(payload);
+    const payload = mapFormValuesToPayloadFn ? mapFormValuesToPayloadFn(formValues) : formValues;
+    const validationError = validatePayloadFn(payload);
 
     if (validationError) {
       setFormError(validationError);
@@ -160,19 +198,19 @@ export function useCrudPage({
 
     try {
       if (selectedItem) {
-        const updated = await updateItem(selectedItem.id, payload);
+        const updated = await updateItemFn(selectedItem.id, payload);
         setItems((current) =>
           current.map((item) => (item.id === updated.id ? updated : item)));
         setSelectedItemState(updated);
       } else {
-        const created = await createItem(payload);
+        const created = await createItemFn(payload);
         setItems((current) => [created, ...current]);
       }
 
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
-      setFormError(messages.save);
+      setFormError(saveErrorMessage);
       if (import.meta.env.DEV) {
         console.error(`Failed to save ${logPrefix}`, error);
       }
@@ -180,15 +218,15 @@ export function useCrudPage({
       setIsSaving(false);
     }
   }, [
-    createItem,
+    createItemFn,
     formValues,
     logPrefix,
-    mapFormValuesToPayload,
-    messages.save,
+    mapFormValuesToPayloadFn,
+    saveErrorMessage,
     resetForm,
     selectedItem,
-    updateItem,
-    validatePayload,
+    updateItemFn,
+    validatePayloadFn,
   ]);
 
   const handleConfirmDeleteSelected = useCallback(async () => {

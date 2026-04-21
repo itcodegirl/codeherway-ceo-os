@@ -6,21 +6,42 @@ const DEFAULT_CONFIRM_STATE = {
   payload: null,
 };
 
-export function useConfirmDelete({ onConfirm }) {
+function resolveOptions(input, maybeMessageResolver) {
+  if (typeof input === 'function') {
+    return {
+      onConfirm: input,
+      getMessage: maybeMessageResolver,
+    };
+  }
+
+  return {
+    onConfirm: input?.onConfirm,
+    getMessage: input?.getMessage || maybeMessageResolver,
+  };
+}
+
+export function useConfirmDelete(onConfirm, getMessage) {
+  const options = resolveOptions(onConfirm, getMessage);
+
   const [confirmState, setConfirmState] = useState(DEFAULT_CONFIRM_STATE);
   const [isConfirmPending, setIsConfirmPending] = useState(false);
 
-  const requestConfirm = useCallback(({ message, payload }) => {
+  const requestConfirm = useCallback((payload) => {
     if (isConfirmPending) {
       return;
     }
 
+    const safePayload = payload === null || payload === undefined ? null : payload;
+    const message = typeof options.getMessage === 'function'
+      ? options.getMessage(safePayload)
+      : safePayload?.message || '';
+
     setConfirmState({
       isOpen: true,
-      message: message || '',
-      payload: payload ?? null,
+      message,
+      payload: safePayload,
     });
-  }, [isConfirmPending]);
+  }, [isConfirmPending, options]);
 
   const closeConfirm = useCallback(() => {
     if (isConfirmPending) {
@@ -42,12 +63,12 @@ export function useConfirmDelete({ onConfirm }) {
 
     setIsConfirmPending(true);
     try {
-      await onConfirm?.(confirmState.payload);
+      await options.onConfirm?.(confirmState.payload);
       setConfirmState(DEFAULT_CONFIRM_STATE);
     } finally {
       setIsConfirmPending(false);
     }
-  }, [confirmState.isOpen, confirmState.payload, onConfirm]);
+  }, [confirmState.isOpen, confirmState.payload, options]);
 
   return {
     isConfirmOpen: confirmState.isOpen,
