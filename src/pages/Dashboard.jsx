@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
@@ -6,28 +6,13 @@ import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import {
-  dashboardDemoData,
-} from '../data/mockData';
-import { defaultBlockers as defaultWeeklyBlockers, defaultPriorities as defaultWeeklyPriorities } from '../lib/weeklyData';
-import { usePersistentState } from '../hooks/usePersistentState';
+import { dashboardDemoData } from '../data/mockData';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
+import { useDashboardInsights } from '../hooks/useDashboardInsights';
 import { useToast } from '../hooks/useToast';
+import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { contentStatusTone } from '../lib/statusMaps';
 import '../styles/dashboard.css';
-
-function clampScore(value) {
-  return Math.max(0, Math.min(100, value));
-}
-
-function shortenText(text, maxLength = 64) {
-  const normalized = (text || '').trim();
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
-}
 
 function Dashboard() {
   const {
@@ -35,14 +20,13 @@ function Dashboard() {
     isToastVisible,
     showToast,
   } = useToast();
-  const [storedWeeklyPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultWeeklyPriorities);
-  const [storedWeeklyBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultWeeklyBlockers);
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh dashboard data right now.');
     if (import.meta.env.DEV) {
       console.error('Dashboard data load failed', error);
     }
   }, [showToast]);
+
   const {
     opportunityItems,
     contentRows,
@@ -51,244 +35,30 @@ function Dashboard() {
     onLoadError: handleDashboardLoadError,
   });
 
-  const weeklyPriorities = useMemo(() => {
-    if (!Array.isArray(storedWeeklyPriorities)) {
-      return [];
-    }
+  const {
+    priorities: weeklyPriorities,
+    blockers: weeklyBlockers,
+    isLoading: isWeeklyLoading,
+    source: weeklySource,
+    loadError: weeklyLoadError,
+  } = useWeeklyBrief();
 
-    return storedWeeklyPriorities;
-  }, [storedWeeklyPriorities]);
+  const normalizedWeeklyPriorities = Array.isArray(weeklyPriorities) ? weeklyPriorities : [];
+  const normalizedWeeklyBlockers = Array.isArray(weeklyBlockers) ? weeklyBlockers : [];
+  const isDashboardLoading = isDataLoading || isWeeklyLoading;
 
-  const weeklyBlockers = useMemo(() => {
-    if (!Array.isArray(storedWeeklyBlockers)) {
-      return [];
-    }
-
-    return storedWeeklyBlockers;
-  }, [storedWeeklyBlockers]);
-
-  const dashboardCounts = useMemo(() => {
-    const counts = {
-      inProgressPriorities: 0,
-      blockedPriorities: 0,
-      blockerCount: weeklyBlockers.length,
-      awaitingReplyCount: 0,
-      highPriorityCount: 0,
-      inProgressOpportunityCount: 0,
-      scheduledContentCount: 0,
-      editingContentCount: 0,
-      draftingContentCount: 0,
-      opportunityCount: opportunityItems.length,
-      contentCount: contentRows.length,
-    };
-
-    weeklyPriorities.forEach((item) => {
-      if (item?.status === 'In Progress') {
-        counts.inProgressPriorities += 1;
-      }
-
-      if (item?.status === 'Blocked') {
-        counts.blockedPriorities += 1;
-      }
-    });
-
-    opportunityItems.forEach((item) => {
-      if (item?.stage === 'Awaiting Reply') {
-        counts.awaitingReplyCount += 1;
-      }
-
-      if (item?.stage === 'In Progress') {
-        counts.inProgressOpportunityCount += 1;
-      }
-
-      if (item?.priority === 'High') {
-        counts.highPriorityCount += 1;
-      }
-    });
-
-    contentRows.forEach((item) => {
-      if (item?.status === 'Scheduled') {
-        counts.scheduledContentCount += 1;
-      }
-
-      if (item?.status === 'Editing') {
-        counts.editingContentCount += 1;
-      }
-
-      if (item?.status === 'Drafting') {
-        counts.draftingContentCount += 1;
-      }
-    });
-
-    return counts;
-  }, [contentRows, opportunityItems, weeklyBlockers.length, weeklyPriorities]);
-
-  const priorityItems = useMemo(
-    () =>
-      weeklyPriorities
-        .slice(0, 3)
-        .map((item, index) => ({
-          id: item?.id ?? item?.title ?? `priority-${index}`,
-          title: item?.title,
-        }))
-        .filter((item) => item.title),
-    [weeklyPriorities],
-  );
-
-  const dashboardInsights = useMemo(() => {
-    const {
-      inProgressPriorities,
-      blockedPriorities,
-      blockerCount,
-      awaitingReplyCount,
-      highPriorityCount,
-      scheduledContentCount,
-      editingContentCount,
-      opportunityCount,
-      contentCount,
-    } = dashboardCounts;
-
-    const focusScore = clampScore(
-      Math.round(
-        55
-          + (inProgressPriorities * 12)
-          + (scheduledContentCount * 6)
-          + (editingContentCount * 3)
-          - (blockedPriorities * 10)
-          - (blockerCount * 8)
-          - (awaitingReplyCount * 4),
-      ),
-    );
-
-    let momentumLabel = dashboardDemoData.executiveSnapshotFallback.momentum;
-    if (focusScore >= 80) {
-      momentumLabel = 'Strong this week';
-    } else if (focusScore >= 60) {
-      momentumLabel = 'Steady progress';
-    }
-
-    const leadPriority = weeklyPriorities.find((item) => item?.title);
-    const leadOpportunity = opportunityItems.find((item) => item.priority === 'High') || opportunityItems[0];
-    const leadContent = contentRows.find((item) => item.status === 'Scheduled') || contentRows[0];
-    const topBlocker = weeklyBlockers.find((item) => item?.text);
-
-    const strategicFocus = leadPriority?.title
-      ? shortenText(leadPriority.title)
-      : leadOpportunity?.name
-        ? `Advance ${shortenText(leadOpportunity.name, 52)}`
-        : leadContent?.title
-          ? `Publish ${shortenText(leadContent.title, 52)}`
-          : dashboardDemoData.executiveSnapshotFallback.strategicFocus;
-
-    const topRisk = topBlocker?.text
-      ? shortenText(topBlocker.text, 72)
-      : blockedPriorities > 0
-        ? `${blockedPriorities} blocked priorities`
-        : awaitingReplyCount > 0
-          ? `${awaitingReplyCount} opportunities awaiting reply`
-          : dashboardDemoData.executiveSnapshotFallback.topRisk;
-
-    const computedRecentActivity = [
-      leadPriority?.title
-        ? {
-          id: `activity-priority-${leadPriority.id || 'current'}`,
-          title: `Priority in motion: ${shortenText(leadPriority.title, 56)}`,
-          time: 'Live focus',
-          type: 'Planning',
-        }
-        : null,
-      leadOpportunity?.name
-        ? {
-          id: `activity-opportunity-${leadOpportunity.id || 'current'}`,
-          title: `${shortenText(leadOpportunity.name, 48)} (${leadOpportunity.stage})`,
-          time: `Priority: ${leadOpportunity.priority}`,
-          type: 'Opportunity',
-        }
-        : null,
-      leadContent?.title
-        ? {
-          id: `activity-content-${leadContent.id || 'current'}`,
-          title: `${shortenText(leadContent.title, 52)} (${leadContent.status})`,
-          time: leadContent.platform || 'Content queue',
-          type: 'Content',
-        }
-        : null,
-      topBlocker?.text
-        ? {
-          id: `activity-blocker-${topBlocker.id || 'current'}`,
-          title: `Risk noted: ${shortenText(topBlocker.text, 52)}`,
-          time: 'Needs resolution',
-          type: 'Risk',
-        }
-        : null,
-    ].filter(Boolean).slice(0, 3);
-    const recentActivity = computedRecentActivity.length ? computedRecentActivity : dashboardDemoData.recentActivity;
-
-    const momentumValues = [
-      clampScore(20 + (opportunityCount * 10)),
-      clampScore(20 + (contentCount * 10)),
-      clampScore(25 + (inProgressPriorities * 18)),
-      clampScore(90 - ((blockedPriorities * 15) + (blockerCount * 12))),
-      clampScore(30 + (highPriorityCount * 12) - (awaitingReplyCount * 8)),
-      focusScore,
-    ];
-
-    const scoreContext = blockerCount + blockedPriorities;
-    const focusChangeBase = scoreContext > 0
-      ? `${scoreContext} active risk${scoreContext > 1 ? 's' : ''}`
-      : `${inProgressPriorities} priorities in progress`;
-    const focusChange = isLocalDashboardDemoMode
-      ? `${focusChangeBase} - ${dashboardDemoData.focusScore.demoSuffix}`
-      : focusChangeBase;
-
-    return {
-      focusScore,
-      focusChange,
-      strategicFocus,
-      topRisk,
-      momentumLabel,
-      recentActivity,
-      momentumValues,
-    };
-  }, [contentRows, dashboardCounts, opportunityItems, weeklyBlockers, weeklyPriorities]);
-
-  const statCards = useMemo(() => {
-    const {
-      highPriorityCount,
-      inProgressOpportunityCount,
-      awaitingReplyCount,
-      draftingContentCount,
-      opportunityCount,
-      contentCount,
-    } = dashboardCounts;
-
-    return [
-      {
-        id: 1,
-        label: 'Active Opportunities',
-        value: isDataLoading ? '--' : opportunityCount,
-        change: `${inProgressOpportunityCount} in progress`,
-      },
-      {
-        id: 2,
-        label: 'Content in Pipeline',
-        value: isDataLoading ? '--' : contentCount,
-        change: `${draftingContentCount} drafting`,
-      },
-      {
-        id: 3,
-        label: 'Follow-Ups Due',
-        value: isDataLoading ? '--' : awaitingReplyCount,
-        change: `${highPriorityCount} high priority`,
-      },
-      {
-        id: 4,
-        label: 'Weekly Focus Score',
-        value: isDataLoading ? '--' : `${dashboardInsights.focusScore}%`,
-        change: dashboardInsights.focusChange,
-      },
-    ];
-  }, [dashboardCounts, dashboardInsights.focusChange, dashboardInsights.focusScore, isDataLoading]);
+  const {
+    priorityItems,
+    dashboardInsights,
+    statCards,
+  } = useDashboardInsights({
+    weeklyPriorities: normalizedWeeklyPriorities,
+    weeklyBlockers: normalizedWeeklyBlockers,
+    opportunityItems,
+    contentRows,
+    isDataLoading: isDashboardLoading,
+    isLocalDashboardDemoMode,
+  });
 
   const handleCopySnapshot = async () => {
     const snapshot = [
@@ -316,6 +86,12 @@ function Dashboard() {
   return (
     <section className="dashboard-page">
       <PageHeader title="Dashboard" description="Track opportunities, content, and priorities from one executive view." />
+      <p className="helper-text">
+        {weeklySource === 'supabase'
+          ? 'Weekly data source: Supabase.'
+          : 'Weekly data source: local persistent storage.'}
+      </p>
+      {weeklyLoadError ? <p className="helper-text" role="alert">{weeklyLoadError}</p> : null}
 
       <div className="dashboard-grid dashboard-grid--stats">
         {statCards.map((stat) => (

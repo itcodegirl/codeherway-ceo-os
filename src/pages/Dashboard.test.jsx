@@ -15,35 +15,31 @@ vi.mock('../hooks/useDashboardData', () => ({
   useDashboardData: vi.fn(),
 }));
 
-vi.mock('../hooks/usePersistentState', () => ({
-  usePersistentState: vi.fn(),
+vi.mock('../hooks/useWeeklyBrief', () => ({
+  useWeeklyBrief: vi.fn(),
 }));
 
 import Dashboard from './Dashboard';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { usePersistentState } from '../hooks/usePersistentState';
+import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 
 describe('src/pages/Dashboard', () => {
   beforeEach(() => {
     window.localStorage.clear();
 
-    usePersistentState.mockImplementation((key, initialValue) => {
-      if (key === 'ceo-os-weekly-priorities') {
-        return [[
-          { id: 'p-1', title: 'Finalize pricing page', status: 'In Progress' },
-          { id: 'p-2', title: 'Ship onboarding updates', status: 'In Progress' },
-          { id: 'p-3', title: 'Review partner terms', status: 'Blocked' },
-        ], vi.fn()];
-      }
-
-      if (key === 'ceo-os-weekly-blockers') {
-        return [[
-          { id: 'b-1', text: 'Waiting on legal review.' },
-          { id: 'b-2', text: 'Missing benchmark update.' },
-        ], vi.fn()];
-      }
-
-      return [initialValue, vi.fn()];
+    useWeeklyBrief.mockReturnValue({
+      priorities: [
+        { id: 'p-1', title: 'Finalize pricing page', status: 'In Progress' },
+        { id: 'p-2', title: 'Ship onboarding updates', status: 'In Progress' },
+        { id: 'p-3', title: 'Review partner terms', status: 'Blocked' },
+      ],
+      blockers: [
+        { id: 'b-1', text: 'Waiting on legal review.' },
+        { id: 'b-2', text: 'Missing benchmark update.' },
+      ],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
     });
 
     useDashboardData.mockReturnValue({
