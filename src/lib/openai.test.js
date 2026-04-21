@@ -157,4 +157,40 @@ describe('src/lib/openai', () => {
       tasks: [],
     });
   });
+
+  it('normalizes partially valid structured payloads and preserves safe fallback content', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createProxyResponse({
+        structured_payload: {
+          priorities: [{ title: '  Ship onboarding updates  ' }, '', null, { title: 'Ship onboarding updates' }],
+          opportunities: [{ name: '  Partner One  ', company: '  Acme ' }, { title: '' }, null],
+          contentItems: [{}, { title: 'Founder Update', platform: ' LinkedIn ' }, { name: 'Legacy' }],
+          tasks: ['   Send update to design', 4, { task: '' }, { title: '  Close loop' }],
+        },
+      }),
+    );
+
+    const result = await generateChiefOfStaffResponse({
+      actionKey: 'actions',
+      notes: 'Clarify cross-team priorities for next week.',
+    });
+
+    expect(result.source).toBe('fallback');
+    expect(result.content.length).toBeGreaterThan(0);
+    expect(result.structuredPayload.priorities).toEqual([
+      { title: 'Ship onboarding updates' },
+    ]);
+    expect(result.structuredPayload.opportunities).toEqual([
+      { name: 'Partner One', company: 'Acme' },
+    ]);
+    expect(result.structuredPayload.contentItems).toEqual([
+      { title: 'Founder Update', platform: 'LinkedIn' },
+      { title: 'Legacy' },
+    ]);
+    expect(result.structuredPayload.tasks).toEqual([
+      { title: 'Send update to design' },
+      { title: '4' },
+      { title: 'Close loop' },
+    ]);
+  });
 });

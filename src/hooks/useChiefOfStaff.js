@@ -99,6 +99,7 @@ export function useChiefOfStaff() {
   const [acceptedStructuredItemMap, setAcceptedStructuredItemMap] = useState({});
   const [acceptingStructuredItemMap, setAcceptingStructuredItemMap] = useState({});
   const isMountedRef = useRef(true);
+  const acceptingStructuredItemRef = useRef(new Set());
   const opportunitySignaturesRef = useRef(null);
   const contentSignaturesRef = useRef(null);
   const weeklyPrioritySignaturesByWeekRef = useRef(new Map());
@@ -339,6 +340,7 @@ export function useChiefOfStaff() {
       setLoadError('');
       setAcceptedStructuredItemMap({});
       setAcceptingStructuredItemMap({});
+      acceptingStructuredItemRef.current.clear();
       resetAcceptanceCaches();
     } catch (error) {
       if (!isMountedRef.current) {
@@ -439,6 +441,11 @@ export function useChiefOfStaff() {
       return;
     }
 
+    if (acceptingStructuredItemRef.current.has(itemKey)) {
+      return;
+    }
+
+    acceptingStructuredItemRef.current.add(itemKey);
     setAcceptingStructuredItemMap((current) => ({
       ...current,
       [itemKey]: true,
@@ -569,6 +576,7 @@ export function useChiefOfStaff() {
         console.error('Failed to accept structured AI item', error);
       }
     } finally {
+      acceptingStructuredItemRef.current.delete(itemKey);
       setAcceptingStructuredItemMap((current) => {
         if (!current[itemKey]) {
           return current;

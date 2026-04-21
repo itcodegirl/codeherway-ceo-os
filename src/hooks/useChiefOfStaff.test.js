@@ -97,6 +97,139 @@ describe('useChiefOfStaff', () => {
     })).toBe(true);
   });
 
+  it('dedupes rapid acceptance for the same structured opportunity', async () => {
+    listOpportunities.mockResolvedValue([]);
+    createOpportunity.mockResolvedValue({ id: 'opportunity-1' });
+
+    const { result } = renderHook(() => useChiefOfStaff());
+
+    await waitFor(() => {
+      expect(loadChiefWorkspace).toHaveBeenCalledTimes(1);
+    });
+
+    let firstAcceptPromise;
+    let secondAcceptPromise;
+
+    act(() => {
+      firstAcceptPromise = result.current.acceptStructuredItem('opportunities', {
+        name: 'Rapid Save',
+        company: 'Acme',
+      });
+      secondAcceptPromise = result.current.acceptStructuredItem('opportunities', {
+        name: 'Rapid Save',
+        company: 'Acme',
+      });
+    });
+
+    await act(async () => {
+      await Promise.all([firstAcceptPromise, secondAcceptPromise]);
+    });
+
+    expect(createOpportunity).toHaveBeenCalledTimes(1);
+    expect(result.current.feedback).toBe('Added an opportunity from the structured AI output.');
+  });
+
+  it('ignores malformed structured opportunities without required fields', async () => {
+    const { result } = renderHook(() => useChiefOfStaff());
+
+    await waitFor(() => {
+      expect(loadChiefWorkspace).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      await result.current.acceptStructuredItem('opportunities', {
+        company: 'Acme',
+      });
+    });
+
+    expect(createOpportunity).not.toHaveBeenCalled();
+    expect(result.current.feedback).toBe('This item is missing required details and cannot be saved yet.');
+  });
+
+  it('keeps feedback behavior idempotent for duplicate malformed structured items', async () => {
+    const { result } = renderHook(() => useChiefOfStaff());
+
+    await waitFor(() => {
+      expect(loadChiefWorkspace).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      await result.current.acceptStructuredItem('contentItems', {});
+    });
+    await act(async () => {
+      await result.current.acceptStructuredItem('contentItems', {});
+    });
+
+    expect(result.current.feedback).toBe('This item is missing required details and cannot be saved yet.');
+  });
+
+  it('treats malformed and valid payload entries as independent during acceptance hydration', async () => {
+    listOpportunities.mockResolvedValue([
+      {
+        id: 'o-1',
+        name: 'Existing Opp',
+        company: 'Acme',
+      },
+    ]);
+    listContentItems.mockResolvedValue([
+      {
+        id: 'c-1',
+        title: 'Weekly Roundup',
+        platform: 'LinkedIn',
+      },
+    ]);
+    loadChiefWorkspace.mockResolvedValue({
+      notes: 'Initial notes',
+      responses: [
+        {
+          structuredPayload: {
+            opportunities: [
+              { name: 'Existing Opp', company: 'Acme' },
+              { name: '' },
+            ],
+            contentItems: [
+              { title: 'Weekly Roundup', platform: 'LinkedIn' },
+              { title: '', platform: 'LinkedIn' },
+            ],
+            priorities: [
+              { title: 'Do Something' },
+              { title: '' },
+            ],
+            tasks: [{ title: 'Follow up' }, {}],
+          },
+        },
+      ],
+      source: 'local',
+    });
+
+    const { result } = renderHook(() => useChiefOfStaff());
+
+    await waitFor(() => {
+      expect(loadChiefWorkspace).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(
+        result.current.isStructuredItemAccepted('opportunities', {
+          name: 'Existing Opp',
+          company: 'Acme',
+        }),
+      ).toBe(true);
+    });
+    expect(result.current.isStructuredItemAccepted('opportunities', { name: '', company: 'Acme' })).toBe(
+      false,
+    );
+    expect(
+      result.current.isStructuredItemAccepted('contentItems', {
+        title: 'Weekly Roundup',
+        platform: 'LinkedIn',
+      }),
+    ).toBe(true);
+    expect(result.current.isStructuredItemAccepted('contentItems', { title: '', platform: 'LinkedIn' })).toBe(
+      false,
+    );
+  });
+
   it('adds a structured fallback output to local responses when proxy returns fallback source', async () => {
     createChiefSession.mockResolvedValue({ id: 'session-1' });
     listOpportunities.mockResolvedValue([]);
