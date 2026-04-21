@@ -1,10 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import AIResponseCard from '../components/ai/AIResponseCard';
-import AIPromptBox from '../components/ai/AIPromptBox';
-import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
-import Button from '../components/ui/Button';
-import Textarea from '../components/ui/Textarea';
+import AIOutputPanel from '../components/chief/AIOutputPanel';
+import PromptWorkspace from '../components/chief/PromptWorkspace';
 import '../styles/forms.css';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
@@ -106,93 +103,26 @@ function ChiefOfStaff() {
       />
 
       <div className="chief-grid">
-        <SectionCard title="Prompt Workspace">
-          <div aria-busy={isGenerating}>
-            <Textarea
-              id={notesFieldId}
-              label="Paste notes and context"
-              className="form-field"
-              labelClassName="form-field__label"
-              controlClassName="chief-textarea"
-              placeholder="Paste notes, priorities, meeting takeaways, or rough ideas..."
-              rows={10}
-              disabled={isGenerating}
-              aria-disabled={isGenerating}
-              value={notesText}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-
-            <div className="chief-actions">
-              <Button
-                onClick={() => handleAction('summarize')}
-                disabled={!canGenerate}
-                aria-label="Generate an executive summary from current notes"
-                icon={{ name: 'action', size: 14 }}
-              >
-                Summarize This Week
-              </Button>
-              <Button
-                onClick={() => handleAction('draft')}
-                disabled={!canGenerate}
-                aria-label="Generate a LinkedIn post draft from current notes"
-                icon={{ name: 'action', size: 14 }}
-              >
-                Draft LinkedIn Post
-              </Button>
-              <Button
-                onClick={() => handleAction('actions')}
-                disabled={!canGenerate}
-                aria-label="Generate action items from current notes"
-                icon={{ name: 'action', size: 14 }}
-              >
-                Convert to Action Items
-              </Button>
-              <Button
-                onClick={() => handleAction('priorities')}
-                disabled={!canGenerate}
-                aria-label="Generate next-priority recommendations from current notes"
-                icon={{ name: 'action', size: 14 }}
-              >
-                Suggest Next Priorities
-              </Button>
-            </div>
-
-            <AIPromptBox
-              onSubmit={(value) =>
-                setNotes((existing) => {
-                  const normalizedExisting = typeof existing === 'string' ? existing.trimEnd() : '';
-                  return normalizedExisting ? `${normalizedExisting}\n\n${value}` : value;
-                })
-              }
-              placeholder="Ask for a specific rewrite, tone, or structure..."
-              isDisabled={isGenerating}
-            />
-          </div>
-        </SectionCard>
-
-        <SectionCard title="AI Output">
-          <div aria-busy={isGenerating}>
-            <p className="helper-text" role="status" aria-live="polite">
-              {feedback}
-            </p>
-
-            {isGenerating ? (
-              <div className="skeleton-line skeleton-line--panel" />
-            ) : hasHistory ? (
-              responseItems.map((entry) => (
-                <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
-              ))
-            ) : (
-              <article className="chief-response" aria-label="Starter copy">
-                <p className="chief-response__label">Starter Copy</p>
-                <p className="chief-response__text">
-                  This week's momentum is strong. Core product structure is in place, and the next move is to
-                  convert these notes into editable plans and content that can be shipped this week.
-                </p>
-              </article>
-            )}
-          </div>
-        </SectionCard>
+        <PromptWorkspace
+          notesFieldId={notesFieldId}
+          notes={notesText}
+          onNotesChange={setNotes}
+          isGenerating={isGenerating}
+          canGenerate={canGenerate}
+          onAction={handleAction}
+          onAppendPrompt={(value) =>
+            setNotes((existing) => {
+              const normalizedExisting = typeof existing === 'string' ? existing.trimEnd() : '';
+              return normalizedExisting ? `${normalizedExisting}\n\n${value}` : value;
+            })
+          }
+        />
+        <AIOutputPanel
+          isGenerating={isGenerating}
+          feedback={feedback}
+          hasHistory={hasHistory}
+          responses={responseItems}
+        />
       </div>
     </section>
   );
