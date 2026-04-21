@@ -134,6 +134,7 @@ npm run typecheck
 
 - [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
 - [docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md) for final release-candidate verification.
+- [CHANGELOG.md](./CHANGELOG.md) for timestamped hardening and release-readiness updates.
 
 ## Portfolio and production readiness
 
