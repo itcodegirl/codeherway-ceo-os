@@ -620,6 +620,28 @@ textarea {
 	padding: 2rem;
 }
 
+.toast {
+	position: fixed;
+	right: 1rem;
+	bottom: 1rem;
+	z-index: 80;
+	max-width: min(420px, calc(100vw - 2rem));
+	padding: 0.75rem 0.95rem;
+	border-radius: var(--radius-action);
+	border: 1px solid rgba(183, 173, 255, 0.42);
+	background: rgba(24, 31, 46, 0.96);
+	color: #f5f7fb;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+	font-size: 0.9rem;
+	line-height: 1.35;
+	pointer-events: none;
+}
+
+.toast--dashboard {
+	right: clamp(1rem, 2.5vw, 2rem);
+	bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
 @media (max-width: 900px) {
 	.settings-grid {
 		grid-template-columns: 1fr;
