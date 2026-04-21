@@ -40,7 +40,10 @@ const actionPrompts = {
 };
 
 function ChiefOfStaff() {
-  useDocumentTitle('Chief of Staff');
+  useDocumentTitle(
+    'Chief of Staff',
+    'Convert rough notes into executive text, action recommendations, and draft-ready material.',
+  );
 
   const notesFieldId = useId();
 

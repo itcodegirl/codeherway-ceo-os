@@ -34,7 +34,10 @@ const PRIORITY_OPTIONS = ['High', 'Medium', 'Low'];
 const STAGE_OPTIONS = ['In Progress', 'Awaiting Reply', 'New'];
 
 function Opportunities() {
-  useDocumentTitle('Opportunities');
+  useDocumentTitle(
+    'Opportunities',
+    'Track partnerships, roles, and outreach as an executive-grade pipeline.',
+  );
 
   const [isLoading, setIsLoading] = useState(true);
   const [opportunityItems, setOpportunityItems] = useState([]);

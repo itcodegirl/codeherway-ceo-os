@@ -25,7 +25,10 @@ const recentActivity = [
 ];
 
 function Dashboard() {
-  useDocumentTitle('Dashboard');
+  useDocumentTitle(
+    'Dashboard',
+    'Track opportunities, content, and priorities from one executive view.',
+  );
 
   const [toastMessage, setToastMessage] = useState('');
   const [opportunityItems, setOpportunityItems] = useState([]);

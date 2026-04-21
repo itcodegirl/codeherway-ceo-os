@@ -13,7 +13,10 @@ const DEFAULT_SETTINGS = {
 };
 
 function Settings() {
-  useDocumentTitle('Settings');
+  useDocumentTitle(
+    'Settings',
+    'Manage preferences that control your executive operating environment.',
+  );
 
   const [settings, setSettings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', 0);

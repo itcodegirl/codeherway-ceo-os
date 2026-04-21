@@ -31,7 +31,10 @@ const DEFAULT_FORM = {
 };
 
 function ContentOS() {
-  useDocumentTitle('Content OS');
+  useDocumentTitle(
+    'Content OS',
+    'Plan, track, and ship founder content across platforms with a clear publishing workflow.',
+  );
 
   const [isLoading, setIsLoading] = useState(true);
   const [contentRows, setContentRows] = useState([]);

@@ -50,7 +50,10 @@ function getDefaultFormValues(type) {
 }
 
 function WeeklyBrief() {
-  useDocumentTitle('Weekly Brief');
+  useDocumentTitle(
+    'Weekly Brief',
+    'A weekly planning and review checkpoint to keep momentum explicit.',
+  );
   const [storedPriorities, setStoredPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultPriorities);
   const [storedWins, setStoredWins] = usePersistentState('ceo-os-weekly-wins', defaultWins);
   const [storedBlockers, setStoredBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultBlockers);
