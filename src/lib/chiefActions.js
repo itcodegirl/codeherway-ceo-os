@@ -24,7 +24,7 @@ export const CHIEF_ACTIONS = {
     instruction:
       'Return a prioritized action list for the next 72 hours. Include owner, outcome, and due timing for each item.',
     fallback: () =>
-      'Action Items:\n- Owner: Jenna | Outcome: Confirm next owner for each critical thread | Due: Today\n- Owner: Jenna | Outcome: Assign dates to each blocked item | Due: Tomorrow\n- Owner: Team | Outcome: Lock top 3 priorities for next 72 hours | Due: End of day',
+      'Action Items:\n- Owner: Team Member | Outcome: Confirm owner for each critical thread | Due: Today\n- Owner: Team Member | Outcome: Assign dates to each blocked item | Due: Tomorrow\n- Owner: Team | Outcome: Lock top 3 priorities for next 72 hours | Due: End of day',
   },
   priorities: {
     title: 'Priority Recommendation',

@@ -11,7 +11,7 @@ describe('weeklyBriefEditor helpers', () => {
   it('returns defaults for each editor type', () => {
     expect(getDefaultFormValues('priority')).toEqual({
       title: '',
-      owner: 'Jenna',
+      owner: 'Team Member',
       status: 'Planned',
     });
     expect(getDefaultFormValues('win')).toEqual({
@@ -27,7 +27,7 @@ describe('weeklyBriefEditor helpers', () => {
   it('builds form values for edit mode with fallbacks', () => {
     expect(getFormValuesForEdit('priority', {})).toEqual({
       title: '',
-      owner: 'Jenna',
+      owner: 'Team Member',
       status: 'Planned',
     });
     expect(getFormValuesForEdit('win', { text: 'Shipped', category: 'Product' })).toEqual({

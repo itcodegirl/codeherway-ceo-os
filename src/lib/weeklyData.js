@@ -19,7 +19,7 @@ export const BLOCKER_SEVERITY_OPTIONS = ['warning', 'high'];
 const DEFAULT_EDITOR_FORM_BY_TYPE = {
   priority: {
     title: '',
-    owner: 'Jenna',
+    owner: 'Team Member',
     status: 'Planned',
   },
   win: {

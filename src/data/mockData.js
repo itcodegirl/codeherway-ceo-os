@@ -50,19 +50,19 @@ export const weeklyPriorities = [
   {
     id: 1,
     title: 'Ship a meaningful progress update for XPAIRK partnership',
-    owner: 'Jenna',
+    owner: 'Team Member',
     status: 'In Progress',
   },
   {
     id: 2,
     title: "Finalize this week's founder narrative draft",
-    owner: 'You',
+    owner: 'Team Lead',
     status: 'Planned',
   },
   {
     id: 3,
     title: 'Recruiter follow-up sequence for Studio North',
-    owner: 'Jenna',
+    owner: 'Team Member',
     status: 'Blocked',
   },
 ];

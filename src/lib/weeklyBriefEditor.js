@@ -26,7 +26,7 @@ const EDITOR_STRATEGIES = {
     getDefaultFormValues: () => ({ ...getDefaultFormValuesByType('priority') }),
     getFormValuesForEdit: (item) => ({
       title: item.title || '',
-      owner: item.owner || 'Jenna',
+      owner: item.owner || 'Team Member',
       status: item.status || 'Planned',
     }),
     createPayload: (formValues, existingId) => {
