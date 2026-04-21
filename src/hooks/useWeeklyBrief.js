@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   WEEKLY_BRIEF_UPDATED_EVENT,
   createWeeklyItem,
@@ -19,6 +19,11 @@ import {
 
 function resolveNextValue(nextValue, currentValue) {
   return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
+}
+
+function normalizeCollectionPayload(payload, key) {
+  const values = Array.isArray(payload?.[key]) ? payload[key] : [];
+  return values.map((item) => item);
 }
 
 function normalizeArrayValue(nextValue, fallbackValue) {
@@ -55,7 +60,8 @@ function shallowEqualRecords(left, right) {
 }
 
 export function useWeeklyBrief() {
-  const weekStart = useMemo(() => getCurrentWeekStart(), []);
+  const [weekStart, setWeekStart] = useState(() => getCurrentWeekStart());
+  const weekStartRef = useRef(weekStart);
   const [source, setSource] = useState(resolveWeeklySource());
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -63,6 +69,34 @@ export function useWeeklyBrief() {
   const [priorities, setPrioritiesState] = useState(defaultPriorities);
   const [wins, setWinsState] = useState(defaultWins);
   const [blockers, setBlockersState] = useState(defaultBlockers);
+
+  useEffect(() => {
+    weekStartRef.current = weekStart;
+  }, [weekStart]);
+
+  useEffect(() => {
+    const msUntilNextMinute = 60 * 1000 - (Date.now() % (60 * 1000));
+    let intervalId = null;
+
+    const checkAndUpdateWeek = () => {
+      const currentWeekStart = getCurrentWeekStart();
+      if (currentWeekStart !== weekStartRef.current) {
+        setWeekStart(currentWeekStart);
+      }
+    };
+
+    const timerId = window.setTimeout(() => {
+      checkAndUpdateWeek();
+      intervalId = window.setInterval(checkAndUpdateWeek, 60 * 1000);
+    }, msUntilNextMinute);
+
+    return () => {
+      window.clearTimeout(timerId);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, []);
 
   const loadWeeklyBrief = useCallback(async () => {
     setIsLoading(true);
@@ -72,9 +106,9 @@ export function useWeeklyBrief() {
       const payload = await getWeeklyBriefByWeek(weekStart);
       setSource(payload.source || resolveWeeklySource());
       setReviewNotesState(typeof payload.reviewNotes === 'string' ? payload.reviewNotes : DEFAULT_REVIEW_NOTES);
-      setPrioritiesState(Array.isArray(payload.priorities) ? payload.priorities : []);
-      setWinsState(Array.isArray(payload.wins) ? payload.wins : []);
-      setBlockersState(Array.isArray(payload.blockers) ? payload.blockers : []);
+      setPrioritiesState(normalizeCollectionPayload(payload, 'priorities'));
+      setWinsState(normalizeCollectionPayload(payload, 'wins'));
+      setBlockersState(normalizeCollectionPayload(payload, 'blockers'));
     } catch (error) {
       setLoadError('Unable to load weekly brief right now.');
       if (import.meta.env.DEV) {
@@ -98,7 +132,7 @@ export function useWeeklyBrief() {
   useEffect(() => {
     const handleWeeklyUpdate = (event) => {
       const updatedWeekStart = event?.detail?.weekStart;
-      if (updatedWeekStart && updatedWeekStart !== weekStart) {
+      if (updatedWeekStart && updatedWeekStart !== weekStartRef.current) {
         return;
       }
 
@@ -109,7 +143,7 @@ export function useWeeklyBrief() {
     return () => {
       window.removeEventListener(WEEKLY_BRIEF_UPDATED_EVENT, handleWeeklyUpdate);
     };
-  }, [loadWeeklyBrief, weekStart]);
+  }, [loadWeeklyBrief]);
 
   const persistCollectionDiff = useCallback(async (itemType, previousItems, nextItems) => {
     const previousMap = new Map(previousItems.map((item) => [String(item.id), item]));
