@@ -1,5 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Icon from './Icon';
+
+function normalizePath(path) {
+  if (!path) {
+    return '';
+  }
+
+  const normalized = path.replace(/\/+$/, '');
+  return normalized || '/';
+}
 
 function PageHeader({
   title,
@@ -9,9 +18,17 @@ function PageHeader({
   onAction,
   actionLabel,
 }) {
-  const hasAction = Boolean(actionText && (actionTo || onAction));
+  const location = useLocation();
+  const normalizedCurrentPath = normalizePath(location.pathname);
+  const normalizedTargetPath = normalizePath(actionTo);
+  const isSelfNavigation = Boolean(actionTo && normalizedTargetPath === normalizedCurrentPath);
+
+  const shouldRenderLinkAction = Boolean(actionText && actionTo && !isSelfNavigation);
+  const shouldRenderButtonAction = Boolean(actionText && onAction && (!actionTo || isSelfNavigation));
+  const hasAction = shouldRenderLinkAction || shouldRenderButtonAction;
+
   const action = actionText && hasAction
-    ? actionTo
+    ? shouldRenderLinkAction
       ? (
           <Link
             className="action-button"
