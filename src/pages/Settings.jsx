@@ -3,14 +3,7 @@ import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-
-const DEFAULT_SETTINGS = {
-  timezone: 'America/Chicago',
-  teamName: 'CodeHerWay',
-  emailDigest: true,
-  keyboardShortcuts: false,
-  autoSave: true,
-};
+import { DEFAULT_SETTINGS, resolveTimeZone } from '../lib/settings';
 
 function Settings() {
   useDocumentTitle(
@@ -26,6 +19,10 @@ function Settings() {
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
 
+  const timezoneInput = typeof settings.timezone === 'string' ? settings.timezone : '';
+  const resolvedTimezone = resolveTimeZone(timezoneInput);
+  const timezoneIsValid = Boolean(resolvedTimezone);
+
   const handleChange = (key, value) => {
     setSettings((prev) => ({
       ...prev,
@@ -34,6 +31,10 @@ function Settings() {
   };
 
   const markSave = () => {
+    if (!timezoneIsValid) {
+      return;
+    }
+
     setSavedAt(Date.now());
   };
 
@@ -80,12 +81,28 @@ function Settings() {
               type="text"
               name="timezone"
               autoComplete="off"
-              value={settings.timezone}
+              value={timezoneInput}
               required
               minLength={2}
+              aria-invalid={!timezoneIsValid}
+              title={
+                timezoneIsValid
+                  ? 'Use an IANA timezone, for example America/Chicago.'
+                  : 'Enter a valid IANA timezone, for example America/Chicago.'
+              }
+              onBlur={() => {
+                if (resolvedTimezone && resolvedTimezone !== timezoneInput) {
+                  handleChange('timezone', resolvedTimezone);
+                }
+              }}
               onChange={(e) => handleChange('timezone', e.target.value)}
               className="settings-input"
             />
+            <span className="helper-text helper-text--offset" role={!timezoneIsValid ? 'alert' : undefined}>
+              {timezoneIsValid
+                ? 'Use IANA format such as America/Chicago.'
+                : 'Timezone is invalid. Example: America/Chicago.'}
+            </span>
           </label>
         </SectionCard>
 

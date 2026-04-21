@@ -1,25 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePersistentState } from '../../hooks/usePersistentState';
-
-const DEFAULT_SETTINGS = {
-  teamName: 'CodeHerWay',
-  timezone: 'America/Chicago',
-};
-
-function resolveTimeZone(input) {
-  if (typeof input !== 'string' || !input.trim()) {
-    return '';
-  }
-
-  const candidate = input.trim();
-
-  try {
-    new Intl.DateTimeFormat(undefined, { timeZone: candidate });
-    return candidate;
-  } catch {
-    return '';
-  }
-}
+import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../../lib/settings';
 
 function formatIsoDate(date, timeZone) {
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -67,9 +48,7 @@ function Topbar() {
   const today = todayFormatter.format(now);
   const isoDate = formatIsoDate(now, resolvedTimeZone);
   const timezoneLabel = resolvedTimeZone || 'Local Time';
-  const teamName = typeof settings?.teamName === 'string' && settings.teamName.trim()
-    ? settings.teamName.trim()
-    : DEFAULT_SETTINGS.teamName;
+  const teamName = resolveTeamName(settings?.teamName);
 
   return (
     <header className="topbar">
