@@ -1,15 +1,19 @@
 import { getChiefActionConfig } from './chiefActions';
 
-const OPENAI_PROXY_URL = (import.meta.env.VITE_OPENAI_PROXY_URL || '/api/chief-of-staff').trim();
+const configuredProxyUrl = (import.meta.env.VITE_OPENAI_PROXY_URL || '').trim();
+const fallbackProxyUrl = '/api/chief-of-staff';
+const OPENAI_PROXY_URL = configuredProxyUrl || fallbackProxyUrl;
 
-if (!OPENAI_PROXY_URL && import.meta.env.DEV) {
+if (!configuredProxyUrl && import.meta.env.DEV) {
   console.warn(
-    'OpenAI proxy URL is not configured. Wire VITE_OPENAI_PROXY_URL to a server endpoint for live AI responses.',
+    'OpenAI proxy URL is not explicitly configured. Using the bundled default endpoint for live responses.',
   );
 }
 
 export const aiConfig = {
-  hasProxyEndpoint: Boolean(OPENAI_PROXY_URL),
+  hasProxyEndpoint: Boolean(configuredProxyUrl),
+  endpoint: OPENAI_PROXY_URL,
+  configuredEndpoint: configuredProxyUrl || null,
 };
 
 function extractResponseText(payload) {
@@ -64,14 +68,14 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     };
   }
 
-  if (!aiConfig.hasProxyEndpoint) {
+  if (!aiConfig.endpoint) {
     return createFallback(actionKey, normalizedNotes);
   }
 
   const config = getChiefActionConfig(actionKey);
 
   try {
-    const response = await fetch(OPENAI_PROXY_URL, {
+    const response = await fetch(aiConfig.endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

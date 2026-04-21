@@ -18,7 +18,7 @@ function ChiefOfStaff() {
   const [feedback, setFeedback] = useState(
     aiConfig.hasProxyEndpoint
       ? 'Start by pasting notes. Then choose an action to transform them into executive-ready output.'
-      : 'AI proxy not configured. Actions will run in local fallback mode.',
+      : 'AI proxy is using the default endpoint. For production reliability, configure VITE_OPENAI_PROXY_URL and OPENAI_API_KEY.',
   );
   const isMountedRef = useRef(true);
   const notesText = typeof notes === 'string' ? notes : '';
