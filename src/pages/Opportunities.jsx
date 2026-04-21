@@ -13,6 +13,7 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../lib/opportunitiesRepository';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/opportunities.css';
 
 const stageTone = {
@@ -33,6 +34,8 @@ const PRIORITY_OPTIONS = ['High', 'Medium', 'Low'];
 const STAGE_OPTIONS = ['In Progress', 'Awaiting Reply', 'New'];
 
 function Opportunities() {
+  useDocumentTitle('Opportunities');
+
   const [isLoading, setIsLoading] = useState(true);
   const [opportunityItems, setOpportunityItems] = useState([]);
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);

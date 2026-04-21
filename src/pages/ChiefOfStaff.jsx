@@ -6,6 +6,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const INITIAL_NOTES = '';
 const INITIAL_RESPONSES = [];
@@ -39,6 +40,8 @@ const actionPrompts = {
 };
 
 function ChiefOfStaff() {
+  useDocumentTitle('Chief of Staff');
+
   const notesFieldId = useId();
 
   const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);

@@ -13,6 +13,7 @@ import {
   listContentItems,
   updateContentItem,
 } from '../lib/contentRepository';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/content.css';
 
 const statusTone = {
@@ -30,6 +31,8 @@ const DEFAULT_FORM = {
 };
 
 function ContentOS() {
+  useDocumentTitle('Content OS');
+
   const [isLoading, setIsLoading] = useState(true);
   const [contentRows, setContentRows] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);

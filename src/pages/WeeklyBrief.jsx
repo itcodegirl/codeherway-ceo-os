@@ -2,9 +2,12 @@ import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/weekly.css';
 
 function WeeklyBrief() {
+  useDocumentTitle('Weekly Brief');
+
   return (
     <section className="weekly-page">
       <PageHeader

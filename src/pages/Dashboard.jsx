@@ -7,6 +7,7 @@ import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import { stats, priorities, opportunities, contentItems } from '../data/mockData';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/dashboard.css';
 
 const contentStatusTone = {
@@ -22,6 +23,8 @@ const recentActivity = [
 ];
 
 function Dashboard() {
+  useDocumentTitle('Dashboard');
+
   const [toastMessage, setToastMessage] = useState('');
   const toastTimerRef = useRef(null);
 
