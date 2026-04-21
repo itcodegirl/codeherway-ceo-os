@@ -26,6 +26,7 @@ This project is a polished frontend prototype with partial persistence:
 - Route-based metadata updates (`document.title`, description, OG/Twitter tags)
 - Responsive layout with accessible primitives (skip link, focus-trapped modal, semantic headings)
 - Automated UI regression coverage for key Chief of Staff generation paths (empty-input guard + successful response render)
+- Accessibility regression coverage for modal focus trapping and compact-sidebar Escape navigation behavior
 
 ## Tech Stack
 
