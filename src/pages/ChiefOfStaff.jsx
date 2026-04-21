@@ -1,73 +1,77 @@
-import { useId } from 'react';
-import PageHeader from '../components/ui/PageHeader';
-import AIOutputPanel from '../components/chief/AIOutputPanel';
-import PromptWorkspace from '../components/chief/PromptWorkspace';
-import SourceStatusNotice from '../components/ui/SourceStatusNotice';
-import '../styles/forms.css';
-import '../styles/chief-of-staff.css';
-import { useChiefOfStaff } from '../hooks/useChiefOfStaff';
+﻿import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
+import { useChiefDemoState } from "../hooks/useChiefDemoState";
+import "../styles/chief-of-staff.css";
 
-function ChiefOfStaff() {
-  const notesFieldId = useId();
+export default function ChiefOfStaff() {
   const {
     notes,
-    responses,
-    feedback,
-    source,
-    isLoading,
-    isGenerating,
-    loadError,
-    hasHistory,
-    canGenerate,
     setNotes,
-    appendPrompt,
-    handleAction,
-    acceptStructuredItem,
-    isStructuredItemAccepted,
-    isStructuredItemAccepting,
-    clearWorkspace,
-    refreshWorkspace,
-  } = useChiefOfStaff();
+    isGenerating,
+    result,
+    handleBuildActionPlan,
+    resetWorkspace
+  } = useChiefDemoState();
+
+  const acceptHandlers = {
+    onAcceptPriority: async (item) => console.log("Priority accepted:", item),
+    onAcceptOpportunity: async (item) =>
+      console.log("Opportunity accepted:", item),
+    onAcceptContent: async (item) => console.log("Content accepted:", item),
+    onAcceptTask: async (item) => console.log("Task accepted:", item),
+    onAcceptAll: async () => console.log("Accept all clicked")
+  };
 
   return (
-    <section className="chief-page">
-      <PageHeader
-        title="Chief of Staff"
-        description="Convert rough notes into executive text, action recommendations, and draft-ready material."
-        actionText="Reset Workspace"
-        onAction={clearWorkspace}
-        actionLabel="Clear chief of staff notes and generated outputs"
-      />
-      <SourceStatusNotice
-        source={source}
-        loadError={loadError}
-        onRetry={refreshWorkspace}
-        retryAriaLabel="Retry loading chief workspace"
-      />
-      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading chief workspace.</p> : null}
+    <section className="chief-page-grid">
+      <h1 className="sr-only">Chief of Staff</h1>
+      <div className="chief-left-column">
+        <div className="chief-card chief-input-card">
+          <div className="chief-input-header">
+            <div>
+              <p className="chief-eyebrow">Prompt Workspace</p>
+              <h3>Turn founder notes into action</h3>
+            </div>
 
-      <div className="chief-grid">
-        <PromptWorkspace
-          notesFieldId={notesFieldId}
-          notes={notes}
-          onNotesChange={setNotes}
+            <button type="button" onClick={resetWorkspace}>
+              Reset Workspace
+            </button>
+          </div>
+
+          <p className="chief-helper-text">
+            Paste notes, founder thoughts, meeting takeaways, or rough strategy
+            ideas.
+          </p>
+
+          <textarea
+            className="chief-notes-input"
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="I need to follow up with XPAIRK, write a LinkedIn post, and figure out hiring strategy..."
+          />
+
+          <div className="chief-action-grid">
+            <button
+              type="button"
+              onClick={handleBuildActionPlan}
+              disabled={!notes.trim() || isGenerating}
+            >
+              {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="chief-right-column">
+        <ChiefOutputPanel
           isGenerating={isGenerating}
-          canGenerate={canGenerate}
-          onAction={handleAction}
-          onAppendPrompt={appendPrompt}
-        />
-        <AIOutputPanel
-          isGenerating={isGenerating}
-          feedback={feedback}
-          hasHistory={hasHistory}
-          responses={responses}
-          onAcceptStructuredItem={acceptStructuredItem}
-          isStructuredItemAccepted={isStructuredItemAccepted}
-          isStructuredItemAccepting={isStructuredItemAccepting}
+          result={result}
+          onAcceptPriority={acceptHandlers.onAcceptPriority}
+          onAcceptOpportunity={acceptHandlers.onAcceptOpportunity}
+          onAcceptContent={acceptHandlers.onAcceptContent}
+          onAcceptTask={acceptHandlers.onAcceptTask}
+          onAcceptAll={acceptHandlers.onAcceptAll}
         />
       </div>
     </section>
   );
 }
-
-export default ChiefOfStaff;
