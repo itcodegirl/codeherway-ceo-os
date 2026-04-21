@@ -32,7 +32,7 @@ function CrudPageTemplate({
     <section className={pageClassName}>
       <PageHeader title={pageTitle} description={pageDescription} />
 
-      <p className={`helper-text ${sourceNoteClassName}`.trim()} role="status" aria-live="polite">
+      <p className={`helper-text ${sourceNoteClassName}`.trim()}>
         {sourceNote}
       </p>
 

@@ -32,7 +32,7 @@ function WeeklyBrief() {
         description="A weekly planning and review checkpoint to keep momentum explicit."
       />
 
-      <p className="helper-text weekly-source-note" role="status" aria-live="polite">
+      <p className="helper-text weekly-source-note">
         Data source: local persistent storage in this browser.
       </p>
 
