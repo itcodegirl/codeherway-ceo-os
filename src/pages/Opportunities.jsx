@@ -7,6 +7,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
+import SummaryCards from '../components/ui/SummaryCards';
 import Textarea from '../components/ui/Textarea';
 import {
   createOpportunity,
@@ -123,6 +124,25 @@ function Opportunities() {
       },
     );
   }, [opportunityItems]);
+  const inProgressCount = metrics.byStage['In Progress'];
+
+  const summaryCards = useMemo(() => ([
+    {
+      id: 'opportunities-total',
+      label: 'Total Opportunities',
+      value: metrics.total,
+    },
+    {
+      id: 'opportunities-high',
+      label: 'High Priority',
+      value: metrics.byPriority.High,
+    },
+    {
+      id: 'opportunities-progress',
+      label: 'In Progress',
+      value: inProgressCount,
+    },
+  ]), [inProgressCount, metrics.total, metrics.byPriority.High]);
 
   return (
     <CrudPageTemplate
@@ -138,32 +158,18 @@ function Opportunities() {
       loadingAnnouncement="Loading opportunities data."
       isLoading={isLoading}
       summaryLoadingContent={(
-        <div className="opportunities-summary" aria-busy={isLoading}>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <article className="summary-card" key={`opportunities-summary-loading-${index}`}>
-              <div className="skeleton-line skeleton-line--label" />
-              <div className="skeleton-line skeleton-line--value" />
-            </article>
-          ))}
-        </div>
+        <SummaryCards
+          className="opportunities-summary"
+          isLoading
+          loadingCount={3}
+          loadingKeyPrefix="opportunities-summary"
+        />
       )}
       summaryContent={(
-        <div className="opportunities-summary">
-          <article className="summary-card">
-            <p className="summary-card__label">Total Opportunities</p>
-            <h3 className="summary-card__value">{metrics.total}</h3>
-          </article>
-
-          <article className="summary-card">
-            <p className="summary-card__label">High Priority</p>
-            <h3 className="summary-card__value">{metrics.byPriority.High}</h3>
-          </article>
-
-          <article className="summary-card">
-            <p className="summary-card__label">In Progress</p>
-            <h3 className="summary-card__value">{metrics.byStage['In Progress']}</h3>
-          </article>
-        </div>
+        <SummaryCards
+          className="opportunities-summary"
+          cards={summaryCards}
+        />
       )}
       sectionTitle="Pipeline Overview"
       sectionActionText="Add Opportunity"

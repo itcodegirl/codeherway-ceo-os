@@ -7,6 +7,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
+import SummaryCards from '../components/ui/SummaryCards';
 import {
   createContentItem,
   deleteContentItem,
@@ -110,6 +111,24 @@ function ContentOS() {
     [contentRows],
   );
 
+  const summaryCards = useMemo(() => ([
+    {
+      id: 'content-drafting',
+      label: 'Drafting',
+      value: statusCounts.Drafting,
+    },
+    {
+      id: 'content-editing',
+      label: 'Editing',
+      value: statusCounts.Editing,
+    },
+    {
+      id: 'content-scheduled',
+      label: 'Scheduled',
+      value: statusCounts.Scheduled,
+    },
+  ]), [statusCounts.Drafting, statusCounts.Editing, statusCounts.Scheduled]);
+
   return (
     <CrudPageTemplate
       pageClassName="content-page"
@@ -124,32 +143,18 @@ function ContentOS() {
       loadingAnnouncement="Loading content board data."
       isLoading={isLoading}
       summaryLoadingContent={(
-        <div className="content-summary" aria-busy={isLoading}>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <article className="summary-card" key={`content-summary-loading-${index}`}>
-              <div className="skeleton-line skeleton-line--label" />
-              <div className="skeleton-line skeleton-line--value" />
-            </article>
-          ))}
-        </div>
+        <SummaryCards
+          className="content-summary"
+          isLoading
+          loadingCount={3}
+          loadingKeyPrefix="content-summary"
+        />
       )}
       summaryContent={(
-        <div className="content-summary">
-          <article className="summary-card">
-            <p className="summary-card__label">Drafting</p>
-            <h3 className="summary-card__value">{statusCounts.Drafting}</h3>
-          </article>
-
-          <article className="summary-card">
-            <p className="summary-card__label">Editing</p>
-            <h3 className="summary-card__value">{statusCounts.Editing}</h3>
-          </article>
-
-          <article className="summary-card">
-            <p className="summary-card__label">Scheduled</p>
-            <h3 className="summary-card__value">{statusCounts.Scheduled}</h3>
-          </article>
-        </div>
+        <SummaryCards
+          className="content-summary"
+          cards={summaryCards}
+        />
       )}
       sectionTitle="Publishing Workflow"
       sectionActionText="Add Content"

@@ -5,6 +5,7 @@ import {
   getEditorTitle,
   getFormValuesForEdit,
 } from '../lib/weeklyBriefEditor';
+import { useConfirmDelete } from './useConfirmDelete';
 
 function getItemName(type, item) {
   if (!item) {
@@ -19,19 +20,30 @@ export function useWeeklySectionEditor({ type, defaultItems, setItems }) {
   const [editorItemId, setEditorItemId] = useState('');
   const [formValues, setFormValues] = useState({});
   const [formError, setFormError] = useState('');
-  const [deleteState, setDeleteState] = useState({ itemId: '', itemName: '' });
+
+  const {
+    isConfirmOpen: isDeleteConfirmOpen,
+    confirmMessage: deletePrompt,
+    requestConfirm,
+    closeConfirm: closeDeleteConfirm,
+    confirm: handleConfirmDelete,
+  } = useConfirmDelete({
+    onConfirm: async (itemToDelete) => {
+      const itemId = itemToDelete?.id;
+      if (itemId === null || itemId === undefined) {
+        return;
+      }
+
+      setItems((current) => {
+        const sourceItems = Array.isArray(current) ? current : defaultItems;
+        return sourceItems.filter((item) => String(item.id) !== String(itemId));
+      });
+    },
+  });
 
   const isEditing = Boolean(editorItemId);
-  const isDeleteConfirmOpen = Boolean(deleteState.itemId);
 
   const editorTitle = useMemo(() => getEditorTitle(type, isEditing), [isEditing, type]);
-  const deletePrompt = useMemo(() => {
-    if (!deleteState.itemName) {
-      return '';
-    }
-
-    return `Delete "${deleteState.itemName}"? This cannot be undone.`;
-  }, [deleteState.itemName]);
 
   const closeEditor = () => {
     setIsEditorOpen(false);
@@ -73,26 +85,12 @@ export function useWeeklySectionEditor({ type, defaultItems, setItems }) {
       return;
     }
 
-    setDeleteState({
-      itemId: String(itemId),
-      itemName,
+    requestConfirm({
+      message: `Delete "${itemName}"? This cannot be undone.`,
+      payload: {
+        id: itemId,
+      },
     });
-  };
-
-  const closeDeleteConfirm = () => {
-    setDeleteState({ itemId: '', itemName: '' });
-  };
-
-  const handleConfirmDelete = () => {
-    if (!deleteState.itemId) {
-      return;
-    }
-
-    setItems((current) => {
-      const sourceItems = Array.isArray(current) ? current : defaultItems;
-      return sourceItems.filter((item) => String(item.id) !== deleteState.itemId);
-    });
-    closeDeleteConfirm();
   };
 
   const handleEditorSubmit = (event) => {

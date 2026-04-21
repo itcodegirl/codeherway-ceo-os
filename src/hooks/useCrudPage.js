@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirmDelete } from './useConfirmDelete';
 
 export function useCrudPage({
   defaultFormValues,
@@ -17,20 +18,46 @@ export function useCrudPage({
   const [items, setItems] = useState([]);
   const [selectedItemState, setSelectedItemState] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [formValues, setFormValues] = useState(defaultFormValues);
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
   const selectedItem = selectedItemState;
 
+  const {
+    isConfirmOpen: isDeleteConfirmOpen,
+    confirmMessage: deletePrompt,
+    isConfirmPending: isDeleting,
+    requestConfirm,
+    closeConfirm: closeDeleteConfirm,
+    resetConfirm,
+    confirm: confirmDelete,
+  } = useConfirmDelete({
+    onConfirm: async (itemToDelete) => {
+      if (!itemToDelete) {
+        return;
+      }
+
+      try {
+        await deleteItem(itemToDelete.id);
+        setItems((current) => current.filter((item) => item.id !== itemToDelete.id));
+        setSelectedItemState(null);
+      } catch (error) {
+        setLoadError(messages.delete);
+        if (import.meta.env.DEV) {
+          console.error(`Failed to delete ${logPrefix}`, error);
+        }
+        throw error;
+      }
+    },
+  });
+
   const setSelectedItem = useCallback((nextItem) => {
     setSelectedItemState(nextItem);
     if (!nextItem) {
-      setIsDeleteConfirmOpen(false);
+      resetConfirm();
     }
-  }, []);
+  }, [resetConfirm]);
 
   useEffect(() => {
     let isActive = true;
@@ -72,7 +99,6 @@ export function useCrudPage({
 
   const handleOpenCreateModal = useCallback(() => {
     setSelectedItem(null);
-    setIsDeleteConfirmOpen(false);
     resetForm();
     setIsFormOpen(true);
   }, [resetForm, setSelectedItem]);
@@ -84,9 +110,9 @@ export function useCrudPage({
 
     setFormValues(mapItemToFormValues(selectedItem));
     setFormError('');
-    setIsDeleteConfirmOpen(false);
+    closeDeleteConfirm();
     setIsFormOpen(true);
-  }, [mapItemToFormValues, selectedItem]);
+  }, [closeDeleteConfirm, mapItemToFormValues, selectedItem]);
 
   const handleCloseFormModal = useCallback(() => {
     if (isSaving) {
@@ -102,16 +128,15 @@ export function useCrudPage({
       return;
     }
 
-    setIsDeleteConfirmOpen(true);
-  }, [isDeleting, selectedItem]);
+    requestConfirm({
+      message: `Delete "${getDeleteLabel(selectedItem)}"? This cannot be undone.`,
+      payload: selectedItem,
+    });
+  }, [getDeleteLabel, isDeleting, requestConfirm, selectedItem]);
 
   const handleCloseDeleteConfirm = useCallback(() => {
-    if (isDeleting) {
-      return;
-    }
-
-    setIsDeleteConfirmOpen(false);
-  }, [isDeleting]);
+    closeDeleteConfirm();
+  }, [closeDeleteConfirm]);
 
   const handleFormChange = useCallback((field, value) => {
     setFormValues((current) => ({
@@ -167,25 +192,12 @@ export function useCrudPage({
   ]);
 
   const handleConfirmDeleteSelected = useCallback(async () => {
-    if (!selectedItem) {
-      return;
-    }
-
-    setIsDeleting(true);
     try {
-      await deleteItem(selectedItem.id);
-      setItems((current) => current.filter((item) => item.id !== selectedItem.id));
-      setIsDeleteConfirmOpen(false);
-      setSelectedItemState(null);
-    } catch (error) {
-      setLoadError(messages.delete);
-      if (import.meta.env.DEV) {
-        console.error(`Failed to delete ${logPrefix}`, error);
-      }
-    } finally {
-      setIsDeleting(false);
+      await confirmDelete();
+    } catch {
+      // Error state is already set in onConfirm; keep modal open so the user can retry.
     }
-  }, [deleteItem, logPrefix, messages.delete, selectedItem]);
+  }, [confirmDelete]);
 
   return {
     isLoading,
@@ -207,6 +219,6 @@ export function useCrudPage({
     handleOpenDeleteConfirm,
     handleCloseDeleteConfirm,
     handleConfirmDeleteSelected,
-    deletePrompt: selectedItem ? `Delete "${getDeleteLabel(selectedItem)}"? This cannot be undone.` : '',
+    deletePrompt,
   };
 }

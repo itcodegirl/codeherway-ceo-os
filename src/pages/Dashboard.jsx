@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
@@ -11,17 +11,9 @@ import {
   weeklyPriorities as defaultWeeklyPriorities,
   weeklyBlockers as defaultWeeklyBlockers,
 } from '../data/mockData';
-import {
-  getOpportunitiesSource,
-  listOpportunities,
-  OPPORTUNITIES_UPDATED_EVENT,
-} from '../lib/opportunitiesRepository';
-import {
-  CONTENT_ITEMS_UPDATED_EVENT,
-  getContentSource,
-  listContentItems,
-} from '../lib/contentRepository';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
+import { useToast } from '../hooks/useToast';
 import '../styles/dashboard.css';
 
 const contentStatusTone = {
@@ -29,8 +21,6 @@ const contentStatusTone = {
   Editing: 'warning',
   Scheduled: 'high',
 };
-const SILENT_REFRESH_COALESCE_MS = 400;
-const isLocalDemoMode = getOpportunitiesSource() === 'local' && getContentSource() === 'local';
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
@@ -46,16 +36,26 @@ function shortenText(text, maxLength = 64) {
 }
 
 function Dashboard() {
-  const [toastMessage, setToastMessage] = useState('');
-  const [opportunityItems, setOpportunityItems] = useState([]);
-  const [contentRows, setContentRows] = useState([]);
+  const {
+    toastMessage,
+    isToastVisible,
+    showToast,
+  } = useToast();
   const [storedWeeklyPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultWeeklyPriorities);
   const [storedWeeklyBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultWeeklyBlockers);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const toastTimerRef = useRef(null);
-  const isMountedRef = useRef(true);
-  const requestIdRef = useRef(0);
-  const lastSilentRefreshAtRef = useRef(0);
+  const handleDashboardLoadError = useCallback((error) => {
+    showToast('Unable to refresh dashboard data right now.');
+    if (import.meta.env.DEV) {
+      console.error('Dashboard data load failed', error);
+    }
+  }, [showToast]);
+  const {
+    opportunityItems,
+    contentRows,
+    isDataLoading,
+  } = useDashboardData({
+    onLoadError: handleDashboardLoadError,
+  });
 
   const weeklyPriorities = useMemo(() => {
     if (!Array.isArray(storedWeeklyPriorities)) {
@@ -176,7 +176,7 @@ function Dashboard() {
     const focusChangeBase = scoreContext > 0
       ? `${scoreContext} active risk${scoreContext > 1 ? 's' : ''}`
       : `${inProgressPriorities} priorities in progress`;
-    const focusChange = isLocalDemoMode
+    const focusChange = isLocalDashboardDemoMode
       ? `${focusChangeBase} - ${dashboardDemoData.focusScore.demoSuffix}`
       : focusChangeBase;
 
@@ -224,118 +224,6 @@ function Dashboard() {
       },
     ];
   }, [contentRows, dashboardInsights.focusChange, dashboardInsights.focusScore, isDataLoading, opportunityItems]);
-
-  const showToast = useCallback((message) => {
-    setToastMessage(message);
-
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
-
-    toastTimerRef.current = window.setTimeout(() => {
-      setToastMessage('');
-    }, 2200);
-  }, []);
-
-  const loadDashboardData = useCallback(
-    async ({ silent = false } = {}) => {
-      const requestId = requestIdRef.current + 1;
-      requestIdRef.current = requestId;
-
-      if (!silent) {
-        setIsDataLoading(true);
-      }
-
-      try {
-        const [nextOpportunities, nextContentRows] = await Promise.all([
-          listOpportunities(),
-          listContentItems(),
-        ]);
-
-        if (!isMountedRef.current || requestId !== requestIdRef.current) {
-          return;
-        }
-
-        setOpportunityItems(nextOpportunities);
-        setContentRows(nextContentRows);
-      } catch (error) {
-        if (!isMountedRef.current || requestId !== requestIdRef.current) {
-          return;
-        }
-
-        showToast('Unable to refresh dashboard data right now.');
-        if (import.meta.env.DEV) {
-          console.error('Dashboard data load failed', error);
-        }
-      } finally {
-        if (!silent && isMountedRef.current && requestId === requestIdRef.current) {
-          setIsDataLoading(false);
-        }
-      }
-    },
-    [showToast],
-  );
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const frameId = window.requestAnimationFrame(() => {
-      loadDashboardData();
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
-  }, [loadDashboardData]);
-
-  useEffect(() => {
-    const requestSilentRefresh = () => {
-      const now = Date.now();
-      if (now - lastSilentRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
-        return;
-      }
-
-      lastSilentRefreshAtRef.current = now;
-      loadDashboardData({ silent: true });
-    };
-
-    const handleStorageChange = (event) => {
-      if (
-        event.key === 'ceo-os-opportunities'
-        || event.key === 'ceo-os-content-items'
-        || event.key === null
-      ) {
-        requestSilentRefresh();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        requestSilentRefresh();
-      }
-    };
-
-    window.addEventListener(OPPORTUNITIES_UPDATED_EVENT, requestSilentRefresh);
-    window.addEventListener(CONTENT_ITEMS_UPDATED_EVENT, requestSilentRefresh);
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', requestSilentRefresh);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener(OPPORTUNITIES_UPDATED_EVENT, requestSilentRefresh);
-      window.removeEventListener(CONTENT_ITEMS_UPDATED_EVENT, requestSilentRefresh);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', requestSilentRefresh);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [loadDashboardData]);
 
   const handleCopySnapshot = async () => {
     const snapshot = [
@@ -417,7 +305,7 @@ function Dashboard() {
               <strong>{dashboardInsights.momentumLabel}</strong>
             </div>
           </div>
-          {isLocalDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
+          {isLocalDashboardDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
         </SectionCard>
 
         <SectionCard
@@ -476,12 +364,12 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard title="Recent Activity">
-          {isLocalDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
+          {isLocalDashboardDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
           <ActivityFeed items={dashboardInsights.recentActivity} />
         </SectionCard>
       </div>
 
-      <Toast className="toast--dashboard" isVisible={Boolean(toastMessage)} message={toastMessage} />
+      <Toast className="toast--dashboard" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }
