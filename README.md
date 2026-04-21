@@ -95,6 +95,7 @@ Useful commands:
 ```bash
 npm run lint
 npm run build
+npm run typecheck
 npm run test:run
 ```
 
