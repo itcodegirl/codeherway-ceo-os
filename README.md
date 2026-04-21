@@ -133,6 +133,7 @@ npm run typecheck
 ## Portfolio assets
 
 - [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
+- [docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md) for final release-candidate verification.
 
 ## Portfolio and production readiness
 
@@ -163,7 +164,9 @@ npm run typecheck
 - Repository includes architecture decision records and tradeoffs via:
   - `README.md`
   - `CASE_STUDY.md`
+  - `docs/RELEASE_CHECKLIST.md`
 
 ## Author
 
-Jenna Zawaski — frontend product engineering with workflow-first architecture focus.
+Jenna Zawaski - frontend product engineering with workflow-first architecture focus.
+
