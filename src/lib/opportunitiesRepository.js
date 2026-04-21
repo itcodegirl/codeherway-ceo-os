@@ -1,5 +1,5 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
-import { isSupabaseConfigured, supabaseClient } from './supabase';
+import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 import { buildCreateId } from './utils';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
@@ -62,6 +62,7 @@ function notifyOpportunitiesUpdated(detail = {}) {
 
 function formatForSupabase(payload) {
   return {
+    ...(payload.userId ? { user_id: payload.userId } : {}),
     name: payload.name,
     company: payload.company,
     priority: payload.priority,
@@ -80,9 +81,11 @@ export function getOpportunitiesSource() {
 
 export async function listOpportunities() {
   if (isSupabaseConfigured && supabaseClient) {
+    const userId = await requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('opportunities')
-      .select('id, name, company, priority, stage, next_step');
+      .select('id, name, company, priority, stage, next_step')
+      .eq('user_id', userId);
 
     if (error) {
       throw error;
@@ -98,9 +101,10 @@ export async function createOpportunity(payload) {
   const normalizedPayload = normalizeOpportunity({ id: buildCreateId(), ...payload });
 
   if (isSupabaseConfigured && supabaseClient) {
+    const userId = await requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('opportunities')
-      .insert(formatForSupabase(normalizedPayload))
+      .insert(formatForSupabase({ ...normalizedPayload, userId }))
       .select('id, name, company, priority, stage, next_step')
       .single();
 
@@ -123,10 +127,12 @@ export async function updateOpportunity(id, payload) {
   const normalizedPayload = normalizeOpportunity({ id, ...payload });
 
   if (isSupabaseConfigured && supabaseClient) {
+    const userId = await requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('opportunities')
       .update(formatForSupabase(normalizedPayload))
       .eq('id', id)
+      .eq('user_id', userId)
       .select('id, name, company, priority, stage, next_step')
       .single();
 
@@ -147,7 +153,12 @@ export async function updateOpportunity(id, payload) {
 
 export async function deleteOpportunity(id) {
   if (isSupabaseConfigured && supabaseClient) {
-    const { error } = await supabaseClient.from('opportunities').delete().eq('id', id);
+    const userId = await requireSupabaseUserId();
+    const { error } = await supabaseClient
+      .from('opportunities')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
     if (error) {
       throw error;
     }

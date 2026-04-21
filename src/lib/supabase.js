@@ -27,3 +27,23 @@ export const supabaseClient = isSupabaseConfigured
       },
     })
   : null;
+
+export async function requireSupabaseUserId() {
+  if (!supabaseClient) {
+    return '';
+  }
+
+  const { data, error } = await supabaseClient.auth.getUser();
+  if (error) {
+    throw error;
+  }
+
+  const userId = data?.user?.id;
+  if (!userId) {
+    const authError = new Error('Supabase authentication is required for this action.');
+    authError.code = 'SUPABASE_AUTH_REQUIRED';
+    throw authError;
+  }
+
+  return userId;
+}

@@ -1,5 +1,5 @@
 import { contentItems as mockContentItems } from '../data/mockData';
-import { isSupabaseConfigured, supabaseClient } from './supabase';
+import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 import { buildCreateId } from './utils';
 
 const STORAGE_KEY = 'ceo-os-content-items';
@@ -64,9 +64,11 @@ export function getContentSource() {
 
 export async function listContentItems() {
   if (isSupabaseConfigured && supabaseClient) {
+    const userId = await requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
-      .select('id, title, platform, status');
+      .select('id, title, platform, status')
+      .eq('user_id', userId);
 
     if (error) {
       throw error;
@@ -82,9 +84,11 @@ export async function createContentItem(payload) {
   const normalizedPayload = normalizeContentItem({ id: buildCreateId(), ...payload });
 
   if (isSupabaseConfigured && supabaseClient) {
+    const userId = await requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
       .insert({
+        user_id: userId,
         title: normalizedPayload.title,
         platform: normalizedPayload.platform,
         status: normalizedPayload.status,
@@ -111,6 +115,7 @@ export async function updateContentItem(id, payload) {
   const normalizedPayload = normalizeContentItem({ id, ...payload });
 
   if (isSupabaseConfigured && supabaseClient) {
+    const userId = await requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
       .update({
@@ -119,6 +124,7 @@ export async function updateContentItem(id, payload) {
         status: normalizedPayload.status,
       })
       .eq('id', id)
+      .eq('user_id', userId)
       .select('id, title, platform, status')
       .single();
 
@@ -139,7 +145,12 @@ export async function updateContentItem(id, payload) {
 
 export async function deleteContentItem(id) {
   if (isSupabaseConfigured && supabaseClient) {
-    const { error } = await supabaseClient.from('content_items').delete().eq('id', id);
+    const userId = await requireSupabaseUserId();
+    const { error } = await supabaseClient
+      .from('content_items')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
     if (error) {
       throw error;
     }
