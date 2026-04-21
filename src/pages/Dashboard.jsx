@@ -20,6 +20,7 @@ const contentStatusTone = {
   Editing: 'warning',
   Scheduled: 'high',
 };
+const SILENT_REFRESH_COALESCE_MS = 400;
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
@@ -44,6 +45,7 @@ function Dashboard() {
   const toastTimerRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  const lastSilentRefreshAtRef = useRef(0);
 
   const weeklyPriorities = useMemo(() => {
     if (!Array.isArray(storedWeeklyPriorities)) {
@@ -280,7 +282,13 @@ function Dashboard() {
   }, [loadDashboardData]);
 
   useEffect(() => {
-    const handleRepositoryChange = () => {
+    const requestSilentRefresh = () => {
+      const now = Date.now();
+      if (now - lastSilentRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
+        return;
+      }
+
+      lastSilentRefreshAtRef.current = now;
       loadDashboardData({ silent: true });
     };
 
@@ -290,27 +298,27 @@ function Dashboard() {
         || event.key === 'ceo-os-content-items'
         || event.key === null
       ) {
-        handleRepositoryChange();
+        requestSilentRefresh();
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        handleRepositoryChange();
+        requestSilentRefresh();
       }
     };
 
-    window.addEventListener(OPPORTUNITIES_UPDATED_EVENT, handleRepositoryChange);
-    window.addEventListener(CONTENT_ITEMS_UPDATED_EVENT, handleRepositoryChange);
+    window.addEventListener(OPPORTUNITIES_UPDATED_EVENT, requestSilentRefresh);
+    window.addEventListener(CONTENT_ITEMS_UPDATED_EVENT, requestSilentRefresh);
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleRepositoryChange);
+    window.addEventListener('focus', requestSilentRefresh);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener(OPPORTUNITIES_UPDATED_EVENT, handleRepositoryChange);
-      window.removeEventListener(CONTENT_ITEMS_UPDATED_EVENT, handleRepositoryChange);
+      window.removeEventListener(OPPORTUNITIES_UPDATED_EVENT, requestSilentRefresh);
+      window.removeEventListener(CONTENT_ITEMS_UPDATED_EVENT, requestSilentRefresh);
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleRepositoryChange);
+      window.removeEventListener('focus', requestSilentRefresh);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [loadDashboardData]);
