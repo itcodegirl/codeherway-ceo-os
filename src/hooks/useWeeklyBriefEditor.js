@@ -1,0 +1,136 @@
+import { useMemo, useState } from 'react';
+import {
+  DEFAULT_EDITOR_STATE,
+  createEditorPayload,
+  getDefaultFormValues,
+  getEditorTitle,
+  getFormValuesForEdit,
+} from '../lib/weeklyBriefEditor';
+
+function getCollectionConfig(type, params) {
+  const {
+    defaultPriorities,
+    defaultWins,
+    defaultBlockers,
+    setStoredPriorities,
+    setStoredWins,
+    setStoredBlockers,
+  } = params;
+
+  switch (type) {
+    case 'priority':
+      return {
+        defaultItems: defaultPriorities,
+        setItems: setStoredPriorities,
+      };
+    case 'win':
+      return {
+        defaultItems: defaultWins,
+        setItems: setStoredWins,
+      };
+    case 'blocker':
+      return {
+        defaultItems: defaultBlockers,
+        setItems: setStoredBlockers,
+      };
+    default:
+      return null;
+  }
+}
+
+export function useWeeklyBriefEditor(params) {
+  const [editorState, setEditorState] = useState(DEFAULT_EDITOR_STATE);
+  const [formValues, setFormValues] = useState({});
+  const [formError, setFormError] = useState('');
+
+  const isEditorOpen = Boolean(editorState.type);
+  const isEditing = Boolean(editorState.itemId);
+
+  const editorTitle = useMemo(
+    () => getEditorTitle(editorState.type, isEditing),
+    [editorState.type, isEditing],
+  );
+
+  const closeEditor = () => {
+    setEditorState(DEFAULT_EDITOR_STATE);
+    setFormValues({});
+    setFormError('');
+  };
+
+  const openCreateEditor = (type) => {
+    setEditorState({ type, itemId: '' });
+    setFormValues(getDefaultFormValues(type));
+    setFormError('');
+  };
+
+  const openEditEditor = (type, item) => {
+    setEditorState({ type, itemId: String(item.id) });
+    setFormValues(getFormValuesForEdit(type, item));
+    setFormError('');
+  };
+
+  const handleFormChange = (field, value) => {
+    setFormValues((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const updateCollection = (type, updater) => {
+    const config = getCollectionConfig(type, params);
+    if (!config) {
+      return;
+    }
+
+    config.setItems((current) => {
+      const sourceItems = Array.isArray(current) ? current : config.defaultItems;
+      return updater(sourceItems);
+    });
+  };
+
+  const handleDelete = (type, item) => {
+    const itemName = type === 'priority' ? item.title : item.text;
+    const shouldDelete = window.confirm(`Delete "${itemName}"? This cannot be undone.`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    updateCollection(type, (items) =>
+      items.filter((entry) => String(entry.id) !== String(item.id)));
+  };
+
+  const handleEditorSubmit = (event) => {
+    event.preventDefault();
+
+    const { payload, error } = createEditorPayload(editorState.type, formValues, editorState.itemId);
+    if (error) {
+      setFormError(error);
+      return;
+    }
+
+    updateCollection(editorState.type, (items) => {
+      if (!editorState.itemId) {
+        return [payload, ...items];
+      }
+
+      return items.map((entry) => (String(entry.id) === String(editorState.itemId) ? payload : entry));
+    });
+
+    closeEditor();
+  };
+
+  return {
+    editorState,
+    formValues,
+    formError,
+    isEditorOpen,
+    isEditing,
+    editorTitle,
+    closeEditor,
+    openCreateEditor,
+    openEditEditor,
+    handleFormChange,
+    handleDelete,
+    handleEditorSubmit,
+  };
+}
