@@ -14,6 +14,26 @@ function shortenText(text, maxLength = 64) {
   return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
+function normalizeCollection(values) {
+  return Array.isArray(values) ? values : [];
+}
+
+function normalizeTone(value) {
+  if (typeof value !== 'string') {
+    return 'default';
+  }
+
+  return value.toLowerCase();
+}
+
+function normalizeStatusTone(status) {
+  if (typeof status !== 'string') {
+    return 'default';
+  }
+
+  return status.toLowerCase();
+}
+
 export function useDashboardInsights({
   weeklyPriorities,
   weeklyBlockers,
@@ -22,22 +42,27 @@ export function useDashboardInsights({
   isDataLoading,
   isLocalDashboardDemoMode,
 }) {
+  const safeWeeklyPriorities = normalizeCollection(weeklyPriorities);
+  const safeWeeklyBlockers = normalizeCollection(weeklyBlockers);
+  const safeOpportunityItems = normalizeCollection(opportunityItems);
+  const safeContentRows = normalizeCollection(contentRows);
+
   const dashboardCounts = useMemo(() => {
     const counts = {
       inProgressPriorities: 0,
       blockedPriorities: 0,
-      blockerCount: weeklyBlockers.length,
+      blockerCount: safeWeeklyBlockers.length,
       awaitingReplyCount: 0,
       highPriorityCount: 0,
       inProgressOpportunityCount: 0,
       scheduledContentCount: 0,
       editingContentCount: 0,
       draftingContentCount: 0,
-      opportunityCount: opportunityItems.length,
-      contentCount: contentRows.length,
+      opportunityCount: safeOpportunityItems.length,
+      contentCount: safeContentRows.length,
     };
 
-    weeklyPriorities.forEach((item) => {
+    safeWeeklyPriorities.forEach((item) => {
       if (item?.status === 'In Progress') {
         counts.inProgressPriorities += 1;
       }
@@ -47,7 +72,7 @@ export function useDashboardInsights({
       }
     });
 
-    opportunityItems.forEach((item) => {
+    safeOpportunityItems.forEach((item) => {
       if (item?.stage === 'Awaiting Reply') {
         counts.awaitingReplyCount += 1;
       }
@@ -61,7 +86,7 @@ export function useDashboardInsights({
       }
     });
 
-    contentRows.forEach((item) => {
+    safeContentRows.forEach((item) => {
       if (item?.status === 'Scheduled') {
         counts.scheduledContentCount += 1;
       }
@@ -76,18 +101,18 @@ export function useDashboardInsights({
     });
 
     return counts;
-  }, [contentRows, opportunityItems, weeklyBlockers.length, weeklyPriorities]);
+  }, [safeContentRows, safeOpportunityItems, safeWeeklyBlockers.length, safeWeeklyPriorities]);
 
   const priorityItems = useMemo(
     () =>
-      weeklyPriorities
+      safeWeeklyPriorities
         .slice(0, 3)
         .map((item, index) => ({
           id: item?.id ?? item?.title ?? `priority-${index}`,
           title: item?.title,
         }))
         .filter((item) => item.title),
-    [weeklyPriorities],
+    [safeWeeklyPriorities],
   );
 
   const dashboardInsightValues = useMemo(() => {
@@ -122,10 +147,12 @@ export function useDashboardInsights({
       momentumLabel = 'Steady progress';
     }
 
-    const leadPriority = weeklyPriorities.find((item) => item?.title);
-    const leadOpportunity = opportunityItems.find((item) => item.priority === 'High') || opportunityItems[0];
-    const leadContent = contentRows.find((item) => item.status === 'Scheduled') || contentRows[0];
-    const topBlocker = weeklyBlockers.find((item) => item?.text);
+    const leadPriority = safeWeeklyPriorities.find((item) => item?.title);
+    const leadOpportunity = safeOpportunityItems.find((item) => item.priority === 'High')
+      || safeOpportunityItems[0];
+    const leadContent = safeContentRows.find((item) => item.status === 'Scheduled')
+      || safeContentRows[0];
+    const topBlocker = safeWeeklyBlockers.find((item) => item?.text);
 
     const strategicFocus = leadPriority?.title
       ? shortenText(leadPriority.title)
@@ -205,7 +232,14 @@ export function useDashboardInsights({
       recentActivity,
       momentumValues,
     };
-  }, [contentRows, dashboardCounts, isLocalDashboardDemoMode, opportunityItems, weeklyBlockers, weeklyPriorities]);
+  }, [
+    dashboardCounts,
+    isLocalDashboardDemoMode,
+    safeContentRows,
+    safeOpportunityItems,
+    safeWeeklyBlockers,
+    safeWeeklyPriorities,
+  ]);
 
   const statCards = useMemo(() => {
     const {
@@ -250,10 +284,77 @@ export function useDashboardInsights({
     isDataLoading,
   ]);
 
+  const dashboardOpportunityRows = useMemo(
+    () => safeOpportunityItems.map((item, index) => {
+      const itemId = item?.id ?? `opportunity-${index}`;
+      const priority = item?.priority;
+      return {
+        id: itemId,
+        name: item?.name || 'Untitled opportunity',
+        company: item?.company || 'Unknown company',
+        priorityTone: normalizeTone(priority),
+        priority: normalizeStatusTone(priority),
+        stage: item?.stage || 'Unknown stage',
+      };
+    }),
+    [safeOpportunityItems],
+  );
+
+  const dashboardContentRows = useMemo(
+    () => safeContentRows.map((item, index) => {
+      const itemId = item?.id ?? `content-${index}`;
+      return {
+        id: itemId,
+        title: item?.title || 'Untitled content',
+        platform: item?.platform || 'Unknown platform',
+        statusTone: normalizeStatusTone(item?.status),
+        status: item?.status || 'Drafting',
+      };
+    }),
+    [safeContentRows],
+  );
+
+  const snapshotRows = useMemo(
+    () => [
+      {
+        id: 'strategic-focus',
+        label: 'Strategic Focus',
+        value: dashboardInsightValues.strategicFocus,
+      },
+      {
+        id: 'top-risk',
+        label: 'Top Risk',
+        value: dashboardInsightValues.topRisk,
+      },
+      {
+        id: 'momentum',
+        label: 'Momentum',
+        value: dashboardInsightValues.momentumLabel,
+      },
+    ],
+    [
+      dashboardInsightValues.strategicFocus,
+      dashboardInsightValues.topRisk,
+      dashboardInsightValues.momentumLabel,
+    ],
+  );
+
+  const snapshotText = useMemo(
+    () => snapshotRows.map((row) => `${row.label}: ${row.value}`).join('\n'),
+    [snapshotRows],
+  );
+
   return {
     dashboardCounts,
     priorityItems,
     dashboardInsights: dashboardInsightValues,
+    isDashboardLoading: isDataLoading,
     statCards,
+    opportunityRows: dashboardOpportunityRows,
+    contentRows: dashboardContentRows,
+    snapshotRows,
+    snapshotText,
+    dashboardDemoNote: isLocalDashboardDemoMode ? dashboardDemoData.demoNote : '',
   };
 }
+

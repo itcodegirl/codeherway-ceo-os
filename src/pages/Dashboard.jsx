@@ -7,7 +7,6 @@ import Badge from '../components/ui/Badge';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import { dashboardDemoData } from '../data/mockData';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
 import { useDashboardInsights } from '../hooks/useDashboardInsights';
 import { useToast } from '../hooks/useToast';
@@ -45,37 +44,32 @@ function Dashboard() {
     refreshWeeklyBrief,
   } = useWeeklyBrief();
 
-  const normalizedWeeklyPriorities = Array.isArray(weeklyPriorities) ? weeklyPriorities : [];
-  const normalizedWeeklyBlockers = Array.isArray(weeklyBlockers) ? weeklyBlockers : [];
-  const isDashboardLoading = isDataLoading || isWeeklyLoading;
-
   const {
     priorityItems,
     dashboardInsights,
     statCards,
+    opportunityRows,
+    contentRows: dashboardContentRows,
+    snapshotRows,
+    snapshotText,
+    dashboardDemoNote,
   } = useDashboardInsights({
-    weeklyPriorities: normalizedWeeklyPriorities,
-    weeklyBlockers: normalizedWeeklyBlockers,
+    weeklyPriorities,
+    weeklyBlockers,
     opportunityItems,
-    contentRows,
-    isDataLoading: isDashboardLoading,
+    contentRows: contentRows,
+    isDataLoading: isDataLoading || isWeeklyLoading,
     isLocalDashboardDemoMode,
   });
 
   const handleCopySnapshot = async () => {
-    const snapshot = [
-      `Strategic Focus: ${dashboardInsights.strategicFocus}`,
-      `Top Risk: ${dashboardInsights.topRisk}`,
-      `Momentum: ${dashboardInsights.momentumLabel}`,
-    ].join('\n');
-
     if (!navigator?.clipboard?.writeText) {
       showToast('Clipboard access is not available in this environment.');
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(snapshot);
+      await navigator.clipboard.writeText(snapshotText);
       showToast('Executive snapshot copied to clipboard.');
     } catch (error) {
       showToast('Unable to copy snapshot right now.');
@@ -137,20 +131,14 @@ function Dashboard() {
           actionLabel="Copy executive snapshot"
         >
           <div className="snapshot-stack" role="list" aria-label="Executive snapshot highlights">
-            <div className="snapshot-row" role="listitem">
-              <span>Strategic Focus</span>
-              <strong>{dashboardInsights.strategicFocus}</strong>
-            </div>
-            <div className="snapshot-row" role="listitem">
-              <span>Top Risk</span>
-              <strong>{dashboardInsights.topRisk}</strong>
-            </div>
-            <div className="snapshot-row" role="listitem">
-              <span>Momentum</span>
-              <strong>{dashboardInsights.momentumLabel}</strong>
-            </div>
+            {snapshotRows.map((item) => (
+              <div key={item.id} className="snapshot-row" role="listitem">
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
           </div>
-          {isLocalDashboardDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
+          {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
         </SectionCard>
 
         <SectionCard
@@ -160,15 +148,20 @@ function Dashboard() {
           actionLabel="Open opportunities pipeline dashboard"
         >
           <div className="mini-table" role="list" aria-label="Opportunity pipeline snapshot">
-            {opportunityItems.length ? (
-              opportunityItems.map((item) => (
-                <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.name} at ${item.company}`}>
+            {opportunityRows.length ? (
+              opportunityRows.map((item) => (
+                <div
+                  key={item.id}
+                  className="mini-table__row"
+                  role="listitem"
+                  aria-label={`${item.name} at ${item.company}`}
+                >
                   <div>
                     <p className="mini-table__title">{item.name}</p>
                     <p className="mini-table__subtitle">{item.company}</p>
                   </div>
                   <div className="mini-table__meta">
-                    <Badge label={item.priority} tone={item.priority.toLowerCase()} />
+                    <Badge label={item.priority} tone={item.priorityTone} />
                     <span className="mini-table__stage">{item.stage}</span>
                   </div>
                 </div>
@@ -186,15 +179,23 @@ function Dashboard() {
           actionLabel="Open content operating system dashboard"
         >
           <div className="mini-table" role="list" aria-label="Content pipeline snapshot">
-            {contentRows.length ? (
-              contentRows.map((item) => (
-                <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.title} on ${item.platform}`}>
+            {dashboardContentRows.length ? (
+              dashboardContentRows.map((item) => (
+                <div
+                  key={item.id}
+                  className="mini-table__row"
+                  role="listitem"
+                  aria-label={`${item.title} on ${item.platform}`}
+                >
                   <div>
                     <p className="mini-table__title">{item.title}</p>
                     <p className="mini-table__subtitle">{item.platform}</p>
                   </div>
                   <div className="mini-table__meta">
-                    <Badge label={item.status} tone={contentStatusTone[item.status] || 'default'} />
+                    <Badge
+                      label={item.status}
+                      tone={contentStatusTone[item.status] || item.statusTone || 'default'}
+                    />
                   </div>
                 </div>
               ))
@@ -209,7 +210,7 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard title="Recent Activity">
-          {isLocalDashboardDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
+          {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
           <ActivityFeed items={dashboardInsights.recentActivity} />
         </SectionCard>
       </div>
