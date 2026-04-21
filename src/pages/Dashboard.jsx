@@ -68,7 +68,14 @@ function Dashboard() {
   }, [storedWeeklyBlockers]);
 
   const priorityItems = useMemo(
-    () => weeklyPriorities.slice(0, 3).map((item) => item?.title).filter(Boolean),
+    () =>
+      weeklyPriorities
+        .slice(0, 3)
+        .map((item, index) => ({
+          id: item?.id ?? item?.title ?? `priority-${index}`,
+          title: item?.title,
+        }))
+        .filter((item) => item.title),
     [weeklyPriorities],
   );
 
@@ -266,9 +273,9 @@ function Dashboard() {
         >
           <ul className="priority-list">
             {priorityItems.length ? priorityItems.map((item) => (
-              <li key={item} className="priority-list__item">
+              <li key={item.id} className="priority-list__item">
                 <span className="priority-list__dot" />
-                <span>{item}</span>
+                <span>{item.title}</span>
               </li>
             )) : (
               <li className="priority-list__item">
