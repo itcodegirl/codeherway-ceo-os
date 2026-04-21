@@ -114,6 +114,58 @@ describe('useDashboardData', () => {
     });
   });
 
+  it('keeps refresh listeners stable across rerenders and uses the latest onLoadError callback', async () => {
+    const firstOnLoadError = vi.fn();
+    const secondOnLoadError = vi.fn();
+    listOpportunities.mockResolvedValue([{ id: 'o-1', name: 'Opportunity A' }]);
+    listContentItems.mockResolvedValue([{ id: 'c-1', title: 'Status Update' }]);
+
+    const addWindowListener = vi.spyOn(window, 'addEventListener');
+    const addDocumentListener = vi.spyOn(document, 'addEventListener');
+    const capturedWindowHandlers = {};
+
+    addWindowListener.mockImplementation((type, listener) => {
+      capturedWindowHandlers[type] = listener;
+      return undefined;
+    });
+
+    try {
+      const { result, rerender } = renderHook(
+        ({ onLoadError }) => useDashboardData({ onLoadError }),
+        {
+          initialProps: { onLoadError: firstOnLoadError },
+        },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isDataLoading).toBe(false);
+      });
+
+      const windowListenerCountBeforeRerender = addWindowListener.mock.calls.length;
+      const documentListenerCountBeforeRerender = addDocumentListener.mock.calls.length;
+
+      rerender({ onLoadError: secondOnLoadError });
+
+      expect(addWindowListener.mock.calls.length).toBe(windowListenerCountBeforeRerender);
+      expect(addDocumentListener.mock.calls.length).toBe(documentListenerCountBeforeRerender);
+
+      listOpportunities.mockRejectedValue(new Error('refresh failed'));
+      listContentItems.mockResolvedValue([]);
+
+      act(() => {
+        capturedWindowHandlers.focus();
+      });
+
+      await waitFor(() => {
+        expect(secondOnLoadError).toHaveBeenCalledWith(expect.any(Error));
+      });
+      expect(firstOnLoadError).not.toHaveBeenCalled();
+    } finally {
+      addWindowListener.mockRestore();
+      addDocumentListener.mockRestore();
+    }
+  });
+
   it('keeps state references stable when silent refresh data is unchanged', async () => {
     const initialOpportunities = [{ id: 'o-1', name: 'Opportunity A', stage: 'In Progress' }];
     const initialContent = [{ id: 'c-1', title: 'Status Update', status: 'Drafting' }];

@@ -66,8 +66,13 @@ export function useDashboardData({ onLoadError }) {
   const [contentRows, setContentRows] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const isMountedRef = useRef(true);
+  const onLoadErrorRef = useRef(onLoadError);
   const requestIdRef = useRef(0);
   const lastSilentRefreshAtRef = useRef(0);
+
+  useEffect(() => {
+    onLoadErrorRef.current = onLoadError;
+  }, [onLoadError]);
 
   const loadDashboardData = useCallback(
     async ({ silent = false } = {}) => {
@@ -99,14 +104,14 @@ export function useDashboardData({ onLoadError }) {
           return;
         }
 
-        onLoadError?.(error);
+        onLoadErrorRef.current?.(error);
       } finally {
         if (!silent && isMountedRef.current && requestId === requestIdRef.current) {
           setIsDataLoading(false);
         }
       }
     },
-    [onLoadError],
+    [],
   );
 
   useEffect(() => () => {
