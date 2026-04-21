@@ -4,6 +4,7 @@ import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
+import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import { dashboardDemoData } from '../data/mockData';
@@ -41,6 +42,7 @@ function Dashboard() {
     isLoading: isWeeklyLoading,
     source: weeklySource,
     loadError: weeklyLoadError,
+    refreshWeeklyBrief,
   } = useWeeklyBrief();
 
   const normalizedWeeklyPriorities = Array.isArray(weeklyPriorities) ? weeklyPriorities : [];
@@ -86,12 +88,14 @@ function Dashboard() {
   return (
     <section className="dashboard-page">
       <PageHeader title="Dashboard" description="Track opportunities, content, and priorities from one executive view." />
-      <p className="helper-text">
-        {weeklySource === 'supabase'
-          ? 'Weekly data source: Supabase.'
-          : 'Weekly data source: local persistent storage.'}
-      </p>
-      {weeklyLoadError ? <p className="helper-text" role="alert">{weeklyLoadError}</p> : null}
+      <SourceStatusNotice
+        source={weeklySource}
+        supabaseText="Weekly data source: Supabase."
+        localText="Weekly data source: local persistent storage."
+        loadError={weeklyLoadError}
+        onRetry={refreshWeeklyBrief}
+        retryAriaLabel="Retry loading weekly dashboard data"
+      />
 
       <div className="dashboard-grid dashboard-grid--stats">
         {statCards.map((stat) => (

@@ -1,7 +1,7 @@
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import SummaryCards from '../components/ui/SummaryCards';
-import Button from '../components/ui/Button';
+import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import PrioritiesSection from '../components/weekly/PrioritiesSection';
 import WinsSection from '../components/weekly/WinsSection';
 import BlockersSection from '../components/weekly/BlockersSection';
@@ -42,26 +42,12 @@ function WeeklyBrief() {
         description="A weekly planning and review checkpoint to keep momentum explicit."
       />
 
-      <p className="helper-text weekly-source-note">
-        {source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Data source: local persistent storage in this browser.'}
-      </p>
-      {loadError ? (
-        <div className="helper-inline-actions">
-          <p className="helper-text weekly-error" role="alert">{loadError}</p>
-          <Button
-            type="button"
-            size="small"
-            onClick={() => {
-              void refreshWeeklyBrief();
-            }}
-            ariaLabel="Retry loading weekly brief"
-          >
-            Retry
-          </Button>
-        </div>
-      ) : null}
+      <SourceStatusNotice
+        source={source}
+        loadError={loadError}
+        onRetry={refreshWeeklyBrief}
+        retryAriaLabel="Retry loading weekly brief"
+      />
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading weekly brief.</p> : null}
 
       <SummaryCards

@@ -2,7 +2,7 @@ import { useId } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import AIOutputPanel from '../components/chief/AIOutputPanel';
 import PromptWorkspace from '../components/chief/PromptWorkspace';
-import Button from '../components/ui/Button';
+import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import '../styles/forms.css';
 import '../styles/chief-of-staff.css';
 import { useChiefOfStaff } from '../hooks/useChiefOfStaff';
@@ -38,26 +38,12 @@ function ChiefOfStaff() {
         onAction={clearWorkspace}
         actionLabel="Clear chief of staff notes and generated outputs"
       />
-      <p className="helper-text">
-        {source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Data source: local persistent storage in this browser.'}
-      </p>
-      {loadError ? (
-        <div className="helper-inline-actions">
-          <p className="helper-text" role="alert">{loadError}</p>
-          <Button
-            type="button"
-            size="small"
-            onClick={() => {
-              void refreshWorkspace();
-            }}
-            ariaLabel="Retry loading chief workspace"
-          >
-            Retry
-          </Button>
-        </div>
-      ) : null}
+      <SourceStatusNotice
+        source={source}
+        loadError={loadError}
+        onRetry={refreshWorkspace}
+        retryAriaLabel="Retry loading chief workspace"
+      />
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading chief workspace.</p> : null}
 
       <div className="chief-grid">

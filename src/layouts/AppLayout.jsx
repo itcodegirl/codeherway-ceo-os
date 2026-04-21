@@ -3,14 +3,14 @@ import { useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
-import { usePersistentState } from '../hooks/usePersistentState';
-import { DEFAULT_SETTINGS, resolveTeamName } from '../lib/settings';
+import { useSettings } from '../hooks/useSettings';
+import { resolveTeamName } from '../lib/settings';
 import { buildPageMetaByRoute, setCanonical, setMetaTag } from '../lib/pageMeta';
 
 function AppLayout() {
   const location = useLocation();
   const mainRef = useRef(null);
-  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
+  const { settings } = useSettings();
 
   const teamName = resolveTeamName(settings?.teamName);
   const appName = `${teamName} CEO OS`;

@@ -2,7 +2,7 @@ import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
+import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
 import { resolveTimeZone } from '../lib/settings';
 import '../styles/forms.css';
@@ -52,27 +52,13 @@ function Settings() {
         title="Settings"
         description="Manage preferences that control your executive operating environment."
       />
-      <p className="helper-text">
-        {source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Data source: local persistent storage in this browser.'}
-      </p>
-      {loadError ? (
-        <div className="helper-inline-actions">
-          <p className="helper-text" role="alert">{loadError}</p>
-          <Button
-            type="button"
-            size="small"
-            disabled={isLoading || isSaving}
-            onClick={() => {
-              void refreshSettings();
-            }}
-            ariaLabel="Retry loading settings"
-          >
-            Retry
-          </Button>
-        </div>
-      ) : null}
+      <SourceStatusNotice
+        source={source}
+        loadError={loadError}
+        onRetry={refreshSettings}
+        retryAriaLabel="Retry loading settings"
+        retryDisabled={isLoading || isSaving}
+      />
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading settings.</p> : null}
 
       <form className="settings-grid" onSubmit={handleSubmit}>
@@ -174,7 +160,9 @@ function Settings() {
       </form>
 
       <div className="helper-text" role="status" aria-live="polite">
-        Changes persist in browser memory for now and will be synced to your account in the next release.
+        {source === 'supabase'
+          ? 'Changes sync to your Supabase profile.'
+          : 'Changes persist in browser memory for now and can sync to your account in a configured Supabase environment.'}
         {savedAt ? (
           <span className="settings-saved-indicator">
             {' '}
