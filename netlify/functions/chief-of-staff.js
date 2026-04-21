@@ -4,6 +4,7 @@ export async function handler(event) {
   const result = await handleChiefOfStaffProxy({
     method: event.httpMethod,
     body: event.body,
+    headers: event.headers,
   });
 
   return {

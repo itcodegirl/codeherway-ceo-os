@@ -3,6 +3,7 @@ import { handleChiefOfStaffProxy } from './chiefOfStaffProxyCore.js';
 
 describe('handleChiefOfStaffProxy', () => {
   const originalApiKey = process.env.OPENAI_API_KEY;
+  const originalProxyToken = process.env.CHIEF_STAFF_PROXY_TOKEN;
 
   const makeResponse = (options = {}) => {
     const {
@@ -20,10 +21,12 @@ describe('handleChiefOfStaffProxy', () => {
 
   beforeEach(() => {
     process.env.OPENAI_API_KEY = 'test-key';
+    delete process.env.CHIEF_STAFF_PROXY_TOKEN;
   });
 
   afterEach(() => {
     process.env.OPENAI_API_KEY = originalApiKey;
+    process.env.CHIEF_STAFF_PROXY_TOKEN = originalProxyToken;
     vi.restoreAllMocks();
   });
 
@@ -47,6 +50,20 @@ describe('handleChiefOfStaffProxy', () => {
     expect(result).toMatchObject({
       status: 500,
       body: { error: 'OPENAI_API_KEY is not configured on the server' },
+    });
+  });
+
+  it('enforces optional proxy token when configured', async () => {
+    process.env.CHIEF_STAFF_PROXY_TOKEN = 'expected-token';
+
+    const unauthenticated = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+    });
+
+    expect(unauthenticated).toMatchObject({
+      status: 401,
+      body: { error: 'Missing or invalid proxy authentication token' },
     });
   });
 
@@ -100,6 +117,31 @@ describe('handleChiefOfStaffProxy', () => {
     const result = await handleChiefOfStaffProxy({
       method: 'POST',
       body: { notes: 'sample notes for review', actionKey: 'summarize' },
+    });
+
+    expect(result).toEqual({
+      status: 200,
+      body: { output_text: 'all good' },
+    });
+  });
+
+  it('accepts proxy token when configured and headers are valid', async () => {
+    process.env.CHIEF_STAFF_PROXY_TOKEN = 'expected-token';
+
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      makeResponse({
+        ok: true,
+        status: 200,
+        body: { output_text: 'all good' },
+      }),
+    );
+
+    const result = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      headers: {
+        authorization: 'Bearer expected-token',
+      },
     });
 
     expect(result).toEqual({

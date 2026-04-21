@@ -45,6 +45,36 @@ function normalizeActionKey(actionKey, allowedActionKeys) {
   return allowedActionKeys.has(actionKey) ? actionKey : 'summarize';
 }
 
+function extractRequestToken(headers) {
+  if (!headers || typeof headers !== 'object') {
+    return '';
+  }
+
+  const headerToken = headers['x-chief-staff-token']
+    || headers['X-Chief-Staff-Token']
+    || headers['X-CHIEF-STAFF-TOKEN']
+    || headers.authorization;
+
+  if (typeof headerToken !== 'string') {
+    return '';
+  }
+
+  if (headerToken.startsWith('Bearer ')) {
+    return headerToken.slice(7).trim();
+  }
+
+  return headerToken.trim();
+}
+
+function hasValidProxyToken(headers) {
+  const configuredToken = process.env.CHIEF_STAFF_PROXY_TOKEN?.trim();
+  if (!configuredToken) {
+    return true;
+  }
+
+  return extractRequestToken(headers) === configuredToken;
+}
+
 function buildInput({ instruction, notes }) {
   return [
     {
@@ -75,9 +105,13 @@ function buildResponse(status, body) {
   };
 }
 
-export async function handleChiefOfStaffProxy({ method, body }) {
+export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
   if (method !== 'POST') {
     return buildResponse(405, { error: 'Method not allowed' });
+  }
+
+  if (!hasValidProxyToken(headers)) {
+    return buildResponse(401, { error: 'Missing or invalid proxy authentication token' });
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
