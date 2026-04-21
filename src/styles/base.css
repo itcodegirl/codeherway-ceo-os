@@ -102,6 +102,7 @@ textarea {
 
 .input-field__control:focus-visible,
 .textarea-field__control:focus-visible,
+.form-input:focus-visible,
 .settings-input:focus-visible,
 .chief-textarea:focus-visible {
 	outline: 2px solid rgba(142, 173, 255, 0.7);
@@ -497,6 +498,13 @@ textarea {
 	gap: 0.85rem;
 }
 
+.modal-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-list-gap);
+	margin-top: 0.4rem;
+}
+
 .pill--high,
 .pill--medium,
 .pill--low,
@@ -535,18 +543,21 @@ textarea {
 	align-items: start;
 }
 
-.settings-field {
+.settings-field,
+.form-field {
 	display: flex;
 	flex-direction: column;
 	gap: 0.45rem;
 }
 
-.settings-field__label {
+.settings-field__label,
+.form-field__label {
 	color: var(--text-muted);
 	font-size: 0.9rem;
 }
 
-.settings-input {
+.settings-input,
+.form-input {
 	width: 100%;
 	border-radius: var(--radius-action);
 	border: 1px solid var(--border);

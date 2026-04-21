@@ -15,13 +15,22 @@ export function useCrudCollection({
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemState, setSelectedItemState] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formValues, setFormValues] = useState(defaultFormValues);
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const selectedItem = selectedItemState;
+
+  const setSelectedItem = (nextItem) => {
+    setSelectedItemState(nextItem);
+    if (!nextItem) {
+      setIsDeleteConfirmOpen(false);
+    }
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -63,6 +72,7 @@ export function useCrudCollection({
 
   const handleOpenCreateModal = () => {
     setSelectedItem(null);
+    setIsDeleteConfirmOpen(false);
     resetForm();
     setIsFormOpen(true);
   };
@@ -74,6 +84,7 @@ export function useCrudCollection({
 
     setFormValues(mapItemToFormValues(selectedItem));
     setFormError('');
+    setIsDeleteConfirmOpen(false);
     setIsFormOpen(true);
   };
 
@@ -84,6 +95,22 @@ export function useCrudCollection({
 
     setIsFormOpen(false);
     setFormError('');
+  };
+
+  const handleOpenDeleteConfirm = () => {
+    if (!selectedItem || isDeleting) {
+      return;
+    }
+
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    if (isDeleting) {
+      return;
+    }
+
+    setIsDeleteConfirmOpen(false);
   };
 
   const handleFormChange = (field, value) => {
@@ -112,7 +139,7 @@ export function useCrudCollection({
         setItems((current) =>
           current.map((item) => (item.id === updated.id ? updated : item)),
         );
-        setSelectedItem(updated);
+      setSelectedItemState(updated);
       } else {
         const created = await createItem(payload);
         setItems((current) => [created, ...current]);
@@ -130,13 +157,8 @@ export function useCrudCollection({
     }
   };
 
-  const handleDeleteSelected = async () => {
+  const handleConfirmDeleteSelected = async () => {
     if (!selectedItem) {
-      return;
-    }
-
-    const shouldDelete = window.confirm(`Delete "${getDeleteLabel(selectedItem)}"? This cannot be undone.`);
-    if (!shouldDelete) {
       return;
     }
 
@@ -144,7 +166,8 @@ export function useCrudCollection({
     try {
       await deleteItem(selectedItem.id);
       setItems((current) => current.filter((item) => item.id !== selectedItem.id));
-      setSelectedItem(null);
+      setIsDeleteConfirmOpen(false);
+      setSelectedItemState(null);
     } catch (error) {
       setLoadError(messages.delete);
       if (import.meta.env.DEV) {
@@ -161,6 +184,7 @@ export function useCrudCollection({
     selectedItem,
     setSelectedItem,
     isFormOpen,
+    isDeleteConfirmOpen,
     isSaving,
     isDeleting,
     formValues,
@@ -171,6 +195,9 @@ export function useCrudCollection({
     handleCloseFormModal,
     handleFormChange,
     handleFormSubmit,
-    handleDeleteSelected,
+    handleOpenDeleteConfirm,
+    handleCloseDeleteConfirm,
+    handleConfirmDeleteSelected,
+    deletePrompt: selectedItem ? `Delete "${getDeleteLabel(selectedItem)}"? This cannot be undone.` : '',
   };
 }

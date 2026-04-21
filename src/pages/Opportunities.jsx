@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
-import SectionCard from '../components/ui/SectionCard';
-import EmptyState from '../components/ui/EmptyState';
-import PageHeader from '../components/ui/PageHeader';
+import CrudPageTemplate from '../components/crud/CrudPageTemplate';
 import OpportunityTable from '../components/opportunities/OpportunityTable';
 import Modal from '../components/ui/Modal';
+import DeleteConfirmModal from '../components/ui/DeleteConfirmModal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -70,6 +69,7 @@ function Opportunities() {
     selectedItem: selectedOpportunity,
     setSelectedItem: setSelectedOpportunity,
     isFormOpen,
+    isDeleteConfirmOpen,
     isSaving,
     isDeleting,
     formValues,
@@ -80,7 +80,10 @@ function Opportunities() {
     handleCloseFormModal,
     handleFormChange,
     handleFormSubmit,
-    handleDeleteSelected,
+    handleOpenDeleteConfirm,
+    handleCloseDeleteConfirm,
+    handleConfirmDeleteSelected,
+    deletePrompt,
   } = useCrudCollection({
     defaultFormValues: DEFAULT_FORM,
     listItems: listOpportunities,
@@ -121,42 +124,29 @@ function Opportunities() {
   }, [opportunityItems]);
 
   return (
-    <section className="opportunities-page">
-      <PageHeader
-        title="Opportunities"
-        description="Track partnerships, roles, and outreach as an executive-grade pipeline."
-      />
-
-      <p className="helper-text opportunities-source-note" role="status" aria-live="polite">
-        {source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Data source: local demo storage. Configure Supabase env vars to persist to backend.'}
-      </p>
-
-      {loadError ? (
-        <p className="helper-text opportunities-error" role="alert">
-          {loadError}
-        </p>
-      ) : null}
-
-      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading opportunities data.</p> : null}
-
-      {isLoading ? (
+    <CrudPageTemplate
+      pageClassName="opportunities-page"
+      pageTitle="Opportunities"
+      pageDescription="Track partnerships, roles, and outreach as an executive-grade pipeline."
+      sourceNote={source === 'supabase'
+        ? 'Data source: Supabase (live persistence).'
+        : 'Data source: local demo storage. Configure Supabase env vars to persist to backend.'}
+      sourceNoteClassName="opportunities-source-note"
+      loadError={loadError}
+      loadErrorClassName="opportunities-error"
+      loadingAnnouncement="Loading opportunities data."
+      isLoading={isLoading}
+      summaryLoadingContent={(
         <div className="opportunities-summary" aria-busy={isLoading}>
-          <article className="summary-card">
-            <div className="skeleton-line skeleton-line--label" />
-            <div className="skeleton-line skeleton-line--value" />
-          </article>
-          <article className="summary-card">
-            <div className="skeleton-line skeleton-line--label" />
-            <div className="skeleton-line skeleton-line--value" />
-          </article>
-          <article className="summary-card">
-            <div className="skeleton-line skeleton-line--label" />
-            <div className="skeleton-line skeleton-line--value" />
-          </article>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <article className="summary-card" key={`opportunities-summary-loading-${index}`}>
+              <div className="skeleton-line skeleton-line--label" />
+              <div className="skeleton-line skeleton-line--value" />
+            </article>
+          ))}
         </div>
-      ) : (
+      )}
+      summaryContent={(
         <div className="opportunities-summary">
           <article className="summary-card">
             <p className="summary-card__label">Total Opportunities</p>
@@ -174,199 +164,206 @@ function Opportunities() {
           </article>
         </div>
       )}
-
-      <SectionCard
-        title="Pipeline Overview"
-        actionText="Add Opportunity"
-        onAction={handleOpenCreateModal}
-        actionLabel="Create a new opportunity"
-      >
-        {isLoading ? (
-          <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
-            <p className="sr-only" role="status" aria-live="polite">
-              Loading pipeline rows.
-            </p>
-            <div className="crm-table__header" role="row">
-              <p role="columnheader">Opportunity</p>
-              <p role="columnheader">Company</p>
-              <p role="columnheader">Priority</p>
-              <p role="columnheader">Stage / Next Step</p>
-            </div>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="crm-table__row" role="row">
-                <div className="crm-table__cell" role="cell" data-label="Opportunity">
-                  <div className="skeleton-line" />
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Company">
-                  <div className="skeleton-line" />
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Priority">
-                  <div className="skeleton-line" />
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
-                  <div className="skeleton-line" />
-                </div>
+      sectionTitle="Pipeline Overview"
+      sectionActionText="Add Opportunity"
+      onSectionAction={handleOpenCreateModal}
+      sectionActionLabel="Create a new opportunity"
+      sectionLoadingContent={(
+        <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
+          <p className="sr-only" role="status" aria-live="polite">
+            Loading pipeline rows.
+          </p>
+          <div className="crm-table__header" role="row">
+            <p role="columnheader">Opportunity</p>
+            <p role="columnheader">Company</p>
+            <p role="columnheader">Priority</p>
+            <p role="columnheader">Stage / Next Step</p>
+          </div>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="crm-table__row" role="row">
+              <div className="crm-table__cell" role="cell" data-label="Opportunity">
+                <div className="skeleton-line" />
               </div>
-            ))}
-          </div>
-        ) : opportunityItems.length === 0 ? (
-          <EmptyState
-            title="No opportunities yet"
-            description="Add your first opportunity to start tracking outreach and next steps."
-            action={
-              <Button onClick={handleOpenCreateModal} icon={{ name: 'action', size: 14 }}>
-                Add Opportunity
-              </Button>
-            }
-          />
-        ) : (
-          <div>
-            <p className="sr-only" role="status" aria-live="polite">
-              Showing {opportunityItems.length} opportunities.
-            </p>
-            <OpportunityTable items={opportunityItems} onSelect={setSelectedOpportunity} />
-          </div>
-        )}
-      </SectionCard>
+              <div className="crm-table__cell" role="cell" data-label="Company">
+                <div className="skeleton-line" />
+              </div>
+              <div className="crm-table__cell" role="cell" data-label="Priority">
+                <div className="skeleton-line" />
+              </div>
+              <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
+                <div className="skeleton-line" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      isEmpty={opportunityItems.length === 0}
+      emptyStateTitle="No opportunities yet"
+      emptyStateDescription="Add your first opportunity to start tracking outreach and next steps."
+      emptyStateAction={(
+        <Button onClick={handleOpenCreateModal} icon={{ name: 'action', size: 14 }}>
+          Add Opportunity
+        </Button>
+      )}
+      sectionContent={(
+        <div>
+          <p className="sr-only" role="status" aria-live="polite">
+            Showing {opportunityItems.length} opportunities.
+          </p>
+          <OpportunityTable items={opportunityItems} onSelect={setSelectedOpportunity} />
+        </div>
+      )}
+      itemModal={(
+        <Modal
+          isOpen={Boolean(selectedOpportunity)}
+          title={selectedOpportunity ? selectedOpportunity.name : ''}
+          onClose={() => setSelectedOpportunity(null)}
+        >
+          {selectedOpportunity ? (
+            <div className="opportunity-modal-content">
+              <p className="helper-text">Company: {selectedOpportunity.company}</p>
+              <p className="helper-text">
+                Priority: <Badge label={selectedOpportunity.priority} tone={selectedOpportunity.priority.toLowerCase()} />
+              </p>
+              <p className="helper-text">
+                Stage: <Badge label={selectedOpportunity.stage} tone={stageTone[selectedOpportunity.stage] || 'low'} />
+              </p>
+              <p className="helper-text">Next step: {selectedOpportunity.nextStep}</p>
+              <div className="opportunity-modal-actions">
+                <Button
+                  type="button"
+                  onClick={handleOpenEditModal}
+                  aria-label="Edit selected opportunity"
+                  icon={{ name: 'action', size: 14 }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleOpenDeleteConfirm}
+                  disabled={isDeleting}
+                  aria-label="Delete selected opportunity"
+                  icon={{ name: 'action', size: 14 }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </Modal>
+      )}
+      formModal={(
+        <Modal
+          isOpen={isFormOpen}
+          title={selectedOpportunity ? 'Edit Opportunity' : 'Add Opportunity'}
+          onClose={handleCloseFormModal}
+        >
+          <form className="opportunity-form" onSubmit={handleFormSubmit}>
+            <Input
+              id="opportunity-name"
+              label="Opportunity"
+              className="form-field"
+              value={formValues.name}
+              onChange={(event) => handleFormChange('name', event.target.value)}
+              required
+              disabled={isSaving}
+            />
 
-      <Modal
-        isOpen={Boolean(selectedOpportunity)}
-        title={selectedOpportunity ? selectedOpportunity.name : ''}
-        onClose={() => setSelectedOpportunity(null)}
-      >
-        {selectedOpportunity ? (
-          <div className="opportunity-modal-content">
-            <p className="helper-text">Company: {selectedOpportunity.company}</p>
-            <p className="helper-text">
-              Priority: <Badge label={selectedOpportunity.priority} tone={selectedOpportunity.priority.toLowerCase()} />
-            </p>
-            <p className="helper-text">
-              Stage: <Badge label={selectedOpportunity.stage} tone={stageTone[selectedOpportunity.stage] || 'low'} />
-            </p>
-            <p className="helper-text">Next step: {selectedOpportunity.nextStep}</p>
+            <Input
+              id="opportunity-company"
+              label="Company"
+              className="form-field"
+              value={formValues.company}
+              onChange={(event) => handleFormChange('company', event.target.value)}
+              required
+              disabled={isSaving}
+            />
+
+            <label className="form-field" htmlFor="opportunity-priority">
+              <span className="form-field__label">Priority</span>
+              <select
+                id="opportunity-priority"
+                className="form-input"
+                value={formValues.priority}
+                onChange={(event) => handleFormChange('priority', event.target.value)}
+                disabled={isSaving}
+              >
+                {PRIORITY_OPTIONS.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="form-field" htmlFor="opportunity-stage">
+              <span className="form-field__label">Stage</span>
+              <select
+                id="opportunity-stage"
+                className="form-input"
+                value={formValues.stage}
+                onChange={(event) => handleFormChange('stage', event.target.value)}
+                disabled={isSaving}
+              >
+                {STAGE_OPTIONS.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stage}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <Textarea
+              id="opportunity-next-step"
+              label="Next Step"
+              className="form-field opportunity-form__textarea-field"
+              value={formValues.nextStep}
+              onChange={(event) => handleFormChange('nextStep', event.target.value)}
+              required
+              disabled={isSaving}
+              rows={3}
+            />
+
+            {formError ? (
+              <p className="helper-text opportunities-error" role="alert">
+                {formError}
+              </p>
+            ) : null}
+
             <div className="opportunity-modal-actions">
               <Button
                 type="button"
-                onClick={handleOpenEditModal}
-                aria-label="Edit selected opportunity"
-                icon={{ name: 'action', size: 14 }}
+                variant="ghost"
+                onClick={handleCloseFormModal}
+                disabled={isSaving}
+                aria-label="Cancel opportunity form"
               >
-                Edit
+                Cancel
               </Button>
               <Button
-                type="button"
-                variant="ghost"
-                onClick={handleDeleteSelected}
-                disabled={isDeleting}
-                aria-label="Delete selected opportunity"
+                type="submit"
+                disabled={isSaving}
+                aria-label={selectedOpportunity ? 'Save opportunity changes' : 'Create opportunity'}
                 icon={{ name: 'action', size: 14 }}
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isSaving ? 'Saving...' : selectedOpportunity ? 'Save Changes' : 'Create Opportunity'}
               </Button>
             </div>
-          </div>
-        ) : null}
-      </Modal>
-
-      <Modal
-        isOpen={isFormOpen}
-        title={selectedOpportunity ? 'Edit Opportunity' : 'Add Opportunity'}
-        onClose={handleCloseFormModal}
-      >
-        <form className="opportunity-form" onSubmit={handleFormSubmit}>
-          <Input
-            id="opportunity-name"
-            label="Opportunity"
-            className="settings-field"
-            value={formValues.name}
-            onChange={(event) => handleFormChange('name', event.target.value)}
-            required
-            disabled={isSaving}
-          />
-
-          <Input
-            id="opportunity-company"
-            label="Company"
-            className="settings-field"
-            value={formValues.company}
-            onChange={(event) => handleFormChange('company', event.target.value)}
-            required
-            disabled={isSaving}
-          />
-
-          <label className="settings-field" htmlFor="opportunity-priority">
-            <span className="settings-field__label">Priority</span>
-            <select
-              id="opportunity-priority"
-              className="settings-input"
-              value={formValues.priority}
-              onChange={(event) => handleFormChange('priority', event.target.value)}
-              disabled={isSaving}
-            >
-              {PRIORITY_OPTIONS.map((priority) => (
-                <option key={priority} value={priority}>
-                  {priority}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="settings-field" htmlFor="opportunity-stage">
-            <span className="settings-field__label">Stage</span>
-            <select
-              id="opportunity-stage"
-              className="settings-input"
-              value={formValues.stage}
-              onChange={(event) => handleFormChange('stage', event.target.value)}
-              disabled={isSaving}
-            >
-              {STAGE_OPTIONS.map((stage) => (
-                <option key={stage} value={stage}>
-                  {stage}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <Textarea
-            id="opportunity-next-step"
-            label="Next Step"
-            className="settings-field opportunity-form__textarea-field"
-            value={formValues.nextStep}
-            onChange={(event) => handleFormChange('nextStep', event.target.value)}
-            required
-            disabled={isSaving}
-            rows={3}
-          />
-
-          {formError ? (
-            <p className="helper-text opportunities-error" role="alert">
-              {formError}
-            </p>
-          ) : null}
-
-          <div className="opportunity-modal-actions">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleCloseFormModal}
-              disabled={isSaving}
-              aria-label="Cancel opportunity form"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              aria-label={selectedOpportunity ? 'Save opportunity changes' : 'Create opportunity'}
-              icon={{ name: 'action', size: 14 }}
-            >
-              {isSaving ? 'Saving...' : selectedOpportunity ? 'Save Changes' : 'Create Opportunity'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </section>
+          </form>
+        </Modal>
+      )}
+      deleteConfirmModal={(
+        <DeleteConfirmModal
+          isOpen={isDeleteConfirmOpen}
+          title="Delete Opportunity"
+          message={deletePrompt}
+          onCancel={handleCloseDeleteConfirm}
+          onConfirm={handleConfirmDeleteSelected}
+          isDeleting={isDeleting}
+        />
+      )}
+    />
   );
 }
 

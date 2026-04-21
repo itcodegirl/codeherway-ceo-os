@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
-import SectionCard from '../components/ui/SectionCard';
-import EmptyState from '../components/ui/EmptyState';
-import PageHeader from '../components/ui/PageHeader';
+import CrudPageTemplate from '../components/crud/CrudPageTemplate';
 import ContentTable from '../components/content/ContentTable';
 import Modal from '../components/ui/Modal';
+import DeleteConfirmModal from '../components/ui/DeleteConfirmModal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -62,6 +61,7 @@ function ContentOS() {
     selectedItem,
     setSelectedItem,
     isFormOpen,
+    isDeleteConfirmOpen,
     isSaving,
     isDeleting,
     formValues,
@@ -72,7 +72,10 @@ function ContentOS() {
     handleCloseFormModal,
     handleFormChange,
     handleFormSubmit,
-    handleDeleteSelected,
+    handleOpenDeleteConfirm,
+    handleCloseDeleteConfirm,
+    handleConfirmDeleteSelected,
+    deletePrompt,
   } = useCrudCollection({
     defaultFormValues: DEFAULT_FORM,
     listItems: listContentItems,
@@ -107,42 +110,29 @@ function ContentOS() {
   );
 
   return (
-    <section className="content-page">
-      <PageHeader
-        title="Content OS"
-        description="Plan, track, and ship founder content across platforms with a clear publishing workflow."
-      />
-
-      <p className="helper-text content-source-note" role="status" aria-live="polite">
-        {source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Data source: local demo storage. Configure Supabase env vars to persist to backend.'}
-      </p>
-
-      {loadError ? (
-        <p className="helper-text content-error" role="alert">
-          {loadError}
-        </p>
-      ) : null}
-
-      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading content board data.</p> : null}
-
-      {isLoading ? (
+    <CrudPageTemplate
+      pageClassName="content-page"
+      pageTitle="Content OS"
+      pageDescription="Plan, track, and ship founder content across platforms with a clear publishing workflow."
+      sourceNote={source === 'supabase'
+        ? 'Data source: Supabase (live persistence).'
+        : 'Data source: local demo storage. Configure Supabase env vars to persist to backend.'}
+      sourceNoteClassName="content-source-note"
+      loadError={loadError}
+      loadErrorClassName="content-error"
+      loadingAnnouncement="Loading content board data."
+      isLoading={isLoading}
+      summaryLoadingContent={(
         <div className="content-summary" aria-busy={isLoading}>
-          <article className="summary-card">
-            <div className="skeleton-line skeleton-line--label" />
-            <div className="skeleton-line skeleton-line--value" />
-          </article>
-          <article className="summary-card">
-            <div className="skeleton-line skeleton-line--label" />
-            <div className="skeleton-line skeleton-line--value" />
-          </article>
-          <article className="summary-card">
-            <div className="skeleton-line skeleton-line--label" />
-            <div className="skeleton-line skeleton-line--value" />
-          </article>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <article className="summary-card" key={`content-summary-loading-${index}`}>
+              <div className="skeleton-line skeleton-line--label" />
+              <div className="skeleton-line skeleton-line--value" />
+            </article>
+          ))}
         </div>
-      ) : (
+      )}
+      summaryContent={(
         <div className="content-summary">
           <article className="summary-card">
             <p className="summary-card__label">Drafting</p>
@@ -160,151 +150,160 @@ function ContentOS() {
           </article>
         </div>
       )}
-
-      <SectionCard
-        title="Publishing Workflow"
-        actionText="Add Content"
-        onAction={handleOpenCreateModal}
-        actionLabel="Create a new content item"
-      >
-        {isLoading ? (
-          <div className="content-board" role="list" aria-label="Publishing workflow cards" aria-busy={isLoading}>
-            <p className="sr-only" role="status" aria-live="polite">
-              Loading content cards.
-            </p>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <article className="content-card" key={index} role="listitem">
-                <div className="content-card__header">
-                  <div>
-                    <div className="skeleton-line skeleton-line--value" />
-                    <div className="skeleton-line skeleton-line--offset" />
-                  </div>
-                  <div className="skeleton-line skeleton-line--meta-wide" />
+      sectionTitle="Publishing Workflow"
+      sectionActionText="Add Content"
+      onSectionAction={handleOpenCreateModal}
+      sectionActionLabel="Create a new content item"
+      sectionLoadingContent={(
+        <div className="content-board" role="list" aria-label="Publishing workflow cards" aria-busy={isLoading}>
+          <p className="sr-only" role="status" aria-live="polite">
+            Loading content cards.
+          </p>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <article className="content-card" key={index} role="listitem">
+              <div className="content-card__header">
+                <div>
+                  <div className="skeleton-line skeleton-line--value" />
+                  <div className="skeleton-line skeleton-line--offset" />
                 </div>
-                <div className="content-card__footer">
-                  <div className="skeleton-line skeleton-line--meta-narrow" />
-                  <div className="skeleton-line skeleton-line--meta-narrow" />
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : contentRows.length === 0 ? (
-          <EmptyState
-            title="No content items yet"
-            description="Add your first draft to begin tracking your publishing pipeline."
-            action={
-              <Button onClick={handleOpenCreateModal} icon={{ name: 'action', size: 14 }}>
-                Add Content
-              </Button>
-            }
-          />
-        ) : (
-          <ContentTable items={contentRows} onOpenItem={setSelectedItem} />
-        )}
-      </SectionCard>
+                <div className="skeleton-line skeleton-line--meta-wide" />
+              </div>
+              <div className="content-card__footer">
+                <div className="skeleton-line skeleton-line--meta-narrow" />
+                <div className="skeleton-line skeleton-line--meta-narrow" />
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      isEmpty={contentRows.length === 0}
+      emptyStateTitle="No content items yet"
+      emptyStateDescription="Add your first draft to begin tracking your publishing pipeline."
+      emptyStateAction={(
+        <Button onClick={handleOpenCreateModal} icon={{ name: 'action', size: 14 }}>
+          Add Content
+        </Button>
+      )}
+      sectionContent={<ContentTable items={contentRows} onOpenItem={setSelectedItem} />}
+      itemModal={(
+        <Modal
+          isOpen={Boolean(selectedItem)}
+          title={selectedItem ? selectedItem.title : ''}
+          onClose={() => setSelectedItem(null)}
+        >
+          {selectedItem ? (
+            <div className="content-modal-content">
+              <p className="helper-text">Platform: {selectedItem.platform}</p>
+              <p className="helper-text">
+                Status: <Badge label={selectedItem.status} tone={statusTone[selectedItem.status] || 'default'} />
+              </p>
+              <div className="content-modal-actions">
+                <Button
+                  type="button"
+                  onClick={handleOpenEditModal}
+                  aria-label="Edit selected content item"
+                  icon={{ name: 'action', size: 14 }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleOpenDeleteConfirm}
+                  disabled={isDeleting}
+                  aria-label="Delete selected content item"
+                  icon={{ name: 'action', size: 14 }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </Modal>
+      )}
+      formModal={(
+        <Modal
+          isOpen={isFormOpen}
+          title={selectedItem ? 'Edit Content Item' : 'Add Content Item'}
+          onClose={handleCloseFormModal}
+        >
+          <form className="content-form" onSubmit={handleFormSubmit}>
+            <Input
+              id="content-title"
+              label="Title"
+              className="form-field"
+              value={formValues.title}
+              onChange={(event) => handleFormChange('title', event.target.value)}
+              required
+              disabled={isSaving}
+            />
 
-      <Modal isOpen={Boolean(selectedItem)} title={selectedItem ? selectedItem.title : ''} onClose={() => setSelectedItem(null)}>
-        {selectedItem ? (
-          <div className="content-modal-content">
-            <p className="helper-text">Platform: {selectedItem.platform}</p>
-            <p className="helper-text">
-              Status: <Badge label={selectedItem.status} tone={statusTone[selectedItem.status] || 'default'} />
-            </p>
+            <Input
+              id="content-platform"
+              label="Platform"
+              className="form-field"
+              value={formValues.platform}
+              onChange={(event) => handleFormChange('platform', event.target.value)}
+              required
+              disabled={isSaving}
+            />
+
+            <label className="form-field" htmlFor="content-status">
+              <span className="form-field__label">Status</span>
+              <select
+                id="content-status"
+                className="form-input"
+                value={formValues.status}
+                onChange={(event) => handleFormChange('status', event.target.value)}
+                disabled={isSaving}
+              >
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {formError ? (
+              <p className="helper-text content-error" role="alert">
+                {formError}
+              </p>
+            ) : null}
+
             <div className="content-modal-actions">
               <Button
                 type="button"
-                onClick={handleOpenEditModal}
-                aria-label="Edit selected content item"
-                icon={{ name: 'action', size: 14 }}
+                variant="ghost"
+                onClick={handleCloseFormModal}
+                disabled={isSaving}
+                aria-label="Cancel content form"
               >
-                Edit
+                Cancel
               </Button>
               <Button
-                type="button"
-                variant="ghost"
-                onClick={handleDeleteSelected}
-                disabled={isDeleting}
-                aria-label="Delete selected content item"
+                type="submit"
+                disabled={isSaving}
+                aria-label={selectedItem ? 'Save content changes' : 'Create content item'}
                 icon={{ name: 'action', size: 14 }}
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isSaving ? 'Saving...' : selectedItem ? 'Save Changes' : 'Create Content'}
               </Button>
             </div>
-          </div>
-        ) : null}
-      </Modal>
-
-      <Modal
-        isOpen={isFormOpen}
-        title={selectedItem ? 'Edit Content Item' : 'Add Content Item'}
-        onClose={handleCloseFormModal}
-      >
-        <form className="content-form" onSubmit={handleFormSubmit}>
-          <Input
-            id="content-title"
-            label="Title"
-            className="settings-field"
-            value={formValues.title}
-            onChange={(event) => handleFormChange('title', event.target.value)}
-            required
-            disabled={isSaving}
-          />
-
-          <Input
-            id="content-platform"
-            label="Platform"
-            className="settings-field"
-            value={formValues.platform}
-            onChange={(event) => handleFormChange('platform', event.target.value)}
-            required
-            disabled={isSaving}
-          />
-
-          <label className="settings-field" htmlFor="content-status">
-            <span className="settings-field__label">Status</span>
-            <select
-              id="content-status"
-              className="settings-input"
-              value={formValues.status}
-              onChange={(event) => handleFormChange('status', event.target.value)}
-              disabled={isSaving}
-            >
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {formError ? (
-            <p className="helper-text content-error" role="alert">
-              {formError}
-            </p>
-          ) : null}
-
-          <div className="content-modal-actions">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleCloseFormModal}
-              disabled={isSaving}
-              aria-label="Cancel content form"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              aria-label={selectedItem ? 'Save content changes' : 'Create content item'}
-              icon={{ name: 'action', size: 14 }}
-            >
-              {isSaving ? 'Saving...' : selectedItem ? 'Save Changes' : 'Create Content'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </section>
+          </form>
+        </Modal>
+      )}
+      deleteConfirmModal={(
+        <DeleteConfirmModal
+          isOpen={isDeleteConfirmOpen}
+          title="Delete Content Item"
+          message={deletePrompt}
+          onCancel={handleCloseDeleteConfirm}
+          onConfirm={handleConfirmDeleteSelected}
+          isDeleting={isDeleting}
+        />
+      )}
+    />
   );
 }
 
