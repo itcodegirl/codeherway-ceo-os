@@ -1,4 +1,11 @@
+import { usePersistentState } from '../../hooks/usePersistentState';
+
+const DEFAULT_SETTINGS = {
+  teamName: 'CodeHerWay',
+};
+
 function Topbar() {
+  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const now = new Date();
   const today = now.toLocaleDateString(undefined, {
     weekday: 'long',
@@ -9,12 +16,15 @@ function Topbar() {
   const isoDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
     now.getDate(),
   ).padStart(2, '0')}`;
+  const teamName = typeof settings?.teamName === 'string' && settings.teamName.trim()
+    ? settings.teamName.trim()
+    : DEFAULT_SETTINGS.teamName;
 
   return (
     <header className="topbar">
       <div className="topbar__left">
         <p className="topbar__label">Executive Overview</p>
-        <h2 className="topbar__title">Welcome back, Jenna</h2>
+        <h2 className="topbar__title">Welcome back, {teamName}</h2>
       </div>
 
       <div className="topbar__right">
