@@ -1,33 +1,27 @@
 # CodeHerWay CEO OS
 
-CodeHerWay CEO OS is a React + Vite executive operations workspace for running high-leverage founder workflows:
+CodeHerWay CEO OS is a React + Vite executive operations workspace for founder-facing workflows:
 
-- Opportunities pipeline
-- Content pipeline
+- Opportunities and deal tracking
+- Content planning and production
 - Weekly planning and review
 - AI-assisted chief-of-staff outputs
-- App preferences and accessibility settings
+- Settings and accessibility-aware UX
 
-The project is intentionally kept local-first by default, with a clear Supabase upgrade path for account-backed persistence.
+The project is intentionally local-first by default with a first-class Supabase path for authenticated, account-scoped persistence.
 
-## What this repo demonstrates
+## What this repository demonstrates
 
-### 1) Reusable architecture patterns
+### 1) Architecture consistency
 
-- Route-level pages stay focused (UI composition + orchestration hooks).
-- Reusable domain components in `src/components`.
-- Domain logic centralized in `src/hooks` and `src/lib` repository modules.
-- Thin shell layout with route metadata, focus management, and loading/error boundaries.
+- Route files are intentionally thin and composition-first.
+- Data orchestration and side effects live in `src/hooks`.
+- Repository modules under `src/lib` own normalization, persistence, and transport concerns.
+- The app shell owns shared structure and meta behaviors, not domain logic.
 
-### 2) Local-first persistence with fallback behavior
+### 2) Repository pattern across domains
 
-- Repositories load from:
-  - Supabase tables when environment credentials are present and authenticated.
-  - Browser `localStorage` when not configured or when auth is unavailable.
-- Repositories are resilient and explicit about source (`local` vs `supabase`), so each page can surface source status to users.
-- Repositories dispatch cross-component update events to keep route data synchronized after mutations.
-
-### 3) Domain repository pattern
+Implemented across:
 
 - `src/lib/opportunitiesRepository.js`
 - `src/lib/contentRepository.js`
@@ -35,51 +29,58 @@ The project is intentionally kept local-first by default, with a clear Supabase 
 - `src/lib/settingsRepository.js`
 - `src/lib/chiefRepository.js`
 
-Each repository owns:
+Each repository follows the same contract:
 
-- normalization of stored entities
-- local persistence details
-- Supabase queries and mapping
-- event notifications for in-app refreshes
+- Normalize and default incoming data
+- Read/write from the active source (`local` vs `supabase`)  
+- Emit domain events after changes for lightweight synchronization
+- Keep consumers independent of storage transport details
 
-### 4) AI proxy with server-side secrets
+### 3) Reliable local-first + optional cloud workflows
 
-- Client calls the proxy via `VITE_OPENAI_PROXY_URL` (default `/api/chief-of-staff`).
-- Actual provider keys stay server-side in:
+- Without environment credentials, the app works from browser storage.
+- With credentials + session, repositories upgrade to Supabase-backed persistence.
+- Source state is surfaced as `local` or `supabase` so behavior stays transparent to users.
+
+### 4) AI proxy integration with safe failure behavior
+
+- Client requests are routed through a server endpoint:
+  - `VITE_OPENAI_PROXY_URL` in frontend config (defaults to `/api/chief-of-staff`)
   - `api/chief-of-staff.js` (Vercel-style)
   - `netlify/functions/chief-of-staff.js` (Netlify)
-- Core orchestration sits in `src/lib/openai.js` with proxy timeout handling and graceful fallback output.
+- `src/lib/openai.js` handles:
+  - request timeout/abort behavior
+  - normalized parsing across tool-like outputs and plain text responses
+  - structured payload extraction with deduplication
+  - graceful fallback output when proxy/parse fails
 
 ### 5) Accessibility and UX polish
 
-- Skip link and focus restoration in `AppLayout`.
-- One clear main landmark and unique H1 per route.
-- Source/status notices for local vs persisted data state.
-- Consistent keyboard and form semantics across controls.
-- Route-level metadata updates and canonical URL tagging.
+- Skip link and focus restoration in shell
+- Single semantic page landmarks and route heading structure
+- Clear loading, empty, and fallback states
+- Source/status messaging for persistence mode
+- Controlled keyboard interactions and form behavior in core workflows
 
-### 6) Testing and quality posture
+### 6) Test and quality culture
 
-- `AppLayout` and route-level accessibility checks.
-- Hook unit tests for data orchestration and persistence.
-- Library tests for AI response parsing, settings normalization, and metadata helpers.
-- Coverage and lint/typecheck scripts available for day-to-day verification.
+- Hook tests cover orchestration and synchronization.
+- Library tests cover parsing, settings normalization, and metadata helper behavior.
+- Route tests cover key visibility and accessibility flows.
 
-## Current project shape
+## Project layout
 
 ```text
 src/
-  components/      # UI primitives + domain components
-  hooks/           # Workflow orchestration and state logic
-  layouts/         # App shell and route frame
-  lib/             # Repository + integrations layer
-  pages/           # Route composition
-  styles/          # Page and component styling
+  components/      # Reusable UI primitives and domain components
+  hooks/           # Workflow orchestration and state composition
+  layouts/         # Shell behavior and route frame
+  lib/             # Repositories, integration, and utilities
+  pages/           # Route-level composition
+  styles/          # Shared styles and page-specific styling
 ```
 
 ## Development
-
-### Install & run
 
 ```bash
 npm install
@@ -91,29 +92,29 @@ npm run dev
 ```bash
 npm run lint
 npm run build
-npm run typecheck
 npm run test:run
+npm run typecheck
 ```
 
 ## Configuration
 
 ### Frontend environment
 
-- `VITE_OPENAI_PROXY_URL` (optional; defaults to `/api/chief-of-staff`)
+- `VITE_OPENAI_PROXY_URL` (optional, defaults to `/api/chief-of-staff`)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
 ### Server runtime environment
 
-- `OPENAI_API_KEY` (required for proxyed responses)
+- `OPENAI_API_KEY` (required for proxy responses)
 - `OPENAI_MODEL` (optional)
 - `CHIEF_STAFF_PROXY_TOKEN` (optional)
 - `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
 
 ## Data model references
 
-- Supabase migration scripts are under `supabase/migrations/`.
-- Tables used by repositories include:
+- Supabase migration scripts in `supabase/migrations/`.
+- Primary tables:
   - `opportunities`
   - `content_items`
   - `weekly_briefs`
@@ -122,12 +123,12 @@ npm run test:run
   - `chief_sessions`
   - `chief_outputs`
 
-## Roadmap (still in progress)
+## Roadmap
 
-- Broaden integration tests around cross-domain fallback behavior.
-- Strengthen event-driven synchronization across additional screens.
-- Add structured monitoring for AI proxy failures and fallback reasons.
-- Add stricter data shape checks around accepted AI output ingestion.
+- Broaden integration coverage for cross-domain synchronization under concurrent updates.
+- Add structured telemetry for AI fallback rates and acceptance outcomes.
+- Expand acceptance criteria snapshots for AI-generated structured outputs.
+- Publish a portfolio case study with architecture decision records and tradeoff notes.
 
 ## Author
 
