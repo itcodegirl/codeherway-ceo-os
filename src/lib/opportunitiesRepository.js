@@ -1,5 +1,6 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
 import { isSupabaseConfigured, supabaseClient } from './supabase';
+import { buildCreateId } from './createId';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
@@ -57,14 +58,6 @@ function notifyOpportunitiesUpdated(detail = {}) {
   }
 
   window.dispatchEvent(new CustomEvent(OPPORTUNITIES_UPDATED_EVENT, { detail }));
-}
-
-function buildCreateId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-
-  return String(Date.now());
 }
 
 function formatForSupabase(payload) {

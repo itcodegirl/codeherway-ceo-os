@@ -1,5 +1,6 @@
 import { contentItems as mockContentItems } from '../data/mockData';
 import { isSupabaseConfigured, supabaseClient } from './supabase';
+import { buildCreateId } from './createId';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
@@ -55,14 +56,6 @@ function notifyContentItemsUpdated(detail = {}) {
   }
 
   window.dispatchEvent(new CustomEvent(CONTENT_ITEMS_UPDATED_EVENT, { detail }));
-}
-
-function buildCreateId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-
-  return String(Date.now());
 }
 
 export function getContentSource() {
