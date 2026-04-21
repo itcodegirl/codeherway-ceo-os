@@ -1,6 +1,14 @@
 import { contentItems } from '../../data/mockData';
+import Badge from '../ui/Badge';
 
-function ContentTable({ onOpenItem }) {
+const statusTone = {
+  Drafting: 'low',
+  Editing: 'warning',
+  Scheduled: 'high',
+};
+
+function ContentTable({ items, onOpenItem }) {
+  const rows = items && items.length ? items : contentItems;
   const hasHandler = typeof onOpenItem === 'function';
 
   return (
@@ -11,7 +19,7 @@ function ContentTable({ onOpenItem }) {
         <p role="columnheader">Status</p>
       </div>
 
-      {contentItems.map((item) => (
+      {rows.map((item) => (
         <button
           key={item.id}
           type="button"
@@ -28,9 +36,7 @@ function ContentTable({ onOpenItem }) {
             <p className="crm-table__subtitle">{item.platform}</p>
           </span>
           <span className="crm-table__cell" role="cell" data-label="Status">
-            <span className={`content-status content-status--${item.status.toLowerCase()}`}>
-              {item.status}
-            </span>
+            <Badge label={item.status} tone={statusTone[item.status] || 'default'} />
           </span>
         </button>
       ))}

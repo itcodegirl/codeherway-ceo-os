@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { opportunities } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import EmptyState from '../components/ui/EmptyState';
+import PageHeader from '../components/ui/PageHeader';
+import OpportunityTable from '../components/opportunities/OpportunityTable';
+import Modal from '../components/ui/Modal';
+import Badge from '../components/ui/Badge';
 import '../styles/opportunities.css';
-
-const priorityTone = {
-  High: 'high',
-  Medium: 'medium',
-  Low: 'low',
-};
 
 const stageTone = {
   'In Progress': 'high',
@@ -18,6 +16,7 @@ const stageTone = {
 
 function Opportunities() {
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
 
   const metrics = useMemo(() => {
     return opportunities.reduce(
@@ -45,10 +44,10 @@ function Opportunities() {
 
   return (
     <section className="opportunities-page">
-      <div className="page-intro">
-        <h1 className="page-title">Opportunities</h1>
-        <p className="helper-text">Track partnerships, roles, and outreach as an executive-grade pipeline.</p>
-      </div>
+      <PageHeader
+        title="Opportunities"
+        description="Track partnerships, roles, and outreach as an executive-grade pipeline."
+      />
 
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading opportunities data.</p> : null}
 
@@ -118,41 +117,33 @@ function Opportunities() {
         ) : opportunities.length === 0 ? (
           <EmptyState title="No opportunities yet" description="Add the first opportunity to populate this pipeline." />
         ) : (
-          <div className="crm-table" role="table" aria-label="Opportunity pipeline">
+          <div>
             <p className="sr-only" role="status" aria-live="polite">
               Showing {opportunities.length} opportunities.
             </p>
-            <div className="crm-table__header" role="row">
-              <p role="columnheader">Opportunity</p>
-              <p role="columnheader">Company</p>
-              <p role="columnheader">Priority</p>
-              <p role="columnheader">Stage / Next Step</p>
-            </div>
-
-            {opportunities.map((item) => (
-              <div key={item.id} className="crm-table__row" role="row">
-                <div className="crm-table__cell" role="cell" data-label="Opportunity">
-                  <p className="crm-table__title">{item.name}</p>
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Company">
-                  <p className="crm-table__subtitle">{item.company}</p>
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Priority">
-                  <span className={`pill pill--${priorityTone[item.priority] || 'low'}`}>
-                    {item.priority}
-                  </span>
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
-                  <p className="crm-table__subtitle">
-                    <span className={`pill pill--${stageTone[item.stage] || 'low'}`}>{item.stage}</span>{' '}
-                    {item.nextStep}
-                  </p>
-                </div>
-              </div>
-            ))}
+            <OpportunityTable items={opportunities} onSelect={setSelectedOpportunity} />
           </div>
         )}
       </SectionCard>
+
+      <Modal
+        isOpen={Boolean(selectedOpportunity)}
+        title={selectedOpportunity ? selectedOpportunity.name : ''}
+        onClose={() => setSelectedOpportunity(null)}
+      >
+        {selectedOpportunity ? (
+          <>
+            <p className="helper-text">Company: {selectedOpportunity.company}</p>
+            <p className="helper-text">
+              Priority: <Badge label={selectedOpportunity.priority} tone={selectedOpportunity.priority.toLowerCase()} />
+            </p>
+            <p className="helper-text">
+              Stage: <Badge label={selectedOpportunity.stage} tone={stageTone[selectedOpportunity.stage] || 'low'} />
+            </p>
+            <p className="helper-text">Next step: {selectedOpportunity.nextStep}</p>
+          </>
+        ) : null}
+      </Modal>
     </section>
   );
 }

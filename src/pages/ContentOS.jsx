@@ -2,10 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { contentItems } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import EmptyState from '../components/ui/EmptyState';
+import PageHeader from '../components/ui/PageHeader';
+import ContentTable from '../components/content/ContentTable';
+import Modal from '../components/ui/Modal';
+import Badge from '../components/ui/Badge';
 import '../styles/content.css';
+
+const statusTone = {
+  Drafting: 'low',
+  Editing: 'warning',
+  Scheduled: 'high',
+};
 
 function ContentOS() {
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const statusCounts = useMemo(
     () =>
@@ -28,12 +39,10 @@ function ContentOS() {
 
   return (
     <section className="content-page">
-      <div className="page-intro">
-        <h1 className="page-title">Content OS</h1>
-        <p className="helper-text">
-          Plan, track, and ship founder content across platforms with a clear publishing workflow.
-        </p>
-      </div>
+      <PageHeader
+        title="Content OS"
+        description="Plan, track, and ship founder content across platforms with a clear publishing workflow."
+      />
 
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading content board data.</p> : null}
 
@@ -96,29 +105,20 @@ function ContentOS() {
         ) : contentItems.length === 0 ? (
           <EmptyState title="No content items yet" description="Add your first draft, and your workflow cards will appear here." />
         ) : (
-          <div className="content-board" role="list" aria-label="Publishing workflow cards">
-            {contentItems.map((item) => (
-              <article key={item.id} className="content-card" role="listitem">
-                <div className="content-card__header">
-                  <div>
-                    <h3 className="content-card__title">{item.title}</h3>
-                    <p className="content-card__platform">{item.platform}</p>
-                  </div>
-
-                  <span className={`content-status content-status--${item.status.toLowerCase()}`}>
-                    {item.status}
-                  </span>
-                </div>
-
-                <div className="content-card__footer">
-                  <span className="content-card__meta-label">Channel</span>
-                  <strong>{item.platform}</strong>
-                </div>
-              </article>
-            ))}
-          </div>
+          <ContentTable items={contentItems} onOpenItem={setSelectedItem} />
         )}
       </SectionCard>
+
+      <Modal isOpen={Boolean(selectedItem)} title={selectedItem ? selectedItem.title : ''} onClose={() => setSelectedItem(null)}>
+        {selectedItem ? (
+          <>
+            <p className="helper-text">Platform: {selectedItem.platform}</p>
+            <p className="helper-text">
+              Status: <Badge label={selectedItem.status} tone={statusTone[selectedItem.status] || 'default'} />
+            </p>
+          </>
+        ) : null}
+      </Modal>
     </section>
   );
 }

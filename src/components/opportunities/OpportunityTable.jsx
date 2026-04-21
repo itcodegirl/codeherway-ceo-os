@@ -1,4 +1,11 @@
 import { opportunities as mockOpportunities } from '../../data/mockData';
+import Badge from '../ui/Badge';
+
+const stageTone = {
+  'In Progress': 'high',
+  'Awaiting Reply': 'warning',
+  New: 'low',
+};
 
 function OpportunityTable({ items, onSelect }) {
   const rows = items && items.length ? items : mockOpportunities;
@@ -34,11 +41,11 @@ function OpportunityTable({ items, onSelect }) {
             <p className="crm-table__subtitle">{item.company}</p>
           </span>
           <span className="crm-table__cell" role="cell" data-label="Priority">
-            <span className={`pill pill--${item.priority.toLowerCase()}`}>{item.priority}</span>
+            <Badge label={item.priority} tone={item.priority.toLowerCase()} />
           </span>
           <span className="crm-table__cell" role="cell" data-label="Stage / Next Step">
             <p className="crm-table__subtitle">
-              <span className="pill pill--low">{item.stage}</span> {item.nextStep}
+              <Badge label={item.stage} tone={stageTone[item.stage] || 'low'} /> {item.nextStep}
             </p>
           </span>
         </button>

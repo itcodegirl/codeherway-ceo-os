@@ -2,8 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
+import PageHeader from '../components/ui/PageHeader';
+import Badge from '../components/ui/Badge';
+import MomentumChart from '../components/dashboard/MomentumChart';
+import ActivityFeed from '../components/dashboard/ActivityFeed';
 import { stats, priorities, opportunities, contentItems } from '../data/mockData';
 import '../styles/dashboard.css';
+
+const contentStatusTone = {
+  Drafting: 'low',
+  Editing: 'warning',
+  Scheduled: 'high',
+};
+
+const recentActivity = [
+  { id: 'a1', title: 'Sent XPAIRK follow-up email', time: 'Today, 9:15 AM', type: 'Opportunity' },
+  { id: 'a2', title: 'Moved Founder Update to Editing', time: 'Yesterday, 5:40 PM', type: 'Content' },
+  { id: 'a3', title: 'Updated weekly blocker notes', time: 'Yesterday, 3:10 PM', type: 'Planning' },
+];
 
 function Dashboard() {
   const [toastMessage, setToastMessage] = useState('');
@@ -47,7 +63,6 @@ function Dashboard() {
     } catch (error) {
       showToast('Unable to copy snapshot right now.');
       if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
         console.error('Clipboard copy failed', error);
       }
     }
@@ -55,10 +70,7 @@ function Dashboard() {
 
   return (
     <section className="dashboard-page">
-      <div className="page-intro">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="helper-text">Track opportunities, content, and priorities from one executive view.</p>
-      </div>
+      <PageHeader title="Dashboard" description="Track opportunities, content, and priorities from one executive view." />
 
       <div className="dashboard-grid dashboard-grid--stats">
         {stats.map((stat) => (
@@ -124,9 +136,7 @@ function Dashboard() {
                   <p className="mini-table__subtitle">{item.company}</p>
                 </div>
                 <div className="mini-table__meta">
-                  <span className={`pill pill--${item.priority.toLowerCase()}`}>
-                    {item.priority}
-                  </span>
+                  <Badge label={item.priority} tone={item.priority.toLowerCase()} />
                   <span className="mini-table__stage">{item.stage}</span>
                 </div>
               </div>
@@ -148,11 +158,19 @@ function Dashboard() {
                   <p className="mini-table__subtitle">{item.platform}</p>
                 </div>
                 <div className="mini-table__meta">
-                  <span className="mini-table__stage">{item.status}</span>
+                  <Badge label={item.status} tone={contentStatusTone[item.status] || 'default'} />
                 </div>
               </div>
             ))}
           </div>
+        </SectionCard>
+
+        <SectionCard title="Momentum Trend">
+          <MomentumChart values={[12, 18, 9, 16, 14, 22]} />
+        </SectionCard>
+
+        <SectionCard title="Recent Activity">
+          <ActivityFeed items={recentActivity} />
         </SectionCard>
       </div>
 

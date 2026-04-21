@@ -2,7 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
-import Icon from '../components/ui/Icon';
+import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 
@@ -27,12 +28,12 @@ const actionPrompts = {
   },
   actions: {
     title: 'Action Item List',
-    make: ({ notes }) =>
+    make: () =>
       `Action items derived from your notes:\n- Confirm next owner for each critical point\n- Assign a target date for each blocked item\n- Define the top 3 priorities for the next 72 hours`,
   },
   priorities: {
     title: 'Priority Recommendation',
-    make: ({ notes }) =>
+    make: () =>
       `Priority recommendation: based on your current context, lead with high-urgency follow-ups, then lock a content artifact for this week, then clear one strategic blocker.`,
   },
 };
@@ -101,12 +102,10 @@ function ChiefOfStaff() {
 
   return (
     <section className="chief-page">
-      <div className="page-intro">
-        <h1 className="page-title">Chief of Staff</h1>
-        <p className="helper-text">
-          Convert rough notes into executive text, action recommendations, and draft-ready material.
-        </p>
-      </div>
+      <PageHeader
+        title="Chief of Staff"
+        description="Convert rough notes into executive text, action recommendations, and draft-ready material."
+      />
 
       <div className="chief-grid">
         <section className="section-card">
@@ -130,46 +129,38 @@ function ChiefOfStaff() {
             </label>
 
             <div className="chief-actions">
-              <button
-                type="button"
-                className="action-button"
+              <Button
                 onClick={() => handleAction('summarize')}
                 disabled={!canGenerate}
                 aria-label="Generate an executive summary from current notes"
+                icon={{ name: 'action', size: 14 }}
               >
                 Summarize This Week
-                <Icon name="action" size={14} className="action-button__icon" />
-              </button>
-              <button
-                type="button"
-                className="action-button"
+              </Button>
+              <Button
                 onClick={() => handleAction('draft')}
                 disabled={!canGenerate}
                 aria-label="Generate a LinkedIn post draft from current notes"
+                icon={{ name: 'action', size: 14 }}
               >
                 Draft LinkedIn Post
-                <Icon name="action" size={14} className="action-button__icon" />
-              </button>
-              <button
-                type="button"
-                className="action-button"
+              </Button>
+              <Button
                 onClick={() => handleAction('actions')}
                 disabled={!canGenerate}
                 aria-label="Generate action items from current notes"
+                icon={{ name: 'action', size: 14 }}
               >
                 Convert to Action Items
-                <Icon name="action" size={14} className="action-button__icon" />
-              </button>
-              <button
-                type="button"
-                className="action-button"
+              </Button>
+              <Button
                 onClick={() => handleAction('priorities')}
                 disabled={!canGenerate}
                 aria-label="Generate next-priority recommendations from current notes"
+                icon={{ name: 'action', size: 14 }}
               >
                 Suggest Next Priorities
-                <Icon name="action" size={14} className="action-button__icon" />
-              </button>
+              </Button>
             </div>
 
             <AIPromptBox

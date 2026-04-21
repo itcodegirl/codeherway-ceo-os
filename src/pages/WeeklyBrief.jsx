@@ -1,14 +1,16 @@
 import { weeklyPriorities, weeklyWins, weeklyBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
+import PageHeader from '../components/ui/PageHeader';
+import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
 import '../styles/weekly.css';
 
 function WeeklyBrief() {
   return (
     <section className="weekly-page">
-      <div className="page-intro">
-        <h1 className="page-title">Weekly Brief</h1>
-        <p className="helper-text">A weekly planning and review checkpoint to keep momentum explicit.</p>
-      </div>
+      <PageHeader
+        title="Weekly Brief"
+        description="A weekly planning and review checkpoint to keep momentum explicit."
+      />
 
       <div className="weekly-overview">
         <article className="summary-card">
@@ -32,22 +34,7 @@ function WeeklyBrief() {
 
       <div className="weekly-grid">
         <SectionCard title="Priority Track">
-          <ul className="weekly-list">
-            {weeklyPriorities.map((item) => (
-              <li key={item.id} className="weekly-list__item">
-                <span
-                  className={`weekly-list__dot ${item.status === 'In Progress' ? 'weekly-list__dot--success' : ''}`}
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="weekly-note">{item.title}</p>
-                  <p className="helper-text helper-text--offset">
-                    Owner: {item.owner} {'\u2022'} Status: {item.status}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <WeeklyPriorities items={weeklyPriorities} />
         </SectionCard>
 
         <SectionCard title="Wins / Momentum">

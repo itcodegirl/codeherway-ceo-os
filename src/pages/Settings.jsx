@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
+import PageHeader from '../components/ui/PageHeader';
 import { usePersistentState } from '../hooks/usePersistentState';
 
 const DEFAULT_SETTINGS = {
@@ -37,10 +38,10 @@ function Settings() {
 
   return (
     <section className="settings-page">
-      <div className="page-intro">
-        <h1 className="page-title">Settings</h1>
-        <p className="helper-text">Manage preferences that control your executive operating environment.</p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Manage preferences that control your executive operating environment."
+      />
 
       <form className="settings-grid" onSubmit={handleSubmit}>
         <SectionCard

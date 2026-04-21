@@ -8,7 +8,7 @@ function ActivityFeed({ items = [] }) {
           <article key={item.id} className="activity-item">
             <p className="activity-item__title">{item.title}</p>
             <p className="activity-item__meta">
-              {item.time} • {item.type}
+              {item.time} | {item.type}
             </p>
           </article>
         ))

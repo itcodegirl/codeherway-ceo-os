@@ -1,20 +1,26 @@
 import { weeklyPriorities } from '../../data/mockData';
 
-function WeeklyPriorities() {
+const statusDotClass = {
+  'In Progress': 'weekly-list__dot--success',
+  Planned: '',
+  Blocked: 'weekly-list__dot--warning',
+};
+
+function WeeklyPriorities({ items = weeklyPriorities }) {
   return (
-    <div className="weekly-grid">
-      {weeklyPriorities.map((item) => (
-        <article key={item.id} className="section-card">
-          <div className="section-card__header">
-            <h2>{item.title}</h2>
+    <ul className="weekly-list">
+      {items.map((item) => (
+        <li key={item.id} className="weekly-list__item">
+          <span className={`weekly-list__dot ${statusDotClass[item.status] || ''}`.trim()} aria-hidden="true" />
+          <div>
+            <p className="weekly-note">{item.title}</p>
+            <p className="helper-text helper-text--offset">
+              Owner: {item.owner} | Status: {item.status}
+            </p>
           </div>
-          <div className="section-card__body">
-            <p className="helper-text">Owner: {item.owner}</p>
-            <p className="summary-card__label">Status: {item.status}</p>
-          </div>
-        </article>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
