@@ -37,7 +37,7 @@ describe('src/components/ui/Topbar', () => {
 
     render(<Topbar />);
 
-    expect(screen.getByRole('heading', { name: 'Welcome back, Jenna' })).toBeInTheDocument();
+    expect(screen.getByText('Welcome back, Jenna')).toBeInTheDocument();
     expect(screen.getByRole('time')).toHaveTextContent(dateFormatter.format(new Date('2026-04-20T23:58:00.000Z')));
     expect(screen.getByRole('time')).toHaveAttribute('dateTime', formatIsoDate(new Date('2026-04-20T23:58:00.000Z'), 'UTC'));
   });

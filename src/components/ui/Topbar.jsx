@@ -40,7 +40,7 @@ function Topbar() {
     <header className="topbar">
       <div className="topbar__left">
         <p className="topbar__label">Executive Overview</p>
-        <h2 className="topbar__title">Welcome back, {teamName}</h2>
+        <p className="topbar__title">Welcome back, {teamName}</p>
       </div>
 
       <div className="topbar__right">
