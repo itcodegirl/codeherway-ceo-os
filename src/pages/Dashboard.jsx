@@ -6,7 +6,10 @@ import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import { weeklyPriorities as defaultWeeklyPriorities } from '../data/mockData';
+import {
+  weeklyPriorities as defaultWeeklyPriorities,
+  weeklyBlockers as defaultWeeklyBlockers,
+} from '../data/mockData';
 import { listOpportunities, OPPORTUNITIES_UPDATED_EVENT } from '../lib/opportunitiesRepository';
 import { listContentItems, CONTENT_ITEMS_UPDATED_EVENT } from '../lib/contentRepository';
 import { usePersistentState } from '../hooks/usePersistentState';
@@ -18,29 +21,159 @@ const contentStatusTone = {
   Scheduled: 'high',
 };
 
-const recentActivity = [
-  { id: 'a1', title: 'Sent XPAIRK follow-up email', time: 'Today, 9:15 AM', type: 'Opportunity' },
-  { id: 'a2', title: 'Moved Founder Update to Editing', time: 'Yesterday, 5:40 PM', type: 'Content' },
-  { id: 'a3', title: 'Updated weekly blocker notes', time: 'Yesterday, 3:10 PM', type: 'Planning' },
-];
+function clampScore(value) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function shortenText(text, maxLength = 64) {
+  const normalized = (text || '').trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
 
 function Dashboard() {
   const [toastMessage, setToastMessage] = useState('');
   const [opportunityItems, setOpportunityItems] = useState([]);
   const [contentRows, setContentRows] = useState([]);
   const [storedWeeklyPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultWeeklyPriorities);
+  const [storedWeeklyBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultWeeklyBlockers);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const toastTimerRef = useRef(null);
   const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
 
-  const priorityItems = useMemo(() => {
+  const weeklyPriorities = useMemo(() => {
     if (!Array.isArray(storedWeeklyPriorities)) {
       return [];
     }
 
-    return storedWeeklyPriorities.slice(0, 3).map((item) => item?.title).filter(Boolean);
+    return storedWeeklyPriorities;
   }, [storedWeeklyPriorities]);
+
+  const weeklyBlockers = useMemo(() => {
+    if (!Array.isArray(storedWeeklyBlockers)) {
+      return [];
+    }
+
+    return storedWeeklyBlockers;
+  }, [storedWeeklyBlockers]);
+
+  const priorityItems = useMemo(
+    () => weeklyPriorities.slice(0, 3).map((item) => item?.title).filter(Boolean),
+    [weeklyPriorities],
+  );
+
+  const dashboardInsights = useMemo(() => {
+    const inProgressPriorities = weeklyPriorities.filter((item) => item?.status === 'In Progress').length;
+    const blockedPriorities = weeklyPriorities.filter((item) => item?.status === 'Blocked').length;
+    const blockerCount = weeklyBlockers.length;
+    const awaitingReplyCount = opportunityItems.filter((item) => item.stage === 'Awaiting Reply').length;
+    const highPriorityCount = opportunityItems.filter((item) => item.priority === 'High').length;
+    const scheduledContentCount = contentRows.filter((item) => item.status === 'Scheduled').length;
+    const editingContentCount = contentRows.filter((item) => item.status === 'Editing').length;
+
+    const focusScore = clampScore(
+      Math.round(
+        55
+          + (inProgressPriorities * 12)
+          + (scheduledContentCount * 6)
+          + (editingContentCount * 3)
+          - (blockedPriorities * 10)
+          - (blockerCount * 8)
+          - (awaitingReplyCount * 4),
+      ),
+    );
+
+    let momentumLabel = 'Needs attention';
+    if (focusScore >= 80) {
+      momentumLabel = 'Strong this week';
+    } else if (focusScore >= 60) {
+      momentumLabel = 'Steady progress';
+    }
+
+    const leadPriority = weeklyPriorities.find((item) => item?.title);
+    const leadOpportunity = opportunityItems.find((item) => item.priority === 'High') || opportunityItems[0];
+    const leadContent = contentRows.find((item) => item.status === 'Scheduled') || contentRows[0];
+    const topBlocker = weeklyBlockers.find((item) => item?.text);
+
+    const strategicFocus = leadPriority?.title
+      ? shortenText(leadPriority.title)
+      : leadOpportunity?.name
+        ? `Advance ${shortenText(leadOpportunity.name, 52)}`
+        : leadContent?.title
+          ? `Publish ${shortenText(leadContent.title, 52)}`
+          : 'Set this week\'s primary priority';
+
+    const topRisk = topBlocker?.text
+      ? shortenText(topBlocker.text, 72)
+      : blockedPriorities > 0
+        ? `${blockedPriorities} blocked priorities`
+        : awaitingReplyCount > 0
+          ? `${awaitingReplyCount} opportunities awaiting reply`
+          : 'No critical risks logged';
+
+    const recentActivity = [
+      leadPriority?.title
+        ? {
+          id: `activity-priority-${leadPriority.id || 'current'}`,
+          title: `Priority in motion: ${shortenText(leadPriority.title, 56)}`,
+          time: 'Live focus',
+          type: 'Planning',
+        }
+        : null,
+      leadOpportunity?.name
+        ? {
+          id: `activity-opportunity-${leadOpportunity.id || 'current'}`,
+          title: `${shortenText(leadOpportunity.name, 48)} (${leadOpportunity.stage})`,
+          time: `Priority: ${leadOpportunity.priority}`,
+          type: 'Opportunity',
+        }
+        : null,
+      leadContent?.title
+        ? {
+          id: `activity-content-${leadContent.id || 'current'}`,
+          title: `${shortenText(leadContent.title, 52)} (${leadContent.status})`,
+          time: leadContent.platform || 'Content queue',
+          type: 'Content',
+        }
+        : null,
+      topBlocker?.text
+        ? {
+          id: `activity-blocker-${topBlocker.id || 'current'}`,
+          title: `Risk noted: ${shortenText(topBlocker.text, 52)}`,
+          time: 'Needs resolution',
+          type: 'Risk',
+        }
+        : null,
+    ].filter(Boolean).slice(0, 3);
+
+    const momentumValues = [
+      clampScore(20 + (opportunityItems.length * 10)),
+      clampScore(20 + (contentRows.length * 10)),
+      clampScore(25 + (inProgressPriorities * 18)),
+      clampScore(90 - ((blockedPriorities * 15) + (blockerCount * 12))),
+      clampScore(30 + (highPriorityCount * 12) - (awaitingReplyCount * 8)),
+      focusScore,
+    ];
+
+    const scoreContext = blockerCount + blockedPriorities;
+    const focusChange = scoreContext > 0
+      ? `${scoreContext} active risk${scoreContext > 1 ? 's' : ''}`
+      : `${inProgressPriorities} priorities in progress`;
+
+    return {
+      focusScore,
+      focusChange,
+      strategicFocus,
+      topRisk,
+      momentumLabel,
+      recentActivity,
+      momentumValues,
+    };
+  }, [contentRows, opportunityItems, weeklyBlockers, weeklyPriorities]);
 
   const statCards = useMemo(() => {
     const highPriorityCount = opportunityItems.filter((item) => item.priority === 'High').length;
@@ -67,9 +200,14 @@ function Dashboard() {
         value: isDataLoading ? '--' : awaitingReplyCount,
         change: `${highPriorityCount} high priority`,
       },
-      { id: 4, label: 'Weekly Focus Score', value: '86%', change: '+8% from last week' },
+      {
+        id: 4,
+        label: 'Weekly Focus Score',
+        value: isDataLoading ? '--' : `${dashboardInsights.focusScore}%`,
+        change: dashboardInsights.focusChange,
+      },
     ];
-  }, [contentRows, isDataLoading, opportunityItems]);
+  }, [contentRows, dashboardInsights.focusChange, dashboardInsights.focusScore, isDataLoading, opportunityItems]);
 
   const showToast = useCallback((message) => {
     setToastMessage(message);
@@ -179,9 +317,9 @@ function Dashboard() {
 
   const handleCopySnapshot = async () => {
     const snapshot = [
-      'Strategic Focus: Platform + Partnerships',
-      'Top Risk: Follow-up delays',
-      'Momentum: Strong this week',
+      `Strategic Focus: ${dashboardInsights.strategicFocus}`,
+      `Top Risk: ${dashboardInsights.topRisk}`,
+      `Momentum: ${dashboardInsights.momentumLabel}`,
     ].join('\n');
 
     if (!navigator?.clipboard?.writeText) {
@@ -246,15 +384,15 @@ function Dashboard() {
           <div className="snapshot-stack" role="list" aria-label="Executive snapshot highlights">
             <div className="snapshot-row" role="listitem">
               <span>Strategic Focus</span>
-              <strong>Platform + Partnerships</strong>
+              <strong>{dashboardInsights.strategicFocus}</strong>
             </div>
             <div className="snapshot-row" role="listitem">
               <span>Top Risk</span>
-              <strong>Follow-up delays</strong>
+              <strong>{dashboardInsights.topRisk}</strong>
             </div>
             <div className="snapshot-row" role="listitem">
               <span>Momentum</span>
-              <strong>Strong this week</strong>
+              <strong>{dashboardInsights.momentumLabel}</strong>
             </div>
           </div>
         </SectionCard>
@@ -311,11 +449,11 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard title="Momentum Trend">
-          <MomentumChart values={[12, 18, 9, 16, 14, 22]} />
+          <MomentumChart values={dashboardInsights.momentumValues} />
         </SectionCard>
 
         <SectionCard title="Recent Activity">
-          <ActivityFeed items={recentActivity} />
+          <ActivityFeed items={dashboardInsights.recentActivity} />
         </SectionCard>
       </div>
 
