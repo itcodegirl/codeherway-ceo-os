@@ -176,8 +176,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 
 ### Demo target
 
-- Walkthrough capture: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`
+- Walkthrough capture: `docs/assets/demo/ceo-os-workflow-walkthrough.webm`
 - Suggested scope: dashboard snapshot -> weekly planning -> chief-of-staff generation -> structured acceptance.
+- Current walkthrough asset: [ceo-os-workflow-walkthrough.webm](./docs/assets/demo/ceo-os-workflow-walkthrough.webm)
 
 ## Portfolio and production readiness
 

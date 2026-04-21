@@ -20,7 +20,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Weekly brief proof: `docs/assets/screenshots/weekly-brief-planning.png`
 - Chief of staff proof: `docs/assets/screenshots/chief-of-staff-structured-output.png`
 - Settings proof: `docs/assets/screenshots/settings-workspace-profile.png`
-- Walkthrough demo: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`
+- Walkthrough demo: `docs/assets/demo/ceo-os-workflow-walkthrough.webm`
 - Capture/update workflow: `docs/assets/CAPTURE_GUIDE.md`
 
 ### Visual preview highlights

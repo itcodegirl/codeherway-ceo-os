@@ -24,7 +24,7 @@ Use this guide when updating screenshot or demo assets for portfolio packaging.
    - Weekly Brief priorities/blockers
    - Chief of Staff generation
    - Structured acceptance action
-2. Export as `ceo-os-workflow-walkthrough.mp4`.
+2. Export as `ceo-os-workflow-walkthrough.webm` (or convert to mp4 if needed for sharing platforms).
 3. Save under `docs/assets/demo/`.
 
 ## Update checklist

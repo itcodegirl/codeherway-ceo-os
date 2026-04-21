@@ -13,3 +13,7 @@ Current screenshot set:
 - `screenshots/weekly-brief-planning.png`
 - `screenshots/chief-of-staff-structured-output.png`
 - `screenshots/settings-workspace-profile.png`
+
+Current demo set:
+
+- `demo/ceo-os-workflow-walkthrough.webm`
