@@ -1,42 +1,39 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
+import { usePersistentState } from '../hooks/usePersistentState';
+import { DEFAULT_SETTINGS, resolveTeamName } from '../lib/settings';
 
-const APP_NAME = 'CodeHerWay CEO OS';
-const DEFAULT_PAGE_META = {
-  title: `Dashboard | ${APP_NAME}`,
-  description:
-    'CodeHerWay CEO OS is an executive dashboard to manage opportunities, content operations, weekly priorities, and leadership workflows.',
-};
-
-const PAGE_META_BY_ROUTE = {
-  '/': {
-    title: `Dashboard | ${APP_NAME}`,
-    description: 'Executive overview of key priorities, momentum, opportunities, and content pipeline.',
-  },
-  '/opportunities': {
-    title: `Opportunities | ${APP_NAME}`,
-    description: 'Track partnerships, role pipelines, and strategic outreach in one opportunity workspace.',
-  },
-  '/content': {
-    title: `Content OS | ${APP_NAME}`,
-    description: 'Plan, monitor, and ship founder content across channels with a clear publishing workflow.',
-  },
-  '/weekly-brief': {
-    title: `Weekly Brief | ${APP_NAME}`,
-    description: 'Review weekly priorities, wins, blockers, and next executive moves with clarity.',
-  },
-  '/chief-of-staff': {
-    title: `Chief of Staff | ${APP_NAME}`,
-    description: 'Transform notes into executive summaries, action items, and communication-ready drafts.',
-  },
-  '/settings': {
-    title: `Settings | ${APP_NAME}`,
-    description: 'Manage workspace profile, timezone, and experience preferences for CEO OS.',
-  },
-};
+function buildPageMetaByRoute(appName) {
+  return {
+    '/': {
+      title: `Dashboard | ${appName}`,
+      description: 'Executive overview of key priorities, momentum, opportunities, and content pipeline.',
+    },
+    '/opportunities': {
+      title: `Opportunities | ${appName}`,
+      description: 'Track partnerships, role pipelines, and strategic outreach in one opportunity workspace.',
+    },
+    '/content': {
+      title: `Content OS | ${appName}`,
+      description: 'Plan, monitor, and ship founder content across channels with a clear publishing workflow.',
+    },
+    '/weekly-brief': {
+      title: `Weekly Brief | ${appName}`,
+      description: 'Review weekly priorities, wins, blockers, and next executive moves with clarity.',
+    },
+    '/chief-of-staff': {
+      title: `Chief of Staff | ${appName}`,
+      description: 'Transform notes into executive summaries, action items, and communication-ready drafts.',
+    },
+    '/settings': {
+      title: `Settings | ${appName}`,
+      description: 'Manage workspace profile, timezone, and experience preferences for CEO OS.',
+    },
+  };
+}
 
 function setMetaTag({ selector, attribute, key, value }) {
   const head = document.head;
@@ -73,6 +70,19 @@ function setCanonical(url) {
 function AppLayout() {
   const location = useLocation();
   const mainRef = useRef(null);
+  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
+
+  const teamName = resolveTeamName(settings?.teamName);
+  const appName = `${teamName} CEO OS`;
+  const pageMetaByRoute = useMemo(() => buildPageMetaByRoute(appName), [appName]);
+  const defaultPageMeta = useMemo(
+    () => ({
+      title: `Dashboard | ${appName}`,
+      description:
+        `${appName} is an executive dashboard to manage opportunities, content operations, weekly priorities, and leadership workflows.`,
+    }),
+    [appName],
+  );
 
   useEffect(() => {
     const mainElement = mainRef.current;
@@ -89,7 +99,7 @@ function AppLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
-    const meta = PAGE_META_BY_ROUTE[location.pathname] || DEFAULT_PAGE_META;
+    const meta = pageMetaByRoute[location.pathname] || defaultPageMeta;
     document.title = meta.title;
 
     setMetaTag({
@@ -109,6 +119,12 @@ function AppLayout() {
       attribute: 'property',
       key: 'og:description',
       value: meta.description,
+    });
+    setMetaTag({
+      selector: 'meta[property="og:site_name"]',
+      attribute: 'property',
+      key: 'og:site_name',
+      value: appName,
     });
     setMetaTag({
       selector: 'meta[name="twitter:title"]',
@@ -133,7 +149,7 @@ function AppLayout() {
       });
       setCanonical(currentUrl);
     }
-  }, [location.pathname]);
+  }, [appName, defaultPageMeta, location.pathname, pageMetaByRoute]);
 
   return (
     <div className="app-shell">

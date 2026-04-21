@@ -1,7 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import Icon from './Icon';
+import { usePersistentState } from '../../hooks/usePersistentState';
+import { DEFAULT_SETTINGS, resolveTeamName } from '../../lib/settings';
 
 function Sidebar() {
+  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
+  const teamName = resolveTeamName(settings?.teamName);
+
   const navItems = [
     { label: 'Dashboard', path: '/', icon: 'dashboard' },
     { label: 'Opportunities', path: '/opportunities', icon: 'opportunities' },
@@ -14,7 +19,7 @@ function Sidebar() {
   return (
     <aside className="sidebar" aria-label="Primary navigation">
       <div className="sidebar__brand">
-        <p className="sidebar__eyebrow">CodeHerWay</p>
+        <p className="sidebar__eyebrow">{teamName}</p>
         <p className="sidebar__brand-title">CEO OS</p>
       </div>
 
