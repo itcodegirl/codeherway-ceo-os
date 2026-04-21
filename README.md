@@ -1,121 +1,85 @@
 # CodeHerWay CEO OS
 
-CodeHerWay CEO OS is a React + Vite executive operations workspace for managing:
+CodeHerWay CEO OS is a React + Vite executive operations workspace for running high-leverage founder workflows:
 
-- opportunities pipeline
-- content pipeline
-- weekly planning and review
+- Opportunities pipeline
+- Content pipeline
+- Weekly planning and review
 - AI-assisted chief-of-staff outputs
-- user settings and workspace preferences
+- App preferences and accessibility settings
 
-The project is built with a local-first architecture that upgrades to Supabase-backed persistence when configured.
+The project is intentionally kept local-first by default, with a clear Supabase upgrade path for account-backed persistence.
 
-## Product Snapshot
+## What this repo demonstrates
 
-### What is implemented
+### 1) Reusable architecture patterns
 
-- Route-based app shell with lazy-loaded pages and metadata updates
-- Repository layer for core domains:
-  - opportunities
-  - content items
-  - weekly brief
-  - chief of staff sessions/outputs
-  - settings/profile
-- Hook layer for workflow orchestration:
-  - weekly brief state/actions
-  - chief of staff generation + structured acceptance flows
-  - dashboard insights and derived metrics
-  - settings load/save behavior
-- Supabase support with local fallback behavior where appropriate
-- Backend proxy path for AI requests (no API key in client bundle)
-- Accessibility and interaction polish:
-  - skip link
-  - focus-aware app shell/main navigation behavior
-  - keyboard-friendly modal and navigation interactions
-  - route-level heading/landmark consistency checks
+- Route-level pages stay focused (UI composition + orchestration hooks).
+- Reusable domain components in `src/components`.
+- Domain logic centralized in `src/hooks` and `src/lib` repository modules.
+- Thin shell layout with route metadata, focus management, and loading/error boundaries.
 
-### Current quality posture
+### 2) Local-first persistence with fallback behavior
 
-- Linting, build, typecheck, and test scripts are configured
-- Core route and workflow behavior has automated tests
-- The app is portfolio-ready and production-oriented in architecture
-- Remaining work is mostly operational hardening (auth depth, monitoring, broader integration tests)
+- Repositories load from:
+  - Supabase tables when environment credentials are present and authenticated.
+  - Browser `localStorage` when not configured or when auth is unavailable.
+- Repositories are resilient and explicit about source (`local` vs `supabase`), so each page can surface source status to users.
+- Repositories dispatch cross-component update events to keep route data synchronized after mutations.
 
-## Architecture
+### 3) Domain repository pattern
+
+- `src/lib/opportunitiesRepository.js`
+- `src/lib/contentRepository.js`
+- `src/lib/weeklyRepository.js`
+- `src/lib/settingsRepository.js`
+- `src/lib/chiefRepository.js`
+
+Each repository owns:
+
+- normalization of stored entities
+- local persistence details
+- Supabase queries and mapping
+- event notifications for in-app refreshes
+
+### 4) AI proxy with server-side secrets
+
+- Client calls the proxy via `VITE_OPENAI_PROXY_URL` (default `/api/chief-of-staff`).
+- Actual provider keys stay server-side in:
+  - `api/chief-of-staff.js` (Vercel-style)
+  - `netlify/functions/chief-of-staff.js` (Netlify)
+- Core orchestration sits in `src/lib/openai.js` with proxy timeout handling and graceful fallback output.
+
+### 5) Accessibility and UX polish
+
+- Skip link and focus restoration in `AppLayout`.
+- One clear main landmark and unique H1 per route.
+- Source/status notices for local vs persisted data state.
+- Consistent keyboard and form semantics across controls.
+- Route-level metadata updates and canonical URL tagging.
+
+### 6) Testing and quality posture
+
+- `AppLayout` and route-level accessibility checks.
+- Hook unit tests for data orchestration and persistence.
+- Library tests for AI response parsing, settings normalization, and metadata helpers.
+- Coverage and lint/typecheck scripts available for day-to-day verification.
+
+## Current project shape
 
 ```text
 src/
-  components/      # reusable UI + feature components
-  hooks/           # workflow/state orchestration
-  layouts/         # app shell and route outlet framing
-  lib/             # repository layer + domain utilities
-  pages/           # route-level page composition
-  styles/          # feature and shared styles
+  components/      # UI primitives + domain components
+  hooks/           # Workflow orchestration and state logic
+  layouts/         # App shell and route frame
+  lib/             # Repository + integrations layer
+  pages/           # Route composition
+  styles/          # Page and component styling
 ```
 
-### Design principles used in this repo
+## Development
 
-- Local-first UX with Supabase upgrade path
-- Thin page components (view composition only)
-- Domain logic in hooks + repositories
-- Reusable UI primitives for consistency
-- Preserve accessibility and keyboard support by default
-
-## Data and persistence modes
-
-The app supports two operating modes:
-
-1. `local` mode (default)
-- data persists in browser localStorage
-- useful for quick demos and local development
-
-2. `supabase` mode (when env vars are configured)
-- repositories read/write user-scoped data in Supabase
-- row-level security policies are expected in database schema
-
-Most pages expose a source note so you can see whether data is coming from local storage or Supabase.
-
-## AI Chief of Staff flow
-
-The AI workflow is proxied through server endpoints:
-
-- Vercel: `api/chief-of-staff.js`
-- Netlify: `netlify/functions/chief-of-staff.js`
-- Shared core handler: `server/chiefOfStaffProxyCore.js`
-
-The client calls `/api/chief-of-staff` by default via `src/lib/openai.js`.
-
-The response contract supports:
-
-- primary text output
-- optional structured payload:
-  - `priorities`
-  - `opportunities`
-  - `contentItems`
-  - `tasks`
-
-Structured items can be accepted into product domains (opportunities, content, weekly priorities) from the UI.
-
-## Environment variables
-
-Copy `.env.example` to `.env.local` and set the variables relevant to your environment.
-
-### Frontend
-
-- `VITE_OPENAI_PROXY_URL` (optional; defaults to `/api/chief-of-staff`)
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-
-### Server/runtime
-
-- `OPENAI_API_KEY` (required for real AI responses; server-side only)
-- `OPENAI_MODEL` (optional; defaults to `gpt-4.1-mini`)
-- `CHIEF_STAFF_PROXY_TOKEN` (optional)
-- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
-
-Do not expose `OPENAI_API_KEY` to the browser (`VITE_` prefix must not be used).
-
-## Local development
+### Install & run
 
 ```bash
 npm install
@@ -131,33 +95,40 @@ npm run typecheck
 npm run test:run
 ```
 
-## Supabase migrations
+## Configuration
 
-Migration SQL is in `supabase/migrations/`.
+### Frontend environment
 
-Apply migrations in order (SQL editor or CLI) to create:
+- `VITE_OPENAI_PROXY_URL` (optional; defaults to `/api/chief-of-staff`)
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-- domain tables and indexes
-- `updated_at` trigger behavior
-- row-level security policies
-- ownership-safe defaults for user-scoped rows
+### Server runtime environment
 
-## Portfolio framing
+- `OPENAI_API_KEY` (required for proxyed responses)
+- `OPENAI_MODEL` (optional)
+- `CHIEF_STAFF_PROXY_TOKEN` (optional)
+- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
 
-This repo demonstrates:
+## Data model references
 
-- product architecture thinking (page/hook/repository separation)
-- maintainable React organization for multi-workflow apps
-- practical accessibility and interaction quality
-- incremental hardening across persistence, AI integration, and test coverage
+- Supabase migration scripts are under `supabase/migrations/`.
+- Tables used by repositories include:
+  - `opportunities`
+  - `content_items`
+  - `weekly_briefs`
+  - `weekly_brief_items`
+  - `profiles`
+  - `chief_sessions`
+  - `chief_outputs`
 
-## Next recommended phase
+## Roadmap (still in progress)
 
-- deeper end-to-end integration tests around Supabase fallback behavior
-- stronger operational telemetry/monitoring for AI proxy paths
-- authentication/session UX hardening across all repository-backed flows
+- Broaden integration tests around cross-domain fallback behavior.
+- Strengthen event-driven synchronization across additional screens.
+- Add structured monitoring for AI proxy failures and fallback reasons.
+- Add stricter data shape checks around accepted AI output ingestion.
 
 ## Author
 
-Jenna Zawaski  
-Frontend developer focused on product-grade interfaces and workflow-driven UX.
+Jenna Zawaski — frontend product engineering with workflow-first architecture focus.
