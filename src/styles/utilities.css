@@ -1,0 +1,50 @@
+.list-compact {
+  --space-list-gap: var(--space-list-gap-compact);
+}
+
+.page-intro {
+  margin: var(--space-page-intro-vertical) 0;
+}
+
+.page-intro h1 {
+  font-size: clamp(1.5rem, 2.6vw, var(--fs-page-title));
+  font-weight: var(--fw-page-title);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.page-intro p {
+  color: var(--text-muted);
+  font-size: var(--fs-helper);
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.page-title {
+  font-size: clamp(1.5rem, 2.6vw, var(--fs-page-title));
+  font-weight: var(--fw-page-title);
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.helper-text {
+  color: var(--text-muted);
+  font-size: var(--fs-helper);
+}
+
+.helper-text--offset {
+  margin-top: 0.35rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,50 @@
+:root {
+  --text: #f5f7fb;
+  --bg: #0f1117;
+  --text-muted: #b0b9c8;
+  --text-soft: #90a0b7;
+  --surface-card: #181f2e;
+  --surface-sidebar: #151c2a;
+  --surface-input: #121824;
+  --border: rgba(255, 255, 255, 0.12);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.22);
+  --accent-soft: #c8c2ff;
+  --focus-ring: rgba(142, 173, 255, 0.85);
+  --checkbox-border: rgba(199, 211, 233, 0.42);
+  --checkbox-border-hover: rgba(168, 183, 211, 0.7);
+  --checkbox-checked-bg: rgba(109, 93, 252, 0.28);
+  --checkbox-checked-border: rgba(183, 173, 255, 0.82);
+  --checkbox-checked-ring: rgba(109, 93, 252, 0.18);
+  --checkbox-checkmark: #efeaff;
+  --radius-lg: 22px;
+  --radius-action: 12px;
+  --action-height: 2.5rem;
+  --action-font-size: var(--fs-helper);
+  --action-padding-x: 1rem;
+
+  --font-display: Inter, Arial, sans-serif;
+  --fs-page-title: 2rem;
+  --fw-page-title: 600;
+  --fs-section-title: 1.1rem;
+  --fw-section-title: 600;
+  --fs-sidebar-link: 0.95rem;
+  --fw-sidebar-link: 500;
+  --fs-sidebar-brand: 1.5rem;
+  --fw-sidebar-brand: 600;
+  --fs-sidebar-eyebrow: 0.75rem;
+  --fw-sidebar-eyebrow: 500;
+  --fs-topbar-title: 1.5rem;
+  --fw-topbar-title: 600;
+  --fs-meta: 0.95rem;
+  --fs-helper: 0.95rem;
+
+  --space-card-padding: 1.25rem;
+  --space-card-inner-gap: 1rem;
+  --space-page-section-gap: 1.5rem;
+  --space-page-intro-vertical: 1.5rem;
+  --space-title-to-content: 1rem;
+  --space-stack-gap: 1rem;
+  --space-list-gap: var(--space-list-gap-comfy);
+  --space-list-gap-comfy: 1rem;
+  --space-list-gap-compact: 0.75rem;
+}
