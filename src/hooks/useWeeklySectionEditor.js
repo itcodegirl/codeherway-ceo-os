@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
-  createEditorPayload,
   getDefaultFormValues,
   getEditorTitle,
   getFormValuesForEdit,
+  buildWeeklyPayload,
 } from '../lib/weeklyBriefEditor';
 import { useConfirmDelete } from './useConfirmDelete';
 
@@ -96,7 +96,7 @@ export function useWeeklySectionEditor({ type, defaultItems, setItems }) {
   const handleEditorSubmit = (event) => {
     event.preventDefault();
 
-    const { payload, error } = createEditorPayload(type, formValues, editorItemId);
+    const { payload, error } = buildWeeklyPayload(type, formValues, editorItemId);
     if (error) {
       setFormError(error);
       return;

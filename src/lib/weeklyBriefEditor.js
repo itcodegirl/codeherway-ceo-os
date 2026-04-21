@@ -1,6 +1,10 @@
-export const PRIORITY_STATUS_OPTIONS = ['Planned', 'In Progress', 'Blocked'];
-export const WIN_CATEGORY_OPTIONS = ['Product', 'Execution', 'Engineering'];
-export const BLOCKER_SEVERITY_OPTIONS = ['warning', 'high'];
+import {
+  BLOCKER_SEVERITY_OPTIONS,
+  getDefaultFormValues as getDefaultFormValuesByType,
+  PRIORITY_STATUS_OPTIONS,
+  WIN_CATEGORY_OPTIONS,
+} from './weeklyData';
+export { BLOCKER_SEVERITY_OPTIONS, PRIORITY_STATUS_OPTIONS, WIN_CATEGORY_OPTIONS };
 
 export const DEFAULT_EDITOR_STATE = {
   type: '',
@@ -19,11 +23,7 @@ const EDITOR_STRATEGIES = {
   priority: {
     addTitle: 'Add Priority',
     editTitle: 'Edit Priority',
-    getDefaultFormValues: () => ({
-      title: '',
-      owner: 'Jenna',
-      status: 'Planned',
-    }),
+    getDefaultFormValues: () => ({ ...getDefaultFormValuesByType('priority') }),
     getFormValuesForEdit: (item) => ({
       title: item.title || '',
       owner: item.owner || 'Jenna',
@@ -51,10 +51,7 @@ const EDITOR_STRATEGIES = {
   win: {
     addTitle: 'Add Win',
     editTitle: 'Edit Win',
-    getDefaultFormValues: () => ({
-      text: '',
-      category: 'Execution',
-    }),
+    getDefaultFormValues: () => ({ ...getDefaultFormValuesByType('win') }),
     getFormValuesForEdit: (item) => ({
       text: item.text || '',
       category: item.category || 'Execution',
@@ -79,10 +76,7 @@ const EDITOR_STRATEGIES = {
   blocker: {
     addTitle: 'Add Blocker',
     editTitle: 'Edit Blocker',
-    getDefaultFormValues: () => ({
-      text: '',
-      severity: 'warning',
-    }),
+    getDefaultFormValues: () => ({ ...getDefaultFormValuesByType('blocker') }),
     getFormValuesForEdit: (item) => ({
       text: item.text || '',
       severity: item.severity || 'warning',
@@ -136,4 +130,8 @@ export function createEditorPayload(type, formValues, existingId) {
   }
 
   return strategy.createPayload(formValues, existingId);
+}
+
+export function buildWeeklyPayload(type, formValues, existingId) {
+  return createEditorPayload(type, formValues, existingId);
 }

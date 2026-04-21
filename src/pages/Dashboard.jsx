@@ -8,9 +8,8 @@ import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import {
   dashboardDemoData,
-  weeklyPriorities as defaultWeeklyPriorities,
-  weeklyBlockers as defaultWeeklyBlockers,
 } from '../data/mockData';
+import { defaultBlockers as defaultWeeklyBlockers, defaultPriorities as defaultWeeklyPriorities } from '../lib/weeklyData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
 import { useToast } from '../hooks/useToast';

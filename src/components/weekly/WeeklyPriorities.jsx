@@ -1,4 +1,4 @@
-import { weeklyPriorities } from '../../data/mockData';
+import { defaultPriorities } from '../../lib/weeklyData';
 import Button from '../ui/Button';
 
 const statusDotClass = {
@@ -7,7 +7,7 @@ const statusDotClass = {
   Blocked: 'weekly-list__dot--warning',
 };
 
-function WeeklyPriorities({ items = weeklyPriorities, onEditItem, onDeleteItem }) {
+function WeeklyPriorities({ items = defaultPriorities, onEditItem, onDeleteItem }) {
   return (
     <ul className="weekly-list">
       {items.map((item) => (

@@ -1,4 +1,3 @@
-import { weeklyPriorities as defaultPriorities, weeklyWins as defaultWins, weeklyBlockers as defaultBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import SummaryCards from '../components/ui/SummaryCards';
@@ -6,11 +5,15 @@ import PrioritiesSection from '../components/weekly/PrioritiesSection';
 import WinsSection from '../components/weekly/WinsSection';
 import BlockersSection from '../components/weekly/BlockersSection';
 import Textarea from '../components/ui/Textarea';
+import {
+  DEFAULT_REVIEW_NOTES,
+  defaultBlockers,
+  defaultPriorities,
+  defaultWins,
+} from '../lib/weeklyData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import '../styles/forms.css';
 import '../styles/weekly.css';
-
-const DEFAULT_REVIEW_NOTES = '';
 
 function WeeklyBrief() {
   const [storedPriorities, setStoredPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultPriorities);

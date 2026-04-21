@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createEditorPayload,
+  buildWeeklyPayload,
   getDefaultFormValues,
   getEditorTitle,
   getFormValuesForEdit,
@@ -42,7 +43,7 @@ describe('weeklyBriefEditor helpers', () => {
   });
 
   it('creates and trims priority payloads', () => {
-    const result = createEditorPayload(
+    const result = buildWeeklyPayload(
       'priority',
       { title: '  Review roadmap ', owner: ' Jenna ', status: 'In Progress' },
       'priority-123',
@@ -59,11 +60,11 @@ describe('weeklyBriefEditor helpers', () => {
   });
 
   it('generates a new win id and validates required fields', () => {
-    const winResult = createEditorPayload('win', { text: '  Closed launch post ', category: 'Execution' });
+    const winResult = buildWeeklyPayload('win', { text: '  Closed launch post ', category: 'Execution' });
     expect(winResult.payload.id).toMatch(/^win-/);
     expect(winResult.payload.text).toBe('Closed launch post');
 
-    expect(createEditorPayload('win', { text: ' ' })).toEqual({
+    expect(buildWeeklyPayload('win', { text: ' ' })).toEqual({
       error: 'Win text is required.',
     });
   });
