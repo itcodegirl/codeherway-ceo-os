@@ -1,0 +1,76 @@
+import { describe, expect, it } from 'vitest';
+import {
+  createEditorPayload,
+  getDefaultFormValues,
+  getEditorTitle,
+  getFormValuesForEdit,
+} from './weeklyBriefEditor';
+
+describe('weeklyBriefEditor helpers', () => {
+  it('returns defaults for each editor type', () => {
+    expect(getDefaultFormValues('priority')).toEqual({
+      title: '',
+      owner: 'Jenna',
+      status: 'Planned',
+    });
+    expect(getDefaultFormValues('win')).toEqual({
+      text: '',
+      category: 'Execution',
+    });
+    expect(getDefaultFormValues('blocker')).toEqual({
+      text: '',
+      severity: 'warning',
+    });
+  });
+
+  it('builds form values for edit mode with fallbacks', () => {
+    expect(getFormValuesForEdit('priority', {})).toEqual({
+      title: '',
+      owner: 'Jenna',
+      status: 'Planned',
+    });
+    expect(getFormValuesForEdit('win', { text: 'Shipped', category: 'Product' })).toEqual({
+      text: 'Shipped',
+      category: 'Product',
+    });
+  });
+
+  it('returns correct editor titles', () => {
+    expect(getEditorTitle('priority', false)).toBe('Add Priority');
+    expect(getEditorTitle('priority', true)).toBe('Edit Priority');
+    expect(getEditorTitle('blocker', true)).toBe('Edit Blocker');
+  });
+
+  it('creates and trims priority payloads', () => {
+    const result = createEditorPayload(
+      'priority',
+      { title: '  Review roadmap ', owner: ' Jenna ', status: 'In Progress' },
+      'priority-123',
+    );
+
+    expect(result).toEqual({
+      payload: {
+        id: 'priority-123',
+        title: 'Review roadmap',
+        owner: 'Jenna',
+        status: 'In Progress',
+      },
+    });
+  });
+
+  it('generates a new win id and validates required fields', () => {
+    const winResult = createEditorPayload('win', { text: '  Closed launch post ', category: 'Execution' });
+    expect(winResult.payload.id).toMatch(/^win-/);
+    expect(winResult.payload.text).toBe('Closed launch post');
+
+    expect(createEditorPayload('win', { text: ' ' })).toEqual({
+      error: 'Win text is required.',
+    });
+  });
+
+  it('returns a safe error for unsupported types', () => {
+    expect(createEditorPayload('unknown', {})).toEqual({
+      error: 'Select a valid item type before saving.',
+    });
+  });
+});
