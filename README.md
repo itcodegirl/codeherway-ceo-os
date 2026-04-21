@@ -35,6 +35,8 @@ This project is a polished frontend prototype with partial persistence:
 - App layout regression coverage for skip-link targeting and main landmark focus restoration on navigation
 - CRM table interaction optimization using delegated `tbody` handlers to reduce per-row function churn
 - Large-dataset CRM table regression coverage for keyboard activation on high row counts
+- Semantic CRM row actions using explicit per-row `Open` buttons with delegated pointer row activation
+- Reduced non-essential live-region announcements for static source notes in CRUD and Weekly Brief pages
 
 ## Tech Stack
 
