@@ -27,6 +27,19 @@ export function buildPageMetaByRoute(appName) {
   };
 }
 
+export function buildDefaultPageMeta(appName) {
+  return {
+    title: `Dashboard | ${appName}`,
+    description:
+      `${appName} is an executive dashboard to manage opportunities, content operations, weekly priorities, and leadership workflows.`,
+  };
+}
+
+export function resolvePageMeta(appName, pathname) {
+  const map = buildPageMetaByRoute(appName);
+  return map[pathname] || buildDefaultPageMeta(appName);
+}
+
 export function setMetaTag({ selector, attribute, key, value }) {
   const head = document.head;
   if (!head) {
