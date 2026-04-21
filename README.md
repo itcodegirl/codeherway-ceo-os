@@ -29,6 +29,8 @@ This project is a polished frontend prototype with partial persistence:
 - Accessibility regression coverage for modal focus trapping and compact-sidebar Escape navigation behavior
 - Route-level accessibility smoke tests for single-page `h1` usage and app `main` landmark consistency
 - Dashboard regression coverage for derived KPI cards and focus score calculations from persisted workflow data
+- Dashboard hook coverage for no-op silent refreshes that avoid unnecessary rerenders
+- Topbar timing coverage for minute-boundary date updates near midnight
 
 ## Tech Stack
 
