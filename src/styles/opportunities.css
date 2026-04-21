@@ -39,7 +39,7 @@
 .crm-table__header,
 .crm-table__row {
 	display: grid;
-	grid-template-columns: 1.4fr 0.9fr 0.8fr 1.2fr;
+	grid-template-columns: 1.35fr 0.9fr 0.8fr 1.2fr 0.55fr;
 	gap: var(--space-list-gap);
 	align-items: baseline;
 	border: 1px solid var(--border);
@@ -98,6 +98,30 @@
 	line-height: 1.35;
 }
 
+.crm-table__cell--action {
+	justify-content: flex-end;
+}
+
+.crm-table__open-button {
+	border: 1px solid rgba(200, 194, 255, 0.35);
+	background: rgba(109, 93, 252, 0.16);
+	color: #efeaff;
+	border-radius: var(--radius-action);
+	padding: 0.4rem 0.7rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.crm-table__open-button:hover {
+	background: rgba(109, 93, 252, 0.25);
+}
+
+.crm-table__open-button:focus-visible {
+	outline: 2px solid rgba(142, 173, 255, 0.85);
+	outline-offset: 2px;
+}
+
 .crm-table__cell::before {
 	display: none;
 	content: attr(data-label);
@@ -151,6 +175,10 @@
 	.crm-table__cell {
 		flex-direction: column;
 		align-items: flex-start;
+		justify-content: flex-start;
+	}
+
+	.crm-table__cell--action {
 		justify-content: flex-start;
 	}
 

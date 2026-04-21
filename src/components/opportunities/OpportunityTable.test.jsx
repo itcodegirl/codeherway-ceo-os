@@ -27,7 +27,7 @@ describe('OpportunityTable', () => {
     expect(table).toHaveTextContent('Partnership Call');
   });
 
-  it('supports row click and keyboard selection when handler is provided', () => {
+  it('supports row click and semantic button activation when handler is provided', () => {
     const onSelect = vi.fn();
     const item = {
       id: 'o-2',
@@ -44,15 +44,13 @@ describe('OpportunityTable', () => {
 
     const rows = getAllByRole('row');
     const opportunityRow = rows[1];
+    const openButton = getAllByRole('button', { name: /Open/i })[0];
 
     fireEvent.click(opportunityRow);
     expect(onSelect).toHaveBeenCalledWith(item);
 
-    fireEvent.keyDown(opportunityRow, { key: 'Enter' });
+    fireEvent.click(openButton);
     expect(onSelect).toHaveBeenCalledTimes(2);
-
-    fireEvent.keyDown(opportunityRow, { key: ' ' });
-    expect(onSelect).toHaveBeenCalledTimes(3);
   });
 
   it('keeps interaction behavior stable with larger datasets', () => {
@@ -66,15 +64,17 @@ describe('OpportunityTable', () => {
       nextStep: 'Follow up',
     }));
 
-    const { getAllByRole } = render(
+    const { getAllByRole, container } = render(
       <OpportunityTable items={items} onSelect={onSelect} />,
     );
 
     const rows = getAllByRole('row');
     expect(rows).toHaveLength(201);
 
-    const lastRow = rows[200];
-    fireEvent.keyDown(lastRow, { key: 'Enter' });
+    const openButtons = container.querySelectorAll('.crm-table__open-button');
+    expect(openButtons).toHaveLength(200);
+    const lastOpenButton = openButtons[199];
+    fireEvent.click(lastOpenButton);
 
     expect(onSelect).toHaveBeenCalledWith(items[199]);
   });

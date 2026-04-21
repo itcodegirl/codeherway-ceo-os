@@ -19,7 +19,7 @@ describe('ContentTable', () => {
     expect(table).toHaveTextContent('Post draft');
   });
 
-  it('supports row click and keyboard selection when handler is provided', () => {
+  it('supports row click and semantic button activation when handler is provided', () => {
     const onOpenItem = vi.fn();
     const items = [
       { id: 'c-2', title: 'Weekly update', platform: 'Blog', status: 'Scheduled' },
@@ -31,15 +31,13 @@ describe('ContentTable', () => {
 
     const rows = getAllByRole('row');
     const contentRow = rows[1];
+    const openButton = getAllByRole('button', { name: /Open/i })[0];
 
     fireEvent.click(contentRow);
     expect(onOpenItem).toHaveBeenCalledWith(items[0]);
 
-    fireEvent.keyDown(contentRow, { key: 'Enter' });
+    fireEvent.click(openButton);
     expect(onOpenItem).toHaveBeenCalledTimes(2);
-
-    fireEvent.keyDown(contentRow, { key: ' ' });
-    expect(onOpenItem).toHaveBeenCalledTimes(3);
   });
 
   it('keeps interaction behavior stable with larger datasets', () => {
@@ -51,15 +49,17 @@ describe('ContentTable', () => {
       status: index % 2 === 0 ? 'Drafting' : 'Scheduled',
     }));
 
-    const { getAllByRole } = render(
+    const { getAllByRole, container } = render(
       <ContentTable items={items} onOpenItem={onOpenItem} />,
     );
 
     const rows = getAllByRole('row');
     expect(rows).toHaveLength(201);
 
-    const lastRow = rows[200];
-    fireEvent.keyDown(lastRow, { key: 'Enter' });
+    const openButtons = container.querySelectorAll('.crm-table__open-button');
+    expect(openButtons).toHaveLength(200);
+    const lastOpenButton = openButtons[199];
+    fireEvent.click(lastOpenButton);
 
     expect(onOpenItem).toHaveBeenCalledWith(items[199]);
   });
