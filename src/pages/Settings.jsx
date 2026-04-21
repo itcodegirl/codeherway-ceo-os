@@ -2,13 +2,21 @@ import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
-import { usePersistentState } from '../hooks/usePersistentState';
-import { DEFAULT_SETTINGS, resolveTimeZone } from '../lib/settings';
+import { useSettings } from '../hooks/useSettings';
+import { resolveTimeZone } from '../lib/settings';
 import '../styles/forms.css';
 
 function Settings() {
-  const [settings, setSettings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
-  const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', 0);
+  const {
+    settings,
+    savedAt,
+    source,
+    isLoading,
+    isSaving,
+    loadError,
+    updateSetting,
+    saveSettings,
+  } = useSettings();
   const teamNameFieldId = useId();
   const timezoneFieldId = useId();
   const autoSaveToggleId = useId();
@@ -20,23 +28,20 @@ function Settings() {
   const timezoneIsValid = Boolean(resolvedTimezone);
 
   const handleChange = (key, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    updateSetting(key, value);
   };
 
-  const markSave = () => {
+  const markSave = async () => {
     if (!timezoneIsValid) {
       return;
     }
 
-    setSavedAt(Date.now());
+    await saveSettings(settings);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    markSave();
+    void markSave();
   };
 
   return (
@@ -45,12 +50,21 @@ function Settings() {
         title="Settings"
         description="Manage preferences that control your executive operating environment."
       />
+      <p className="helper-text">
+        {source === 'supabase'
+          ? 'Data source: Supabase (live persistence).'
+          : 'Data source: local persistent storage in this browser.'}
+      </p>
+      {loadError ? <p className="helper-text" role="alert">{loadError}</p> : null}
+      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading settings.</p> : null}
 
       <form className="settings-grid" onSubmit={handleSubmit}>
         <SectionCard
           title="Workspace"
           actionText="Save Profile"
-          onAction={markSave}
+          onAction={() => {
+            void markSave();
+          }}
           actionLabel="Save workspace profile details"
         >
           <Input
@@ -63,6 +77,7 @@ function Settings() {
             value={settings.teamName}
             required
             minLength={2}
+            disabled={isSaving}
             onChange={(e) => handleChange('teamName', e.target.value)}
           />
 
@@ -76,6 +91,7 @@ function Settings() {
               value={timezoneInput}
               required
               minLength={2}
+              disabled={isSaving}
               error={!timezoneIsValid ? 'Timezone is invalid. Example: America/Chicago.' : ''}
               title={
                 timezoneIsValid
@@ -100,7 +116,9 @@ function Settings() {
         <SectionCard
           title="Experience"
           actionText="Apply"
-          onAction={markSave}
+          onAction={() => {
+            void markSave();
+          }}
           actionLabel="Save workspace and accessibility settings"
         >
           <label className="settings-toggle" htmlFor={autoSaveToggleId}>
@@ -108,6 +126,7 @@ function Settings() {
               id={autoSaveToggleId}
               type="checkbox"
               checked={settings.autoSave}
+              disabled={isSaving}
               onChange={(e) => handleChange('autoSave', e.target.checked)}
             />
             <span>Enable auto-save for drafts and notes</span>
@@ -118,6 +137,7 @@ function Settings() {
               id={emailDigestToggleId}
               type="checkbox"
               checked={settings.emailDigest}
+              disabled={isSaving}
               onChange={(e) => handleChange('emailDigest', e.target.checked)}
             />
             <span>Send weekly digest reminders</span>
@@ -128,6 +148,7 @@ function Settings() {
               id={shortcutsToggleId}
               type="checkbox"
               checked={settings.keyboardShortcuts}
+              disabled={isSaving}
               onChange={(e) => handleChange('keyboardShortcuts', e.target.checked)}
             />
             <span>Enable keyboard shortcuts</span>
