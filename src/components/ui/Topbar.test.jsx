@@ -64,4 +64,28 @@ describe('src/components/ui/Topbar', () => {
     expect(timeElement).toHaveTextContent(dateFormatter.format(new Date('2026-04-21T00:01:00.000Z')));
     expect(timeElement).toHaveAttribute('dateTime', formatIsoDate(new Date('2026-04-21T00:01:00.000Z'), 'UTC'));
   });
+
+  it('updates on the next minute boundary when close to midnight', () => {
+    vi.setSystemTime(new Date('2026-04-20T23:59:45.000Z'));
+    window.localStorage.setItem(
+      'ceo-os-settings',
+      JSON.stringify({
+        timezone: 'UTC',
+        teamName: 'Team Alpha',
+      }),
+    );
+
+    render(<Topbar />);
+
+    const timeElement = screen.getByRole('time');
+
+    expect(timeElement).toHaveTextContent(dateFormatter.format(new Date('2026-04-20T23:59:45.000Z')));
+
+    act(() => {
+      vi.advanceTimersByTime(16 * 1000);
+    });
+
+    expect(timeElement).toHaveTextContent(dateFormatter.format(new Date('2026-04-21T00:00:01.000Z')));
+    expect(timeElement).toHaveAttribute('dateTime', formatIsoDate(new Date('2026-04-21T00:00:01.000Z'), 'UTC'));
+  });
 });
