@@ -2,6 +2,7 @@ import { contentItems as mockContentItems } from '../data/mockData';
 import { isSupabaseConfigured, supabaseClient } from './supabase';
 
 const STORAGE_KEY = 'ceo-os-content-items';
+export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
 
 function normalizeContentItem(item) {
   return {
@@ -46,6 +47,14 @@ function writeLocalContentItems(items) {
   }
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function notifyContentItemsUpdated(detail = {}) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent(CONTENT_ITEMS_UPDATED_EVENT, { detail }));
 }
 
 function buildCreateId() {
@@ -94,12 +103,14 @@ export async function createContentItem(payload) {
       throw error;
     }
 
+    notifyContentItemsUpdated({ source: 'supabase', type: 'create' });
     return normalizeContentItem(data);
   }
 
   const current = readLocalContentItems();
   const next = [normalizedPayload, ...current];
   writeLocalContentItems(next);
+  notifyContentItemsUpdated({ source: 'local', type: 'create' });
   return normalizedPayload;
 }
 
@@ -122,12 +133,14 @@ export async function updateContentItem(id, payload) {
       throw error;
     }
 
+    notifyContentItemsUpdated({ source: 'supabase', type: 'update' });
     return normalizeContentItem(data);
   }
 
   const current = readLocalContentItems();
   const next = current.map((item) => (item.id === String(id) ? normalizedPayload : item));
   writeLocalContentItems(next);
+  notifyContentItemsUpdated({ source: 'local', type: 'update' });
   return normalizedPayload;
 }
 
@@ -137,10 +150,12 @@ export async function deleteContentItem(id) {
     if (error) {
       throw error;
     }
+    notifyContentItemsUpdated({ source: 'supabase', type: 'delete' });
     return;
   }
 
   const current = readLocalContentItems();
   const next = current.filter((item) => item.id !== String(id));
   writeLocalContentItems(next);
+  notifyContentItemsUpdated({ source: 'local', type: 'delete' });
 }

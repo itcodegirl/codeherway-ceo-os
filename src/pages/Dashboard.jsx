@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
@@ -7,8 +7,8 @@ import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import { weeklyPriorities as defaultWeeklyPriorities } from '../data/mockData';
-import { listOpportunities } from '../lib/opportunitiesRepository';
-import { listContentItems } from '../lib/contentRepository';
+import { listOpportunities, OPPORTUNITIES_UPDATED_EVENT } from '../lib/opportunitiesRepository';
+import { listContentItems, CONTENT_ITEMS_UPDATED_EVENT } from '../lib/contentRepository';
 import { usePersistentState } from '../hooks/usePersistentState';
 import '../styles/dashboard.css';
 
@@ -31,6 +31,8 @@ function Dashboard() {
   const [storedWeeklyPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultWeeklyPriorities);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const toastTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
   const priorityItems = useMemo(() => {
     if (!Array.isArray(storedWeeklyPriorities)) {
@@ -69,7 +71,7 @@ function Dashboard() {
     ];
   }, [contentRows, isDataLoading, opportunityItems]);
 
-  const showToast = (message) => {
+  const showToast = useCallback((message) => {
     setToastMessage(message);
 
     if (toastTimerRef.current) {
@@ -79,21 +81,16 @@ function Dashboard() {
     toastTimerRef.current = window.setTimeout(() => {
       setToastMessage('');
     }, 2200);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-    };
   }, []);
 
-  useEffect(() => {
-    let isActive = true;
+  const loadDashboardData = useCallback(
+    async ({ silent = false } = {}) => {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
 
-    const loadDashboardData = async () => {
-      setIsDataLoading(true);
+      if (!silent) {
+        setIsDataLoading(true);
+      }
 
       try {
         const [nextOpportunities, nextContentRows] = await Promise.all([
@@ -101,14 +98,14 @@ function Dashboard() {
           listContentItems(),
         ]);
 
-        if (!isActive) {
+        if (!isMountedRef.current || requestId !== requestIdRef.current) {
           return;
         }
 
         setOpportunityItems(nextOpportunities);
         setContentRows(nextContentRows);
       } catch (error) {
-        if (!isActive) {
+        if (!isMountedRef.current || requestId !== requestIdRef.current) {
           return;
         }
 
@@ -117,18 +114,68 @@ function Dashboard() {
           console.error('Dashboard data load failed', error);
         }
       } finally {
-        if (isActive) {
+        if (!silent && isMountedRef.current && requestId === requestIdRef.current) {
           setIsDataLoading(false);
         }
       }
-    };
+    },
+    [showToast],
+  );
 
-    loadDashboardData();
-
+  useEffect(() => {
     return () => {
-      isActive = false;
+      isMountedRef.current = false;
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      loadDashboardData();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [loadDashboardData]);
+
+  useEffect(() => {
+    const handleRepositoryChange = () => {
+      loadDashboardData({ silent: true });
+    };
+
+    const handleStorageChange = (event) => {
+      if (
+        event.key === 'ceo-os-opportunities'
+        || event.key === 'ceo-os-content-items'
+        || event.key === null
+      ) {
+        handleRepositoryChange();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleRepositoryChange();
+      }
+    };
+
+    window.addEventListener(OPPORTUNITIES_UPDATED_EVENT, handleRepositoryChange);
+    window.addEventListener(CONTENT_ITEMS_UPDATED_EVENT, handleRepositoryChange);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleRepositoryChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener(OPPORTUNITIES_UPDATED_EVENT, handleRepositoryChange);
+      window.removeEventListener(CONTENT_ITEMS_UPDATED_EVENT, handleRepositoryChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleRepositoryChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [loadDashboardData]);
 
   const handleCopySnapshot = async () => {
     const snapshot = [

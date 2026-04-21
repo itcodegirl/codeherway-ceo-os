@@ -2,6 +2,7 @@ import { opportunities as mockOpportunities } from '../data/mockData';
 import { isSupabaseConfigured, supabaseClient } from './supabase';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
+export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
 
 function normalizeOpportunity(item) {
   return {
@@ -48,6 +49,14 @@ function writeLocalOpportunities(items) {
   }
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function notifyOpportunitiesUpdated(detail = {}) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent(OPPORTUNITIES_UPDATED_EVENT, { detail }));
 }
 
 function buildCreateId() {
@@ -106,12 +115,14 @@ export async function createOpportunity(payload) {
       throw error;
     }
 
+    notifyOpportunitiesUpdated({ source: 'supabase', type: 'create' });
     return normalizeOpportunity(data);
   }
 
   const current = readLocalOpportunities();
   const next = [normalizedPayload, ...current];
   writeLocalOpportunities(next);
+  notifyOpportunitiesUpdated({ source: 'local', type: 'create' });
   return normalizedPayload;
 }
 
@@ -130,12 +141,14 @@ export async function updateOpportunity(id, payload) {
       throw error;
     }
 
+    notifyOpportunitiesUpdated({ source: 'supabase', type: 'update' });
     return normalizeOpportunity(data);
   }
 
   const current = readLocalOpportunities();
   const next = current.map((item) => (item.id === String(id) ? normalizedPayload : item));
   writeLocalOpportunities(next);
+  notifyOpportunitiesUpdated({ source: 'local', type: 'update' });
   return normalizedPayload;
 }
 
@@ -145,10 +158,12 @@ export async function deleteOpportunity(id) {
     if (error) {
       throw error;
     }
+    notifyOpportunitiesUpdated({ source: 'supabase', type: 'delete' });
     return;
   }
 
   const current = readLocalOpportunities();
   const next = current.filter((item) => item.id !== String(id));
   writeLocalOpportunities(next);
+  notifyOpportunitiesUpdated({ source: 'local', type: 'delete' });
 }
