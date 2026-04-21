@@ -108,12 +108,8 @@ function ChiefOfStaff() {
       />
 
       <div className="chief-grid">
-        <section className="section-card">
-          <div className="section-card__header">
-            <h2>Prompt Workspace</h2>
-          </div>
-
-          <div className="section-card__body" aria-busy={isGenerating}>
+        <SectionCard title="Prompt Workspace">
+          <div aria-busy={isGenerating}>
             <label className="settings-field" htmlFor={notesFieldId}>
               <span className="settings-field__label">Paste notes and context</span>
               <textarea
@@ -174,14 +170,10 @@ function ChiefOfStaff() {
               isDisabled={isGenerating}
             />
           </div>
-        </section>
+        </SectionCard>
 
-        <section className="section-card">
-          <div className="section-card__header">
-            <h2>AI Output</h2>
-          </div>
-
-          <div className="section-card__body" aria-busy={isGenerating}>
+        <SectionCard title="AI Output">
+          <div aria-busy={isGenerating}>
             <p className="helper-text" role="status" aria-live="polite">
               {feedback}
             </p>
@@ -201,7 +193,7 @@ function ChiefOfStaff() {
               </SectionCard>
             )}
           </div>
-        </section>
+        </SectionCard>
       </div>
     </section>
   );
