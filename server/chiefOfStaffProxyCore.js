@@ -6,6 +6,7 @@ const MAX_NOTES_LENGTH = 12000;
 const REQUEST_TIMEOUT_MS = 10000;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 0;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const STRUCTURED_KEYS = ['priorities', 'opportunities', 'contentItems', 'tasks'];
 
 const requestTimestampsByClient = new Map();
 
@@ -154,6 +155,150 @@ function buildInput({ instruction, notes }) {
   ];
 }
 
+function extractOutputText(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  if (typeof payload.output_text === 'string' && payload.output_text.trim()) {
+    return payload.output_text.trim();
+  }
+
+  if (!Array.isArray(payload.output)) {
+    return '';
+  }
+
+  const textParts = [];
+  payload.output.forEach((item) => {
+    if (!Array.isArray(item?.content)) {
+      return;
+    }
+
+    item.content.forEach((contentPart) => {
+      if (contentPart?.type === 'output_text' && typeof contentPart.text === 'string') {
+        textParts.push(contentPart.text.trim());
+      }
+    });
+  });
+
+  return textParts.filter(Boolean).join('\n\n');
+}
+
+function parseJsonCandidate(candidate) {
+  if (typeof candidate !== 'string') {
+    return null;
+  }
+
+  const normalizedCandidate = candidate.trim();
+  if (!normalizedCandidate) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(normalizedCandidate);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeStructuredItem(item) {
+  if (typeof item === 'string') {
+    const normalizedValue = item.trim();
+    return normalizedValue ? { title: normalizedValue } : null;
+  }
+
+  if (!item || typeof item !== 'object' || Array.isArray(item)) {
+    return null;
+  }
+
+  const normalized = {};
+  Object.entries(item).forEach(([key, value]) => {
+    if (value === null || value === undefined) {
+      return;
+    }
+
+    if (typeof value === 'string') {
+      const trimmedValue = value.trim();
+      if (trimmedValue) {
+        normalized[key] = trimmedValue;
+      }
+      return;
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      normalized[key] = value;
+    }
+  });
+
+  if (Object.keys(normalized).length === 0) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function normalizeStructuredPayload(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return null;
+  }
+
+  const normalized = {
+    priorities: [],
+    opportunities: [],
+    contentItems: [],
+    tasks: [],
+  };
+
+  STRUCTURED_KEYS.forEach((key) => {
+    const values = Array.isArray(input[key]) ? input[key] : [];
+    normalized[key] = values.map(normalizeStructuredItem).filter(Boolean);
+  });
+
+  return normalized;
+}
+
+function hasStructuredContent(structuredPayload) {
+  if (!structuredPayload || typeof structuredPayload !== 'object') {
+    return false;
+  }
+
+  return STRUCTURED_KEYS.some(
+    (key) => Array.isArray(structuredPayload[key]) && structuredPayload[key].length > 0,
+  );
+}
+
+function extractStructuredPayload(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+
+  const normalizedDirect = normalizeStructuredPayload(
+    payload.structured_payload || payload.structuredPayload,
+  );
+  if (hasStructuredContent(normalizedDirect)) {
+    return normalizedDirect;
+  }
+
+  const outputText = extractOutputText(payload);
+  const directParsed = parseJsonCandidate(outputText);
+  const normalizedParsed = normalizeStructuredPayload(directParsed);
+  if (hasStructuredContent(normalizedParsed)) {
+    return normalizedParsed;
+  }
+
+  const fencedMatch = outputText.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fencedMatch?.[1]) {
+    const parsedFenced = parseJsonCandidate(fencedMatch[1]);
+    const normalizedFenced = normalizeStructuredPayload(parsedFenced);
+    if (hasStructuredContent(normalizedFenced)) {
+      return normalizedFenced;
+    }
+  }
+
+  return null;
+}
+
 function buildResponse(status, body) {
   return {
     status,
@@ -238,6 +383,14 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
 
   if (!upstreamPayload) {
     return buildResponse(502, { error: 'Empty response from OpenAI' });
+  }
+
+  const structuredPayload = extractStructuredPayload(upstreamPayload);
+  if (structuredPayload) {
+    return buildResponse(200, {
+      ...upstreamPayload,
+      structured_payload: structuredPayload,
+    });
   }
 
   return buildResponse(200, upstreamPayload);

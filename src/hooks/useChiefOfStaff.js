@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { aiConfig, generateChiefOfStaffResponse, getChiefActionTitle } from '../lib/openai';
+import { createOpportunity } from '../lib/opportunitiesRepository';
+import { createContentItem } from '../lib/contentRepository';
+import { createWeeklyItem, getCurrentWeekStart } from '../lib/weeklyRepository';
+import { buildCreateId } from '../lib/utils';
 import {
   createChiefSession,
   getChiefSource,
@@ -17,6 +21,25 @@ function getDefaultFeedback() {
 
 function resolveNotes(nextNotes) {
   return typeof nextNotes === 'string' ? nextNotes : '';
+}
+
+function resolveStructuredText(item) {
+  if (typeof item === 'string') {
+    return item.trim();
+  }
+
+  if (!item || typeof item !== 'object') {
+    return '';
+  }
+
+  return (
+    item.title
+    || item.name
+    || item.text
+    || item.summary
+    || item.task
+    || ''
+  ).toString().trim();
 }
 
 export function useChiefOfStaff() {
@@ -196,7 +219,7 @@ export function useChiefOfStaff() {
       if (nextResponse.source === 'proxy') {
         setFeedback(`Created: ${savedOutput.title}. Review and edit before sending.`);
       } else {
-        setFeedback(`Created: ${savedOutput.title}. Using local fallback output.`);
+      setFeedback(`Created: ${savedOutput.title}. Using local fallback output.`);
       }
     } catch (error) {
       if (!isMountedRef.current) {
@@ -215,6 +238,73 @@ export function useChiefOfStaff() {
     }
   }, [canGenerate, hasNotes, notesText]);
 
+  const acceptStructuredItem = useCallback(async (section, item) => {
+    const sectionKey = typeof section === 'string' ? section : '';
+    const itemValue = item && typeof item === 'object' ? item : resolveStructuredText(item);
+
+    try {
+      if (sectionKey === 'opportunities') {
+        const name = resolveStructuredText(itemValue);
+        if (!name) {
+          setFeedback('This opportunity entry is missing a name.');
+          return;
+        }
+
+        await createOpportunity({
+          name,
+          company: itemValue.company || '',
+          priority: itemValue.priority || 'Medium',
+          stage: itemValue.stage || 'New',
+          nextStep: itemValue.nextStep || itemValue.next_step || '',
+        });
+        setFeedback('Added an opportunity from the structured AI output.');
+        return;
+      }
+
+      if (sectionKey === 'contentItems') {
+        const title = resolveStructuredText(itemValue);
+        if (!title) {
+          setFeedback('This content entry is missing a title.');
+          return;
+        }
+
+        await createContentItem({
+          title,
+          platform: itemValue.platform || itemValue.channel || '',
+          status: itemValue.status || 'Drafting',
+        });
+        setFeedback('Added a content item from the structured AI output.');
+        return;
+      }
+
+      if (sectionKey === 'priorities' || sectionKey === 'tasks') {
+        const title = resolveStructuredText(itemValue);
+        if (!title) {
+          setFeedback('This priority entry is missing a title.');
+          return;
+        }
+
+        await createWeeklyItem({
+          weekStart: getCurrentWeekStart(),
+          itemType: 'priority',
+          item: {
+            id: buildCreateId(),
+            title,
+            owner: itemValue.owner || 'Team Member',
+            status: itemValue.status || 'Planned',
+          },
+        });
+        setFeedback('Added a weekly priority from the structured AI output.');
+      }
+    } catch (error) {
+      setLoadError('Unable to accept this structured AI item right now.');
+      setFeedback('Unable to save this item right now. Try again.');
+      if (import.meta.env.DEV) {
+        console.error('Failed to accept structured AI item', error);
+      }
+    }
+  }, []);
+
   return useMemo(
     () => ({
       notes: notesText,
@@ -229,6 +319,7 @@ export function useChiefOfStaff() {
       setNotes,
       appendPrompt,
       handleAction,
+      acceptStructuredItem,
       clearWorkspace,
       refreshWorkspace: loadWorkspace,
     }),
@@ -245,6 +336,7 @@ export function useChiefOfStaff() {
       setNotes,
       appendPrompt,
       handleAction,
+      acceptStructuredItem,
       clearWorkspace,
       loadWorkspace,
     ],
