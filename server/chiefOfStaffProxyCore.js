@@ -3,6 +3,11 @@ import { getChiefActionConfig } from '../src/lib/chiefActions.js';
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
 const MAX_NOTES_LENGTH = 12000;
+const REQUEST_TIMEOUT_MS = 10000;
+
+function getAllowedActionKeys() {
+  return new Set(['summarize', 'draft', 'actions', 'priorities']);
+}
 
 function normalizeBody(body) {
   if (!body) {
@@ -13,11 +18,11 @@ function normalizeBody(body) {
     try {
       return JSON.parse(body);
     } catch {
-      return {};
+      return null;
     }
   }
 
-  if (typeof body === 'object') {
+  if (typeof body === 'object' && !Array.isArray(body) && body !== null) {
     return body;
   }
 
@@ -30,6 +35,14 @@ function normalizeNotes(notes) {
   }
 
   return notes.trim().slice(0, MAX_NOTES_LENGTH);
+}
+
+function normalizeActionKey(actionKey, allowedActionKeys) {
+  if (typeof actionKey !== 'string') {
+    return 'summarize';
+  }
+
+  return allowedActionKeys.has(actionKey) ? actionKey : 'summarize';
 }
 
 function buildInput({ instruction, notes }) {
@@ -73,8 +86,13 @@ export async function handleChiefOfStaffProxy({ method, body }) {
   }
 
   const parsedBody = normalizeBody(body);
+  if (parsedBody === null || typeof parsedBody !== 'object') {
+    return buildResponse(400, { error: 'Request body must be a JSON object' });
+  }
+
   const notes = normalizeNotes(parsedBody.notes);
-  const actionKey = typeof parsedBody.actionKey === 'string' ? parsedBody.actionKey : 'summarize';
+  const allowedActionKeys = getAllowedActionKeys();
+  const actionKey = normalizeActionKey(parsedBody.actionKey, allowedActionKeys);
 
   if (!notes) {
     return buildResponse(400, { error: 'Notes are required' });
@@ -82,27 +100,50 @@ export async function handleChiefOfStaffProxy({ method, body }) {
 
   const actionConfig = getChiefActionConfig(actionKey);
 
-  const upstreamResponse = await fetch(OPENAI_RESPONSES_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL,
-      input: buildInput({
-        instruction: actionConfig.instruction,
-        notes,
-      }),
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
 
-  const upstreamPayload = await upstreamResponse.json().catch(() => ({}));
+  let upstreamResponse;
+  try {
+    upstreamResponse = await fetch(OPENAI_RESPONSES_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL,
+        input: buildInput({
+          instruction: actionConfig.instruction,
+          notes,
+        }),
+      }),
+    });
+  } catch (error) {
+    clearTimeout(timeout);
+    const timedOut = error?.name === 'AbortError';
+    return buildResponse(
+      timedOut ? 504 : 502,
+      { error: timedOut ? 'OpenAI request timed out' : 'Unable to reach OpenAI' },
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const upstreamPayload = await upstreamResponse.json().catch(() => ({ error: 'Invalid JSON response from upstream' }));
 
   if (!upstreamResponse.ok) {
     return buildResponse(upstreamResponse.status, {
       error: 'OpenAI request failed',
+      details: upstreamPayload?.error || upstreamPayload,
     });
+  }
+
+  if (!upstreamPayload) {
+    return buildResponse(502, { error: 'Empty response from OpenAI' });
   }
 
   return buildResponse(200, upstreamPayload);
