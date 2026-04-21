@@ -1,45 +1,56 @@
-import { contentItems } from '../../data/mockData';
 import Badge from '../ui/Badge';
-
-const statusTone = {
-  Drafting: 'low',
-  Editing: 'warning',
-  Scheduled: 'high',
-};
+import { contentStatusTone } from '../../lib/statusMaps';
 
 function ContentTable({ items, onOpenItem }) {
-  const rows = Array.isArray(items) ? items : contentItems;
   const hasHandler = typeof onOpenItem === 'function';
+  if (!Array.isArray(items)) {
+    return null;
+  }
+
+  const handleRowKeyDown = (event, item) => {
+    if (!hasHandler) {
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onOpenItem(item);
+    }
+  };
 
   return (
-    <div className="crm-table" role="table" aria-label="Content pipeline">
-      <div className="crm-table__header" role="row">
-        <p role="columnheader">Title</p>
-        <p role="columnheader">Platform</p>
-        <p role="columnheader">Status</p>
-      </div>
-
-      {rows.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className="crm-table__row crm-table__row--button"
-          role="row"
-          aria-label={hasHandler ? `Open ${item.title} on ${item.platform}` : `No action available for ${item.title} on ${item.platform}`}
-          disabled={!hasHandler}
-          onClick={() => onOpenItem?.(item)}
-        >
-          <span className="crm-table__cell" role="cell" data-label="Title">
-            <p className="crm-table__title">{item.title}</p>
-          </span>
-          <span className="crm-table__cell" role="cell" data-label="Platform">
-            <p className="crm-table__subtitle">{item.platform}</p>
-          </span>
-          <span className="crm-table__cell" role="cell" data-label="Status">
-            <Badge label={item.status} tone={statusTone[item.status] || 'default'} />
-          </span>
-        </button>
-      ))}
+    <div className="crm-table">
+      <table className="crm-table__native" aria-label="Content pipeline">
+        <thead>
+          <tr className="crm-table__header">
+            <th scope="col">Title</th>
+            <th scope="col">Platform</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr
+              key={item.id}
+              className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
+              tabIndex={hasHandler ? 0 : undefined}
+              onClick={hasHandler ? () => onOpenItem(item) : undefined}
+              onKeyDown={(event) => handleRowKeyDown(event, item)}
+              aria-label={hasHandler ? `Open ${item.title} on ${item.platform}` : undefined}
+            >
+              <td className="crm-table__cell" data-label="Title">
+                <p className="crm-table__title">{item.title}</p>
+              </td>
+              <td className="crm-table__cell" data-label="Platform">
+                <p className="crm-table__subtitle">{item.platform}</p>
+              </td>
+              <td className="crm-table__cell" data-label="Status">
+                <Badge label={item.status} tone={contentStatusTone[item.status] || 'default'} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
