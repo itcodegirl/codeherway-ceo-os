@@ -38,23 +38,44 @@ function getCollectionConfig(type, params) {
   }
 }
 
+function createDefaultDeleteState() {
+  return {
+    type: '',
+    itemId: '',
+    itemName: '',
+  };
+}
+
 export function useWeeklyBriefEditor(params) {
   const [editorState, setEditorState] = useState(DEFAULT_EDITOR_STATE);
   const [formValues, setFormValues] = useState({});
   const [formError, setFormError] = useState('');
+  const [deleteState, setDeleteState] = useState(createDefaultDeleteState);
 
   const isEditorOpen = Boolean(editorState.type);
   const isEditing = Boolean(editorState.itemId);
+  const isDeleteConfirmOpen = Boolean(deleteState.type && deleteState.itemId);
 
   const editorTitle = useMemo(
     () => getEditorTitle(editorState.type, isEditing),
     [editorState.type, isEditing],
   );
+  const deletePrompt = useMemo(() => {
+    if (!deleteState.itemName) {
+      return '';
+    }
+
+    return `Delete "${deleteState.itemName}"? This cannot be undone.`;
+  }, [deleteState.itemName]);
 
   const closeEditor = () => {
     setEditorState(DEFAULT_EDITOR_STATE);
     setFormValues({});
     setFormError('');
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteState(createDefaultDeleteState());
   };
 
   const openCreateEditor = (type) => {
@@ -90,13 +111,26 @@ export function useWeeklyBriefEditor(params) {
 
   const handleDelete = (type, item) => {
     const itemName = type === 'priority' ? item.title : item.text;
-    const shouldDelete = window.confirm(`Delete "${itemName}"? This cannot be undone.`);
-    if (!shouldDelete) {
+    const itemId = item?.id;
+    if (!itemName || itemId === null || itemId === undefined) {
       return;
     }
 
-    updateCollection(type, (items) =>
-      items.filter((entry) => String(entry.id) !== String(item.id)));
+    setDeleteState({
+      type,
+      itemId: String(itemId),
+      itemName,
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteState.type || !deleteState.itemId) {
+      return;
+    }
+
+    updateCollection(deleteState.type, (items) =>
+      items.filter((entry) => String(entry.id) !== deleteState.itemId));
+    closeDeleteConfirm();
   };
 
   const handleEditorSubmit = (event) => {
@@ -125,12 +159,16 @@ export function useWeeklyBriefEditor(params) {
     formError,
     isEditorOpen,
     isEditing,
+    isDeleteConfirmOpen,
     editorTitle,
+    deletePrompt,
     closeEditor,
+    closeDeleteConfirm,
     openCreateEditor,
     openEditEditor,
     handleFormChange,
     handleDelete,
+    handleConfirmDelete,
     handleEditorSubmit,
   };
 }

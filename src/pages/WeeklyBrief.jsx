@@ -1,6 +1,7 @@
 import { weeklyPriorities as defaultPriorities, weeklyWins as defaultWins, weeklyBlockers as defaultBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
+import ConfirmModal from '../components/ui/ConfirmModal';
 import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
 import WeeklyTextList from '../components/weekly/WeeklyTextList';
 import WeeklyEditorModal from '../components/weekly/WeeklyEditorModal';
@@ -27,12 +28,16 @@ function WeeklyBrief() {
     formError,
     isEditorOpen,
     isEditing,
+    isDeleteConfirmOpen,
     editorTitle,
+    deletePrompt,
     closeEditor,
+    closeDeleteConfirm,
     openCreateEditor,
     openEditEditor,
     handleFormChange,
     handleDelete,
+    handleConfirmDelete,
     handleEditorSubmit,
   } = useWeeklyBriefEditor({
     defaultPriorities,
@@ -159,6 +164,18 @@ function WeeklyBrief() {
         onClose={closeEditor}
         onSubmit={handleEditorSubmit}
         onFormChange={handleFormChange}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete Item"
+        message={deletePrompt}
+        onCancel={closeDeleteConfirm}
+        onConfirm={handleConfirmDelete}
+        cancelLabel="Cancel"
+        confirmLabel="Delete"
+        cancelAriaLabel="Cancel item delete"
+        confirmAriaLabel="Confirm item delete"
       />
     </section>
   );

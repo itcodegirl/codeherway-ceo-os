@@ -1,0 +1,37 @@
+import Modal from './Modal';
+import Button from './Button';
+
+function ConfirmModal({
+  isOpen,
+  title = 'Confirm Action',
+  message,
+  onCancel,
+  onConfirm,
+  cancelLabel = 'Cancel',
+  confirmLabel = 'Confirm',
+  isConfirming = false,
+  confirmAriaLabel = 'Confirm action',
+  cancelAriaLabel = 'Cancel action',
+}) {
+  return (
+    <Modal isOpen={isOpen} title={title} onClose={onCancel}>
+      {message ? <p className="helper-text">{message}</p> : null}
+      <div className="modal-actions">
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isConfirming} aria-label={cancelAriaLabel}>
+          {cancelLabel}
+        </Button>
+        <Button
+          type="button"
+          onClick={onConfirm}
+          disabled={isConfirming}
+          aria-label={confirmAriaLabel}
+          icon={{ name: 'action', size: 14 }}
+        >
+          {confirmLabel}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+export default ConfirmModal;
