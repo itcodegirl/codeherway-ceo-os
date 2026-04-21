@@ -66,6 +66,14 @@ describe('src/lib/pageMeta', () => {
     expect(resolvedMeta).toEqual(defaultMeta);
   });
 
+  it('normalizes trailing slashes when resolving route metadata', () => {
+    const rawMeta = resolvePageMeta('Acme CEO OS', '/chief-of-staff/');
+    const normalizedMeta = resolvePageMeta('Acme CEO OS', '/chief-of-staff');
+
+    expect(rawMeta).toEqual(normalizedMeta);
+    expect(rawMeta.title).toBe('Chief of Staff | Acme CEO OS');
+  });
+
   it('resolves explicit route metadata through buildPageMetaByRoute', () => {
     const meta = resolvePageMeta('Acme CEO OS', '/chief-of-staff');
 

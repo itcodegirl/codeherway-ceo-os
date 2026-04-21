@@ -44,4 +44,18 @@ describe('src/hooks/usePageMeta', () => {
       `${window.location.origin}/unknown`,
     );
   });
+
+  it('normalizes trailing slashes before resolving route metadata', () => {
+    renderHook(() => usePageMeta('Acme CEO OS'), {
+      wrapper: createAppRouter('/content/'),
+    });
+
+    const meta = buildPageMetaByRoute('Acme CEO OS')['/content'];
+
+    expect(document.title).toBe(meta.title);
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toBe(meta.description);
+    expect(document.querySelector('meta[property="og:url"]')?.getAttribute('content')).toBe(
+      `${window.location.origin}/content/`,
+    );
+  });
 });

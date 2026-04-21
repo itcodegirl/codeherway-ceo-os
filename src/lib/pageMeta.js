@@ -35,9 +35,23 @@ export function buildDefaultPageMeta(appName) {
   };
 }
 
+function normalizePathname(pathname = '') {
+  if (typeof pathname !== 'string') {
+    return '/';
+  }
+
+  const normalized = `/${pathname.trim().replace(/^\/+/, '').split('/').filter(Boolean).join('/')}`.replace(/\/\/+/g, '/');
+  if (!normalized || normalized === '/') {
+    return '/';
+  }
+
+  return normalized;
+}
+
 export function resolvePageMeta(appName, pathname) {
   const map = buildPageMetaByRoute(appName);
-  return map[pathname] || buildDefaultPageMeta(appName);
+  const normalizedPathname = normalizePathname(pathname);
+  return map[normalizedPathname] || buildDefaultPageMeta(appName);
 }
 
 export function setMetaTag({ selector, attribute, key, value }) {
