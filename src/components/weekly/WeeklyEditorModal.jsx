@@ -1,6 +1,7 @@
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import Textarea from '../ui/Textarea';
 import {
   BLOCKER_SEVERITY_OPTIONS,
@@ -42,21 +43,21 @@ function WeeklyEditorModal({
               required
             />
 
-            <label className="settings-field" htmlFor="weekly-priority-status">
-              <span className="settings-field__label">Status</span>
-              <select
-                id="weekly-priority-status"
-                className="settings-input"
-                value={formValues.status || 'Planned'}
-                onChange={(event) => onFormChange('status', event.target.value)}
-              >
-                {PRIORITY_STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              id="weekly-priority-status"
+              label="Status"
+              className="settings-field"
+              labelClassName="settings-field__label"
+              controlClassName="settings-input"
+              value={formValues.status || 'Planned'}
+              onChange={(event) => onFormChange('status', event.target.value)}
+            >
+              {PRIORITY_STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </Select>
           </>
         ) : null}
 
@@ -72,21 +73,21 @@ function WeeklyEditorModal({
               required
             />
 
-            <label className="settings-field" htmlFor="weekly-win-category">
-              <span className="settings-field__label">Category</span>
-              <select
-                id="weekly-win-category"
-                className="settings-input"
-                value={formValues.category || 'Execution'}
-                onChange={(event) => onFormChange('category', event.target.value)}
-              >
-                {WIN_CATEGORY_OPTIONS.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              id="weekly-win-category"
+              label="Category"
+              className="settings-field"
+              labelClassName="settings-field__label"
+              controlClassName="settings-input"
+              value={formValues.category || 'Execution'}
+              onChange={(event) => onFormChange('category', event.target.value)}
+            >
+              {WIN_CATEGORY_OPTIONS.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </Select>
           </>
         ) : null}
 
@@ -102,21 +103,21 @@ function WeeklyEditorModal({
               required
             />
 
-            <label className="settings-field" htmlFor="weekly-blocker-severity">
-              <span className="settings-field__label">Severity</span>
-              <select
-                id="weekly-blocker-severity"
-                className="settings-input"
-                value={formValues.severity || 'warning'}
-                onChange={(event) => onFormChange('severity', event.target.value)}
-              >
-                {BLOCKER_SEVERITY_OPTIONS.map((severity) => (
-                  <option key={severity} value={severity}>
-                    {severity}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              id="weekly-blocker-severity"
+              label="Severity"
+              className="settings-field"
+              labelClassName="settings-field__label"
+              controlClassName="settings-input"
+              value={formValues.severity || 'warning'}
+              onChange={(event) => onFormChange('severity', event.target.value)}
+            >
+              {BLOCKER_SEVERITY_OPTIONS.map((severity) => (
+                <option key={severity} value={severity}>
+                  {severity}
+                </option>
+              ))}
+            </Select>
           </>
         ) : null}
 

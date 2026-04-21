@@ -6,6 +6,7 @@ import DeleteConfirmModal from '../components/ui/DeleteConfirmModal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
 import Textarea from '../components/ui/Textarea';
 import {
   createOpportunity,
@@ -280,39 +281,35 @@ function Opportunities() {
               disabled={isSaving}
             />
 
-            <label className="form-field" htmlFor="opportunity-priority">
-              <span className="form-field__label">Priority</span>
-              <select
-                id="opportunity-priority"
-                className="form-input"
-                value={formValues.priority}
-                onChange={(event) => handleFormChange('priority', event.target.value)}
-                disabled={isSaving}
-              >
-                {PRIORITY_OPTIONS.map((priority) => (
-                  <option key={priority} value={priority}>
-                    {priority}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              id="opportunity-priority"
+              label="Priority"
+              className="form-field"
+              value={formValues.priority}
+              onChange={(event) => handleFormChange('priority', event.target.value)}
+              disabled={isSaving}
+            >
+              {PRIORITY_OPTIONS.map((priority) => (
+                <option key={priority} value={priority}>
+                  {priority}
+                </option>
+              ))}
+            </Select>
 
-            <label className="form-field" htmlFor="opportunity-stage">
-              <span className="form-field__label">Stage</span>
-              <select
-                id="opportunity-stage"
-                className="form-input"
-                value={formValues.stage}
-                onChange={(event) => handleFormChange('stage', event.target.value)}
-                disabled={isSaving}
-              >
-                {STAGE_OPTIONS.map((stage) => (
-                  <option key={stage} value={stage}>
-                    {stage}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              id="opportunity-stage"
+              label="Stage"
+              className="form-field"
+              value={formValues.stage}
+              onChange={(event) => handleFormChange('stage', event.target.value)}
+              disabled={isSaving}
+            >
+              {STAGE_OPTIONS.map((stage) => (
+                <option key={stage} value={stage}>
+                  {stage}
+                </option>
+              ))}
+            </Select>
 
             <Textarea
               id="opportunity-next-step"

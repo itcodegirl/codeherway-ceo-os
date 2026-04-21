@@ -6,6 +6,7 @@ import DeleteConfirmModal from '../components/ui/DeleteConfirmModal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
 import {
   createContentItem,
   deleteContentItem,
@@ -248,22 +249,20 @@ function ContentOS() {
               disabled={isSaving}
             />
 
-            <label className="form-field" htmlFor="content-status">
-              <span className="form-field__label">Status</span>
-              <select
-                id="content-status"
-                className="form-input"
-                value={formValues.status}
-                onChange={(event) => handleFormChange('status', event.target.value)}
-                disabled={isSaving}
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              id="content-status"
+              label="Status"
+              className="form-field"
+              value={formValues.status}
+              onChange={(event) => handleFormChange('status', event.target.value)}
+              disabled={isSaving}
+            >
+              {STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </Select>
 
             {formError ? (
               <p className="helper-text content-error" role="alert">
