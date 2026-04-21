@@ -182,12 +182,13 @@ function ChiefOfStaff() {
                 <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
               ))
             ) : (
-              <SectionCard title="Starter Copy">
+              <article className="chief-response" aria-label="Starter copy">
+                <p className="chief-response__label">Starter Copy</p>
                 <p className="chief-response__text">
                   This week's momentum is strong. Core product structure is in place, and the next move is to
                   convert these notes into editable plans and content that can be shipped this week.
                 </p>
-              </SectionCard>
+              </article>
             )}
           </div>
         </SectionCard>
