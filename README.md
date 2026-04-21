@@ -166,6 +166,20 @@ npm run typecheck
   - `CASE_STUDY.md`
   - `docs/RELEASE_CHECKLIST.md`
 
+## Release evidence
+
+- Verification snapshot date: April 21, 2026
+- Quality gates executed successfully:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:run`
+  - `npm run typecheck`
+- Final hardening and readiness commits:
+  - `d95e8d3` - test: harden chief-of-staff edge-case coverage
+  - `188dcc7` - test: harden dashboard insight edge-case resilience
+  - `24d811d` - fix: normalize route paths for page metadata resolution
+  - `f18c16a` - docs: add release-candidate checklist and portfolio polish
+
 ## Author
 
 Jenna Zawaski - frontend product engineering with workflow-first architecture focus.
