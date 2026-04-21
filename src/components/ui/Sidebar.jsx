@@ -8,6 +8,13 @@ function Sidebar() {
   const location = useLocation();
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [mobileMenuOpenPath, setMobileMenuOpenPath] = useState('');
+  const [isCompactViewport, setIsCompactViewport] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+
+    return window.matchMedia('(max-width: 860px)').matches;
+  });
   const teamName = resolveTeamName(settings?.teamName);
 
   const navItems = [
@@ -25,8 +32,11 @@ function Sidebar() {
     }
 
     const mediaQuery = window.matchMedia('(max-width: 860px)');
+
     const handleViewportChange = (event) => {
-      if (!event.matches) {
+      const isCompact = event.matches;
+      setIsCompactViewport(isCompact);
+      if (!isCompact) {
         setMobileMenuOpenPath('');
       }
     };
@@ -38,8 +48,11 @@ function Sidebar() {
     };
   }, []);
 
+  const isMobileMenuOpen = isCompactViewport
+    ? mobileMenuOpenPath === location.pathname
+    : true;
+
   const navId = 'primary-navigation';
-  const isMobileMenuOpen = mobileMenuOpenPath === location.pathname;
 
   return (
     <aside className="sidebar" aria-label="Primary navigation">
@@ -70,6 +83,8 @@ function Sidebar() {
       <nav
         id={navId}
         className={isMobileMenuOpen ? 'sidebar__nav sidebar__nav--open' : 'sidebar__nav'}
+        hidden={isCompactViewport && !isMobileMenuOpen}
+        aria-hidden={isCompactViewport && !isMobileMenuOpen ? 'true' : undefined}
         aria-label="Main navigation"
       >
         <ul className="sidebar__list">

@@ -47,12 +47,10 @@ function Topbar() {
         <time className="topbar__meta" dateTime={isoDate}>
           {today}
         </time>
-        <span className="topbar__status" aria-label="Current period set to this week">
-          This Week
-        </span>
-        <span className="topbar__status" title={`Date shown in ${timezoneLabel}`}>
-          {timezoneLabel}
-        </span>
+        <p className="topbar__status">Current period: This Week</p>
+        <p className="topbar__status" title={`Date shown in ${timezoneLabel}`}>
+          Time zone: {timezoneLabel}
+        </p>
       </div>
     </header>
   );
