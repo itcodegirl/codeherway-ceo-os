@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AppLayout from './AppLayout';
 
@@ -54,5 +54,38 @@ describe('src/layouts/AppLayout', () => {
     expect(description?.getAttribute('content')).toBe(
       'CodeHerWay CEO OS is an executive dashboard to manage opportunities, content operations, weekly priorities, and leadership workflows.',
     );
+  });
+
+  it('keeps skip-link target valid and restores main focus on route navigation', async () => {
+    render(
+      <MemoryRouter initialEntries={['/content']}>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route path="content" element={<div>Content page</div>} />
+            <Route index element={<div>Dashboard page</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const skipLink = screen.getByRole('link', { name: 'Skip to content' });
+    const main = document.getElementById('main-content');
+    const dashboardNavLink = screen.getByRole('link', { name: 'Dashboard' });
+
+    expect(skipLink).toHaveAttribute('href', '#main-content');
+    expect(main).toHaveAttribute('tabindex', '-1');
+
+    await waitFor(() => {
+      expect(main).toHaveFocus();
+    });
+
+    fireEvent.click(skipLink);
+
+    fireEvent.click(dashboardNavLink);
+
+    await waitFor(() => {
+      expect(main).toHaveFocus();
+    });
+    expect(document.title).toBe('Dashboard | CodeHerWay CEO OS');
   });
 });
