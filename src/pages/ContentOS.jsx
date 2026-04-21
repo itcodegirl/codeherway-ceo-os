@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import EmptyState from '../components/ui/EmptyState';
 import PageHeader from '../components/ui/PageHeader';
@@ -14,6 +14,7 @@ import {
   listContentItems,
   updateContentItem,
 } from '../lib/contentRepository';
+import { useCrudCollection } from '../hooks/useCrudCollection';
 import '../styles/content.css';
 
 const statusTone = {
@@ -30,16 +31,65 @@ const DEFAULT_FORM = {
   status: 'Drafting',
 };
 
+function mapContentItemToFormValues(item) {
+  return {
+    title: item.title || '',
+    platform: item.platform || '',
+    status: item.status || 'Drafting',
+  };
+}
+
+function mapContentFormValuesToPayload(formValues) {
+  return {
+    title: formValues.title.trim(),
+    platform: formValues.platform.trim(),
+    status: formValues.status,
+  };
+}
+
+function validateContentPayload(payload) {
+  if (!payload.title || !payload.platform) {
+    return 'Title and platform are required.';
+  }
+
+  return '';
+}
+
 function ContentOS() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [contentRows, setContentRows] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [formValues, setFormValues] = useState(DEFAULT_FORM);
-  const [formError, setFormError] = useState('');
-  const [loadError, setLoadError] = useState('');
+  const {
+    isLoading,
+    items: contentRows,
+    selectedItem,
+    setSelectedItem,
+    isFormOpen,
+    isSaving,
+    isDeleting,
+    formValues,
+    formError,
+    loadError,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseFormModal,
+    handleFormChange,
+    handleFormSubmit,
+    handleDeleteSelected,
+  } = useCrudCollection({
+    defaultFormValues: DEFAULT_FORM,
+    listItems: listContentItems,
+    createItem: createContentItem,
+    updateItem: updateContentItem,
+    deleteItem: deleteContentItem,
+    mapItemToFormValues: mapContentItemToFormValues,
+    mapFormValuesToPayload: mapContentFormValuesToPayload,
+    validatePayload: validateContentPayload,
+    getDeleteLabel: (item) => item.title,
+    messages: {
+      load: 'Unable to load content items right now.',
+      save: 'Unable to save content item right now.',
+      delete: 'Unable to delete content item right now.',
+    },
+    logPrefix: 'content items',
+  });
   const source = getContentSource();
 
   const statusCounts = useMemo(
@@ -55,145 +105,6 @@ function ContentOS() {
       ),
     [contentRows],
   );
-
-  useEffect(() => {
-    let isActive = true;
-
-    const load = async () => {
-      setIsLoading(true);
-      setLoadError('');
-      try {
-        const items = await listContentItems();
-        if (isActive) {
-          setContentRows(items);
-        }
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-        setLoadError('Unable to load content items right now.');
-        if (import.meta.env.DEV) {
-          console.error('Failed to load content items', error);
-        }
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  const resetForm = () => {
-    setFormValues(DEFAULT_FORM);
-    setFormError('');
-  };
-
-  const handleOpenCreateModal = () => {
-    setSelectedItem(null);
-    resetForm();
-    setIsFormOpen(true);
-  };
-
-  const handleOpenEditModal = () => {
-    if (!selectedItem) {
-      return;
-    }
-
-    setFormValues({
-      title: selectedItem.title || '',
-      platform: selectedItem.platform || '',
-      status: selectedItem.status || 'Drafting',
-    });
-    setFormError('');
-    setIsFormOpen(true);
-  };
-
-  const handleCloseFormModal = () => {
-    if (isSaving) {
-      return;
-    }
-
-    setIsFormOpen(false);
-    setFormError('');
-  };
-
-  const handleFormChange = (field, value) => {
-    setFormValues((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-
-  const handleFormSubmit = async (event) => {
-    event.preventDefault();
-    const payload = {
-      title: formValues.title.trim(),
-      platform: formValues.platform.trim(),
-      status: formValues.status,
-    };
-
-    if (!payload.title || !payload.platform) {
-      setFormError('Title and platform are required.');
-      return;
-    }
-
-    setIsSaving(true);
-    setFormError('');
-
-    try {
-      if (selectedItem) {
-        const updated = await updateContentItem(selectedItem.id, payload);
-        setContentRows((current) =>
-          current.map((item) => (item.id === updated.id ? updated : item)),
-        );
-        setSelectedItem(updated);
-      } else {
-        const created = await createContentItem(payload);
-        setContentRows((current) => [created, ...current]);
-      }
-
-      setIsFormOpen(false);
-      resetForm();
-    } catch (error) {
-      setFormError('Unable to save content item right now.');
-      if (import.meta.env.DEV) {
-        console.error('Failed to save content item', error);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    if (!selectedItem) {
-      return;
-    }
-
-    const shouldDelete = window.confirm(`Delete "${selectedItem.title}"? This cannot be undone.`);
-    if (!shouldDelete) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      await deleteContentItem(selectedItem.id);
-      setContentRows((current) => current.filter((item) => item.id !== selectedItem.id));
-      setSelectedItem(null);
-    } catch (error) {
-      setLoadError('Unable to delete content item right now.');
-      if (import.meta.env.DEV) {
-        console.error('Failed to delete content item', error);
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <section className="content-page">

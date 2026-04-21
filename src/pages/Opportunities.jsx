@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import EmptyState from '../components/ui/EmptyState';
 import PageHeader from '../components/ui/PageHeader';
@@ -15,6 +15,7 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../lib/opportunitiesRepository';
+import { useCrudCollection } from '../hooks/useCrudCollection';
 import '../styles/opportunities.css';
 
 const stageTone = {
@@ -34,16 +35,69 @@ const DEFAULT_FORM = {
 const PRIORITY_OPTIONS = ['High', 'Medium', 'Low'];
 const STAGE_OPTIONS = ['In Progress', 'Awaiting Reply', 'New'];
 
+function mapOpportunityToFormValues(item) {
+  return {
+    name: item.name || '',
+    company: item.company || '',
+    priority: item.priority || 'Medium',
+    stage: item.stage || 'New',
+    nextStep: item.nextStep || '',
+  };
+}
+
+function mapOpportunityFormValuesToPayload(formValues) {
+  return {
+    name: formValues.name.trim(),
+    company: formValues.company.trim(),
+    priority: formValues.priority,
+    stage: formValues.stage,
+    nextStep: formValues.nextStep.trim(),
+  };
+}
+
+function validateOpportunityPayload(payload) {
+  if (!payload.name || !payload.company || !payload.nextStep) {
+    return 'Name, company, and next step are required.';
+  }
+
+  return '';
+}
+
 function Opportunities() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [opportunityItems, setOpportunityItems] = useState([]);
-  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [formValues, setFormValues] = useState(DEFAULT_FORM);
-  const [formError, setFormError] = useState('');
-  const [loadError, setLoadError] = useState('');
+  const {
+    isLoading,
+    items: opportunityItems,
+    selectedItem: selectedOpportunity,
+    setSelectedItem: setSelectedOpportunity,
+    isFormOpen,
+    isSaving,
+    isDeleting,
+    formValues,
+    formError,
+    loadError,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseFormModal,
+    handleFormChange,
+    handleFormSubmit,
+    handleDeleteSelected,
+  } = useCrudCollection({
+    defaultFormValues: DEFAULT_FORM,
+    listItems: listOpportunities,
+    createItem: createOpportunity,
+    updateItem: updateOpportunity,
+    deleteItem: deleteOpportunity,
+    mapItemToFormValues: mapOpportunityToFormValues,
+    mapFormValuesToPayload: mapOpportunityFormValuesToPayload,
+    validatePayload: validateOpportunityPayload,
+    getDeleteLabel: (item) => item.name,
+    messages: {
+      load: 'Unable to load opportunities right now.',
+      save: 'Unable to save opportunity right now.',
+      delete: 'Unable to delete opportunity right now.',
+    },
+    logPrefix: 'opportunities',
+  });
   const source = getOpportunitiesSource();
 
   const metrics = useMemo(() => {
@@ -65,149 +119,6 @@ function Opportunities() {
       },
     );
   }, [opportunityItems]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const load = async () => {
-      setIsLoading(true);
-      setLoadError('');
-      try {
-        const items = await listOpportunities();
-        if (isActive) {
-          setOpportunityItems(items);
-        }
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-        setLoadError('Unable to load opportunities right now.');
-        if (import.meta.env.DEV) {
-          console.error('Failed to load opportunities', error);
-        }
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  const resetForm = () => {
-    setFormValues(DEFAULT_FORM);
-    setFormError('');
-  };
-
-  const handleOpenCreateModal = () => {
-    setSelectedOpportunity(null);
-    resetForm();
-    setIsFormOpen(true);
-  };
-
-  const handleOpenEditModal = () => {
-    if (!selectedOpportunity) {
-      return;
-    }
-
-    setFormValues({
-      name: selectedOpportunity.name || '',
-      company: selectedOpportunity.company || '',
-      priority: selectedOpportunity.priority || 'Medium',
-      stage: selectedOpportunity.stage || 'New',
-      nextStep: selectedOpportunity.nextStep || '',
-    });
-    setFormError('');
-    setIsFormOpen(true);
-  };
-
-  const handleCloseFormModal = () => {
-    if (isSaving) {
-      return;
-    }
-
-    setIsFormOpen(false);
-    setFormError('');
-  };
-
-  const handleFormChange = (field, value) => {
-    setFormValues((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-
-  const handleFormSubmit = async (event) => {
-    event.preventDefault();
-    const payload = {
-      name: formValues.name.trim(),
-      company: formValues.company.trim(),
-      priority: formValues.priority,
-      stage: formValues.stage,
-      nextStep: formValues.nextStep.trim(),
-    };
-
-    if (!payload.name || !payload.company || !payload.nextStep) {
-      setFormError('Name, company, and next step are required.');
-      return;
-    }
-
-    setIsSaving(true);
-    setFormError('');
-
-    try {
-      if (selectedOpportunity) {
-        const updated = await updateOpportunity(selectedOpportunity.id, payload);
-        setOpportunityItems((current) =>
-          current.map((item) => (item.id === updated.id ? updated : item)),
-        );
-        setSelectedOpportunity(updated);
-      } else {
-        const created = await createOpportunity(payload);
-        setOpportunityItems((current) => [created, ...current]);
-      }
-
-      setIsFormOpen(false);
-      resetForm();
-    } catch (error) {
-      setFormError('Unable to save opportunity right now.');
-      if (import.meta.env.DEV) {
-        console.error('Failed to save opportunity', error);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    if (!selectedOpportunity) {
-      return;
-    }
-
-    const shouldDelete = window.confirm(`Delete "${selectedOpportunity.name}"? This cannot be undone.`);
-    if (!shouldDelete) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      await deleteOpportunity(selectedOpportunity.id);
-      setOpportunityItems((current) => current.filter((item) => item.id !== selectedOpportunity.id));
-      setSelectedOpportunity(null);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Failed to delete opportunity', error);
-      }
-      setLoadError('Unable to delete opportunity right now.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <section className="opportunities-page">
