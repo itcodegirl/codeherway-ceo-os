@@ -23,9 +23,12 @@ export function formatIsoDate(date, timeZone) {
 
 export function normalizePath(path) {
   if (!path || typeof path !== 'string') {
-    return '';
+    return '/';
   }
 
-  const normalized = path.replace(/\/+$/, '');
+  const normalized = path
+    .replace(/\/+$/, '')
+    .replace(/^\/+/, '/');
+
   return normalized || '/';
 }
