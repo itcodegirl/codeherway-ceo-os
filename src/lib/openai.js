@@ -1,4 +1,5 @@
 const openAiApiKey = import.meta.env.VITE_OPENAI_API_KEY;
+const allowBrowserOpenAiRequests = import.meta.env.VITE_OPENAI_ALLOW_BROWSER === 'true';
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const OPENAI_MODEL = 'gpt-4.1-mini';
 
@@ -6,8 +7,15 @@ if (!openAiApiKey && import.meta.env.DEV) {
   console.warn('OpenAI API key is missing. Wire VITE_OPENAI_API_KEY for AI actions.');
 }
 
+if (openAiApiKey && !allowBrowserOpenAiRequests && import.meta.env.DEV) {
+  console.warn(
+    'Browser OpenAI requests are disabled by default. Set VITE_OPENAI_ALLOW_BROWSER=true only for local demos.',
+  );
+}
+
 export const aiConfig = {
   hasApiKey: Boolean(openAiApiKey),
+  canCallApiFromBrowser: Boolean(openAiApiKey && allowBrowserOpenAiRequests),
 };
 
 const CHIEF_ACTIONS = {
@@ -108,7 +116,7 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     };
   }
 
-  if (!aiConfig.hasApiKey) {
+  if (!aiConfig.canCallApiFromBrowser) {
     return createFallback(actionKey, normalizedNotes);
   }
 

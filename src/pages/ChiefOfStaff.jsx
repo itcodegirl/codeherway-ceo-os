@@ -23,9 +23,11 @@ function ChiefOfStaff() {
   const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);
   const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', INITIAL_RESPONSES);
   const [feedback, setFeedback] = useState(
-    aiConfig.hasApiKey
+    aiConfig.canCallApiFromBrowser
       ? 'Start by pasting notes. Then choose an action to transform them into executive-ready output.'
-      : 'OpenAI key not detected. Actions will run in local fallback mode.',
+      : aiConfig.hasApiKey
+        ? 'OpenAI key detected, but browser API calls are disabled. Actions will run in local fallback mode.'
+        : 'OpenAI key not detected. Actions will run in local fallback mode.',
   );
   const isMountedRef = useRef(true);
   const notesText = typeof notes === 'string' ? notes : '';
