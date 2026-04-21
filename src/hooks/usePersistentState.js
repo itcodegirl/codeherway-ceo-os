@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const PERSISTENT_STATE_EVENT = 'ceo-os:persistent-state';
 
@@ -32,11 +32,46 @@ function valuesEqual(left, right) {
     return true;
   }
 
-  try {
-    return JSON.stringify(left) === JSON.stringify(right);
-  } catch {
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') {
     return false;
   }
+
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false;
+    }
+
+    for (let index = 0; index < left.length; index += 1) {
+      if (!Object.is(left[index], right[index])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false;
+  }
+
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  for (let index = 0; index < leftKeys.length; index += 1) {
+    const key = leftKeys[index];
+    if (!Object.prototype.hasOwnProperty.call(right, key)) {
+      return false;
+    }
+    if (!Object.is(left[key], right[key])) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function usePersistentState(key, initialValue) {
@@ -53,7 +88,7 @@ export function usePersistentState(key, initialValue) {
 
   const value = state.key === key ? state.value : loadValue(key, initialValue);
 
-  const setValue = (nextValue) => {
+  const setValue = useCallback((nextValue) => {
     setState((currentState) => {
       const currentValue = currentState.key === key
         ? currentState.value
@@ -66,7 +101,7 @@ export function usePersistentState(key, initialValue) {
 
       return { key, value: resolvedValue };
     });
-  };
+  }, [key]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
