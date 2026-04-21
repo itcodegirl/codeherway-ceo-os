@@ -13,7 +13,7 @@ import {
   listContentItems,
   updateContentItem,
 } from '../lib/contentRepository';
-import { useCrudCollection } from '../hooks/useCrudCollection';
+import { useCrudPage } from '../hooks/useCrudPage';
 import '../styles/content.css';
 
 const statusTone = {
@@ -76,7 +76,7 @@ function ContentOS() {
     handleCloseDeleteConfirm,
     handleConfirmDeleteSelected,
     deletePrompt,
-  } = useCrudCollection({
+  } = useCrudPage({
     defaultFormValues: DEFAULT_FORM,
     listItems: listContentItems,
     createItem: createContentItem,

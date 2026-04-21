@@ -14,7 +14,7 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../lib/opportunitiesRepository';
-import { useCrudCollection } from '../hooks/useCrudCollection';
+import { useCrudPage } from '../hooks/useCrudPage';
 import '../styles/opportunities.css';
 
 const stageTone = {
@@ -84,7 +84,7 @@ function Opportunities() {
     handleCloseDeleteConfirm,
     handleConfirmDeleteSelected,
     deletePrompt,
-  } = useCrudCollection({
+  } = useCrudPage({
     defaultFormValues: DEFAULT_FORM,
     listItems: listOpportunities,
     createItem: createOpportunity,
