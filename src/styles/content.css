@@ -4,6 +4,14 @@
 	gap: var(--space-page-section-gap);
 }
 
+.content-source-note {
+	margin-top: -0.4rem;
+}
+
+.content-error {
+	color: #ffb4b4;
+}
+
 .content-page .crm-table__header,
 .content-page .crm-table__row {
 	grid-template-columns: 1.4fr 1fr 0.9fr;
@@ -109,6 +117,25 @@
 	background: rgba(142, 214, 181, 0.22);
 	color: #c0f1d8;
 	border-color: rgba(154, 240, 199, 0.4);
+}
+
+.content-modal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.65rem;
+}
+
+.content-modal-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-list-gap);
+	margin-top: 0.4rem;
+}
+
+.content-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-list-gap);
 }
 
 @media (max-width: 1100px) {

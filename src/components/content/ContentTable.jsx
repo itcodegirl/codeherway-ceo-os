@@ -8,7 +8,7 @@ const statusTone = {
 };
 
 function ContentTable({ items, onOpenItem }) {
-  const rows = items && items.length ? items : contentItems;
+  const rows = Array.isArray(items) ? items : contentItems;
   const hasHandler = typeof onOpenItem === 'function';
 
   return (
