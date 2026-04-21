@@ -1,6 +1,6 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
 import { isSupabaseConfigured, supabaseClient } from './supabase';
-import { buildCreateId } from './createId';
+import { buildCreateId } from './utils';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';

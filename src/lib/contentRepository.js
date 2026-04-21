@@ -1,6 +1,6 @@
 import { contentItems as mockContentItems } from '../data/mockData';
 import { isSupabaseConfigured, supabaseClient } from './supabase';
-import { buildCreateId } from './createId';
+import { buildCreateId } from './utils';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
