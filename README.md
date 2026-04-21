@@ -60,6 +60,8 @@ Copy `.env.example` to `.env.local` and fill in values:
 - `VITE_OPENAI_PROXY_URL`
 - `OPENAI_API_KEY` (server-side only)
 - `OPENAI_MODEL` (optional, defaults to `gpt-4.1-mini`)
+- `CHIEF_STAFF_PROXY_TOKEN` (optional; recommended in production)
+- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional; positive integer to enable rate limiting)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
@@ -67,13 +69,19 @@ Keep `OPENAI_API_KEY` server-side only (do not prefix with `VITE_`).
 
 ## OpenAI Proxy
 
-This repo now ships a backend proxy so OpenAI keys never touch the browser bundle:
+This repo ships a backend proxy so OpenAI keys never touch the browser bundle:
 
 - Vercel function: `api/chief-of-staff.js`
 - Netlify function: `netlify/functions/chief-of-staff.js`
 - Netlify route mapping: `netlify.toml` redirects `/api/chief-of-staff` to the function endpoint
 
 The frontend calls `/api/chief-of-staff` by default.
+
+Authentication and hardening options:
+- Set `CHIEF_STAFF_PROXY_TOKEN` to require a shared secret on every proxy request
+  (supported via `Authorization: Bearer <token>` or `X-Chief-Staff-Token` header).
+- Set `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` to a positive integer to apply lightweight
+  per-client request throttling in the shared proxy handler.
 
 ## Local Development
 
