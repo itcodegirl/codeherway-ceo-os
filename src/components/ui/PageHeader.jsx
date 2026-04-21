@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import Icon from './Icon';
+import Button from './Button';
 
 function normalizePath(path) {
   if (!path) {
@@ -40,10 +40,14 @@ function PageHeader({
           </Link>
         )
       : (
-          <button type="button" className="action-button" onClick={onAction} aria-label={actionLabel || actionText}>
+          <Button
+            type="button"
+            onClick={onAction}
+            ariaLabel={actionLabel || actionText}
+            icon={{ name: 'action', size: 14 }}
+          >
             {actionText}
-            <Icon name="action" size={14} className="action-button__icon" />
-          </button>
+          </Button>
         )
     : null;
 

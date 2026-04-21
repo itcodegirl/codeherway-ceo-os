@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-import Icon from './Icon';
+import Button from './Button';
 
 const FOCUSABLE_SELECTORS =
   'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
@@ -113,15 +113,15 @@ function Modal({ isOpen, title, onClose, children }) {
       >
         <header className="modal-panel__header">
           <h3 id={titleId}>{hasTitle ? title : fallbackTitle}</h3>
-          <button
+          <Button
             type="button"
-            className="action-button action-button--small"
+            size="small"
             onClick={() => onClose?.()}
-            aria-label="Close dialog"
+            ariaLabel="Close dialog"
+            icon={{ name: 'action', size: 12 }}
           >
             Close
-            <Icon name="action" size={12} className="action-button__icon" />
-          </button>
+          </Button>
         </header>
         <div className="modal-panel__body">{children}</div>
       </div>

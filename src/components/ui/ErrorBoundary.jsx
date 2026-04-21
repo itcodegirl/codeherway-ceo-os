@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import Icon from './Icon';
+import Button from './Button';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -24,24 +24,23 @@ class ErrorBoundary extends Component {
           <h2>Something went wrong in this view.</h2>
           <p>Try refreshing or go back to the Dashboard.</p>
           <div className="chief-actions">
-            <button
+            <Button
               type="button"
-              className="action-button"
               onClick={() => window.location.reload()}
-              aria-label="Reload the current view"
+              ariaLabel="Reload the current view"
+              icon={{ name: 'action', size: 14 }}
             >
               Reload App
-              <Icon name="action" size={14} className="action-button__icon" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="action-button action-button--ghost"
+              variant="ghost"
               onClick={() => window.history.back()}
-              aria-label="Go back to previous page"
+              ariaLabel="Go back to previous page"
+              icon={{ name: 'action', size: 14 }}
             >
               Go Back
-              <Icon name="action" size={14} className="action-button__icon" />
-            </button>
+            </Button>
           </div>
         </div>
       );

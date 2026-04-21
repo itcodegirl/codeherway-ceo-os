@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import Icon from './Icon';
+import Button from './Button';
 
 function normalizePath(path) {
   if (!path) {
@@ -40,15 +41,14 @@ function SectionCard({
           </Link>
         )
       : (
-          <button
+          <Button
             type="button"
-            className="action-button"
             onClick={onAction || undefined}
-            aria-label={actionLabel || actionText}
+            ariaLabel={actionLabel || actionText}
+            icon={{ name: 'action', size: 14 }}
           >
             {actionText}
-            <Icon name="action" size={14} className="action-button__icon" />
-          </button>
+          </Button>
         )
     : null;
 
