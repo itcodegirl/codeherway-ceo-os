@@ -5,6 +5,7 @@ import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Textarea from '../components/ui/Textarea';
+import '../styles/forms.css';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { aiConfig, generateChiefOfStaffResponse, getChiefActionTitle } from '../lib/openai';
@@ -110,8 +111,8 @@ function ChiefOfStaff() {
             <Textarea
               id={notesFieldId}
               label="Paste notes and context"
-              className="settings-field"
-              labelClassName="settings-field__label"
+              className="form-field"
+              labelClassName="form-field__label"
               controlClassName="chief-textarea"
               placeholder="Paste notes, priorities, meeting takeaways, or rough ideas..."
               rows={10}

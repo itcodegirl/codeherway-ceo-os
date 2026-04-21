@@ -15,14 +15,10 @@ import {
   listContentItems,
   updateContentItem,
 } from '../lib/contentRepository';
+import { contentStatusTone } from '../lib/statusMaps';
 import { useCrudPage } from '../hooks/useCrudPage';
+import '../styles/forms.css';
 import '../styles/content.css';
-
-const statusTone = {
-  Drafting: 'low',
-  Editing: 'warning',
-  Scheduled: 'high',
-};
 
 const STATUS_OPTIONS = ['Drafting', 'Editing', 'Scheduled'];
 
@@ -201,7 +197,7 @@ function ContentOS() {
             <div className="content-modal-content">
               <p className="helper-text">Platform: {selectedItem.platform}</p>
               <p className="helper-text">
-                Status: <Badge label={selectedItem.status} tone={statusTone[selectedItem.status] || 'default'} />
+                Status: <Badge label={selectedItem.status} tone={contentStatusTone[selectedItem.status] || 'default'} />
               </p>
               <div className="content-modal-actions">
                 <Button

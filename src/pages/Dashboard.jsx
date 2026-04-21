@@ -14,13 +14,8 @@ import {
 import { usePersistentState } from '../hooks/usePersistentState';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
 import { useToast } from '../hooks/useToast';
+import { contentStatusTone } from '../lib/statusMaps';
 import '../styles/dashboard.css';
-
-const contentStatusTone = {
-  Drafting: 'low',
-  Editing: 'warning',
-  Scheduled: 'high',
-};
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));

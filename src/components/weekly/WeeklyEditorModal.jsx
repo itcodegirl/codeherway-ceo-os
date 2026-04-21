@@ -28,7 +28,7 @@ function WeeklyEditorModal({
             <Input
               id="weekly-priority-title"
               label="Priority"
-              className="settings-field"
+              className="form-field"
               value={formValues.title || ''}
               onChange={(event) => onFormChange('title', event.target.value)}
               required
@@ -37,7 +37,7 @@ function WeeklyEditorModal({
             <Input
               id="weekly-priority-owner"
               label="Owner"
-              className="settings-field"
+              className="form-field"
               value={formValues.owner || ''}
               onChange={(event) => onFormChange('owner', event.target.value)}
               required
@@ -46,9 +46,9 @@ function WeeklyEditorModal({
             <Select
               id="weekly-priority-status"
               label="Status"
-              className="settings-field"
-              labelClassName="settings-field__label"
-              controlClassName="settings-input"
+              className="form-field"
+              labelClassName="form-field__label"
+              controlClassName="form-input"
               value={formValues.status || 'Planned'}
               onChange={(event) => onFormChange('status', event.target.value)}
             >
@@ -66,7 +66,7 @@ function WeeklyEditorModal({
             <Textarea
               id="weekly-win-text"
               label="Win"
-              className="settings-field weekly-form__textarea-field"
+              className="form-field weekly-form__textarea-field"
               value={formValues.text || ''}
               onChange={(event) => onFormChange('text', event.target.value)}
               rows={3}
@@ -76,9 +76,9 @@ function WeeklyEditorModal({
             <Select
               id="weekly-win-category"
               label="Category"
-              className="settings-field"
-              labelClassName="settings-field__label"
-              controlClassName="settings-input"
+              className="form-field"
+              labelClassName="form-field__label"
+              controlClassName="form-input"
               value={formValues.category || 'Execution'}
               onChange={(event) => onFormChange('category', event.target.value)}
             >
@@ -96,7 +96,7 @@ function WeeklyEditorModal({
             <Textarea
               id="weekly-blocker-text"
               label="Blocker"
-              className="settings-field weekly-form__textarea-field"
+              className="form-field weekly-form__textarea-field"
               value={formValues.text || ''}
               onChange={(event) => onFormChange('text', event.target.value)}
               rows={3}
@@ -106,9 +106,9 @@ function WeeklyEditorModal({
             <Select
               id="weekly-blocker-severity"
               label="Severity"
-              className="settings-field"
-              labelClassName="settings-field__label"
-              controlClassName="settings-input"
+              className="form-field"
+              labelClassName="form-field__label"
+              controlClassName="form-input"
               value={formValues.severity || 'warning'}
               onChange={(event) => onFormChange('severity', event.target.value)}
             >

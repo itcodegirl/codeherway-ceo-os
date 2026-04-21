@@ -7,6 +7,7 @@ import WinsSection from '../components/weekly/WinsSection';
 import BlockersSection from '../components/weekly/BlockersSection';
 import Textarea from '../components/ui/Textarea';
 import { usePersistentState } from '../hooks/usePersistentState';
+import '../styles/forms.css';
 import '../styles/weekly.css';
 
 const DEFAULT_REVIEW_NOTES = '';

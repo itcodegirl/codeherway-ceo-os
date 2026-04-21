@@ -1,10 +1,5 @@
 import Badge from '../ui/Badge';
-
-const stageTone = {
-  'In Progress': 'high',
-  'Awaiting Reply': 'warning',
-  New: 'low',
-};
+import { opportunityStageTone } from '../../lib/statusMaps';
 
 function OpportunityTable({ items, onSelect }) {
   if (!Array.isArray(items)) {
@@ -60,7 +55,7 @@ function OpportunityTable({ items, onSelect }) {
               </td>
               <td className="crm-table__cell" data-label="Stage / Next Step">
                 <p className="crm-table__subtitle">
-                  <Badge label={item.stage} tone={stageTone[item.stage] || 'low'} /> {item.nextStep}
+                  <Badge label={item.stage} tone={opportunityStageTone[item.stage] || 'low'} /> {item.nextStep}
                 </p>
               </td>
             </tr>

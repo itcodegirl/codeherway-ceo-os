@@ -16,14 +16,10 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../lib/opportunitiesRepository';
+import { opportunityStageTone } from '../lib/statusMaps';
 import { useCrudPage } from '../hooks/useCrudPage';
+import '../styles/forms.css';
 import '../styles/opportunities.css';
-
-const stageTone = {
-  'In Progress': 'high',
-  'Awaiting Reply': 'warning',
-  New: 'low',
-};
 
 const DEFAULT_FORM = {
   name: '',
@@ -233,7 +229,7 @@ function Opportunities() {
                 Priority: <Badge label={selectedOpportunity.priority} tone={selectedOpportunity.priority.toLowerCase()} />
               </p>
               <p className="helper-text">
-                Stage: <Badge label={selectedOpportunity.stage} tone={stageTone[selectedOpportunity.stage] || 'low'} />
+                Stage: <Badge label={selectedOpportunity.stage} tone={opportunityStageTone[selectedOpportunity.stage] || 'low'} />
               </p>
               <p className="helper-text">Next step: {selectedOpportunity.nextStep}</p>
               <div className="opportunity-modal-actions">

@@ -1,0 +1,60 @@
+export function buildPageMetaByRoute(appName) {
+  return {
+    '/': {
+      title: `Dashboard | ${appName}`,
+      description: 'Executive overview of key priorities, momentum, opportunities, and content pipeline.',
+    },
+    '/opportunities': {
+      title: `Opportunities | ${appName}`,
+      description: 'Track partnerships, role pipelines, and strategic outreach in one opportunity workspace.',
+    },
+    '/content': {
+      title: `Content OS | ${appName}`,
+      description: 'Plan, monitor, and ship founder content across channels with a clear publishing workflow.',
+    },
+    '/weekly-brief': {
+      title: `Weekly Brief | ${appName}`,
+      description: 'Review weekly priorities, wins, blockers, and next executive moves with clarity.',
+    },
+    '/chief-of-staff': {
+      title: `Chief of Staff | ${appName}`,
+      description: 'Transform notes into executive summaries, action items, and communication-ready drafts.',
+    },
+    '/settings': {
+      title: `Settings | ${appName}`,
+      description: 'Manage workspace profile, timezone, and experience preferences for CEO OS.',
+    },
+  };
+}
+
+export function setMetaTag({ selector, attribute, key, value }) {
+  const head = document.head;
+  if (!head) {
+    return;
+  }
+
+  let tag = head.querySelector(selector);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attribute, key);
+    head.appendChild(tag);
+  }
+
+  tag.setAttribute('content', value);
+}
+
+export function setCanonical(url) {
+  const head = document.head;
+  if (!head) {
+    return;
+  }
+
+  let canonical = head.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.setAttribute('rel', 'canonical');
+    head.appendChild(canonical);
+  }
+
+  canonical.setAttribute('href', url);
+}

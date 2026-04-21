@@ -4,6 +4,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { DEFAULT_SETTINGS, resolveTimeZone } from '../lib/settings';
+import '../styles/forms.css';
 
 function Settings() {
   const [settings, setSettings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
@@ -57,7 +58,7 @@ function Settings() {
             type="text"
             name="teamName"
             label="Workspace name"
-            className="settings-field"
+            className="form-field"
             autoComplete="organization"
             value={settings.teamName}
             required
@@ -65,7 +66,7 @@ function Settings() {
             onChange={(e) => handleChange('teamName', e.target.value)}
           />
 
-          <div className="settings-field">
+          <div className="form-field">
             <Input
               id={timezoneFieldId}
               type="text"

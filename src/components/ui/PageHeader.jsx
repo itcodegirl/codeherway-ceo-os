@@ -1,14 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import Button from './Button';
-
-function normalizePath(path) {
-  if (!path) {
-    return '';
-  }
-
-  const normalized = path.replace(/\/+$/, '');
-  return normalized || '/';
-}
+import { normalizePath } from '../../lib/utils';
 
 function PageHeader({
   title,
