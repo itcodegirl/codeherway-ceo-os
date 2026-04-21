@@ -37,6 +37,8 @@ This project is a polished frontend prototype with partial persistence:
 - Large-dataset CRM table regression coverage for keyboard activation on high row counts
 - Semantic CRM row actions using explicit per-row `Open` buttons with delegated pointer row activation
 - Reduced non-essential live-region announcements for static source notes in CRUD and Weekly Brief pages
+- Supabase CRUD operations scoped to the authenticated user for opportunities and content
+- Supabase migrations for core schema, ownership defaults, and row-level security policies
 
 ## Tech Stack
 
@@ -110,6 +112,15 @@ npm run build
 npm run typecheck
 npm run test:run
 ```
+
+## Supabase migrations
+
+SQL migrations are stored in `supabase/migrations/`.
+Apply them in order in your Supabase SQL editor (or via Supabase CLI) to create:
+- core product tables and indexes
+- `updated_at` triggers
+- row-level security policies
+- `auth.uid()` ownership defaults for user-bound columns
 
 ## Roadmap
 
