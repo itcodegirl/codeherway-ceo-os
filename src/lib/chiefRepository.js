@@ -64,55 +64,79 @@ function writeLocalChiefResponses(responses) {
   window.localStorage.setItem(CHIEF_RESPONSES_STORAGE_KEY, JSON.stringify(responses));
 }
 
-export function getChiefSource() {
-  return isSupabaseConfigured ? 'supabase' : 'local';
+function isSupabaseAuthError(error) {
+  return error?.code === 'SUPABASE_AUTH_REQUIRED';
 }
 
-export async function loadChiefWorkspace() {
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
-    const { data: latestSession, error: sessionError } = await supabaseClient
-      .from('chief_sessions')
-      .select('id, notes')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (sessionError) {
-      throw sessionError;
-    }
-
-    const { data: outputRows, error: outputError } = await supabaseClient
-      .from('chief_outputs')
-      .select('id, title, content, source, structured_payload')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(MAX_CHIEF_RESPONSES);
-
-    if (outputError) {
-      throw outputError;
-    }
-
-    return {
-      notes: latestSession?.notes || '',
-      responses: (Array.isArray(outputRows) ? outputRows : []).map((row) =>
-        normalizeChiefResponse({
-          id: row.id,
-          title: row.title,
-          content: row.content,
-          source: row.source,
-          structuredPayload: row.structured_payload,
-        })),
-      source: 'supabase',
-    };
+async function withSupabaseAuthFallback(operation, localFallback) {
+  if (!isSupabaseConfigured || !supabaseClient) {
+    return localFallback();
   }
 
+  try {
+    return await operation();
+  } catch (error) {
+    if (isSupabaseAuthError(error)) {
+      return localFallback();
+    }
+    throw error;
+  }
+}
+
+function getLocalChiefWorkspace() {
   return {
     notes: readLocalChiefNotes(),
     responses: readLocalChiefResponses(),
     source: 'local',
   };
+}
+
+export function getChiefSource() {
+  return isSupabaseConfigured ? 'supabase' : 'local';
+}
+
+export async function loadChiefWorkspace() {
+  return withSupabaseAuthFallback(
+    async () => {
+      const userId = await requireSupabaseUserId();
+      const { data: latestSession, error: sessionError } = await supabaseClient
+        .from('chief_sessions')
+        .select('id, notes')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      const { data: outputRows, error: outputError } = await supabaseClient
+        .from('chief_outputs')
+        .select('id, title, content, source, structured_payload')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(MAX_CHIEF_RESPONSES);
+
+      if (outputError) {
+        throw outputError;
+      }
+
+      return {
+        notes: latestSession?.notes || '',
+        responses: (Array.isArray(outputRows) ? outputRows : []).map((row) =>
+          normalizeChiefResponse({
+            id: row.id,
+            title: row.title,
+            content: row.content,
+            source: row.source,
+            structuredPayload: row.structured_payload,
+          })),
+        source: 'supabase',
+      };
+    },
+    getLocalChiefWorkspace,
+  );
 }
 
 export async function saveChiefNotes(notes) {
@@ -130,33 +154,36 @@ export async function createChiefSession({ actionKey, notes }) {
   const normalizedActionKey = typeof actionKey === 'string' ? actionKey : '';
   const normalizedNotes = typeof notes === 'string' ? notes : '';
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
-    const { data, error } = await supabaseClient
-      .from('chief_sessions')
-      .insert({
-        user_id: userId,
-        action_key: normalizedActionKey,
-        notes: normalizedNotes,
-      })
-      .select('id')
-      .single();
+  return withSupabaseAuthFallback(
+    async () => {
+      const userId = await requireSupabaseUserId();
+      const { data, error } = await supabaseClient
+        .from('chief_sessions')
+        .insert({
+          user_id: userId,
+          action_key: normalizedActionKey,
+          notes: normalizedNotes,
+        })
+        .select('id')
+        .single();
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    return {
-      id: data.id,
-      source: 'supabase',
-    };
-  }
-
-  writeLocalChiefNotes(normalizedNotes);
-  return {
-    id: buildCreateId(),
-    source: 'local',
-  };
+      return {
+        id: data.id,
+        source: 'supabase',
+      };
+    },
+    () => {
+      writeLocalChiefNotes(normalizedNotes);
+      return {
+        id: buildCreateId(),
+        source: 'local',
+      };
+    },
+  );
 }
 
 export async function saveChiefOutput({
@@ -178,60 +205,64 @@ export async function saveChiefOutput({
         : {},
   });
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
-    const { data, error } = await supabaseClient
-      .from('chief_outputs')
-      .insert({
-        session_id: sessionId,
-        user_id: userId,
-        output_type: outputType,
-        title: normalizedOutput.title,
-        content: normalizedOutput.content,
-        structured_payload: normalizedOutput.structuredPayload,
-        source: normalizedOutput.source,
-      })
-      .select('id, title, content, source, structured_payload')
-      .single();
+  return withSupabaseAuthFallback(
+    async () => {
+      const userId = await requireSupabaseUserId();
+      const { data, error } = await supabaseClient
+        .from('chief_outputs')
+        .insert({
+          session_id: sessionId,
+          user_id: userId,
+          output_type: outputType,
+          title: normalizedOutput.title,
+          content: normalizedOutput.content,
+          structured_payload: normalizedOutput.structuredPayload,
+          source: normalizedOutput.source,
+        })
+        .select('id, title, content, source, structured_payload')
+        .single();
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    return normalizeChiefResponse({
-      id: data.id,
-      title: data.title,
-      content: data.content,
-      source: data.source,
-      structuredPayload: data.structured_payload,
-    });
-  }
-
-  const current = readLocalChiefResponses();
-  const next = [normalizedOutput, ...current].slice(0, MAX_CHIEF_RESPONSES);
-  writeLocalChiefResponses(next);
-  return normalizedOutput;
+      return normalizeChiefResponse({
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        source: data.source,
+        structuredPayload: data.structured_payload,
+      });
+    },
+    () => {
+      const current = readLocalChiefResponses();
+      const next = [normalizedOutput, ...current].slice(0, MAX_CHIEF_RESPONSES);
+      writeLocalChiefResponses(next);
+      return normalizedOutput;
+    },
+  );
 }
 
 export async function resetChiefWorkspace() {
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
-    const { error } = await supabaseClient
-      .from('chief_sessions')
-      .delete()
-      .eq('user_id', userId);
+  return withSupabaseAuthFallback(
+    async () => {
+      const userId = await requireSupabaseUserId();
+      const { error } = await supabaseClient
+        .from('chief_sessions')
+        .delete()
+        .eq('user_id', userId);
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
+    },
+    () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
 
-    return;
-  }
-
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.removeItem(CHIEF_NOTES_STORAGE_KEY);
-  window.localStorage.removeItem(CHIEF_RESPONSES_STORAGE_KEY);
+      window.localStorage.removeItem(CHIEF_NOTES_STORAGE_KEY);
+      window.localStorage.removeItem(CHIEF_RESPONSES_STORAGE_KEY);
+    },
+  );
 }
