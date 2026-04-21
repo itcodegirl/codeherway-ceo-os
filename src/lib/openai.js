@@ -1,11 +1,11 @@
-const missingOpenAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+const openAiApiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-if (!missingOpenAiKey && import.meta.env.DEV) {
+if (!openAiApiKey && import.meta.env.DEV) {
   console.warn('OpenAI API key is missing. Wire VITE_OPENAI_API_KEY for AI actions.');
 }
 
 export const aiConfig = {
-  hasApiKey: Boolean(missingOpenAiKey),
+  hasApiKey: Boolean(openAiApiKey),
 };
 
 export const createPromptPayload = (text) => ({
