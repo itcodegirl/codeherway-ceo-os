@@ -95,6 +95,11 @@
 	min-height: 5rem;
 }
 
+.weekly-review-notes__control {
+	resize: vertical;
+	min-height: 8.5rem;
+}
+
 .weekly-modal-actions {
 	display: flex;
 	flex-wrap: wrap;

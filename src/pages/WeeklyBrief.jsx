@@ -4,14 +4,18 @@ import PageHeader from '../components/ui/PageHeader';
 import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
 import WeeklyTextList from '../components/weekly/WeeklyTextList';
 import WeeklyEditorModal from '../components/weekly/WeeklyEditorModal';
+import Textarea from '../components/ui/Textarea';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useWeeklyBriefEditor } from '../hooks/useWeeklyBriefEditor';
 import '../styles/weekly.css';
+
+const DEFAULT_REVIEW_NOTES = '';
 
 function WeeklyBrief() {
   const [storedPriorities, setStoredPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultPriorities);
   const [storedWins, setStoredWins] = usePersistentState('ceo-os-weekly-wins', defaultWins);
   const [storedBlockers, setStoredBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultBlockers);
+  const [reviewNotes, setReviewNotes] = usePersistentState('ceo-os-weekly-review-notes', DEFAULT_REVIEW_NOTES);
 
   const priorityItems = Array.isArray(storedPriorities) ? storedPriorities : defaultPriorities;
   const winItems = Array.isArray(storedWins) ? storedWins : defaultWins;
@@ -130,10 +134,18 @@ function WeeklyBrief() {
         </SectionCard>
 
         <SectionCard title="Next Review Notes">
-          <p className="weekly-note">
-            Capture outcomes at close of week in plain language: what moved, what stalled, and what your next
-            executive move is for the coming seven days.
-          </p>
+          <Textarea
+            id="weekly-review-notes"
+            label="Close-Of-Week Reflection"
+            className="form-field weekly-review-notes__field"
+            labelClassName="form-field__label"
+            controlClassName="weekly-review-notes__control"
+            value={reviewNotes}
+            onChange={(event) => setReviewNotes(event.target.value)}
+            rows={5}
+            placeholder="Capture outcomes at close of week in plain language: what moved, what stalled, and what your next executive move is for the coming seven days."
+          />
+          <p className="helper-text">Notes are saved automatically in your browser.</p>
         </SectionCard>
       </div>
 
@@ -153,5 +165,3 @@ function WeeklyBrief() {
 }
 
 export default WeeklyBrief;
-
-

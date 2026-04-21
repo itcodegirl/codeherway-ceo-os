@@ -15,118 +15,125 @@ function buildItemId(prefix) {
   return `${prefix}-${Date.now()}`;
 }
 
+const EDITOR_STRATEGIES = {
+  priority: {
+    addTitle: 'Add Priority',
+    editTitle: 'Edit Priority',
+    getDefaultFormValues: () => ({
+      title: '',
+      owner: 'Jenna',
+      status: 'Planned',
+    }),
+    getFormValuesForEdit: (item) => ({
+      title: item.title || '',
+      owner: item.owner || 'Jenna',
+      status: item.status || 'Planned',
+    }),
+    createPayload: (formValues, existingId) => {
+      const title = (formValues.title || '').trim();
+      const owner = (formValues.owner || '').trim();
+      const status = formValues.status || 'Planned';
+
+      if (!title || !owner) {
+        return { error: 'Title and owner are required.' };
+      }
+
+      return {
+        payload: {
+          id: existingId || buildItemId('priority'),
+          title,
+          owner,
+          status,
+        },
+      };
+    },
+  },
+  win: {
+    addTitle: 'Add Win',
+    editTitle: 'Edit Win',
+    getDefaultFormValues: () => ({
+      text: '',
+      category: 'Execution',
+    }),
+    getFormValuesForEdit: (item) => ({
+      text: item.text || '',
+      category: item.category || 'Execution',
+    }),
+    createPayload: (formValues, existingId) => {
+      const text = (formValues.text || '').trim();
+      const category = (formValues.category || '').trim() || 'Execution';
+
+      if (!text) {
+        return { error: 'Win text is required.' };
+      }
+
+      return {
+        payload: {
+          id: existingId || buildItemId('win'),
+          text,
+          category,
+        },
+      };
+    },
+  },
+  blocker: {
+    addTitle: 'Add Blocker',
+    editTitle: 'Edit Blocker',
+    getDefaultFormValues: () => ({
+      text: '',
+      severity: 'warning',
+    }),
+    getFormValuesForEdit: (item) => ({
+      text: item.text || '',
+      severity: item.severity || 'warning',
+    }),
+    createPayload: (formValues, existingId) => {
+      const text = (formValues.text || '').trim();
+      const severity = formValues.severity || 'warning';
+
+      if (!text) {
+        return { error: 'Blocker text is required.' };
+      }
+
+      return {
+        payload: {
+          id: existingId || buildItemId('blocker'),
+          text,
+          severity,
+        },
+      };
+    },
+  },
+};
+
+function getStrategy(type) {
+  return EDITOR_STRATEGIES[type] || null;
+}
+
 export function getDefaultFormValues(type) {
-  switch (type) {
-    case 'priority':
-      return {
-        title: '',
-        owner: 'Jenna',
-        status: 'Planned',
-      };
-    case 'win':
-      return {
-        text: '',
-        category: 'Execution',
-      };
-    case 'blocker':
-      return {
-        text: '',
-        severity: 'warning',
-      };
-    default:
-      return {};
-  }
+  const strategy = getStrategy(type);
+  return strategy ? strategy.getDefaultFormValues() : {};
 }
 
 export function getFormValuesForEdit(type, item) {
-  switch (type) {
-    case 'priority':
-      return {
-        title: item.title || '',
-        owner: item.owner || 'Jenna',
-        status: item.status || 'Planned',
-      };
-    case 'win':
-      return {
-        text: item.text || '',
-        category: item.category || 'Execution',
-      };
-    case 'blocker':
-      return {
-        text: item.text || '',
-        severity: item.severity || 'warning',
-      };
-    default:
-      return {};
-  }
+  const strategy = getStrategy(type);
+  return strategy ? strategy.getFormValuesForEdit(item) : {};
 }
 
 export function getEditorTitle(type, isEditing) {
-  switch (type) {
-    case 'priority':
-      return isEditing ? 'Edit Priority' : 'Add Priority';
-    case 'win':
-      return isEditing ? 'Edit Win' : 'Add Win';
-    case 'blocker':
-      return isEditing ? 'Edit Blocker' : 'Add Blocker';
-    default:
-      return 'Edit Item';
+  const strategy = getStrategy(type);
+  if (!strategy) {
+    return 'Edit Item';
   }
+
+  return isEditing ? strategy.editTitle : strategy.addTitle;
 }
 
 export function createEditorPayload(type, formValues, existingId) {
-  if (type === 'priority') {
-    const title = (formValues.title || '').trim();
-    const owner = (formValues.owner || '').trim();
-    const status = formValues.status || 'Planned';
-
-    if (!title || !owner) {
-      return { error: 'Title and owner are required.' };
-    }
-
-    return {
-      payload: {
-        id: existingId || buildItemId('priority'),
-        title,
-        owner,
-        status,
-      },
-    };
+  const strategy = getStrategy(type);
+  if (!strategy) {
+    return { error: 'Select a valid item type before saving.' };
   }
 
-  if (type === 'win') {
-    const text = (formValues.text || '').trim();
-    const category = (formValues.category || '').trim() || 'Execution';
-
-    if (!text) {
-      return { error: 'Win text is required.' };
-    }
-
-    return {
-      payload: {
-        id: existingId || buildItemId('win'),
-        text,
-        category,
-      },
-    };
-  }
-
-  if (type === 'blocker') {
-    const text = (formValues.text || '').trim();
-    const severity = formValues.severity || 'warning';
-
-    if (!text) {
-      return { error: 'Blocker text is required.' };
-    }
-
-    return {
-      payload: {
-        id: existingId || buildItemId('blocker'),
-        text,
-        severity,
-      },
-    };
-  }
-
-  return { error: 'Select a valid item type before saving.' };
+  return strategy.createPayload(formValues, existingId);
 }
