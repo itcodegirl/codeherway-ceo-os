@@ -134,6 +134,36 @@ npm run typecheck
 
 - [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
 
+## Portfolio and production readiness
+
+### Portfolio evidence
+
+- Repository quality gates are codified and runnable from CI or local terminals:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:run`
+  - `npm run typecheck`
+- The codebase keeps a clear separation of concerns between:
+  - Route shells (`src/layouts`)
+  - Orchestrator hooks (`src/hooks`)
+  - Persistence and transport (`src/lib`)
+- Structured behavior is backed by explicit tests in:
+  - `src/lib/openai.test.js`
+  - `src/hooks/useChiefOfStaff.test.js`
+  - `src/hooks/useDashboardInsights.test.js`
+  - `src/hooks/useWeeklyBrief.test.js`
+  - `src/lib/pageMeta.test.js`
+
+### Production readiness checklist
+
+- Secrets and API endpoints are resolved from environment configuration.
+- Local-first behavior remains default, with authenticated Supabase opt-in path available.
+- Metadata and accessibility defaults are handled in shell-level orchestration.
+- AI responses preserve fallback behavior when proxy output is missing or invalid.
+- Repository includes architecture decision records and tradeoffs via:
+  - `README.md`
+  - `CASE_STUDY.md`
+
 ## Author
 
 Jenna Zawaski — frontend product engineering with workflow-first architecture focus.
