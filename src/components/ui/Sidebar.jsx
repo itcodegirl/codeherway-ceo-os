@@ -4,6 +4,15 @@ import Icon from './Icon';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { DEFAULT_SETTINGS, resolveTeamName } from '../../lib/settings';
 
+const NAV_ITEMS = [
+  { label: 'Dashboard', path: '/', icon: 'dashboard' },
+  { label: 'Opportunities', path: '/opportunities', icon: 'opportunities' },
+  { label: 'Content OS', path: '/content', icon: 'content' },
+  { label: 'Weekly Brief', path: '/weekly-brief', icon: 'weekly' },
+  { label: 'Chief of Staff', path: '/chief-of-staff', icon: 'chief' },
+  { label: 'Settings', path: '/settings', icon: 'settings' },
+];
+
 function Sidebar() {
   const location = useLocation();
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
@@ -16,15 +25,6 @@ function Sidebar() {
     return window.matchMedia('(max-width: 860px)').matches;
   });
   const teamName = resolveTeamName(settings?.teamName);
-
-  const navItems = [
-    { label: 'Dashboard', path: '/', icon: 'dashboard' },
-    { label: 'Opportunities', path: '/opportunities', icon: 'opportunities' },
-    { label: 'Content OS', path: '/content', icon: 'content' },
-    { label: 'Weekly Brief', path: '/weekly-brief', icon: 'weekly' },
-    { label: 'Chief of Staff', path: '/chief-of-staff', icon: 'chief' },
-    { label: 'Settings', path: '/settings', icon: 'settings' },
-  ];
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -88,7 +88,7 @@ function Sidebar() {
         aria-label="Main navigation"
       >
         <ul className="sidebar__list">
-          {navItems.map((item) => (
+          {NAV_ITEMS.map((item) => (
             <li key={item.path} className="sidebar__item">
               <NavLink
                 to={item.path}
