@@ -1,13 +1,11 @@
 import { weeklyPriorities as defaultPriorities, weeklyWins as defaultWins, weeklyBlockers as defaultBlockers } from '../data/mockData';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
-import ConfirmModal from '../components/ui/ConfirmModal';
-import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
-import WeeklyTextList from '../components/weekly/WeeklyTextList';
-import WeeklyEditorModal from '../components/weekly/WeeklyEditorModal';
+import PrioritiesSection from '../components/weekly/PrioritiesSection';
+import WinsSection from '../components/weekly/WinsSection';
+import BlockersSection from '../components/weekly/BlockersSection';
 import Textarea from '../components/ui/Textarea';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useWeeklyBriefEditor } from '../hooks/useWeeklyBriefEditor';
 import '../styles/weekly.css';
 
 const DEFAULT_REVIEW_NOTES = '';
@@ -21,32 +19,6 @@ function WeeklyBrief() {
   const priorityItems = Array.isArray(storedPriorities) ? storedPriorities : defaultPriorities;
   const winItems = Array.isArray(storedWins) ? storedWins : defaultWins;
   const blockerItems = Array.isArray(storedBlockers) ? storedBlockers : defaultBlockers;
-
-  const {
-    editorState,
-    formValues,
-    formError,
-    isEditorOpen,
-    isEditing,
-    isDeleteConfirmOpen,
-    editorTitle,
-    deletePrompt,
-    closeEditor,
-    closeDeleteConfirm,
-    openCreateEditor,
-    openEditEditor,
-    handleFormChange,
-    handleDelete,
-    handleConfirmDelete,
-    handleEditorSubmit,
-  } = useWeeklyBriefEditor({
-    defaultPriorities,
-    defaultWins,
-    defaultBlockers,
-    setStoredPriorities,
-    setStoredWins,
-    setStoredBlockers,
-  });
 
   return (
     <section className="weekly-page">
@@ -80,63 +52,23 @@ function WeeklyBrief() {
       </div>
 
       <div className="weekly-grid">
-        <SectionCard
-          title="Priority Track"
-          actionText="Add Priority"
-          onAction={() => openCreateEditor('priority')}
-          actionLabel="Add weekly priority"
-        >
-          {priorityItems.length ? (
-            <WeeklyPriorities
-              items={priorityItems}
-              onEditItem={(item) => openEditEditor('priority', item)}
-              onDeleteItem={(item) => handleDelete('priority', item)}
-            />
-          ) : (
-            <p className="helper-text">No priorities yet. Add one to define this week&apos;s focus.</p>
-          )}
-        </SectionCard>
+        <PrioritiesSection
+          items={storedPriorities}
+          setItems={setStoredPriorities}
+          defaultItems={defaultPriorities}
+        />
 
-        <SectionCard
-          title="Wins / Momentum"
-          actionText="Add Win"
-          onAction={() => openCreateEditor('win')}
-          actionLabel="Add weekly win"
-        >
-          {winItems.length ? (
-            <WeeklyTextList
-              items={winItems}
-              itemTypeLabel="win"
-              getDotClassName={() => 'weekly-list__dot--success'}
-              getPrimaryText={(item) => item.text}
-              getSecondaryText={(item) => `Category: ${item.category}`}
-              onEditItem={(item) => openEditEditor('win', item)}
-              onDeleteItem={(item) => handleDelete('win', item)}
-            />
-          ) : (
-            <p className="helper-text">No wins captured yet. Add one to preserve momentum context.</p>
-          )}
-        </SectionCard>
+        <WinsSection
+          items={storedWins}
+          setItems={setStoredWins}
+          defaultItems={defaultWins}
+        />
 
-        <SectionCard
-          title="Top Blockers"
-          actionText="Add Blocker"
-          onAction={() => openCreateEditor('blocker')}
-          actionLabel="Add weekly blocker"
-        >
-          {blockerItems.length ? (
-            <WeeklyTextList
-              items={blockerItems}
-              itemTypeLabel="blocker"
-              getDotClassName={(item) => `weekly-list__dot--${item.severity}`}
-              getPrimaryText={(item) => item.text}
-              onEditItem={(item) => openEditEditor('blocker', item)}
-              onDeleteItem={(item) => handleDelete('blocker', item)}
-            />
-          ) : (
-            <p className="helper-text">No blockers logged. Add blockers to keep risk visible.</p>
-          )}
-        </SectionCard>
+        <BlockersSection
+          items={storedBlockers}
+          setItems={setStoredBlockers}
+          defaultItems={defaultBlockers}
+        />
 
         <SectionCard title="Next Review Notes">
           <Textarea
@@ -153,30 +85,6 @@ function WeeklyBrief() {
           <p className="helper-text">Notes are saved automatically in your browser.</p>
         </SectionCard>
       </div>
-
-      <WeeklyEditorModal
-        isOpen={isEditorOpen}
-        title={editorTitle}
-        editorType={editorState.type}
-        formValues={formValues}
-        formError={formError}
-        isEditing={isEditing}
-        onClose={closeEditor}
-        onSubmit={handleEditorSubmit}
-        onFormChange={handleFormChange}
-      />
-
-      <ConfirmModal
-        isOpen={isDeleteConfirmOpen}
-        title="Delete Item"
-        message={deletePrompt}
-        onCancel={closeDeleteConfirm}
-        onConfirm={handleConfirmDelete}
-        cancelLabel="Cancel"
-        confirmLabel="Delete"
-        cancelAriaLabel="Cancel item delete"
-        confirmAriaLabel="Confirm item delete"
-      />
     </section>
   );
 }
