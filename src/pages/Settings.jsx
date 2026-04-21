@@ -2,6 +2,7 @@ import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 import { useSettings } from '../hooks/useSettings';
 import { resolveTimeZone } from '../lib/settings';
 import '../styles/forms.css';
@@ -16,6 +17,7 @@ function Settings() {
     loadError,
     updateSetting,
     saveSettings,
+    refreshSettings,
   } = useSettings();
   const teamNameFieldId = useId();
   const timezoneFieldId = useId();
@@ -55,7 +57,22 @@ function Settings() {
           ? 'Data source: Supabase (live persistence).'
           : 'Data source: local persistent storage in this browser.'}
       </p>
-      {loadError ? <p className="helper-text" role="alert">{loadError}</p> : null}
+      {loadError ? (
+        <div className="helper-inline-actions">
+          <p className="helper-text" role="alert">{loadError}</p>
+          <Button
+            type="button"
+            size="small"
+            disabled={isLoading || isSaving}
+            onClick={() => {
+              void refreshSettings();
+            }}
+            ariaLabel="Retry loading settings"
+          >
+            Retry
+          </Button>
+        </div>
+      ) : null}
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading settings.</p> : null}
 
       <form className="settings-grid" onSubmit={handleSubmit}>

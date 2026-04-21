@@ -2,6 +2,7 @@ import { useId } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import AIOutputPanel from '../components/chief/AIOutputPanel';
 import PromptWorkspace from '../components/chief/PromptWorkspace';
+import Button from '../components/ui/Button';
 import '../styles/forms.css';
 import '../styles/chief-of-staff.css';
 import { useChiefOfStaff } from '../hooks/useChiefOfStaff';
@@ -25,6 +26,7 @@ function ChiefOfStaff() {
     isStructuredItemAccepted,
     isStructuredItemAccepting,
     clearWorkspace,
+    refreshWorkspace,
   } = useChiefOfStaff();
 
   return (
@@ -41,7 +43,21 @@ function ChiefOfStaff() {
           ? 'Data source: Supabase (live persistence).'
           : 'Data source: local persistent storage in this browser.'}
       </p>
-      {loadError ? <p className="helper-text" role="alert">{loadError}</p> : null}
+      {loadError ? (
+        <div className="helper-inline-actions">
+          <p className="helper-text" role="alert">{loadError}</p>
+          <Button
+            type="button"
+            size="small"
+            onClick={() => {
+              void refreshWorkspace();
+            }}
+            ariaLabel="Retry loading chief workspace"
+          >
+            Retry
+          </Button>
+        </div>
+      ) : null}
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading chief workspace.</p> : null}
 
       <div className="chief-grid">

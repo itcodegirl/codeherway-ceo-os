@@ -58,6 +58,13 @@
   min-height: 2.4rem;
 }
 
+.helper-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
 .settings-toggle {
   display: flex;
   align-items: center;
