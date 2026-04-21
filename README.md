@@ -57,9 +57,11 @@ src/
 
 Copy `.env.example` to `.env.local` and fill in values:
 
-- `VITE_OPENAI_API_KEY`
+- `VITE_OPENAI_PROXY_URL`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+
+Keep `OPENAI_API_KEY` server-side only (do not prefix with `VITE_`).
 
 ## Local Development
 
@@ -73,6 +75,7 @@ Useful commands:
 ```bash
 npm run lint
 npm run build
+npm run test:run
 ```
 
 ## Roadmap
@@ -82,7 +85,7 @@ High-impact next steps:
 1. Real Supabase CRUD for opportunities/content workflows
 2. Auth and user-scoped data
 3. Real OpenAI-powered Chief of Staff pipeline via backend endpoint
-4. Automated tests (unit + integration)
+4. Expand test coverage (more integration + route-level tests)
 5. Analytics and production observability
 
 ## Author
