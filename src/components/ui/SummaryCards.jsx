@@ -19,7 +19,7 @@ function SummaryCards({
         : normalizedCards.map((card) => (
           <article className="summary-card" key={card.id || card.label}>
             <p className="summary-card__label">{card.label}</p>
-            <h3 className="summary-card__value">{card.value}</h3>
+            <p className="summary-card__value">{card.value}</p>
             {card.description ? <p className="helper-text">{card.description}</p> : null}
           </article>
         ))}
