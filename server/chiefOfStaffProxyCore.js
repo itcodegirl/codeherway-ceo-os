@@ -4,6 +4,62 @@ const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
 const MAX_NOTES_LENGTH = 12000;
 const REQUEST_TIMEOUT_MS = 10000;
+const DEFAULT_RATE_LIMIT_PER_MINUTE = 0;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
+const requestTimestampsByClient = new Map();
+
+function parseRateLimit(value) {
+  if (!value) {
+    return DEFAULT_RATE_LIMIT_PER_MINUTE;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_RATE_LIMIT_PER_MINUTE;
+  }
+
+  return parsed;
+}
+
+function parseClientKey(headers) {
+  if (!headers || typeof headers !== 'object') {
+    return 'anonymous';
+  }
+
+  const headerValue = headers['x-forwarded-for']
+    || headers['x-real-ip']
+    || headers['cf-connecting-ip']
+    || headers['x-client-ip']
+    || headers['remote-addr'];
+
+  if (typeof headerValue !== 'string') {
+    return 'anonymous';
+  }
+
+  return headerValue.split(',')[0].trim() || 'anonymous';
+}
+
+function isRateLimited(headers) {
+  const limit = parseRateLimit(process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE);
+  if (limit <= 0) {
+    return false;
+  }
+
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const clientKey = parseClientKey(headers);
+  const requestHistory = requestTimestampsByClient.get(clientKey) || [];
+
+  const activeRequests = requestHistory.filter((timestamp) => timestamp >= windowStart);
+  if (activeRequests.length >= limit) {
+    return true;
+  }
+
+  activeRequests.push(now);
+  requestTimestampsByClient.set(clientKey, activeRequests);
+  return false;
+}
 
 function getAllowedActionKeys() {
   return new Set(['summarize', 'draft', 'actions', 'priorities']);
@@ -112,6 +168,10 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
 
   if (!hasValidProxyToken(headers)) {
     return buildResponse(401, { error: 'Missing or invalid proxy authentication token' });
+  }
+
+  if (isRateLimited(headers)) {
+    return buildResponse(429, { error: 'Rate limit exceeded for this client' });
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();

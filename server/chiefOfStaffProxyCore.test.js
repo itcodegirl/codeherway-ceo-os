@@ -4,6 +4,7 @@ import { handleChiefOfStaffProxy } from './chiefOfStaffProxyCore.js';
 describe('handleChiefOfStaffProxy', () => {
   const originalApiKey = process.env.OPENAI_API_KEY;
   const originalProxyToken = process.env.CHIEF_STAFF_PROXY_TOKEN;
+  const originalRateLimit = process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE;
 
   const makeResponse = (options = {}) => {
     const {
@@ -27,6 +28,7 @@ describe('handleChiefOfStaffProxy', () => {
   afterEach(() => {
     process.env.OPENAI_API_KEY = originalApiKey;
     process.env.CHIEF_STAFF_PROXY_TOKEN = originalProxyToken;
+    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = originalRateLimit;
     vi.restoreAllMocks();
   });
 
@@ -83,6 +85,61 @@ describe('handleChiefOfStaffProxy', () => {
       status: 400,
       body: { error: 'Request body must be a JSON object' },
     });
+  });
+
+  it('returns 429 when a client exceeds configured requests per minute', async () => {
+    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = '1';
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      makeResponse({
+        ok: true,
+        status: 200,
+        body: { output_text: 'all good' },
+      }),
+    );
+
+    const headers = { 'x-forwarded-for': '192.0.2.1' };
+
+    const first = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      headers,
+    });
+    const second = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      headers,
+    });
+
+    expect(first).toMatchObject({ status: 200 });
+    expect(second).toMatchObject({
+      status: 429,
+      body: { error: 'Rate limit exceeded for this client' },
+    });
+  });
+
+  it('isolates rate limiting per client identifier', async () => {
+    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = '1';
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      makeResponse({
+        ok: true,
+        status: 200,
+        body: { output_text: 'all good' },
+      }),
+    );
+
+    const first = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      headers: { 'x-forwarded-for': '198.51.100.1' },
+    });
+    const second = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      headers: { 'x-forwarded-for': '198.51.100.2' },
+    });
+
+    expect(first).toMatchObject({ status: 200 });
+    expect(second).toMatchObject({ status: 200 });
   });
 
   it('returns upstream failure details on non-200 responses', async () => {
