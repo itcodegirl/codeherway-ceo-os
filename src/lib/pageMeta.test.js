@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildPageMetaByRoute, setCanonical, setMetaTag } from './pageMeta';
+import {
+  buildDefaultPageMeta,
+  buildPageMetaByRoute,
+  resolvePageMeta,
+  setCanonical,
+  setMetaTag,
+} from './pageMeta';
 
 describe('src/lib/pageMeta', () => {
   it('returns route-level metadata for all primary pages', () => {
@@ -51,5 +57,21 @@ describe('src/lib/pageMeta', () => {
 
     expect(canonical).toBeInstanceOf(HTMLLinkElement);
     expect(canonical?.getAttribute('href')).toBe('https://example.com/weekly-brief');
+  });
+
+  it('resolves fallback metadata for unknown routes', () => {
+    const defaultMeta = buildDefaultPageMeta('Acme CEO OS');
+    const resolvedMeta = resolvePageMeta('Acme CEO OS', '/not-a-route');
+
+    expect(resolvedMeta).toEqual(defaultMeta);
+  });
+
+  it('resolves explicit route metadata through buildPageMetaByRoute', () => {
+    const meta = resolvePageMeta('Acme CEO OS', '/chief-of-staff');
+
+    expect(meta).toEqual({
+      title: 'Chief of Staff | Acme CEO OS',
+      description: 'Transform notes into executive summaries, action items, and communication-ready drafts.',
+    });
   });
 });
