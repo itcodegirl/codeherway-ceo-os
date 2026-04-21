@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { usePersistentState } from '../../hooks/usePersistentState';
 
 const DEFAULT_SETTINGS = {
@@ -6,7 +7,32 @@ const DEFAULT_SETTINGS = {
 
 function Topbar() {
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let timerId;
+
+    const scheduleNextDayRollover = () => {
+      const currentTime = new Date();
+      const nextMidnight = new Date(currentTime);
+      nextMidnight.setHours(24, 0, 0, 0);
+      const delay = Math.max(1000, nextMidnight.getTime() - currentTime.getTime());
+
+      timerId = window.setTimeout(() => {
+        setNow(new Date());
+        scheduleNextDayRollover();
+      }, delay);
+    };
+
+    scheduleNextDayRollover();
+
+    return () => {
+      if (timerId) {
+        clearTimeout(timerId);
+      }
+    };
+  }, []);
+
   const today = now.toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'long',

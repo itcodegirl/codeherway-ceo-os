@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function resolveInitialValue(initialValue) {
   return typeof initialValue === 'function' ? initialValue() : initialValue;
@@ -26,10 +26,16 @@ function resolveNextValue(nextValue, currentValue) {
 }
 
 export function usePersistentState(key, initialValue) {
+  const initialValueRef = useRef(initialValue);
   const [state, setState] = useState(() => ({
     key,
     value: loadValue(key, initialValue),
   }));
+
+  // Update fallback baseline when switching keys.
+  useEffect(() => {
+    initialValueRef.current = initialValue;
+  }, [key, initialValue]);
 
   const value = state.key === key ? state.value : loadValue(key, initialValue);
 
@@ -74,14 +80,14 @@ export function usePersistentState(key, initialValue) {
       }
 
       if (event.key === null || event.newValue === null) {
-        setState({ key, value: resolveInitialValue(initialValue) });
+        setState({ key, value: resolveInitialValue(initialValueRef.current) });
         return;
       }
 
       try {
         setState({ key, value: JSON.parse(event.newValue) });
       } catch {
-        setState({ key, value: resolveInitialValue(initialValue) });
+        setState({ key, value: resolveInitialValue(initialValueRef.current) });
       }
     };
 
@@ -90,7 +96,7 @@ export function usePersistentState(key, initialValue) {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [key, initialValue]);
+  }, [key]);
 
   return [value, setValue];
 }
