@@ -12,6 +12,14 @@ const MAX_STRUCTURED_TEXT_LENGTH = 280;
 
 const requestTimestampsByClient = new Map();
 
+function createRequestId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `chief-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function parseRateLimit(value) {
   if (!value) {
     return DEFAULT_RATE_LIMIT_PER_MINUTE;
@@ -493,34 +501,56 @@ function hasStructuredContent(structuredPayload) {
   );
 }
 
-function buildResponse(status, body) {
+function buildResponse(status, body, requestId) {
+  const responseBody = body && typeof body === 'object' ? body : {};
+
   return {
     status,
-    body,
+    body: {
+      request_id: requestId,
+      ...responseBody,
+    },
   };
 }
 
 export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
+  const requestId = createRequestId();
+
   if (method !== 'POST') {
-    return buildResponse(405, { error: 'Method not allowed' });
+    return buildResponse(405, {
+      error: 'Method not allowed',
+      error_code: 'METHOD_NOT_ALLOWED',
+    }, requestId);
   }
 
   if (!hasValidProxyToken(headers)) {
-    return buildResponse(401, { error: 'Missing or invalid proxy authentication token' });
+    return buildResponse(401, {
+      error: 'Missing or invalid proxy authentication token',
+      error_code: 'PROXY_AUTH_INVALID',
+    }, requestId);
   }
 
   if (isRateLimited(headers)) {
-    return buildResponse(429, { error: 'Rate limit exceeded for this client' });
+    return buildResponse(429, {
+      error: 'Rate limit exceeded for this client',
+      error_code: 'RATE_LIMITED',
+    }, requestId);
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
-    return buildResponse(500, { error: 'OPENAI_API_KEY is not configured on the server' });
+    return buildResponse(500, {
+      error: 'OPENAI_API_KEY is not configured on the server',
+      error_code: 'OPENAI_API_KEY_MISSING',
+    }, requestId);
   }
 
   const parsedBody = normalizeBody(body);
   if (parsedBody === null || typeof parsedBody !== 'object') {
-    return buildResponse(400, { error: 'Request body must be a JSON object' });
+    return buildResponse(400, {
+      error: 'Request body must be a JSON object',
+      error_code: 'INVALID_BODY',
+    }, requestId);
   }
 
   const notes = normalizeNotes(parsedBody.notes);
@@ -528,7 +558,10 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
   const actionKey = normalizeActionKey(parsedBody.actionKey, allowedActionKeys);
 
   if (!notes) {
-    return buildResponse(400, { error: 'Notes are required' });
+    return buildResponse(400, {
+      error: 'Notes are required',
+      error_code: 'NOTES_REQUIRED',
+    }, requestId);
   }
 
   const actionConfig = getChiefActionConfig(actionKey);
@@ -560,7 +593,11 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     const timedOut = error?.name === 'AbortError';
     return buildResponse(
       timedOut ? 504 : 502,
-      { error: timedOut ? 'OpenAI request timed out' : 'Unable to reach OpenAI' },
+      {
+        error: timedOut ? 'OpenAI request timed out' : 'Unable to reach OpenAI',
+        error_code: timedOut ? 'OPENAI_TIMEOUT' : 'OPENAI_UNREACHABLE',
+      },
+      requestId,
     );
   } finally {
     clearTimeout(timeout);
@@ -571,12 +608,16 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
   if (!upstreamResponse.ok) {
     return buildResponse(upstreamResponse.status, {
       error: 'OpenAI request failed',
+      error_code: 'OPENAI_FAILED',
       details: upstreamPayload?.error || upstreamPayload,
-    });
+    }, requestId);
   }
 
   if (!upstreamPayload) {
-    return buildResponse(502, { error: 'Empty response from OpenAI' });
+    return buildResponse(502, {
+      error: 'Empty response from OpenAI',
+      error_code: 'OPENAI_EMPTY_RESPONSE',
+    }, requestId);
   }
 
   const structuredPayload = extractStructuredPayload(upstreamPayload);
@@ -584,8 +625,8 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     return buildResponse(200, {
       ...upstreamPayload,
       structured_payload: structuredPayload,
-    });
+    }, requestId);
   }
 
-  return buildResponse(200, upstreamPayload);
+  return buildResponse(200, upstreamPayload, requestId);
 }

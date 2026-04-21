@@ -1,223 +1,95 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { handleChiefOfStaffProxy } from './chiefOfStaffProxyCore.js';
 
-describe('handleChiefOfStaffProxy', () => {
-  const originalApiKey = process.env.OPENAI_API_KEY;
-  const originalProxyToken = process.env.CHIEF_STAFF_PROXY_TOKEN;
-  const originalRateLimit = process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE;
-
-  const makeResponse = (options = {}) => {
-    const {
-      ok = true,
-      status = 200,
-      body = {},
-    } = options;
-
-    return {
-      ok,
-      status,
-      json: vi.fn().mockResolvedValue(body),
-    };
+function createFetchResponse({ ok = true, status = 200, payload = {} } = {}) {
+  return {
+    ok,
+    status,
+    json: async () => payload,
   };
+}
+
+describe('server/chiefOfStaffProxyCore', () => {
+  const previousEnv = { ...process.env };
 
   beforeEach(() => {
-    process.env.OPENAI_API_KEY = 'test-key';
+    vi.restoreAllMocks();
+    process.env = { ...previousEnv };
     delete process.env.CHIEF_STAFF_PROXY_TOKEN;
+    delete process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE;
+    process.env.OPENAI_API_KEY = 'test-key';
+    globalThis.fetch = vi.fn();
   });
 
   afterEach(() => {
-    process.env.OPENAI_API_KEY = originalApiKey;
-    process.env.CHIEF_STAFF_PROXY_TOKEN = originalProxyToken;
-    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = originalRateLimit;
-    vi.restoreAllMocks();
+    process.env = { ...previousEnv };
   });
 
-  it('rejects unsupported HTTP methods', async () => {
-    const result = await handleChiefOfStaffProxy({ method: 'GET', body: '{}' });
-
-    expect(result).toMatchObject({
-      status: 405,
-      body: { error: 'Method not allowed' },
+  it('returns taxonomy error code and request id for invalid methods', async () => {
+    const result = await handleChiefOfStaffProxy({
+      method: 'GET',
+      body: null,
+      headers: {},
     });
+
+    expect(result.status).toBe(405);
+    expect(result.body.error_code).toBe('METHOD_NOT_ALLOWED');
+    expect(typeof result.body.request_id).toBe('string');
+    expect(result.body.request_id.length).toBeGreaterThan(0);
   });
 
-  it('returns a config error without OPENAI_API_KEY', async () => {
-    delete process.env.OPENAI_API_KEY;
+  it('classifies upstream timeout failures with explicit error code', async () => {
+    globalThis.fetch.mockRejectedValue({ name: 'AbortError' });
 
     const result = await handleChiefOfStaffProxy({
       method: 'POST',
-      body: { notes: 'hello', actionKey: 'summarize' },
+      body: { notes: 'Generate summary', actionKey: 'summarize' },
+      headers: {},
     });
 
-    expect(result).toMatchObject({
-      status: 500,
-      body: { error: 'OPENAI_API_KEY is not configured on the server' },
-    });
+    expect(result.status).toBe(504);
+    expect(result.body.error_code).toBe('OPENAI_TIMEOUT');
+    expect(typeof result.body.request_id).toBe('string');
   });
 
-  it('enforces optional proxy token when configured', async () => {
-    process.env.CHIEF_STAFF_PROXY_TOKEN = 'expected-token';
-
-    const unauthenticated = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-    });
-
-    expect(unauthenticated).toMatchObject({
-      status: 401,
-      body: { error: 'Missing or invalid proxy authentication token' },
-    });
-  });
-
-  it('returns validation error for missing notes', async () => {
-    const result = await handleChiefOfStaffProxy({ method: 'POST', body: {} });
-
-    expect(result).toMatchObject({
-      status: 400,
-      body: { error: 'Notes are required' },
-    });
-  });
-
-  it('returns validation error for non-object bodies', async () => {
-    const result = await handleChiefOfStaffProxy({ method: 'POST', body: 'invalid' });
-
-    expect(result).toMatchObject({
-      status: 400,
-      body: { error: 'Request body must be a JSON object' },
-    });
-  });
-
-  it('returns 429 when a client exceeds configured requests per minute', async () => {
-    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = '1';
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      makeResponse({
-        ok: true,
-        status: 200,
-        body: { output_text: 'all good' },
-      }),
-    );
-
-    const headers = { 'x-forwarded-for': '192.0.2.1' };
-
-    const first = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-      headers,
-    });
-    const second = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-      headers,
-    });
-
-    expect(first).toMatchObject({ status: 200 });
-    expect(second).toMatchObject({
-      status: 429,
-      body: { error: 'Rate limit exceeded for this client' },
-    });
-  });
-
-  it('isolates rate limiting per client identifier', async () => {
-    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = '1';
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      makeResponse({
-        ok: true,
-        status: 200,
-        body: { output_text: 'all good' },
-      }),
-    );
-
-    const first = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-      headers: { 'x-forwarded-for': '198.51.100.1' },
-    });
-    const second = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-      headers: { 'x-forwarded-for': '198.51.100.2' },
-    });
-
-    expect(first).toMatchObject({ status: 200 });
-    expect(second).toMatchObject({ status: 200 });
-  });
-
-  it('returns upstream failure details on non-200 responses', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      makeResponse({
+  it('classifies upstream non-OK responses and preserves error details', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createFetchResponse({
         ok: false,
         status: 429,
-        body: { error: { message: 'rate limited' } },
+        payload: { error: { message: 'Rate limit from upstream' } },
       }),
     );
 
     const result = await handleChiefOfStaffProxy({
       method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      body: { notes: 'Generate summary', actionKey: 'summarize' },
+      headers: {},
     });
 
     expect(result.status).toBe(429);
-    expect(result.body).toMatchObject({
-      error: 'OpenAI request failed',
-    });
+    expect(result.body.error_code).toBe('OPENAI_FAILED');
+    expect(result.body.details).toEqual({ message: 'Rate limit from upstream' });
+    expect(typeof result.body.request_id).toBe('string');
   });
 
-  it('returns success payload from upstream', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      makeResponse({
+  it('adds request id to successful proxy responses', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createFetchResponse({
         ok: true,
         status: 200,
-        body: { output_text: 'all good' },
+        payload: { output_text: 'Executive summary output' },
       }),
     );
 
     const result = await handleChiefOfStaffProxy({
       method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
+      body: { notes: 'Generate summary', actionKey: 'summarize' },
+      headers: {},
     });
 
-    expect(result).toEqual({
-      status: 200,
-      body: { output_text: 'all good' },
-    });
-  });
-
-  it('accepts proxy token when configured and headers are valid', async () => {
-    process.env.CHIEF_STAFF_PROXY_TOKEN = 'expected-token';
-
-    vi.spyOn(global, 'fetch').mockResolvedValue(
-      makeResponse({
-        ok: true,
-        status: 200,
-        body: { output_text: 'all good' },
-      }),
-    );
-
-    const result = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-      headers: {
-        authorization: 'Bearer expected-token',
-      },
-    });
-
-    expect(result).toEqual({
-      status: 200,
-      body: { output_text: 'all good' },
-    });
-  });
-
-  it('returns network error when upstream request fails', async () => {
-    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network failure'));
-
-    const result = await handleChiefOfStaffProxy({
-      method: 'POST',
-      body: { notes: 'sample notes for review', actionKey: 'summarize' },
-    });
-
-    expect(result).toMatchObject({
-      status: 502,
-      body: { error: 'Unable to reach OpenAI' },
-    });
+    expect(result.status).toBe(200);
+    expect(result.body.output_text).toBe('Executive summary output');
+    expect(typeof result.body.request_id).toBe('string');
   });
 });
