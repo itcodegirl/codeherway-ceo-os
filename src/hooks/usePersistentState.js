@@ -52,32 +52,32 @@ export function usePersistentState(key, initialValue) {
   }, [key, initialValue]);
 
   const value = state.key === key ? state.value : loadValue(key, initialValue);
-  const valueRef = useRef(value);
-
-  useEffect(() => {
-    valueRef.current = value;
-  }, [value]);
 
   const setValue = (nextValue) => {
-    const resolvedValue = resolveNextValue(nextValue, valueRef.current);
-
     setState((currentState) => {
+      const currentValue = currentState.key === key
+        ? currentState.value
+        : loadValue(key, initialValueRef.current);
+      const resolvedValue = resolveNextValue(nextValue, currentValue);
+
       if (currentState.key === key && valuesEqual(currentState.value, resolvedValue)) {
         return currentState;
       }
 
       return { key, value: resolvedValue };
     });
+  };
 
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     try {
-      window.localStorage.setItem(key, JSON.stringify(resolvedValue));
+      window.localStorage.setItem(key, JSON.stringify(value));
       window.dispatchEvent(
         new CustomEvent(PERSISTENT_STATE_EVENT, {
-          detail: { key, value: resolvedValue },
+          detail: { key, value },
         }),
       );
     } catch (error) {
@@ -85,7 +85,7 @@ export function usePersistentState(key, initialValue) {
         console.error('localStorage save failed', error);
       }
     }
-  };
+  }, [key, value]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
