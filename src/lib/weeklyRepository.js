@@ -127,6 +127,10 @@ function notifyWeeklyUpdated(detail = {}) {
   window.dispatchEvent(new CustomEvent(WEEKLY_BRIEF_UPDATED_EVENT, { detail }));
 }
 
+export function emitWeeklyBriefUpdated(detail = {}) {
+  notifyWeeklyUpdated(detail);
+}
+
 function readLegacyWeekPayload() {
   if (typeof window === 'undefined') {
     return createDefaultWeekPayload();
@@ -434,6 +438,7 @@ export async function getWeeklyBriefByWeek(weekStart = getCurrentWeekStart()) {
 export async function saveWeeklyBriefReviewNotes({
   weekStart = getCurrentWeekStart(),
   reviewNotes = DEFAULT_REVIEW_NOTES,
+  emitEvent = true,
 }) {
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
@@ -459,11 +464,13 @@ export async function saveWeeklyBriefReviewNotes({
       throw error;
     }
 
-    notifyWeeklyUpdated({
-      weekStart: normalizedWeekStart,
-      source: 'supabase',
-      mutation: 'review_notes',
-    });
+    if (emitEvent) {
+      notifyWeeklyUpdated({
+        weekStart: normalizedWeekStart,
+        source: 'supabase',
+        mutation: 'review_notes',
+      });
+    }
     return normalizedReviewNotes;
   }
 
@@ -472,11 +479,13 @@ export async function saveWeeklyBriefReviewNotes({
     reviewNotes: normalizedReviewNotes,
   }));
 
-  notifyWeeklyUpdated({
-    weekStart: normalizedWeekStart,
-    source: 'local',
-    mutation: 'review_notes',
-  });
+  if (emitEvent) {
+    notifyWeeklyUpdated({
+      weekStart: normalizedWeekStart,
+      source: 'local',
+      mutation: 'review_notes',
+    });
+  }
   return normalizedReviewNotes;
 }
 
@@ -485,6 +494,7 @@ export async function createWeeklyItem({
   itemType,
   item,
   sortOrder = 0,
+  emitEvent = true,
 }) {
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
@@ -524,12 +534,14 @@ export async function createWeeklyItem({
     }
 
     const nextItem = mapItemFromSupabaseRow(data);
-    notifyWeeklyUpdated({
-      weekStart: normalizedWeekStart,
-      source: 'supabase',
-      mutation: 'create_item',
-      itemType: normalizedType,
-    });
+    if (emitEvent) {
+      notifyWeeklyUpdated({
+        weekStart: normalizedWeekStart,
+        source: 'supabase',
+        mutation: 'create_item',
+        itemType: normalizedType,
+      });
+    }
     return nextItem;
   }
 
@@ -555,12 +567,14 @@ export async function createWeeklyItem({
     return next;
   });
 
-  notifyWeeklyUpdated({
-    weekStart: normalizedWeekStart,
-    source: 'local',
-    mutation: 'create_item',
-    itemType: normalizedType,
-  });
+  if (emitEvent) {
+    notifyWeeklyUpdated({
+      weekStart: normalizedWeekStart,
+      source: 'local',
+      mutation: 'create_item',
+      itemType: normalizedType,
+    });
+  }
   return normalizedItem;
 }
 
@@ -570,6 +584,7 @@ export async function updateWeeklyItem({
   itemId,
   item,
   sortOrder = 0,
+  emitEvent = true,
 }) {
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
@@ -605,12 +620,14 @@ export async function updateWeeklyItem({
     }
 
     const nextItem = mapItemFromSupabaseRow(data);
-    notifyWeeklyUpdated({
-      weekStart: normalizedWeekStart,
-      source: 'supabase',
-      mutation: 'update_item',
-      itemType: normalizedType,
-    });
+    if (emitEvent) {
+      notifyWeeklyUpdated({
+        weekStart: normalizedWeekStart,
+        source: 'supabase',
+        mutation: 'update_item',
+        itemType: normalizedType,
+      });
+    }
     return nextItem;
   }
 
@@ -649,12 +666,14 @@ export async function updateWeeklyItem({
     return next;
   });
 
-  notifyWeeklyUpdated({
-    weekStart: normalizedWeekStart,
-    source: 'local',
-    mutation: 'update_item',
-    itemType: normalizedType,
-  });
+  if (emitEvent) {
+    notifyWeeklyUpdated({
+      weekStart: normalizedWeekStart,
+      source: 'local',
+      mutation: 'update_item',
+      itemType: normalizedType,
+    });
+  }
   return nextItem;
 }
 
@@ -662,6 +681,7 @@ export async function deleteWeeklyItem({
   weekStart = getCurrentWeekStart(),
   itemType,
   itemId,
+  emitEvent = true,
 }) {
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
@@ -685,12 +705,14 @@ export async function deleteWeeklyItem({
       throw error;
     }
 
-    notifyWeeklyUpdated({
-      weekStart: normalizedWeekStart,
-      source: 'supabase',
-      mutation: 'delete_item',
-      itemType: normalizedType,
-    });
+    if (emitEvent) {
+      notifyWeeklyUpdated({
+        weekStart: normalizedWeekStart,
+        source: 'supabase',
+        mutation: 'delete_item',
+        itemType: normalizedType,
+      });
+    }
     return;
   }
 
@@ -710,10 +732,12 @@ export async function deleteWeeklyItem({
     return next;
   });
 
-  notifyWeeklyUpdated({
-    weekStart: normalizedWeekStart,
-    source: 'local',
-    mutation: 'delete_item',
-    itemType: normalizedType,
-  });
+  if (emitEvent) {
+    notifyWeeklyUpdated({
+      weekStart: normalizedWeekStart,
+      source: 'local',
+      mutation: 'delete_item',
+      itemType: normalizedType,
+    });
+  }
 }

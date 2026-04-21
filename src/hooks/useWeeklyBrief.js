@@ -3,6 +3,7 @@ import {
   WEEKLY_BRIEF_UPDATED_EVENT,
   createWeeklyItem,
   deleteWeeklyItem,
+  emitWeeklyBriefUpdated,
   getCurrentWeekStart,
   getWeeklyBriefByWeek,
   resolveWeeklySource,
@@ -113,6 +114,7 @@ export function useWeeklyBrief() {
   const persistCollectionDiff = useCallback(async (itemType, previousItems, nextItems) => {
     const previousMap = new Map(previousItems.map((item) => [String(item.id), item]));
     const nextMap = new Map(nextItems.map((item) => [String(item.id), item]));
+    let hasChanges = false;
 
     const deletedItemIds = [];
     previousMap.forEach((_, id) => {
@@ -126,7 +128,9 @@ export function useWeeklyBrief() {
         weekStart,
         itemType,
         itemId: deletedItemIds[index],
+        emitEvent: false,
       });
+      hasChanges = true;
     }
 
     for (let index = 0; index < nextItems.length; index += 1) {
@@ -140,7 +144,9 @@ export function useWeeklyBrief() {
           itemType,
           item: nextItem,
           sortOrder: index,
+          emitEvent: false,
         });
+        hasChanges = true;
         continue;
       }
 
@@ -151,8 +157,19 @@ export function useWeeklyBrief() {
           itemId: nextId,
           item: nextItem,
           sortOrder: index,
+          emitEvent: false,
         });
+        hasChanges = true;
       }
+    }
+
+    if (hasChanges) {
+      emitWeeklyBriefUpdated({
+        weekStart,
+        source: resolveWeeklySource(),
+        mutation: 'sync_items',
+        itemType,
+      });
     }
   }, [weekStart]);
 
