@@ -55,6 +55,30 @@ describe('OpportunityTable', () => {
     expect(onSelect).toHaveBeenCalledTimes(3);
   });
 
+  it('keeps interaction behavior stable with larger datasets', () => {
+    const onSelect = vi.fn();
+    const items = Array.from({ length: 200 }, (_, index) => ({
+      id: `o-${index + 1}`,
+      name: `Opportunity ${index + 1}`,
+      company: `Company ${index + 1}`,
+      priority: index % 3 === 0 ? 'High' : index % 3 === 1 ? 'Medium' : 'Low',
+      stage: index % 2 === 0 ? 'In Progress' : 'Awaiting Reply',
+      nextStep: 'Follow up',
+    }));
+
+    const { getAllByRole } = render(
+      <OpportunityTable items={items} onSelect={onSelect} />,
+    );
+
+    const rows = getAllByRole('row');
+    expect(rows).toHaveLength(201);
+
+    const lastRow = rows[200];
+    fireEvent.keyDown(lastRow, { key: 'Enter' });
+
+    expect(onSelect).toHaveBeenCalledWith(items[199]);
+  });
+
   it('returns null when items are not an array', () => {
     const { container } = render(<OpportunityTable items={null} />);
     expect(container).toBeEmptyDOMElement();

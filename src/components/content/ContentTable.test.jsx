@@ -42,6 +42,28 @@ describe('ContentTable', () => {
     expect(onOpenItem).toHaveBeenCalledTimes(3);
   });
 
+  it('keeps interaction behavior stable with larger datasets', () => {
+    const onOpenItem = vi.fn();
+    const items = Array.from({ length: 200 }, (_, index) => ({
+      id: `c-${index + 1}`,
+      title: `Content Item ${index + 1}`,
+      platform: 'LinkedIn',
+      status: index % 2 === 0 ? 'Drafting' : 'Scheduled',
+    }));
+
+    const { getAllByRole } = render(
+      <ContentTable items={items} onOpenItem={onOpenItem} />,
+    );
+
+    const rows = getAllByRole('row');
+    expect(rows).toHaveLength(201);
+
+    const lastRow = rows[200];
+    fireEvent.keyDown(lastRow, { key: 'Enter' });
+
+    expect(onOpenItem).toHaveBeenCalledWith(items[199]);
+  });
+
   it('returns null when items are not an array', () => {
     const { container } = render(
       <ContentTable items={null} />,
