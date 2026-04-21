@@ -130,6 +130,10 @@ npm run typecheck
 - Expand acceptance criteria snapshots for AI-generated structured outputs.
 - Publish a portfolio case study with architecture decision records and tradeoff notes.
 
+## Portfolio assets
+
+- [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
+
 ## Author
 
 Jenna Zawaski — frontend product engineering with workflow-first architecture focus.
