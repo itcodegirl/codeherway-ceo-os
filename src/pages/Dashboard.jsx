@@ -7,11 +7,20 @@ import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import {
+  dashboardDemoData,
   weeklyPriorities as defaultWeeklyPriorities,
   weeklyBlockers as defaultWeeklyBlockers,
 } from '../data/mockData';
-import { listOpportunities, OPPORTUNITIES_UPDATED_EVENT } from '../lib/opportunitiesRepository';
-import { listContentItems, CONTENT_ITEMS_UPDATED_EVENT } from '../lib/contentRepository';
+import {
+  getOpportunitiesSource,
+  listOpportunities,
+  OPPORTUNITIES_UPDATED_EVENT,
+} from '../lib/opportunitiesRepository';
+import {
+  CONTENT_ITEMS_UPDATED_EVENT,
+  getContentSource,
+  listContentItems,
+} from '../lib/contentRepository';
 import { usePersistentState } from '../hooks/usePersistentState';
 import '../styles/dashboard.css';
 
@@ -21,6 +30,7 @@ const contentStatusTone = {
   Scheduled: 'high',
 };
 const SILENT_REFRESH_COALESCE_MS = 400;
+const isLocalDemoMode = getOpportunitiesSource() === 'local' && getContentSource() === 'local';
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
@@ -89,7 +99,7 @@ function Dashboard() {
       ),
     );
 
-    let momentumLabel = 'Needs attention';
+    let momentumLabel = dashboardDemoData.executiveSnapshotFallback.momentum;
     if (focusScore >= 80) {
       momentumLabel = 'Strong this week';
     } else if (focusScore >= 60) {
@@ -107,7 +117,7 @@ function Dashboard() {
         ? `Advance ${shortenText(leadOpportunity.name, 52)}`
         : leadContent?.title
           ? `Publish ${shortenText(leadContent.title, 52)}`
-          : 'Set this week\'s primary priority';
+          : dashboardDemoData.executiveSnapshotFallback.strategicFocus;
 
     const topRisk = topBlocker?.text
       ? shortenText(topBlocker.text, 72)
@@ -115,9 +125,9 @@ function Dashboard() {
         ? `${blockedPriorities} blocked priorities`
         : awaitingReplyCount > 0
           ? `${awaitingReplyCount} opportunities awaiting reply`
-          : 'No critical risks logged';
+          : dashboardDemoData.executiveSnapshotFallback.topRisk;
 
-    const recentActivity = [
+    const computedRecentActivity = [
       leadPriority?.title
         ? {
           id: `activity-priority-${leadPriority.id || 'current'}`,
@@ -151,6 +161,7 @@ function Dashboard() {
         }
         : null,
     ].filter(Boolean).slice(0, 3);
+    const recentActivity = computedRecentActivity.length ? computedRecentActivity : dashboardDemoData.recentActivity;
 
     const momentumValues = [
       clampScore(20 + (opportunityItems.length * 10)),
@@ -162,9 +173,12 @@ function Dashboard() {
     ];
 
     const scoreContext = blockerCount + blockedPriorities;
-    const focusChange = scoreContext > 0
+    const focusChangeBase = scoreContext > 0
       ? `${scoreContext} active risk${scoreContext > 1 ? 's' : ''}`
       : `${inProgressPriorities} priorities in progress`;
+    const focusChange = isLocalDemoMode
+      ? `${focusChangeBase} - ${dashboardDemoData.focusScore.demoSuffix}`
+      : focusChangeBase;
 
     return {
       focusScore,
@@ -403,6 +417,7 @@ function Dashboard() {
               <strong>{dashboardInsights.momentumLabel}</strong>
             </div>
           </div>
+          {isLocalDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
         </SectionCard>
 
         <SectionCard
@@ -461,6 +476,7 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard title="Recent Activity">
+          {isLocalDemoMode ? <p className="helper-text">{dashboardDemoData.demoNote}</p> : null}
           <ActivityFeed items={dashboardInsights.recentActivity} />
         </SectionCard>
       </div>

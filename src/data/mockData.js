@@ -97,3 +97,35 @@ export const weeklyBlockers = [
     severity: 'warning',
   },
 ];
+
+export const dashboardDemoData = {
+  recentActivity: [
+    {
+      id: 'demo-activity-priority',
+      title: 'Priority in motion: Align weekly founder operating rhythm',
+      time: 'Demo timeline',
+      type: 'Planning',
+    },
+    {
+      id: 'demo-activity-opportunity',
+      title: 'Opportunity advanced: XPAIRK Partnership (In Progress)',
+      time: 'Priority: High',
+      type: 'Opportunity',
+    },
+    {
+      id: 'demo-activity-content',
+      title: 'Content queued: CEO OS Build in Public Post (Scheduled)',
+      time: 'LinkedIn',
+      type: 'Content',
+    },
+  ],
+  executiveSnapshotFallback: {
+    strategicFocus: 'Set this week\'s primary priority',
+    topRisk: 'No critical risks logged',
+    momentum: 'Needs attention',
+  },
+  focusScore: {
+    demoSuffix: 'Demo heuristic',
+  },
+  demoNote: 'Static demo framing: values are generated from local sample data in this browser.',
+};
