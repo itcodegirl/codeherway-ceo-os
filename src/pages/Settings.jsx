@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
+import Input from '../components/ui/Input';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { DEFAULT_SETTINGS, resolveTimeZone } from '../lib/settings';
 
@@ -51,34 +52,30 @@ function Settings() {
           onAction={markSave}
           actionLabel="Save workspace profile details"
         >
-          <label className="settings-field" htmlFor={teamNameFieldId}>
-            <span className="settings-field__label">Workspace name</span>
-            <input
-              id={teamNameFieldId}
-              type="text"
-              name="teamName"
-              autoComplete="organization"
-              value={settings.teamName}
-              required
-              minLength={2}
-              onChange={(e) => handleChange('teamName', e.target.value)}
-              className="settings-input"
-            />
-          </label>
+          <Input
+            id={teamNameFieldId}
+            type="text"
+            name="teamName"
+            label="Workspace name"
+            className="settings-field"
+            autoComplete="organization"
+            value={settings.teamName}
+            required
+            minLength={2}
+            onChange={(e) => handleChange('teamName', e.target.value)}
+          />
 
-          <label className="settings-field" htmlFor={timezoneFieldId}>
-            <span className="settings-field__label">
-              Timezone
-            </span>
-            <input
+          <div className="settings-field">
+            <Input
               id={timezoneFieldId}
               type="text"
               name="timezone"
+              label="Timezone"
               autoComplete="off"
               value={timezoneInput}
               required
               minLength={2}
-              aria-invalid={!timezoneIsValid}
+              error={!timezoneIsValid ? 'Timezone is invalid. Example: America/Chicago.' : ''}
               title={
                 timezoneIsValid
                   ? 'Use an IANA timezone, for example America/Chicago.'
@@ -90,14 +87,13 @@ function Settings() {
                 }
               }}
               onChange={(e) => handleChange('timezone', e.target.value)}
-              className="settings-input"
             />
             <span className="helper-text helper-text--offset" role={!timezoneIsValid ? 'alert' : undefined}>
               {timezoneIsValid
                 ? 'Use IANA format such as America/Chicago.'
                 : 'Timezone is invalid. Example: America/Chicago.'}
             </span>
-          </label>
+          </div>
         </SectionCard>
 
         <SectionCard

@@ -90,7 +90,7 @@
 	gap: var(--space-list-gap);
 }
 
-.weekly-form__textarea {
+.weekly-form__textarea-field .textarea-field__control {
 	resize: vertical;
 	min-height: 5rem;
 }

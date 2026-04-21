@@ -6,6 +6,7 @@ import ContentTable from '../components/content/ContentTable';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
 import {
   createContentItem,
   deleteContentItem,
@@ -328,29 +329,25 @@ function ContentOS() {
         onClose={handleCloseFormModal}
       >
         <form className="content-form" onSubmit={handleFormSubmit}>
-          <label className="settings-field" htmlFor="content-title">
-            <span className="settings-field__label">Title</span>
-            <input
-              id="content-title"
-              className="settings-input"
-              value={formValues.title}
-              onChange={(event) => handleFormChange('title', event.target.value)}
-              required
-              disabled={isSaving}
-            />
-          </label>
+          <Input
+            id="content-title"
+            label="Title"
+            className="settings-field"
+            value={formValues.title}
+            onChange={(event) => handleFormChange('title', event.target.value)}
+            required
+            disabled={isSaving}
+          />
 
-          <label className="settings-field" htmlFor="content-platform">
-            <span className="settings-field__label">Platform</span>
-            <input
-              id="content-platform"
-              className="settings-input"
-              value={formValues.platform}
-              onChange={(event) => handleFormChange('platform', event.target.value)}
-              required
-              disabled={isSaving}
-            />
-          </label>
+          <Input
+            id="content-platform"
+            label="Platform"
+            className="settings-field"
+            value={formValues.platform}
+            onChange={(event) => handleFormChange('platform', event.target.value)}
+            required
+            disabled={isSaving}
+          />
 
           <label className="settings-field" htmlFor="content-status">
             <span className="settings-field__label">Status</span>

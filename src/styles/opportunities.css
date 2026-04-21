@@ -120,7 +120,7 @@
 	gap: var(--space-list-gap);
 }
 
-.opportunity-form__textarea {
+.opportunity-form__textarea-field .textarea-field__control {
 	resize: vertical;
 	min-height: 5rem;
 }

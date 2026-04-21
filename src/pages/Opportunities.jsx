@@ -6,6 +6,8 @@ import OpportunityTable from '../components/opportunities/OpportunityTable';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Textarea from '../components/ui/Textarea';
 import {
   createOpportunity,
   deleteOpportunity,
@@ -361,29 +363,25 @@ function Opportunities() {
         onClose={handleCloseFormModal}
       >
         <form className="opportunity-form" onSubmit={handleFormSubmit}>
-          <label className="settings-field" htmlFor="opportunity-name">
-            <span className="settings-field__label">Opportunity</span>
-            <input
-              id="opportunity-name"
-              className="settings-input"
-              value={formValues.name}
-              onChange={(event) => handleFormChange('name', event.target.value)}
-              required
-              disabled={isSaving}
-            />
-          </label>
+          <Input
+            id="opportunity-name"
+            label="Opportunity"
+            className="settings-field"
+            value={formValues.name}
+            onChange={(event) => handleFormChange('name', event.target.value)}
+            required
+            disabled={isSaving}
+          />
 
-          <label className="settings-field" htmlFor="opportunity-company">
-            <span className="settings-field__label">Company</span>
-            <input
-              id="opportunity-company"
-              className="settings-input"
-              value={formValues.company}
-              onChange={(event) => handleFormChange('company', event.target.value)}
-              required
-              disabled={isSaving}
-            />
-          </label>
+          <Input
+            id="opportunity-company"
+            label="Company"
+            className="settings-field"
+            value={formValues.company}
+            onChange={(event) => handleFormChange('company', event.target.value)}
+            required
+            disabled={isSaving}
+          />
 
           <label className="settings-field" htmlFor="opportunity-priority">
             <span className="settings-field__label">Priority</span>
@@ -419,18 +417,16 @@ function Opportunities() {
             </select>
           </label>
 
-          <label className="settings-field" htmlFor="opportunity-next-step">
-            <span className="settings-field__label">Next Step</span>
-            <textarea
-              id="opportunity-next-step"
-              className="settings-input opportunity-form__textarea"
-              value={formValues.nextStep}
-              onChange={(event) => handleFormChange('nextStep', event.target.value)}
-              required
-              disabled={isSaving}
-              rows={3}
-            />
-          </label>
+          <Textarea
+            id="opportunity-next-step"
+            label="Next Step"
+            className="settings-field opportunity-form__textarea-field"
+            value={formValues.nextStep}
+            onChange={(event) => handleFormChange('nextStep', event.target.value)}
+            required
+            disabled={isSaving}
+            rows={3}
+          />
 
           {formError ? (
             <p className="helper-text opportunities-error" role="alert">

@@ -5,6 +5,8 @@ import PageHeader from '../components/ui/PageHeader';
 import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Textarea from '../components/ui/Textarea';
 import { usePersistentState } from '../hooks/usePersistentState';
 import '../styles/weekly.css';
 
@@ -385,27 +387,23 @@ function WeeklyBrief() {
         <form className="weekly-form" onSubmit={handleEditorSubmit}>
           {editorState.type === 'priority' ? (
             <>
-              <label className="settings-field" htmlFor="weekly-priority-title">
-                <span className="settings-field__label">Priority</span>
-                <input
-                  id="weekly-priority-title"
-                  className="settings-input"
-                  value={formValues.title || ''}
-                  onChange={(event) => handleFormChange('title', event.target.value)}
-                  required
-                />
-              </label>
+              <Input
+                id="weekly-priority-title"
+                label="Priority"
+                className="settings-field"
+                value={formValues.title || ''}
+                onChange={(event) => handleFormChange('title', event.target.value)}
+                required
+              />
 
-              <label className="settings-field" htmlFor="weekly-priority-owner">
-                <span className="settings-field__label">Owner</span>
-                <input
-                  id="weekly-priority-owner"
-                  className="settings-input"
-                  value={formValues.owner || ''}
-                  onChange={(event) => handleFormChange('owner', event.target.value)}
-                  required
-                />
-              </label>
+              <Input
+                id="weekly-priority-owner"
+                label="Owner"
+                className="settings-field"
+                value={formValues.owner || ''}
+                onChange={(event) => handleFormChange('owner', event.target.value)}
+                required
+              />
 
               <label className="settings-field" htmlFor="weekly-priority-status">
                 <span className="settings-field__label">Status</span>
@@ -427,17 +425,15 @@ function WeeklyBrief() {
 
           {editorState.type === 'win' ? (
             <>
-              <label className="settings-field" htmlFor="weekly-win-text">
-                <span className="settings-field__label">Win</span>
-                <textarea
-                  id="weekly-win-text"
-                  className="settings-input weekly-form__textarea"
-                  value={formValues.text || ''}
-                  onChange={(event) => handleFormChange('text', event.target.value)}
-                  rows={3}
-                  required
-                />
-              </label>
+              <Textarea
+                id="weekly-win-text"
+                label="Win"
+                className="settings-field weekly-form__textarea-field"
+                value={formValues.text || ''}
+                onChange={(event) => handleFormChange('text', event.target.value)}
+                rows={3}
+                required
+              />
 
               <label className="settings-field" htmlFor="weekly-win-category">
                 <span className="settings-field__label">Category</span>
@@ -459,17 +455,15 @@ function WeeklyBrief() {
 
           {editorState.type === 'blocker' ? (
             <>
-              <label className="settings-field" htmlFor="weekly-blocker-text">
-                <span className="settings-field__label">Blocker</span>
-                <textarea
-                  id="weekly-blocker-text"
-                  className="settings-input weekly-form__textarea"
-                  value={formValues.text || ''}
-                  onChange={(event) => handleFormChange('text', event.target.value)}
-                  rows={3}
-                  required
-                />
-              </label>
+              <Textarea
+                id="weekly-blocker-text"
+                label="Blocker"
+                className="settings-field weekly-form__textarea-field"
+                value={formValues.text || ''}
+                onChange={(event) => handleFormChange('text', event.target.value)}
+                rows={3}
+                required
+              />
 
               <label className="settings-field" htmlFor="weekly-blocker-severity">
                 <span className="settings-field__label">Severity</span>
