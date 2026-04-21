@@ -152,6 +152,28 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 | Chief of Staff | `docs/assets/screenshots/chief-of-staff-structured-output.png` | AI output quality, structured acceptance workflow |
 | Settings | `docs/assets/screenshots/settings-workspace-profile.png` | Workspace defaults, persistence source alignment |
 
+### Screenshot gallery
+
+#### Dashboard
+
+![Dashboard overview](docs/assets/screenshots/dashboard-overview.png)
+
+#### Opportunities pipeline
+
+![Opportunities pipeline](docs/assets/screenshots/opportunities-pipeline.png)
+
+#### Weekly brief
+
+![Weekly brief planning](docs/assets/screenshots/weekly-brief-planning.png)
+
+#### Chief of staff workflow
+
+![Chief of staff structured output](docs/assets/screenshots/chief-of-staff-structured-output.png)
+
+#### Settings
+
+![Settings workspace profile](docs/assets/screenshots/settings-workspace-profile.png)
+
 ### Demo target
 
 - Walkthrough capture: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`

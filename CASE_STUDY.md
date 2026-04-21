@@ -23,6 +23,16 @@ The following assets are referenced for portfolio review and should be kept curr
 - Walkthrough demo: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`
 - Capture/update workflow: `docs/assets/CAPTURE_GUIDE.md`
 
+### Visual preview highlights
+
+#### Dashboard overview
+
+![Dashboard visual proof](docs/assets/screenshots/dashboard-overview.png)
+
+#### Chief of Staff structured workflow
+
+![Chief of staff visual proof](docs/assets/screenshots/chief-of-staff-structured-output.png)
+
 ## 2) Architecture and decisions
 
 ### Decision: route-level thin composition + repository ownership
