@@ -14,6 +14,53 @@ const SILENT_REFRESH_COALESCE_MS = 400;
 
 export const isLocalDashboardDemoMode = getOpportunitiesSource() === 'local' && getContentSource() === 'local';
 
+function shallowEqualRecords(left, right) {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') {
+    return false;
+  }
+
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  for (let index = 0; index < leftKeys.length; index += 1) {
+    const key = leftKeys[index];
+    if (!Object.prototype.hasOwnProperty.call(right, key)) {
+      return false;
+    }
+
+    if (!Object.is(left[key], right[key])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function shallowEqualRecordArrays(left, right) {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+    return false;
+  }
+
+  for (let index = 0; index < left.length; index += 1) {
+    if (!shallowEqualRecords(left[index], right[index])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export function useDashboardData({ onLoadError }) {
   const [opportunityItems, setOpportunityItems] = useState([]);
   const [contentRows, setContentRows] = useState([]);
@@ -41,8 +88,12 @@ export function useDashboardData({ onLoadError }) {
           return;
         }
 
-        setOpportunityItems(nextOpportunities);
-        setContentRows(nextContentRows);
+        setOpportunityItems((current) => (
+          shallowEqualRecordArrays(current, nextOpportunities) ? current : nextOpportunities
+        ));
+        setContentRows((current) => (
+          shallowEqualRecordArrays(current, nextContentRows) ? current : nextContentRows
+        ));
       } catch (error) {
         if (!isMountedRef.current || requestId !== requestIdRef.current) {
           return;

@@ -113,4 +113,52 @@ describe('useDashboardData', () => {
       expect(onLoadError).toHaveBeenCalledWith(expect.any(Error));
     });
   });
+
+  it('keeps state references stable when silent refresh data is unchanged', async () => {
+    const initialOpportunities = [{ id: 'o-1', name: 'Opportunity A', stage: 'In Progress' }];
+    const initialContent = [{ id: 'c-1', title: 'Status Update', status: 'Drafting' }];
+
+    listOpportunities.mockResolvedValue(initialOpportunities);
+    listContentItems.mockResolvedValue(initialContent);
+
+    const addWindowListener = vi.spyOn(window, 'addEventListener');
+    const capturedWindowHandlers = {};
+
+    addWindowListener.mockImplementation((type, listener) => {
+      capturedWindowHandlers[type] = listener;
+      return undefined;
+    });
+
+    try {
+      const { result } = renderHook(() => useDashboardData({}));
+
+      await waitFor(() => {
+        expect(result.current.isDataLoading).toBe(false);
+      });
+
+      const opportunitiesRef = result.current.opportunityItems;
+      const contentRef = result.current.contentRows;
+      const opportunityCallCountBeforeRefresh = listOpportunities.mock.calls.length;
+      const contentCallCountBeforeRefresh = listContentItems.mock.calls.length;
+
+      listOpportunities.mockResolvedValue([{ id: 'o-1', name: 'Opportunity A', stage: 'In Progress' }]);
+      listContentItems.mockResolvedValue([{ id: 'c-1', title: 'Status Update', status: 'Drafting' }]);
+
+      act(() => {
+        capturedWindowHandlers.focus();
+      });
+
+      await waitFor(() => {
+        expect(listOpportunities.mock.calls.length).toBeGreaterThan(opportunityCallCountBeforeRefresh);
+      });
+      await waitFor(() => {
+        expect(listContentItems.mock.calls.length).toBeGreaterThan(contentCallCountBeforeRefresh);
+      });
+
+      expect(result.current.opportunityItems).toBe(opportunitiesRef);
+      expect(result.current.contentRows).toBe(contentRef);
+    } finally {
+      addWindowListener.mockRestore();
+    }
+  });
 });
