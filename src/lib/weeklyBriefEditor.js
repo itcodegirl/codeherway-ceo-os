@@ -4,20 +4,13 @@ import {
   PRIORITY_STATUS_OPTIONS,
   WIN_CATEGORY_OPTIONS,
 } from './weeklyData';
+import { buildCreateId } from './utils';
 export { BLOCKER_SEVERITY_OPTIONS, PRIORITY_STATUS_OPTIONS, WIN_CATEGORY_OPTIONS };
 
 export const DEFAULT_EDITOR_STATE = {
   type: '',
   itemId: '',
 };
-
-function buildItemId(prefix) {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-
-  return `${prefix}-${Date.now()}`;
-}
 
 const EDITOR_STRATEGIES = {
   priority: {
@@ -40,7 +33,7 @@ const EDITOR_STRATEGIES = {
 
       return {
         payload: {
-          id: existingId || buildItemId('priority'),
+          id: existingId || `priority-${buildCreateId()}`,
           title,
           owner,
           status,
@@ -66,7 +59,7 @@ const EDITOR_STRATEGIES = {
 
       return {
         payload: {
-          id: existingId || buildItemId('win'),
+          id: existingId || `win-${buildCreateId()}`,
           text,
           category,
         },
@@ -91,7 +84,7 @@ const EDITOR_STRATEGIES = {
 
       return {
         payload: {
-          id: existingId || buildItemId('blocker'),
+          id: existingId || `blocker-${buildCreateId()}`,
           text,
           severity,
         },
