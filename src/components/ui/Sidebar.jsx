@@ -15,7 +15,7 @@ function Sidebar() {
     <aside className="sidebar" aria-label="Primary navigation">
       <div className="sidebar__brand">
         <p className="sidebar__eyebrow">CodeHerWay</p>
-        <h1>CEO OS</h1>
+        <p className="sidebar__brand-title">CEO OS</p>
       </div>
 
       <nav className="sidebar__nav" aria-label="Main navigation">

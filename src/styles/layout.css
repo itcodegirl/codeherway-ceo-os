@@ -54,7 +54,7 @@
 	margin-bottom: 0.35rem;
 }
 
-.sidebar__brand h1 {
+.sidebar__brand-title {
 	font-size: var(--fs-sidebar-brand);
 	font-weight: var(--fw-sidebar-brand);
 }
@@ -268,7 +268,7 @@
 }
 
 @media (max-width: 768px) {
-	.sidebar__brand h1 {
+	.sidebar__brand-title {
 		font-size: 1.35rem;
 	}
 
@@ -308,7 +308,7 @@
 }
 
 @media (max-width: 420px) {
-	.sidebar__brand h1 {
+	.sidebar__brand-title {
 		font-size: 1.2rem;
 	}
 
