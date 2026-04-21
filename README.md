@@ -136,6 +136,7 @@ npm run typecheck
 - [docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md) for final release-candidate verification.
 - [CHANGELOG.md](./CHANGELOG.md) for timestamped hardening and release-readiness updates.
 - [docs/assets/README.md](./docs/assets/README.md) for screenshot and demo asset structure.
+- [docs/assets/CAPTURE_GUIDE.md](./docs/assets/CAPTURE_GUIDE.md) for updating screenshots and walkthrough captures.
 
 ## Product visuals and proof
 

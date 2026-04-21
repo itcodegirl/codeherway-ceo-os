@@ -21,6 +21,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Chief of staff proof: `docs/assets/screenshots/chief-of-staff-structured-output.png`
 - Settings proof: `docs/assets/screenshots/settings-workspace-profile.png`
 - Walkthrough demo: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`
+- Capture/update workflow: `docs/assets/CAPTURE_GUIDE.md`
 
 ## 2) Architecture and decisions
 
