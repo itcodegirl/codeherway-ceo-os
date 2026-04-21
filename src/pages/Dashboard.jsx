@@ -67,6 +67,62 @@ function Dashboard() {
     return storedWeeklyBlockers;
   }, [storedWeeklyBlockers]);
 
+  const dashboardCounts = useMemo(() => {
+    const counts = {
+      inProgressPriorities: 0,
+      blockedPriorities: 0,
+      blockerCount: weeklyBlockers.length,
+      awaitingReplyCount: 0,
+      highPriorityCount: 0,
+      inProgressOpportunityCount: 0,
+      scheduledContentCount: 0,
+      editingContentCount: 0,
+      draftingContentCount: 0,
+      opportunityCount: opportunityItems.length,
+      contentCount: contentRows.length,
+    };
+
+    weeklyPriorities.forEach((item) => {
+      if (item?.status === 'In Progress') {
+        counts.inProgressPriorities += 1;
+      }
+
+      if (item?.status === 'Blocked') {
+        counts.blockedPriorities += 1;
+      }
+    });
+
+    opportunityItems.forEach((item) => {
+      if (item?.stage === 'Awaiting Reply') {
+        counts.awaitingReplyCount += 1;
+      }
+
+      if (item?.stage === 'In Progress') {
+        counts.inProgressOpportunityCount += 1;
+      }
+
+      if (item?.priority === 'High') {
+        counts.highPriorityCount += 1;
+      }
+    });
+
+    contentRows.forEach((item) => {
+      if (item?.status === 'Scheduled') {
+        counts.scheduledContentCount += 1;
+      }
+
+      if (item?.status === 'Editing') {
+        counts.editingContentCount += 1;
+      }
+
+      if (item?.status === 'Drafting') {
+        counts.draftingContentCount += 1;
+      }
+    });
+
+    return counts;
+  }, [contentRows, opportunityItems, weeklyBlockers.length, weeklyPriorities]);
+
   const priorityItems = useMemo(
     () =>
       weeklyPriorities
@@ -80,13 +136,17 @@ function Dashboard() {
   );
 
   const dashboardInsights = useMemo(() => {
-    const inProgressPriorities = weeklyPriorities.filter((item) => item?.status === 'In Progress').length;
-    const blockedPriorities = weeklyPriorities.filter((item) => item?.status === 'Blocked').length;
-    const blockerCount = weeklyBlockers.length;
-    const awaitingReplyCount = opportunityItems.filter((item) => item.stage === 'Awaiting Reply').length;
-    const highPriorityCount = opportunityItems.filter((item) => item.priority === 'High').length;
-    const scheduledContentCount = contentRows.filter((item) => item.status === 'Scheduled').length;
-    const editingContentCount = contentRows.filter((item) => item.status === 'Editing').length;
+    const {
+      inProgressPriorities,
+      blockedPriorities,
+      blockerCount,
+      awaitingReplyCount,
+      highPriorityCount,
+      scheduledContentCount,
+      editingContentCount,
+      opportunityCount,
+      contentCount,
+    } = dashboardCounts;
 
     const focusScore = clampScore(
       Math.round(
@@ -165,8 +225,8 @@ function Dashboard() {
     const recentActivity = computedRecentActivity.length ? computedRecentActivity : dashboardDemoData.recentActivity;
 
     const momentumValues = [
-      clampScore(20 + (opportunityItems.length * 10)),
-      clampScore(20 + (contentRows.length * 10)),
+      clampScore(20 + (opportunityCount * 10)),
+      clampScore(20 + (contentCount * 10)),
       clampScore(25 + (inProgressPriorities * 18)),
       clampScore(90 - ((blockedPriorities * 15) + (blockerCount * 12))),
       clampScore(30 + (highPriorityCount * 12) - (awaitingReplyCount * 8)),
@@ -190,26 +250,30 @@ function Dashboard() {
       recentActivity,
       momentumValues,
     };
-  }, [contentRows, opportunityItems, weeklyBlockers, weeklyPriorities]);
+  }, [contentRows, dashboardCounts, opportunityItems, weeklyBlockers, weeklyPriorities]);
 
   const statCards = useMemo(() => {
-    const highPriorityCount = opportunityItems.filter((item) => item.priority === 'High').length;
-    const inProgressCount = opportunityItems.filter((item) => item.stage === 'In Progress').length;
-    const awaitingReplyCount = opportunityItems.filter((item) => item.stage === 'Awaiting Reply').length;
-    const draftingCount = contentRows.filter((item) => item.status === 'Drafting').length;
+    const {
+      highPriorityCount,
+      inProgressOpportunityCount,
+      awaitingReplyCount,
+      draftingContentCount,
+      opportunityCount,
+      contentCount,
+    } = dashboardCounts;
 
     return [
       {
         id: 1,
         label: 'Active Opportunities',
-        value: isDataLoading ? '--' : opportunityItems.length,
-        change: `${inProgressCount} in progress`,
+        value: isDataLoading ? '--' : opportunityCount,
+        change: `${inProgressOpportunityCount} in progress`,
       },
       {
         id: 2,
         label: 'Content in Pipeline',
-        value: isDataLoading ? '--' : contentRows.length,
-        change: `${draftingCount} drafting`,
+        value: isDataLoading ? '--' : contentCount,
+        change: `${draftingContentCount} drafting`,
       },
       {
         id: 3,
@@ -224,7 +288,7 @@ function Dashboard() {
         change: dashboardInsights.focusChange,
       },
     ];
-  }, [contentRows, dashboardInsights.focusChange, dashboardInsights.focusScore, isDataLoading, opportunityItems]);
+  }, [dashboardCounts, dashboardInsights.focusChange, dashboardInsights.focusScore, isDataLoading]);
 
   const handleCopySnapshot = async () => {
     const snapshot = [
