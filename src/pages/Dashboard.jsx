@@ -6,9 +6,10 @@ import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import { priorities } from '../data/mockData';
+import { weeklyPriorities as defaultWeeklyPriorities } from '../data/mockData';
 import { listOpportunities } from '../lib/opportunitiesRepository';
 import { listContentItems } from '../lib/contentRepository';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/dashboard.css';
 
@@ -33,8 +34,17 @@ function Dashboard() {
   const [toastMessage, setToastMessage] = useState('');
   const [opportunityItems, setOpportunityItems] = useState([]);
   const [contentRows, setContentRows] = useState([]);
+  const [storedWeeklyPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultWeeklyPriorities);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const toastTimerRef = useRef(null);
+
+  const priorityItems = useMemo(() => {
+    if (!Array.isArray(storedWeeklyPriorities)) {
+      return [];
+    }
+
+    return storedWeeklyPriorities.slice(0, 3).map((item) => item?.title).filter(Boolean);
+  }, [storedWeeklyPriorities]);
 
   const statCards = useMemo(() => {
     const highPriorityCount = opportunityItems.filter((item) => item.priority === 'High').length;
@@ -172,12 +182,17 @@ function Dashboard() {
           actionLabel="Open weekly plan and priority focus"
         >
           <ul className="priority-list">
-            {priorities.map((item) => (
+            {priorityItems.length ? priorityItems.map((item) => (
               <li key={item} className="priority-list__item">
                 <span className="priority-list__dot" />
                 <span>{item}</span>
               </li>
-            ))}
+            )) : (
+              <li className="priority-list__item">
+                <span className="priority-list__dot" />
+                <span className="helper-text">No weekly priorities yet. Add them from Weekly Brief.</span>
+              </li>
+            )}
           </ul>
         </SectionCard>
 
