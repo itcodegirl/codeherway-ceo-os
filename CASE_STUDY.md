@@ -11,6 +11,17 @@ This repository demonstrates a single-screen, browser-first operations dashboard
 - Integrating AI assistance where it adds leverage (executive summaries, prioritization suggestions, content planning support)
 - Preserving accessibility and status clarity as first-class UX concerns
 
+## 1.1) Visual evidence map
+
+The following assets are referenced for portfolio review and should be kept current with the app:
+
+- Dashboard proof: `docs/assets/screenshots/dashboard-overview.png`
+- Opportunities proof: `docs/assets/screenshots/opportunities-pipeline.png`
+- Weekly brief proof: `docs/assets/screenshots/weekly-brief-planning.png`
+- Chief of staff proof: `docs/assets/screenshots/chief-of-staff-structured-output.png`
+- Settings proof: `docs/assets/screenshots/settings-workspace-profile.png`
+- Walkthrough demo: `docs/assets/demo/ceo-os-workflow-walkthrough.mp4`
+
 ## 2) Architecture and decisions
 
 ### Decision: route-level thin composition + repository ownership
@@ -20,16 +31,26 @@ This repository demonstrates a single-screen, browser-first operations dashboard
   - `src/pages/*`
   - `src/hooks/*`
   - `src/lib/*`
+- **Visual tie-in:** the dashboard and weekly brief screenshots should show unchanged page-level composition while data orchestration remains hook/repository-driven.
 
 ### Decision: local-first with Supabase upgrade path
 - **Goal:** preserve usability even without backend credentials.
 - **Implementation:** repositories first attempt local storage fallback, and prefer Supabase when configured.
 - **Evidence:** source-aware flags (`local` / `supabase`) are surfaced to the UI and tests validate fallback behavior.
+- **Visual tie-in:** settings and dashboard captures should include source-status cues to demonstrate local-first transparency.
 
 ### Decision: AI through a server proxy
 - **Goal:** avoid client-exposed provider secrets and keep response failure handling explicit.
 - **Implementation:** route-side proxy endpoints for Vercel and Netlify; `src/lib/openai.js` performs output extraction and structured parsing with fallback handling.
 - **Evidence:** parser tests cover direct payloads, fenced JSON, fallback content paths, and tool-output text arrays.
+- **Visual tie-in:** chief-of-staff screenshot and walkthrough should show structured output acceptance flow and fallback-safe interaction language.
+
+## 2.1) Product outcome narrative
+
+- Operators can move from weekly priorities to action without leaving one shell.
+- Founder content planning stays visible alongside opportunity momentum.
+- AI assistance is integrated as an accelerant, not a hidden dependency, because fallback output paths remain explicit.
+- Portfolio reviewers can trace each claim to both source code and visual proof assets.
 
 ## 3) Hardening focus for production credibility
 
@@ -63,4 +84,4 @@ npm run typecheck
 
 - Additional telemetry around AI fallback reasons and acceptance rates
 - More cross-domain event synchronization tests under concurrent multi-screen updates
-- Additional product narrative artifacts (screenshots or short demo links) as deployment pipeline evolves
+- Continued refresh of screenshot/demo artifacts as UI polish evolves
