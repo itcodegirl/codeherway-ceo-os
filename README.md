@@ -28,6 +28,7 @@ This project is a polished frontend prototype with partial persistence:
 - Automated UI regression coverage for key Chief of Staff generation paths (empty-input guard + successful response render)
 - Accessibility regression coverage for modal focus trapping and compact-sidebar Escape navigation behavior
 - Route-level accessibility smoke tests for single-page `h1` usage and app `main` landmark consistency
+- Dashboard regression coverage for derived KPI cards and focus score calculations from persisted workflow data
 
 ## Tech Stack
 
