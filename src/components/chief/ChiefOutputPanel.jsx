@@ -13,7 +13,11 @@ export default function ChiefOutputPanel({
   onAcceptOpportunity,
   onAcceptContent,
   onAcceptTask,
-  onAcceptAll
+  onAcceptAll,
+  isOpportunityAccepted,
+  isOpportunityAccepting,
+  isContentAccepted,
+  isContentAccepting
 }) {
   if (isGenerating) {
     return <OutputLoadingState />;
@@ -41,8 +45,15 @@ export default function ChiefOutputPanel({
       <ChiefOpportunityList
         items={opportunities}
         onAccept={onAcceptOpportunity}
+        isAccepted={isOpportunityAccepted}
+        isAccepting={isOpportunityAccepting}
       />
-      <ChiefContentList items={contentItems} onAccept={onAcceptContent} />
+      <ChiefContentList
+        items={contentItems}
+        onAccept={onAcceptContent}
+        isAccepted={isContentAccepted}
+        isAccepting={isContentAccepting}
+      />
       <ChiefTaskList items={tasks} onAccept={onAcceptTask} />
     </section>
   );

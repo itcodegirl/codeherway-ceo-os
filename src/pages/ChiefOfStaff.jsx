@@ -7,19 +7,20 @@ export default function ChiefOfStaff() {
     notes,
     setNotes,
     isGenerating,
+    feedback,
     result,
     handleBuildActionPlan,
-    resetWorkspace
+    resetWorkspace,
+    acceptPriority,
+    acceptOpportunity,
+    acceptContent,
+    acceptTask,
+    acceptAll,
+    isOpportunityAccepted,
+    isOpportunityAccepting,
+    isContentAccepted,
+    isContentAccepting
   } = useChiefDemoState();
-
-  const acceptHandlers = {
-    onAcceptPriority: async (item) => console.log("Priority accepted:", item),
-    onAcceptOpportunity: async (item) =>
-      console.log("Opportunity accepted:", item),
-    onAcceptContent: async (item) => console.log("Content accepted:", item),
-    onAcceptTask: async (item) => console.log("Task accepted:", item),
-    onAcceptAll: async () => console.log("Accept all clicked")
-  };
 
   return (
     <section className="chief-page-grid">
@@ -58,6 +59,10 @@ export default function ChiefOfStaff() {
               {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
             </button>
           </div>
+
+          <p className="chief-feedback-text" role="status" aria-live="polite">
+            {feedback}
+          </p>
         </div>
       </div>
 
@@ -65,11 +70,15 @@ export default function ChiefOfStaff() {
         <ChiefOutputPanel
           isGenerating={isGenerating}
           result={result}
-          onAcceptPriority={acceptHandlers.onAcceptPriority}
-          onAcceptOpportunity={acceptHandlers.onAcceptOpportunity}
-          onAcceptContent={acceptHandlers.onAcceptContent}
-          onAcceptTask={acceptHandlers.onAcceptTask}
-          onAcceptAll={acceptHandlers.onAcceptAll}
+          onAcceptPriority={acceptPriority}
+          onAcceptOpportunity={acceptOpportunity}
+          onAcceptContent={acceptContent}
+          onAcceptTask={acceptTask}
+          onAcceptAll={acceptAll}
+          isOpportunityAccepted={isOpportunityAccepted}
+          isOpportunityAccepting={isOpportunityAccepting}
+          isContentAccepted={isContentAccepted}
+          isContentAccepting={isContentAccepting}
         />
       </div>
     </section>

@@ -66,6 +66,13 @@
   margin-top: 1rem;
 }
 
+.chief-feedback-text {
+  margin-top: 0.75rem;
+  min-height: 1.2rem;
+  opacity: 0.84;
+  font-size: 0.88rem;
+}
+
 .chief-output-panel {
   display: grid;
   gap: 1rem;
