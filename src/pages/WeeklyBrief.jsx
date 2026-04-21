@@ -6,24 +6,32 @@ import WinsSection from '../components/weekly/WinsSection';
 import BlockersSection from '../components/weekly/BlockersSection';
 import Textarea from '../components/ui/Textarea';
 import {
-  DEFAULT_REVIEW_NOTES,
   defaultBlockers,
   defaultPriorities,
   defaultWins,
 } from '../lib/weeklyData';
-import { usePersistentState } from '../hooks/usePersistentState';
+import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import '../styles/forms.css';
 import '../styles/weekly.css';
 
 function WeeklyBrief() {
-  const [storedPriorities, setStoredPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultPriorities);
-  const [storedWins, setStoredWins] = usePersistentState('ceo-os-weekly-wins', defaultWins);
-  const [storedBlockers, setStoredBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultBlockers);
-  const [reviewNotes, setReviewNotes] = usePersistentState('ceo-os-weekly-review-notes', DEFAULT_REVIEW_NOTES);
+  const {
+    source,
+    isLoading,
+    loadError,
+    reviewNotes,
+    priorities,
+    wins,
+    blockers,
+    setReviewNotes,
+    setPriorities,
+    setWins,
+    setBlockers,
+  } = useWeeklyBrief();
 
-  const priorityItems = Array.isArray(storedPriorities) ? storedPriorities : defaultPriorities;
-  const winItems = Array.isArray(storedWins) ? storedWins : defaultWins;
-  const blockerItems = Array.isArray(storedBlockers) ? storedBlockers : defaultBlockers;
+  const priorityItems = Array.isArray(priorities) ? priorities : defaultPriorities;
+  const winItems = Array.isArray(wins) ? wins : defaultWins;
+  const blockerItems = Array.isArray(blockers) ? blockers : defaultBlockers;
 
   return (
     <section className="weekly-page">
@@ -33,11 +41,16 @@ function WeeklyBrief() {
       />
 
       <p className="helper-text weekly-source-note">
-        Data source: local persistent storage in this browser.
+        {source === 'supabase'
+          ? 'Data source: Supabase (live persistence).'
+          : 'Data source: local persistent storage in this browser.'}
       </p>
+      {loadError ? <p className="helper-text weekly-error" role="alert">{loadError}</p> : null}
+      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading weekly brief.</p> : null}
 
       <SummaryCards
         className="weekly-overview"
+        isLoading={isLoading}
         cards={[
           {
             id: 'weekly-priorities',
@@ -62,20 +75,20 @@ function WeeklyBrief() {
 
       <div className="weekly-grid">
         <PrioritiesSection
-          items={storedPriorities}
-          setItems={setStoredPriorities}
+          items={priorityItems}
+          setItems={setPriorities}
           defaultItems={defaultPriorities}
         />
 
         <WinsSection
-          items={storedWins}
-          setItems={setStoredWins}
+          items={winItems}
+          setItems={setWins}
           defaultItems={defaultWins}
         />
 
         <BlockersSection
-          items={storedBlockers}
-          setItems={setStoredBlockers}
+          items={blockerItems}
+          setItems={setBlockers}
           defaultItems={defaultBlockers}
         />
 

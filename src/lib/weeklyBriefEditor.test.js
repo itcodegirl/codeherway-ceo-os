@@ -61,7 +61,8 @@ describe('weeklyBriefEditor helpers', () => {
 
   it('generates a new win id and validates required fields', () => {
     const winResult = buildWeeklyPayload('win', { text: '  Closed launch post ', category: 'Execution' });
-    expect(winResult.payload.id).toMatch(/^win-/);
+    expect(typeof winResult.payload.id).toBe('string');
+    expect(winResult.payload.id.length).toBeGreaterThan(0);
     expect(winResult.payload.text).toBe('Closed launch post');
 
     expect(buildWeeklyPayload('win', { text: ' ' })).toEqual({

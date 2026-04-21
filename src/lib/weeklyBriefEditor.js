@@ -33,7 +33,7 @@ const EDITOR_STRATEGIES = {
 
       return {
         payload: {
-          id: existingId || `priority-${buildCreateId()}`,
+          id: existingId || buildCreateId(),
           title,
           owner,
           status,
@@ -59,7 +59,7 @@ const EDITOR_STRATEGIES = {
 
       return {
         payload: {
-          id: existingId || `win-${buildCreateId()}`,
+          id: existingId || buildCreateId(),
           text,
           category,
         },
@@ -84,7 +84,7 @@ const EDITOR_STRATEGIES = {
 
       return {
         payload: {
-          id: existingId || `blocker-${buildCreateId()}`,
+          id: existingId || buildCreateId(),
           text,
           severity,
         },
