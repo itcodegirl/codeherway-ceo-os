@@ -128,4 +128,33 @@ describe('src/lib/openai', () => {
       tasks: [],
     });
   });
+
+  it('extracts output from structured tool content when output_text is not present', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createProxyResponse({
+        output: [
+          {
+            content: [
+              { type: 'output_text', text: ['Step 1: summarize', 'Step 2: recommend'] },
+              { type: 'other_text', text: 'ignored by parser' },
+            ],
+          },
+        ],
+      }),
+    );
+
+    const result = await generateChiefOfStaffResponse({
+      actionKey: 'actions',
+      notes: 'Need practical weekly priorities',
+    });
+
+    expect(result.source).toBe('proxy');
+    expect(result.content).toBe('Step 1: summarize\n\nStep 2: recommend');
+    expect(result.structuredPayload).toEqual({
+      priorities: [],
+      opportunities: [],
+      contentItems: [],
+      tasks: [],
+    });
+  });
 });
