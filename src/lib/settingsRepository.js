@@ -89,6 +89,18 @@ function mapProfileToSettings(profile) {
   });
 }
 
+function isSupabaseAuthError(error) {
+  const authErrorCode = error?.code || '';
+  const statusCode = Number(error?.status) || 0;
+  return (
+    authErrorCode === 'SUPABASE_AUTH_REQUIRED'
+    || authErrorCode === 'PGRST301'
+    || authErrorCode === 'PGRST116'
+    || statusCode === 401
+    || statusCode === 403
+  );
+}
+
 export function getSettingsSource() {
   return isSupabaseConfigured ? 'supabase' : 'local';
 }
@@ -122,7 +134,7 @@ export async function loadSettings() {
         source: 'supabase',
       };
     } catch (error) {
-      if (error?.code !== 'SUPABASE_AUTH_REQUIRED') {
+      if (!isSupabaseAuthError(error)) {
         throw error;
       }
     }
@@ -167,7 +179,7 @@ export async function saveSettings(nextSettings) {
         source: 'supabase',
       };
     } catch (error) {
-      if (error?.code !== 'SUPABASE_AUTH_REQUIRED') {
+      if (!isSupabaseAuthError(error)) {
         throw error;
       }
     }

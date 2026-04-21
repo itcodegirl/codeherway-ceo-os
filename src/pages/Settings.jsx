@@ -4,7 +4,6 @@ import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
-import { resolveTimeZone } from '../lib/settings';
 import '../styles/forms.css';
 
 function Settings() {
@@ -15,6 +14,8 @@ function Settings() {
     isLoading,
     isSaving,
     loadError,
+    timezoneIsValid,
+    normalizeTimezone,
     updateSetting,
     saveSettings,
     refreshSettings,
@@ -24,17 +25,14 @@ function Settings() {
   const autoSaveToggleId = useId();
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
-
-  const timezoneInput = typeof settings.timezone === 'string' ? settings.timezone : '';
-  const resolvedTimezone = resolveTimeZone(timezoneInput);
-  const timezoneIsValid = Boolean(resolvedTimezone);
+  const canSave = timezoneIsValid && !isSaving;
 
   const handleChange = (key, value) => {
     updateSetting(key, value);
   };
 
   const markSave = async () => {
-    if (!timezoneIsValid) {
+    if (!canSave) {
       return;
     }
 
@@ -66,6 +64,10 @@ function Settings() {
           title="Workspace"
           actionText="Save Profile"
           onAction={() => {
+            if (!canSave) {
+              return;
+            }
+
             void markSave();
           }}
           actionLabel="Save workspace profile details"
@@ -91,7 +93,7 @@ function Settings() {
               name="timezone"
               label="Timezone"
               autoComplete="off"
-              value={timezoneInput}
+              value={settings.timezone}
               required
               minLength={2}
               disabled={isSaving}
@@ -101,11 +103,7 @@ function Settings() {
                   ? 'Use an IANA timezone, for example America/Chicago.'
                   : 'Enter a valid IANA timezone, for example America/Chicago.'
               }
-              onBlur={() => {
-                if (resolvedTimezone && resolvedTimezone !== timezoneInput) {
-                  handleChange('timezone', resolvedTimezone);
-                }
-              }}
+              onBlur={normalizeTimezone}
               onChange={(e) => handleChange('timezone', e.target.value)}
             />
             <span className="helper-text helper-text--offset" role={!timezoneIsValid ? 'alert' : undefined}>
@@ -120,6 +118,10 @@ function Settings() {
           title="Experience"
           actionText="Apply"
           onAction={() => {
+            if (!canSave) {
+              return;
+            }
+
             void markSave();
           }}
           actionLabel="Save workspace and accessibility settings"

@@ -1,9 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { DEFAULT_SETTINGS } from '../lib/settings';
+import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../lib/settings';
 import { getSettingsSource, loadSettings, saveSettings as persistSettings } from '../lib/settingsRepository';
 
 function resolveNextValue(nextValue, currentValue) {
   return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
+}
+
+function resolveSettingValue(key, nextValue) {
+  if (key === 'teamName') {
+    return resolveTeamName(nextValue);
+  }
+
+  if (key === 'timezone') {
+    return typeof nextValue === 'string' ? nextValue : DEFAULT_SETTINGS.timezone;
+  }
+
+  if (key === 'emailDigest' || key === 'keyboardShortcuts' || key === 'autoSave') {
+    return Boolean(nextValue);
+  }
+
+  return nextValue;
 }
 
 export function useSettings() {
@@ -13,6 +29,7 @@ export function useSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const timezoneIsValid = Boolean(resolveTimeZone(settings.timezone || ''));
 
   const loadCurrentSettings = useCallback(async () => {
     setIsLoading(true);
@@ -46,7 +63,7 @@ export function useSettings() {
   const updateSetting = useCallback((key, value) => {
     setSettingsState((current) => ({
       ...current,
-      [key]: value,
+      [key]: resolveSettingValue(key, value),
     }));
   }, []);
 
@@ -57,9 +74,32 @@ export function useSettings() {
   const saveSettings = useCallback(async (nextSettings) => {
     setIsSaving(true);
     setLoadError('');
+    const resolvedNextSettings = nextSettings || settings;
+    const normalizedTimezone = resolveTimeZone(resolvedNextSettings?.timezone);
+    const normalizedSettings = {
+      ...resolvedNextSettings,
+      timezone: normalizedTimezone || DEFAULT_SETTINGS.timezone,
+      teamName: resolveTeamName(resolvedNextSettings?.teamName),
+      emailDigest: Boolean(resolvedNextSettings?.emailDigest),
+      keyboardShortcuts: Boolean(resolvedNextSettings?.keyboardShortcuts),
+      autoSave: Boolean(resolvedNextSettings?.autoSave),
+    };
+
+    if (!normalizedTimezone) {
+      setLoadError('Timezone is invalid.');
+      setSettingsState((current) => ({
+        ...current,
+        timezone: normalizedSettings.timezone,
+        teamName: normalizedSettings.teamName,
+        emailDigest: normalizedSettings.emailDigest,
+        keyboardShortcuts: normalizedSettings.keyboardShortcuts,
+        autoSave: normalizedSettings.autoSave,
+      }));
+      return;
+    }
 
     try {
-      const result = await persistSettings(nextSettings || settings);
+      const result = await persistSettings(normalizedSettings);
       setSettingsState(result.settings || DEFAULT_SETTINGS);
       setSavedAt(result.savedAt || Date.now());
       setSource(result.source || getSettingsSource());
@@ -69,11 +109,24 @@ export function useSettings() {
       if (import.meta.env.DEV) {
         console.error('Failed to save settings', error);
       }
-      throw error;
     } finally {
       setIsSaving(false);
     }
   }, [settings]);
+
+  const normalizeTimezone = useCallback(() => {
+    setSettingsState((current) => {
+      const resolvedTimezone = resolveTimeZone(current.timezone);
+      if (!resolvedTimezone || resolvedTimezone === current.timezone) {
+        return current;
+      }
+
+      return {
+        ...current,
+        timezone: resolvedTimezone,
+      };
+    });
+  }, []);
 
   return useMemo(
     () => ({
@@ -83,9 +136,11 @@ export function useSettings() {
       isLoading,
       isSaving,
       loadError,
+      timezoneIsValid,
       updateSetting,
       setSettings,
       saveSettings,
+      normalizeTimezone,
       refreshSettings: loadCurrentSettings,
     }),
     [
@@ -95,9 +150,11 @@ export function useSettings() {
       isLoading,
       isSaving,
       loadError,
+      timezoneIsValid,
       updateSetting,
       setSettings,
       saveSettings,
+      normalizeTimezone,
       loadCurrentSettings,
     ],
   );
