@@ -1,23 +1,67 @@
+import { useCallback, useMemo } from 'react';
 import Badge from '../ui/Badge';
 import { opportunityStageTone } from '../../lib/statusMaps';
 
 function OpportunityTable({ items, onSelect }) {
-  if (!Array.isArray(items)) {
-    return null;
-  }
-
+  const isValidItemsArray = Array.isArray(items);
+  const normalizedItems = useMemo(
+    () => (isValidItemsArray ? items : []),
+    [isValidItemsArray, items],
+  );
   const hasHandler = typeof onSelect === 'function';
 
-  const handleRowKeyDown = (event, item) => {
+  const itemsById = useMemo(
+    () =>
+      new Map(normalizedItems.map((item) => [String(item.id), item])),
+    [normalizedItems],
+  );
+
+  const activateRowFromEvent = useCallback((event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const row = target.closest('tr[data-item-id]');
+    if (!row) {
+      return;
+    }
+
+    const itemId = row.getAttribute('data-item-id');
+    if (!itemId) {
+      return;
+    }
+
+    const item = itemsById.get(itemId);
+    if (!item) {
+      return;
+    }
+
+    onSelect(item);
+  }, [itemsById, onSelect]);
+
+  const handleRowKeyDown = useCallback((event) => {
     if (!hasHandler) {
       return;
     }
 
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      onSelect(item);
+      activateRowFromEvent(event);
     }
-  };
+  }, [activateRowFromEvent, hasHandler]);
+
+  const handleRowClick = useCallback((event) => {
+    if (!hasHandler) {
+      return;
+    }
+
+    activateRowFromEvent(event);
+  }, [activateRowFromEvent, hasHandler]);
+
+  if (!isValidItemsArray) {
+    return null;
+  }
 
   return (
     <div className="crm-table">
@@ -30,14 +74,16 @@ function OpportunityTable({ items, onSelect }) {
             <th scope="col">Stage / Next Step</th>
           </tr>
         </thead>
-        <tbody>
-          {items.map((item) => (
+        <tbody
+          onClick={hasHandler ? handleRowClick : undefined}
+          onKeyDown={hasHandler ? handleRowKeyDown : undefined}
+        >
+          {normalizedItems.map((item) => (
             <tr
               key={item.id}
+              data-item-id={String(item.id)}
               className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
               tabIndex={hasHandler ? 0 : undefined}
-              onClick={hasHandler ? () => onSelect(item) : undefined}
-              onKeyDown={(event) => handleRowKeyDown(event, item)}
               aria-label={
                 hasHandler
                   ? `Open ${item.name} opportunity from ${item.company}`
