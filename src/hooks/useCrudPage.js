@@ -105,7 +105,9 @@ export function useCrudPage(config) {
       try {
         const nextItems = await listItemsFn();
         if (!Array.isArray(nextItems)) {
-          setItems([]);
+          if (isActive) {
+            setItems([]);
+          }
           return;
         }
         if (isActive) {
