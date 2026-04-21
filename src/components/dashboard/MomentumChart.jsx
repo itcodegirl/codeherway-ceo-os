@@ -1,6 +1,8 @@
 function MomentumChart({ values = [] }) {
-  const points = values.length ? values : [12, 18, 9, 16, 14, 22];
-  const ariaLabel = `Momentum trend chart values: ${points.join(', ')}`;
+  const points = Array.isArray(values) ? values : [];
+  const ariaLabel = points.length
+    ? `Momentum trend chart values: ${points.join(', ')}`
+    : 'Momentum trend chart has no points yet';
 
   return (
     <div className="momentum-chart" role="img" aria-label={ariaLabel}>
@@ -9,7 +11,7 @@ function MomentumChart({ values = [] }) {
         const height = Math.max(24, Math.min(100, value)) * 1.35;
         return (
           <div
-            key={`${value}-${index}`}
+            key={index}
             className="momentum-bar"
             style={{ '--bar-height': `${height}px` }}
             aria-hidden="true"
