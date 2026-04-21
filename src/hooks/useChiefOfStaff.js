@@ -160,6 +160,77 @@ export function useChiefOfStaff() {
     return signatures;
   }, []);
 
+  const hydrateAcceptedStructuredItems = useCallback(async (workspaceResponses) => {
+    const responseEntries = Array.isArray(workspaceResponses) ? workspaceResponses : [];
+    if (!responseEntries.length) {
+      setAcceptedStructuredItemMap({});
+      return;
+    }
+
+    try {
+      const opportunitySignatures = await getOpportunitySignatures();
+      const contentSignatures = await getContentSignatures();
+      const weeklySignatures = await getWeeklyPrioritySignatures(getCurrentWeekStart());
+
+      const accepted = {};
+      responseEntries.forEach((entry) => {
+        const payload = entry?.structuredPayload;
+        if (!payload || typeof payload !== 'object') {
+          return;
+        }
+
+        const opportunities = payload.opportunities;
+        if (Array.isArray(opportunities)) {
+          opportunities.forEach((item) => {
+            const key = createStructuredItemKey('opportunities', item);
+            const signature = buildOpportunitySignature(item);
+            if (key && signature && opportunitySignatures.has(signature)) {
+              accepted[key] = true;
+            }
+          });
+        }
+
+        const contentItems = payload.contentItems;
+        if (Array.isArray(contentItems)) {
+          contentItems.forEach((item) => {
+            const key = createStructuredItemKey('contentItems', item);
+            const signature = buildContentSignature(item);
+            if (key && signature && contentSignatures.has(signature)) {
+              accepted[key] = true;
+            }
+          });
+        }
+
+        const priorityLike = [...(Array.isArray(payload.priorities) ? payload.priorities : []),
+          ...(Array.isArray(payload.tasks) ? payload.tasks : [])];
+        priorityLike.forEach((item) => {
+          const key = createStructuredItemKey('priorities', item);
+          const signature = buildPrioritySignature(item);
+          if (!key || !signature) {
+            return;
+          }
+
+          if (weeklySignatures.has(signature)) {
+            accepted[key] = true;
+          }
+        });
+      });
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setAcceptedStructuredItemMap(accepted);
+    } catch {
+      // Do not block workspace load if acceptance hydration fails.
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setAcceptedStructuredItemMap({});
+    }
+  }, [getContentSignatures, getOpportunitySignatures, getWeeklyPrioritySignatures]);
+
   const loadWorkspace = useCallback(async () => {
     setIsLoading(true);
     setLoadError('');
@@ -171,11 +242,13 @@ export function useChiefOfStaff() {
       }
 
       setNotesState(workspace.notes || '');
-      setResponses(Array.isArray(workspace.responses) ? workspace.responses : []);
+      const workspaceResponses = Array.isArray(workspace.responses) ? workspace.responses : [];
+      setResponses(workspaceResponses);
       setSource(workspace.source || getChiefSource());
       setAcceptedStructuredItemMap({});
       setAcceptingStructuredItemMap({});
       resetAcceptanceCaches();
+      void hydrateAcceptedStructuredItems(workspaceResponses);
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -190,7 +263,7 @@ export function useChiefOfStaff() {
         setIsLoading(false);
       }
     }
-  }, [resetAcceptanceCaches]);
+  }, [hydrateAcceptedStructuredItems, resetAcceptanceCaches]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -328,7 +401,7 @@ export function useChiefOfStaff() {
       if (nextResponse.source === 'proxy') {
         setFeedback(`Created: ${savedOutput.title}. Review and edit before sending.`);
       } else {
-      setFeedback(`Created: ${savedOutput.title}. Using local fallback output.`);
+        setFeedback(`Created: ${savedOutput.title}. Using local fallback output.`);
       }
     } catch (error) {
       if (!isMountedRef.current) {

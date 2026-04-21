@@ -26,8 +26,24 @@ function extractResponseText(payload) {
     return '';
   }
 
-  if (typeof payload.output_text === 'string' && payload.output_text.trim()) {
-    return payload.output_text.trim();
+  const readOutputTextValue = (value) => {
+    if (typeof value === 'string') {
+      return value.trim();
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => readOutputTextValue(entry))
+        .filter(Boolean)
+        .join('\n\n');
+    }
+
+    return '';
+  };
+
+  const outputText = readOutputTextValue(payload.output_text);
+  if (outputText) {
+    return outputText;
   }
 
   if (!Array.isArray(payload.output)) {
@@ -44,6 +60,17 @@ function extractResponseText(payload) {
     item.content.forEach((contentPart) => {
       if (contentPart?.type === 'output_text' && typeof contentPart.text === 'string') {
         textParts.push(contentPart.text.trim());
+        return;
+      }
+
+      if (
+        contentPart?.type === 'output_text'
+        && Array.isArray(contentPart.text)
+      ) {
+        contentPart.text
+          .map((entry) => readOutputTextValue(entry))
+          .filter(Boolean)
+          .forEach((entryText) => textParts.push(entryText));
       }
     });
   });
