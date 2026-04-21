@@ -46,6 +46,23 @@ function normalizeComparableValue(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function buildOpportunitySignature(value) {
+  const normalizedName = normalizeComparableValue(value?.name || value?.title || value?.text || value?.summary || value?.task);
+  const normalizedCompany = normalizeComparableValue(value?.company || value?.organization);
+  return normalizedName ? `${normalizedName}|${normalizedCompany}` : '';
+}
+
+function buildContentSignature(value) {
+  const normalizedTitle = normalizeComparableValue(value?.title || value?.name || value?.text || value?.summary || value?.task);
+  const normalizedPlatform = normalizeComparableValue(value?.platform || value?.channel);
+  return normalizedTitle ? `${normalizedTitle}|${normalizedPlatform}` : '';
+}
+
+function buildPrioritySignature(value) {
+  const normalizedTitle = normalizeComparableValue(value?.title || value?.name || value?.text || value?.summary || value?.task);
+  return normalizedTitle || '';
+}
+
 function createStructuredItemKey(section, item) {
   const sectionKey = typeof section === 'string' ? section : '';
   const itemValue = item && typeof item === 'object' ? item : { title: resolveStructuredText(item) };
@@ -82,11 +99,66 @@ export function useChiefOfStaff() {
   const [acceptedStructuredItemMap, setAcceptedStructuredItemMap] = useState({});
   const [acceptingStructuredItemMap, setAcceptingStructuredItemMap] = useState({});
   const isMountedRef = useRef(true);
+  const opportunitySignaturesRef = useRef(null);
+  const contentSignaturesRef = useRef(null);
+  const weeklyPrioritySignaturesByWeekRef = useRef(new Map());
 
   const hasHistory = responses.length > 0;
   const notesText = resolveNotes(notes);
   const hasNotes = notesText.trim().length > 0;
   const canGenerate = hasNotes && !isGenerating;
+
+  const resetAcceptanceCaches = useCallback(() => {
+    opportunitySignaturesRef.current = null;
+    contentSignaturesRef.current = null;
+    weeklyPrioritySignaturesByWeekRef.current = new Map();
+  }, []);
+
+  const getOpportunitySignatures = useCallback(async () => {
+    if (opportunitySignaturesRef.current) {
+      return opportunitySignaturesRef.current;
+    }
+
+    const items = await listOpportunities();
+    const signatures = new Set(
+      items
+        .map((entry) => buildOpportunitySignature(entry))
+        .filter(Boolean),
+    );
+    opportunitySignaturesRef.current = signatures;
+    return signatures;
+  }, []);
+
+  const getContentSignatures = useCallback(async () => {
+    if (contentSignaturesRef.current) {
+      return contentSignaturesRef.current;
+    }
+
+    const items = await listContentItems();
+    const signatures = new Set(
+      items
+        .map((entry) => buildContentSignature(entry))
+        .filter(Boolean),
+    );
+    contentSignaturesRef.current = signatures;
+    return signatures;
+  }, []);
+
+  const getWeeklyPrioritySignatures = useCallback(async (weekStart) => {
+    if (weeklyPrioritySignaturesByWeekRef.current.has(weekStart)) {
+      return weeklyPrioritySignaturesByWeekRef.current.get(weekStart);
+    }
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+    const signatures = new Set(
+      (Array.isArray(brief.priorities) ? brief.priorities : [])
+        .map((entry) => buildPrioritySignature(entry))
+        .filter(Boolean),
+    );
+
+    weeklyPrioritySignaturesByWeekRef.current.set(weekStart, signatures);
+    return signatures;
+  }, []);
 
   const loadWorkspace = useCallback(async () => {
     setIsLoading(true);
@@ -103,6 +175,7 @@ export function useChiefOfStaff() {
       setSource(workspace.source || getChiefSource());
       setAcceptedStructuredItemMap({});
       setAcceptingStructuredItemMap({});
+      resetAcceptanceCaches();
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -117,7 +190,7 @@ export function useChiefOfStaff() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [resetAcceptanceCaches]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -193,6 +266,7 @@ export function useChiefOfStaff() {
       setLoadError('');
       setAcceptedStructuredItemMap({});
       setAcceptingStructuredItemMap({});
+      resetAcceptanceCaches();
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -203,7 +277,7 @@ export function useChiefOfStaff() {
         console.error('Failed to clear chief workspace', error);
       }
     }
-  }, []);
+  }, [resetAcceptanceCaches]);
 
   const handleAction = useCallback(async (actionKey) => {
     if (!canGenerate) {
@@ -305,12 +379,12 @@ export function useChiefOfStaff() {
           return;
         }
 
-        const existingOpportunities = await listOpportunities();
-        const duplicateOpportunity = existingOpportunities.some((entry) => (
-          normalizeComparableValue(entry.name) === normalizeComparableValue(name)
-          && normalizeComparableValue(entry.company) === normalizeComparableValue(itemValue.company || '')
-        ));
-        if (duplicateOpportunity) {
+        const signature = buildOpportunitySignature({
+          name,
+          company: itemValue.company || '',
+        });
+        const existingSignatures = await getOpportunitySignatures();
+        if (signature && existingSignatures.has(signature)) {
           setAcceptedStructuredItemMap((current) => ({
             ...current,
             [itemKey]: true,
@@ -326,6 +400,9 @@ export function useChiefOfStaff() {
           stage: itemValue.stage || 'New',
           nextStep: itemValue.nextStep || itemValue.next_step || '',
         });
+        if (signature) {
+          existingSignatures.add(signature);
+        }
         setAcceptedStructuredItemMap((current) => ({
           ...current,
           [itemKey]: true,
@@ -341,12 +418,12 @@ export function useChiefOfStaff() {
           return;
         }
 
-        const existingContentItems = await listContentItems();
-        const duplicateContentItem = existingContentItems.some((entry) => (
-          normalizeComparableValue(entry.title) === normalizeComparableValue(title)
-          && normalizeComparableValue(entry.platform) === normalizeComparableValue(itemValue.platform || itemValue.channel || '')
-        ));
-        if (duplicateContentItem) {
+        const signature = buildContentSignature({
+          title,
+          platform: itemValue.platform || itemValue.channel || '',
+        });
+        const existingSignatures = await getContentSignatures();
+        if (signature && existingSignatures.has(signature)) {
           setAcceptedStructuredItemMap((current) => ({
             ...current,
             [itemKey]: true,
@@ -360,6 +437,9 @@ export function useChiefOfStaff() {
           platform: itemValue.platform || itemValue.channel || '',
           status: itemValue.status || 'Drafting',
         });
+        if (signature) {
+          existingSignatures.add(signature);
+        }
         setAcceptedStructuredItemMap((current) => ({
           ...current,
           [itemKey]: true,
@@ -376,12 +456,9 @@ export function useChiefOfStaff() {
         }
 
         const currentWeekStart = getCurrentWeekStart();
-        const weeklyBrief = await getWeeklyBriefByWeek(currentWeekStart);
-        const duplicatePriority = Array.isArray(weeklyBrief.priorities)
-          && weeklyBrief.priorities.some((entry) => (
-            normalizeComparableValue(entry.title) === normalizeComparableValue(title)
-          ));
-        if (duplicatePriority) {
+        const signature = buildPrioritySignature({ title });
+        const existingSignatures = await getWeeklyPrioritySignatures(currentWeekStart);
+        if (signature && existingSignatures.has(signature)) {
           setAcceptedStructuredItemMap((current) => ({
             ...current,
             [itemKey]: true,
@@ -400,12 +477,18 @@ export function useChiefOfStaff() {
             status: itemValue.status || 'Planned',
           },
         });
+        if (signature) {
+          existingSignatures.add(signature);
+        }
         setAcceptedStructuredItemMap((current) => ({
           ...current,
           [itemKey]: true,
         }));
         setFeedback('Added a weekly priority from the structured AI output.');
+        return;
       }
+
+      setFeedback('This structured item type is not supported yet.');
     } catch (error) {
       setLoadError('Unable to accept this structured AI item right now.');
       setFeedback('Unable to save this item right now. Try again.');
@@ -423,7 +506,13 @@ export function useChiefOfStaff() {
         return next;
       });
     }
-  }, [acceptedStructuredItemMap, acceptingStructuredItemMap]);
+  }, [
+    acceptedStructuredItemMap,
+    acceptingStructuredItemMap,
+    getContentSignatures,
+    getOpportunitySignatures,
+    getWeeklyPrioritySignatures,
+  ]);
 
   const isStructuredItemAccepted = useCallback(
     (section, item) => {

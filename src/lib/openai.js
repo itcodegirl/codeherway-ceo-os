@@ -13,6 +13,7 @@ if (!configuredProxyUrl && import.meta.env.DEV) {
 const STRUCTURED_KEYS = ['priorities', 'opportunities', 'contentItems', 'tasks'];
 const MAX_STRUCTURED_ITEMS_PER_SECTION = 12;
 const MAX_STRUCTURED_TEXT_LENGTH = 280;
+const REQUEST_TIMEOUT_MS = 12000;
 
 export const aiConfig = {
   hasProxyEndpoint: Boolean(configuredProxyUrl),
@@ -366,6 +367,33 @@ function createFallback(actionKey, notes) {
   };
 }
 
+async function fetchChiefProxy(payload) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(aiConfig.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      const timeoutError = new Error('Chief of staff proxy request timed out');
+      timeoutError.code = 'CHIEF_PROXY_TIMEOUT';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export const getChiefActionTitle = (actionKey) => getChiefActionConfig(actionKey).title;
 
 export async function generateChiefOfStaffResponse({ actionKey, notes }) {
@@ -387,15 +415,9 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
   const config = getChiefActionConfig(actionKey);
 
   try {
-    const response = await fetch(aiConfig.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        actionKey,
-        notes: normalizedNotes,
-      }),
+    const response = await fetchChiefProxy({
+      actionKey,
+      notes: normalizedNotes,
     });
 
     if (!response.ok) {

@@ -110,4 +110,22 @@ describe('src/lib/openai', () => {
       tasks: [],
     });
   });
+
+  it('falls back when the proxy request times out or aborts', async () => {
+    globalThis.fetch.mockRejectedValue({ name: 'AbortError' });
+
+    const result = await generateChiefOfStaffResponse({
+      actionKey: 'summarize',
+      notes: 'Summarize this quickly',
+    });
+
+    expect(result.source).toBe('fallback');
+    expect(result.content.length).toBeGreaterThan(0);
+    expect(result.structuredPayload).toEqual({
+      priorities: [],
+      opportunities: [],
+      contentItems: [],
+      tasks: [],
+    });
+  });
 });
