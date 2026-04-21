@@ -1,5 +1,5 @@
 ﻿import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useChiefDemoState } from "./useChiefDemoState";
 
 vi.mock("../lib/opportunitiesRepository", () => ({
@@ -28,6 +28,22 @@ import {
   getWeeklyBriefByWeek
 } from "../lib/weeklyRepository";
 
+async function buildActionPlan(result) {
+  act(() => {
+    result.current.setNotes("Founder notes");
+  });
+
+  let buildPromise;
+  act(() => {
+    buildPromise = result.current.handleBuildActionPlan();
+  });
+
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1200);
+    await buildPromise;
+  });
+}
+
 describe("useChiefDemoState acceptance wiring", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,6 +53,10 @@ describe("useChiefDemoState acceptance wiring", () => {
     createOpportunity.mockResolvedValue({ id: "opp-1" });
     createContentItem.mockResolvedValue({ id: "content-1" });
     createWeeklyItem.mockResolvedValue({ id: "weekly-1" });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("saves accepted opportunity to repository", async () => {
@@ -216,5 +236,64 @@ describe("useChiefDemoState acceptance wiring", () => {
     expect(createOpportunity).toHaveBeenCalledTimes(1);
     expect(result.current.isOpportunityAccepted(item)).toBe(true);
     expect(result.current.isOpportunityAccepting(item)).toBe(false);
+  });
+
+  it("processes accept-all with mixed valid and invalid items", async () => {
+    vi.useFakeTimers();
+
+    createContentItem.mockRejectedValueOnce(new Error("Failed content save"));
+
+    const { result } = renderHook(() => useChiefDemoState());
+    await buildActionPlan(result);
+
+    act(() => {
+      result.current.result.structured.opportunities.push({ company: "Malformed" });
+    });
+
+    await act(async () => {
+      await result.current.acceptAll();
+    });
+
+    expect(createWeeklyItem).toHaveBeenCalledTimes(4);
+    expect(createOpportunity).toHaveBeenCalledTimes(2);
+    expect(createContentItem).toHaveBeenCalledTimes(1);
+    expect(result.current.feedback).toBe(
+      "Add all complete: 6 saved, 1 skipped, 1 failed."
+    );
+  });
+
+  it("protects accept-all from rapid repeated clicks", async () => {
+    vi.useFakeTimers();
+
+    let resolveOpportunity;
+    createOpportunity
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOpportunity = resolve;
+        })
+      )
+      .mockResolvedValue({ id: "opp-2" });
+
+    const { result } = renderHook(() => useChiefDemoState());
+    await buildActionPlan(result);
+
+    let firstPromise;
+    let secondPromise;
+
+    act(() => {
+      firstPromise = result.current.acceptAll();
+      secondPromise = result.current.acceptAll();
+    });
+
+    expect(result.current.isAcceptingAll).toBe(true);
+
+    await act(async () => {
+      resolveOpportunity({ id: "opp-1" });
+      await Promise.all([firstPromise, secondPromise]);
+    });
+
+    expect(createWeeklyItem).toHaveBeenCalledTimes(4);
+    expect(createOpportunity).toHaveBeenCalledTimes(2);
+    expect(createContentItem).toHaveBeenCalledTimes(1);
   });
 });

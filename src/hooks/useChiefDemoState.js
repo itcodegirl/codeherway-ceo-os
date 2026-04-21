@@ -13,6 +13,12 @@ import {
 } from "../lib/weeklyRepository";
 import { buildCreateId } from "../lib/utils";
 
+const ACCEPTANCE_STATUS = {
+  SAVED: "saved",
+  SKIPPED: "skipped",
+  FAILED: "failed"
+};
+
 function normalizeComparableValue(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -141,7 +147,9 @@ export function useChiefDemoState() {
   const [feedback, setFeedback] = useState(DEFAULT_FEEDBACK);
   const [acceptedItemMap, setAcceptedItemMap] = useState({});
   const [acceptingItemMap, setAcceptingItemMap] = useState({});
+  const [isAcceptingAll, setIsAcceptingAll] = useState(false);
   const acceptingItemRef = useRef(new Set());
+  const acceptingAllRef = useRef(false);
   const opportunitySignaturesRef = useRef(null);
   const contentSignaturesRef = useRef(null);
   const weeklyPrioritySignaturesByWeekRef = useRef(new Map());
@@ -149,6 +157,12 @@ export function useChiefDemoState() {
   const normalizedResult = useMemo(() => {
     return result ? normalizeChiefOutput(result) : null;
   }, [result]);
+
+  const setFeedbackIfAllowed = useCallback((message, suppressFeedback = false) => {
+    if (!suppressFeedback) {
+      setFeedback(message);
+    }
+  }, []);
 
   const getOpportunitySignatures = useCallback(async () => {
     if (opportunitySignaturesRef.current) {
@@ -223,15 +237,15 @@ export function useChiefDemoState() {
   const withAcceptingGuard = useCallback(
     async (itemKey, fn) => {
       if (!itemKey) {
-        return false;
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
       if (acceptedItemMap[itemKey]) {
-        return false;
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
       if (acceptingItemMap[itemKey] || acceptingItemRef.current.has(itemKey)) {
-        return false;
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
       acceptingItemRef.current.add(itemKey);
@@ -248,133 +262,256 @@ export function useChiefDemoState() {
   );
 
   const acceptOpportunity = useCallback(
-    async (item) => {
+    async (item, options = {}) => {
+      const { suppressFeedback = false } = options;
       const normalizedPayload = normalizeOpportunityPayload(item);
       const itemKey = createStructuredItemKey("opportunities", normalizedPayload);
 
       if (!normalizedPayload || !itemKey) {
-        setFeedback("Skipped malformed opportunity. Missing required details.");
-        return false;
+        setFeedbackIfAllowed(
+          "Skipped malformed opportunity. Missing required details.",
+          suppressFeedback
+        );
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
-      return withAcceptingGuard(itemKey, async () => {
-        const signature = buildOpportunitySignature(normalizedPayload);
-        const existingSignatures = await getOpportunitySignatures();
+      try {
+        return await withAcceptingGuard(itemKey, async () => {
+          const signature = buildOpportunitySignature(normalizedPayload);
+          const existingSignatures = await getOpportunitySignatures();
 
-        if (signature && existingSignatures.has(signature)) {
+          if (signature && existingSignatures.has(signature)) {
+            markItemAccepted(itemKey);
+            setFeedbackIfAllowed(
+              "Skipped existing opportunity. Already in your system.",
+              suppressFeedback
+            );
+            return ACCEPTANCE_STATUS.SKIPPED;
+          }
+
+          await createOpportunity(normalizedPayload);
+          if (signature) {
+            existingSignatures.add(signature);
+          }
+
           markItemAccepted(itemKey);
-          setFeedback("Skipped existing opportunity. Already in your system.");
-          return false;
-        }
-
-        await createOpportunity(normalizedPayload);
-        if (signature) {
-          existingSignatures.add(signature);
-        }
-
-        markItemAccepted(itemKey);
-        setFeedback("Saved opportunity to your system.");
-        return true;
-      });
+          setFeedbackIfAllowed("Saved opportunity to your system.", suppressFeedback);
+          return ACCEPTANCE_STATUS.SAVED;
+        });
+      } catch {
+        setFeedbackIfAllowed("Failed to save opportunity.", suppressFeedback);
+        return ACCEPTANCE_STATUS.FAILED;
+      }
     },
-    [getOpportunitySignatures, markItemAccepted, withAcceptingGuard]
+    [
+      getOpportunitySignatures,
+      markItemAccepted,
+      setFeedbackIfAllowed,
+      withAcceptingGuard
+    ]
   );
 
   const acceptContent = useCallback(
-    async (item) => {
+    async (item, options = {}) => {
+      const { suppressFeedback = false } = options;
       const normalizedPayload = normalizeContentPayload(item);
       const itemKey = createStructuredItemKey("contentItems", normalizedPayload);
 
       if (!normalizedPayload || !itemKey) {
-        setFeedback("Skipped malformed content item. Missing required details.");
-        return false;
+        setFeedbackIfAllowed(
+          "Skipped malformed content item. Missing required details.",
+          suppressFeedback
+        );
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
-      return withAcceptingGuard(itemKey, async () => {
-        const signature = buildContentSignature(normalizedPayload);
-        const existingSignatures = await getContentSignatures();
+      try {
+        return await withAcceptingGuard(itemKey, async () => {
+          const signature = buildContentSignature(normalizedPayload);
+          const existingSignatures = await getContentSignatures();
 
-        if (signature && existingSignatures.has(signature)) {
+          if (signature && existingSignatures.has(signature)) {
+            markItemAccepted(itemKey);
+            setFeedbackIfAllowed(
+              "Skipped existing content item. Already in your system.",
+              suppressFeedback
+            );
+            return ACCEPTANCE_STATUS.SKIPPED;
+          }
+
+          await createContentItem(normalizedPayload);
+          if (signature) {
+            existingSignatures.add(signature);
+          }
+
           markItemAccepted(itemKey);
-          setFeedback("Skipped existing content item. Already in your system.");
-          return false;
-        }
-
-        await createContentItem(normalizedPayload);
-        if (signature) {
-          existingSignatures.add(signature);
-        }
-
-        markItemAccepted(itemKey);
-        setFeedback("Saved content item to your system.");
-        return true;
-      });
+          setFeedbackIfAllowed("Saved content item to your system.", suppressFeedback);
+          return ACCEPTANCE_STATUS.SAVED;
+        });
+      } catch {
+        setFeedbackIfAllowed("Failed to save content item.", suppressFeedback);
+        return ACCEPTANCE_STATUS.FAILED;
+      }
     },
-    [getContentSignatures, markItemAccepted, withAcceptingGuard]
+    [getContentSignatures, markItemAccepted, setFeedbackIfAllowed, withAcceptingGuard]
   );
 
   const acceptWeeklyPriorityItem = useCallback(
-    async (item, section) => {
+    async (item, section, options = {}) => {
+      const { suppressFeedback = false } = options;
       const normalizedPayload = normalizeWeeklyPayload(item);
       const itemKey = createStructuredItemKey(section, normalizedPayload);
 
       if (!normalizedPayload || !itemKey) {
-        setFeedback("Skipped malformed weekly item. Missing required details.");
-        return false;
+        setFeedbackIfAllowed(
+          "Skipped malformed weekly item. Missing required details.",
+          suppressFeedback
+        );
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
-      return withAcceptingGuard(itemKey, async () => {
-        const weekStart = getCurrentWeekStart();
-        const signature = buildPrioritySignature(normalizedPayload);
-        const existingSignatures = await getWeeklyPrioritySignatures(weekStart);
+      try {
+        return await withAcceptingGuard(itemKey, async () => {
+          const weekStart = getCurrentWeekStart();
+          const signature = buildPrioritySignature(normalizedPayload);
+          const existingSignatures = await getWeeklyPrioritySignatures(weekStart);
 
-        if (signature && existingSignatures.has(signature)) {
-          markItemAccepted(itemKey);
-          setFeedback("Skipped existing weekly item. Already in this week.");
-          return false;
-        }
-
-        await createWeeklyItem({
-          weekStart,
-          itemType: "priority",
-          item: {
-            id: buildCreateId(),
-            title: normalizedPayload.title,
-            owner: normalizedPayload.owner,
-            status: normalizedPayload.status
+          if (signature && existingSignatures.has(signature)) {
+            markItemAccepted(itemKey);
+            setFeedbackIfAllowed(
+              "Skipped existing weekly item. Already in this week.",
+              suppressFeedback
+            );
+            return ACCEPTANCE_STATUS.SKIPPED;
           }
+
+          await createWeeklyItem({
+            weekStart,
+            itemType: "priority",
+            item: {
+              id: buildCreateId(),
+              title: normalizedPayload.title,
+              owner: normalizedPayload.owner,
+              status: normalizedPayload.status
+            }
+          });
+
+          if (signature) {
+            existingSignatures.add(signature);
+          }
+
+          markItemAccepted(itemKey);
+          setFeedbackIfAllowed("Saved item to Weekly.", suppressFeedback);
+          return ACCEPTANCE_STATUS.SAVED;
         });
-
-        if (signature) {
-          existingSignatures.add(signature);
-        }
-
-        markItemAccepted(itemKey);
-        setFeedback("Saved item to Weekly.");
-        return true;
-      });
+      } catch {
+        setFeedbackIfAllowed("Failed to save weekly item.", suppressFeedback);
+        return ACCEPTANCE_STATUS.FAILED;
+      }
     },
-    [getWeeklyPrioritySignatures, markItemAccepted, withAcceptingGuard]
+    [
+      getWeeklyPrioritySignatures,
+      markItemAccepted,
+      setFeedbackIfAllowed,
+      withAcceptingGuard
+    ]
   );
 
   const acceptPriority = useCallback(
-    async (item) => {
-      return acceptWeeklyPriorityItem(item, "priorities");
+    async (item, options = {}) => {
+      return acceptWeeklyPriorityItem(item, "priorities", options);
     },
     [acceptWeeklyPriorityItem]
   );
 
   const acceptTask = useCallback(
-    async (item) => {
-      return acceptWeeklyPriorityItem(item, "tasks");
+    async (item, options = {}) => {
+      return acceptWeeklyPriorityItem(item, "tasks", options);
     },
     [acceptWeeklyPriorityItem]
   );
 
   const acceptAll = useCallback(async () => {
-    setFeedback("Add-all wiring is coming in the next pass.");
-    return false;
-  }, []);
+    if (!normalizedResult?.structured) {
+      setFeedback("No action plan items to add yet.");
+      return false;
+    }
+
+    if (acceptingAllRef.current) {
+      setFeedback("Add all is already running.");
+      return false;
+    }
+
+    acceptingAllRef.current = true;
+    setIsAcceptingAll(true);
+
+    let saved = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    try {
+      const structured = normalizedResult.structured;
+      const queue = [
+        ...(Array.isArray(structured.priorities)
+          ? structured.priorities.map((item) => ({
+              accept: acceptPriority,
+              item
+            }))
+          : []),
+        ...(Array.isArray(structured.opportunities)
+          ? structured.opportunities.map((item) => ({
+              accept: acceptOpportunity,
+              item
+            }))
+          : []),
+        ...(Array.isArray(structured.contentItems)
+          ? structured.contentItems.map((item) => ({
+              accept: acceptContent,
+              item
+            }))
+          : []),
+        ...(Array.isArray(structured.tasks)
+          ? structured.tasks.map((item) => ({
+              accept: acceptTask,
+              item
+            }))
+          : [])
+      ];
+
+      if (!queue.length) {
+        setFeedback("No valid items found to add.");
+        return false;
+      }
+
+      for (const entry of queue) {
+        const status = await entry.accept(entry.item, {
+          suppressFeedback: true
+        });
+
+        if (status === ACCEPTANCE_STATUS.SAVED) {
+          saved += 1;
+        } else if (status === ACCEPTANCE_STATUS.FAILED) {
+          failed += 1;
+        } else {
+          skipped += 1;
+        }
+      }
+
+      setFeedback(
+        `Add all complete: ${saved} saved, ${skipped} skipped, ${failed} failed.`
+      );
+      return failed === 0;
+    } finally {
+      acceptingAllRef.current = false;
+      setIsAcceptingAll(false);
+    }
+  }, [
+    acceptContent,
+    acceptOpportunity,
+    acceptPriority,
+    acceptTask,
+    normalizedResult
+  ]);
 
   const isOpportunityAccepted = useCallback(
     (item) => {
@@ -468,6 +605,8 @@ export function useChiefDemoState() {
 
     setResult(chiefMockResponse);
     setIsGenerating(false);
+    setIsAcceptingAll(false);
+    acceptingAllRef.current = false;
     setAcceptedItemMap({});
     setAcceptingItemMap({});
     acceptingItemRef.current.clear();
@@ -481,6 +620,8 @@ export function useChiefDemoState() {
     setNotes("");
     setResult(null);
     setIsGenerating(false);
+    setIsAcceptingAll(false);
+    acceptingAllRef.current = false;
     setAcceptedItemMap({});
     setAcceptingItemMap({});
     acceptingItemRef.current.clear();
@@ -494,6 +635,7 @@ export function useChiefDemoState() {
     notes,
     setNotes,
     isGenerating,
+    isAcceptingAll,
     feedback,
     result: normalizedResult,
     handleBuildActionPlan,

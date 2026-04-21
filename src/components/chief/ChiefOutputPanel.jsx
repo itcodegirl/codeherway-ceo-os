@@ -14,6 +14,7 @@ export default function ChiefOutputPanel({
   onAcceptContent,
   onAcceptTask,
   onAcceptAll,
+  isAcceptingAll,
   isPriorityAccepted,
   isPriorityAccepting,
   isOpportunityAccepted,
@@ -43,6 +44,7 @@ export default function ChiefOutputPanel({
         title={result.title}
         summary={result.summary}
         onAcceptAll={onAcceptAll}
+        isAcceptingAll={isAcceptingAll}
       />
 
       <ChiefPriorityList

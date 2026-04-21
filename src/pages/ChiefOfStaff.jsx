@@ -7,6 +7,7 @@ export default function ChiefOfStaff() {
     notes,
     setNotes,
     isGenerating,
+    isAcceptingAll,
     feedback,
     result,
     handleBuildActionPlan,
@@ -79,6 +80,7 @@ export default function ChiefOfStaff() {
           onAcceptContent={acceptContent}
           onAcceptTask={acceptTask}
           onAcceptAll={acceptAll}
+          isAcceptingAll={isAcceptingAll}
           isPriorityAccepted={isPriorityAccepted}
           isPriorityAccepting={isPriorityAccepting}
           isOpportunityAccepted={isOpportunityAccepted}

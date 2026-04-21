@@ -1,4 +1,9 @@
-﻿export default function ChiefSummaryCard({ title, summary, onAcceptAll }) {
+﻿export default function ChiefSummaryCard({
+  title,
+  summary,
+  onAcceptAll,
+  isAcceptingAll
+}) {
   return (
     <div className="chief-card chief-summary-card">
       <div className="chief-summary-header">
@@ -10,9 +15,10 @@
         <button
           type="button"
           className="chief-accept-all-btn"
+          disabled={isAcceptingAll}
           onClick={onAcceptAll}
         >
-          Add All to System
+          {isAcceptingAll ? "Adding..." : "Add All to System"}
         </button>
       </div>
 
