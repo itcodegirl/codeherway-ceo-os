@@ -21,6 +21,7 @@ function ChiefOfStaff() {
     setNotes,
     appendPrompt,
     handleAction,
+    acceptStructuredItem,
     clearWorkspace,
   } = useChiefOfStaff();
 
@@ -56,6 +57,7 @@ function ChiefOfStaff() {
           feedback={feedback}
           hasHistory={hasHistory}
           responses={responses}
+          onAcceptStructuredItem={acceptStructuredItem}
         />
       </div>
     </section>

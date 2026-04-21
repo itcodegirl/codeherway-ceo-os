@@ -6,6 +6,7 @@ function AIOutputPanel({
   feedback,
   hasHistory,
   responses,
+  onAcceptStructuredItem,
 }) {
   return (
     <SectionCard title="AI Output">
@@ -18,7 +19,13 @@ function AIOutputPanel({
           <div className="skeleton-line skeleton-line--panel" />
         ) : hasHistory ? (
           responses.map((entry) => (
-            <AIResponseCard key={entry.id} title={entry.title} content={entry.content} />
+            <AIResponseCard
+              key={entry.id}
+              title={entry.title}
+              content={entry.content}
+              structuredPayload={entry.structuredPayload}
+              onAcceptStructuredItem={onAcceptStructuredItem}
+            />
           ))
         ) : (
           <article className="chief-response" aria-label="Starter copy">
