@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
@@ -6,7 +6,9 @@ import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
 import MomentumChart from '../components/dashboard/MomentumChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import { stats, priorities, opportunities, contentItems } from '../data/mockData';
+import { priorities } from '../data/mockData';
+import { listOpportunities } from '../lib/opportunitiesRepository';
+import { listContentItems } from '../lib/contentRepository';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/dashboard.css';
 
@@ -26,7 +28,39 @@ function Dashboard() {
   useDocumentTitle('Dashboard');
 
   const [toastMessage, setToastMessage] = useState('');
+  const [opportunityItems, setOpportunityItems] = useState([]);
+  const [contentRows, setContentRows] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const toastTimerRef = useRef(null);
+
+  const statCards = useMemo(() => {
+    const highPriorityCount = opportunityItems.filter((item) => item.priority === 'High').length;
+    const inProgressCount = opportunityItems.filter((item) => item.stage === 'In Progress').length;
+    const awaitingReplyCount = opportunityItems.filter((item) => item.stage === 'Awaiting Reply').length;
+    const draftingCount = contentRows.filter((item) => item.status === 'Drafting').length;
+
+    return [
+      {
+        id: 1,
+        label: 'Active Opportunities',
+        value: isDataLoading ? '--' : opportunityItems.length,
+        change: `${inProgressCount} in progress`,
+      },
+      {
+        id: 2,
+        label: 'Content in Pipeline',
+        value: isDataLoading ? '--' : contentRows.length,
+        change: `${draftingCount} drafting`,
+      },
+      {
+        id: 3,
+        label: 'Follow-Ups Due',
+        value: isDataLoading ? '--' : awaitingReplyCount,
+        change: `${highPriorityCount} high priority`,
+      },
+      { id: 4, label: 'Weekly Focus Score', value: '86%', change: '+8% from last week' },
+    ];
+  }, [contentRows, isDataLoading, opportunityItems]);
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -45,6 +79,47 @@ function Dashboard() {
       if (toastTimerRef.current) {
         clearTimeout(toastTimerRef.current);
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadDashboardData = async () => {
+      setIsDataLoading(true);
+
+      try {
+        const [nextOpportunities, nextContentRows] = await Promise.all([
+          listOpportunities(),
+          listContentItems(),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        setOpportunityItems(nextOpportunities);
+        setContentRows(nextContentRows);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        showToast('Unable to refresh dashboard data right now.');
+        if (import.meta.env.DEV) {
+          console.error('Dashboard data load failed', error);
+        }
+      } finally {
+        if (isActive) {
+          setIsDataLoading(false);
+        }
+      }
+    };
+
+    loadDashboardData();
+
+    return () => {
+      isActive = false;
     };
   }, []);
 
@@ -76,7 +151,7 @@ function Dashboard() {
       <PageHeader title="Dashboard" description="Track opportunities, content, and priorities from one executive view." />
 
       <div className="dashboard-grid dashboard-grid--stats">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <StatCard
             key={stat.id}
             label={stat.label}
@@ -132,18 +207,22 @@ function Dashboard() {
           actionLabel="Open opportunities pipeline dashboard"
         >
           <div className="mini-table" role="list" aria-label="Opportunity pipeline snapshot">
-            {opportunities.map((item) => (
-              <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.name} at ${item.company}`}>
-                <div>
-                  <p className="mini-table__title">{item.name}</p>
-                  <p className="mini-table__subtitle">{item.company}</p>
+            {opportunityItems.length ? (
+              opportunityItems.map((item) => (
+                <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.name} at ${item.company}`}>
+                  <div>
+                    <p className="mini-table__title">{item.name}</p>
+                    <p className="mini-table__subtitle">{item.company}</p>
+                  </div>
+                  <div className="mini-table__meta">
+                    <Badge label={item.priority} tone={item.priority.toLowerCase()} />
+                    <span className="mini-table__stage">{item.stage}</span>
+                  </div>
                 </div>
-                <div className="mini-table__meta">
-                  <Badge label={item.priority} tone={item.priority.toLowerCase()} />
-                  <span className="mini-table__stage">{item.stage}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="helper-text">No opportunities to display yet.</p>
+            )}
           </div>
         </SectionCard>
 
@@ -154,17 +233,21 @@ function Dashboard() {
           actionLabel="Open content operating system dashboard"
         >
           <div className="mini-table" role="list" aria-label="Content pipeline snapshot">
-            {contentItems.map((item) => (
-              <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.title} on ${item.platform}`}>
-                <div>
-                  <p className="mini-table__title">{item.title}</p>
-                  <p className="mini-table__subtitle">{item.platform}</p>
+            {contentRows.length ? (
+              contentRows.map((item) => (
+                <div key={item.id} className="mini-table__row" role="listitem" aria-label={`${item.title} on ${item.platform}`}>
+                  <div>
+                    <p className="mini-table__title">{item.title}</p>
+                    <p className="mini-table__subtitle">{item.platform}</p>
+                  </div>
+                  <div className="mini-table__meta">
+                    <Badge label={item.status} tone={contentStatusTone[item.status] || 'default'} />
+                  </div>
                 </div>
-                <div className="mini-table__meta">
-                  <Badge label={item.status} tone={contentStatusTone[item.status] || 'default'} />
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="helper-text">No content items to display yet.</p>
+            )}
           </div>
         </SectionCard>
 
