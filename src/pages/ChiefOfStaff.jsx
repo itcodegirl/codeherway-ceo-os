@@ -18,11 +18,9 @@ function ChiefOfStaff() {
   const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);
   const [responses, setResponses] = usePersistentState('ceo-os-chief-responses', INITIAL_RESPONSES);
   const [feedback, setFeedback] = useState(
-    aiConfig.canCallApiFromBrowser
+    aiConfig.hasProxyEndpoint
       ? 'Start by pasting notes. Then choose an action to transform them into executive-ready output.'
-      : aiConfig.hasApiKey
-        ? 'OpenAI key detected, but browser API calls are disabled. Actions will run in local fallback mode.'
-        : 'OpenAI key not detected. Actions will run in local fallback mode.',
+      : 'AI proxy not configured. Actions will run in local fallback mode.',
   );
   const isMountedRef = useRef(true);
   const notesText = typeof notes === 'string' ? notes : '';
@@ -82,7 +80,7 @@ function ChiefOfStaff() {
 
       setResponses((current) => [next, ...(Array.isArray(current) ? current : [])]);
 
-      if (nextResponse.source === 'openai') {
+      if (nextResponse.source === 'proxy') {
         setFeedback(`Created: ${next.title}. Review and edit before sending.`);
       } else {
         setFeedback(`Created: ${next.title}. Using local fallback output.`);

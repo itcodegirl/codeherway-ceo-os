@@ -1,21 +1,13 @@
-const openAiApiKey = import.meta.env.VITE_OPENAI_API_KEY;
-const allowBrowserOpenAiRequests = import.meta.env.VITE_OPENAI_ALLOW_BROWSER === 'true';
-const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
-const OPENAI_MODEL = 'gpt-4.1-mini';
+const OPENAI_PROXY_URL = (import.meta.env.VITE_OPENAI_PROXY_URL || '').trim();
 
-if (!openAiApiKey && import.meta.env.DEV) {
-  console.warn('OpenAI API key is missing. Wire VITE_OPENAI_API_KEY for AI actions.');
-}
-
-if (openAiApiKey && !allowBrowserOpenAiRequests && import.meta.env.DEV) {
+if (!OPENAI_PROXY_URL && import.meta.env.DEV) {
   console.warn(
-    'Browser OpenAI requests are disabled by default. Set VITE_OPENAI_ALLOW_BROWSER=true only for local demos.',
+    'OpenAI proxy URL is not configured. Wire VITE_OPENAI_PROXY_URL to a server endpoint for live AI responses.',
   );
 }
 
 export const aiConfig = {
-  hasApiKey: Boolean(openAiApiKey),
-  canCallApiFromBrowser: Boolean(openAiApiKey && allowBrowserOpenAiRequests),
+  hasProxyEndpoint: Boolean(OPENAI_PROXY_URL),
 };
 
 const CHIEF_ACTIONS = {
@@ -98,11 +90,6 @@ function createFallback(actionKey, notes) {
   };
 }
 
-export const createPromptPayload = (text) => ({
-  input: text?.trim() || '',
-  createdAt: new Date().toISOString(),
-});
-
 export const getChiefActionTitle = (actionKey) => getActionConfig(actionKey).title;
 
 export async function generateChiefOfStaffResponse({ actionKey, notes }) {
@@ -116,35 +103,28 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     };
   }
 
-  if (!aiConfig.canCallApiFromBrowser) {
+  if (!aiConfig.hasProxyEndpoint) {
     return createFallback(actionKey, normalizedNotes);
   }
 
   const config = getActionConfig(actionKey);
-  const prompt = [
-    `Task: ${config.instruction}`,
-    'Use only the information below.',
-    'If details are missing, state assumptions explicitly and keep wording practical.',
-    '',
-    'Notes:',
-    normalizedNotes,
-  ].join('\n');
 
   try {
-    const response = await fetch(OPENAI_RESPONSES_URL, {
+    const response = await fetch(OPENAI_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${openAiApiKey}`,
       },
       body: JSON.stringify({
-        model: OPENAI_MODEL,
-        input: prompt,
+        actionKey,
+        title: config.title,
+        instruction: config.instruction,
+        notes: normalizedNotes,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI request failed with status ${response.status}`);
+      throw new Error(`AI proxy request failed with status ${response.status}`);
     }
 
     const payload = await response.json();
@@ -157,7 +137,7 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     return {
       title: config.title,
       content: output,
-      source: 'openai',
+      source: 'proxy',
     };
   } catch {
     return createFallback(actionKey, normalizedNotes);
