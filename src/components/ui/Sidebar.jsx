@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
 import { usePersistentState } from '../../hooks/usePersistentState';
@@ -13,10 +13,25 @@ const NAV_ITEMS = [
   { label: 'Settings', path: '/settings', icon: 'settings' },
 ];
 
+function subscribeToMediaQuery(mediaQuery, listener) {
+  if (typeof mediaQuery?.addEventListener === 'function') {
+    mediaQuery.addEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
+  }
+
+  if (typeof mediaQuery?.addListener === 'function') {
+    mediaQuery.addListener(listener);
+    return () => mediaQuery.removeListener(listener);
+  }
+
+  return () => {};
+}
+
 function Sidebar() {
   const location = useLocation();
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [mobileMenuOpenPath, setMobileMenuOpenPath] = useState('');
+  const menuToggleRef = useRef(null);
   const [isCompactViewport, setIsCompactViewport] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return false;
@@ -41,16 +56,34 @@ function Sidebar() {
       }
     };
 
-    mediaQuery.addEventListener('change', handleViewportChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleViewportChange);
-    };
+    return subscribeToMediaQuery(mediaQuery, handleViewportChange);
   }, []);
 
   const isMobileMenuOpen = isCompactViewport
     ? mobileMenuOpenPath === location.pathname
     : true;
+
+  useEffect(() => {
+    if (!isCompactViewport || !isMobileMenuOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      event.preventDefault();
+      setMobileMenuOpenPath('');
+      menuToggleRef.current?.focus?.();
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isCompactViewport, isMobileMenuOpen]);
 
   const navId = 'primary-navigation';
 
@@ -63,6 +96,7 @@ function Sidebar() {
         </div>
 
         <button
+          ref={menuToggleRef}
           type="button"
           className="sidebar__menu-toggle"
           aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
