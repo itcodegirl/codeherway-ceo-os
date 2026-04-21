@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { aiConfig, generateChiefOfStaffResponse, getChiefActionTitle } from '../lib/openai';
-import { createOpportunity } from '../lib/opportunitiesRepository';
-import { createContentItem } from '../lib/contentRepository';
-import { createWeeklyItem, getCurrentWeekStart } from '../lib/weeklyRepository';
+import { createOpportunity, listOpportunities } from '../lib/opportunitiesRepository';
+import { createContentItem, listContentItems } from '../lib/contentRepository';
+import { createWeeklyItem, getCurrentWeekStart, getWeeklyBriefByWeek } from '../lib/weeklyRepository';
 import { buildCreateId } from '../lib/utils';
 import {
   createChiefSession,
@@ -42,6 +42,35 @@ function resolveStructuredText(item) {
   ).toString().trim();
 }
 
+function normalizeComparableValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function createStructuredItemKey(section, item) {
+  const sectionKey = typeof section === 'string' ? section : '';
+  const itemValue = item && typeof item === 'object' ? item : { title: resolveStructuredText(item) };
+
+  if (sectionKey === 'opportunities') {
+    const name = normalizeComparableValue(itemValue.name || itemValue.title || itemValue.text || itemValue.summary || itemValue.task);
+    const company = normalizeComparableValue(itemValue.company || itemValue.organization);
+    return name ? `${sectionKey}:${name}|${company}` : '';
+  }
+
+  if (sectionKey === 'contentItems') {
+    const title = normalizeComparableValue(itemValue.title || itemValue.name || itemValue.text || itemValue.summary || itemValue.task);
+    const platform = normalizeComparableValue(itemValue.platform || itemValue.channel);
+    return title ? `${sectionKey}:${title}|${platform}` : '';
+  }
+
+  if (sectionKey === 'priorities' || sectionKey === 'tasks') {
+    const title = normalizeComparableValue(itemValue.title || itemValue.name || itemValue.text || itemValue.summary || itemValue.task);
+    const owner = normalizeComparableValue(itemValue.owner || itemValue.assignee);
+    return title ? `${sectionKey}:${title}|${owner}` : '';
+  }
+
+  return '';
+}
+
 export function useChiefOfStaff() {
   const [notes, setNotesState] = useState('');
   const [responses, setResponses] = useState([]);
@@ -50,6 +79,8 @@ export function useChiefOfStaff() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [acceptedStructuredItemMap, setAcceptedStructuredItemMap] = useState({});
+  const [acceptingStructuredItemMap, setAcceptingStructuredItemMap] = useState({});
   const isMountedRef = useRef(true);
 
   const hasHistory = responses.length > 0;
@@ -70,6 +101,8 @@ export function useChiefOfStaff() {
       setNotesState(workspace.notes || '');
       setResponses(Array.isArray(workspace.responses) ? workspace.responses : []);
       setSource(workspace.source || getChiefSource());
+      setAcceptedStructuredItemMap({});
+      setAcceptingStructuredItemMap({});
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -158,6 +191,8 @@ export function useChiefOfStaff() {
       setResponses([]);
       setFeedback(getDefaultFeedback());
       setLoadError('');
+      setAcceptedStructuredItemMap({});
+      setAcceptingStructuredItemMap({});
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -241,12 +276,46 @@ export function useChiefOfStaff() {
   const acceptStructuredItem = useCallback(async (section, item) => {
     const sectionKey = typeof section === 'string' ? section : '';
     const itemValue = item && typeof item === 'object' ? item : resolveStructuredText(item);
+    const itemKey = createStructuredItemKey(sectionKey, itemValue);
+
+    if (!itemKey) {
+      setFeedback('This item is missing required details and cannot be saved yet.');
+      return;
+    }
+
+    if (acceptedStructuredItemMap[itemKey]) {
+      setFeedback('This structured item was already added.');
+      return;
+    }
+
+    if (acceptingStructuredItemMap[itemKey]) {
+      return;
+    }
+
+    setAcceptingStructuredItemMap((current) => ({
+      ...current,
+      [itemKey]: true,
+    }));
 
     try {
       if (sectionKey === 'opportunities') {
         const name = resolveStructuredText(itemValue);
         if (!name) {
           setFeedback('This opportunity entry is missing a name.');
+          return;
+        }
+
+        const existingOpportunities = await listOpportunities();
+        const duplicateOpportunity = existingOpportunities.some((entry) => (
+          normalizeComparableValue(entry.name) === normalizeComparableValue(name)
+          && normalizeComparableValue(entry.company) === normalizeComparableValue(itemValue.company || '')
+        ));
+        if (duplicateOpportunity) {
+          setAcceptedStructuredItemMap((current) => ({
+            ...current,
+            [itemKey]: true,
+          }));
+          setFeedback('That opportunity already exists.');
           return;
         }
 
@@ -257,6 +326,10 @@ export function useChiefOfStaff() {
           stage: itemValue.stage || 'New',
           nextStep: itemValue.nextStep || itemValue.next_step || '',
         });
+        setAcceptedStructuredItemMap((current) => ({
+          ...current,
+          [itemKey]: true,
+        }));
         setFeedback('Added an opportunity from the structured AI output.');
         return;
       }
@@ -268,11 +341,29 @@ export function useChiefOfStaff() {
           return;
         }
 
+        const existingContentItems = await listContentItems();
+        const duplicateContentItem = existingContentItems.some((entry) => (
+          normalizeComparableValue(entry.title) === normalizeComparableValue(title)
+          && normalizeComparableValue(entry.platform) === normalizeComparableValue(itemValue.platform || itemValue.channel || '')
+        ));
+        if (duplicateContentItem) {
+          setAcceptedStructuredItemMap((current) => ({
+            ...current,
+            [itemKey]: true,
+          }));
+          setFeedback('That content item already exists.');
+          return;
+        }
+
         await createContentItem({
           title,
           platform: itemValue.platform || itemValue.channel || '',
           status: itemValue.status || 'Drafting',
         });
+        setAcceptedStructuredItemMap((current) => ({
+          ...current,
+          [itemKey]: true,
+        }));
         setFeedback('Added a content item from the structured AI output.');
         return;
       }
@@ -284,8 +375,23 @@ export function useChiefOfStaff() {
           return;
         }
 
+        const currentWeekStart = getCurrentWeekStart();
+        const weeklyBrief = await getWeeklyBriefByWeek(currentWeekStart);
+        const duplicatePriority = Array.isArray(weeklyBrief.priorities)
+          && weeklyBrief.priorities.some((entry) => (
+            normalizeComparableValue(entry.title) === normalizeComparableValue(title)
+          ));
+        if (duplicatePriority) {
+          setAcceptedStructuredItemMap((current) => ({
+            ...current,
+            [itemKey]: true,
+          }));
+          setFeedback('That weekly priority already exists.');
+          return;
+        }
+
         await createWeeklyItem({
-          weekStart: getCurrentWeekStart(),
+          weekStart: currentWeekStart,
           itemType: 'priority',
           item: {
             id: buildCreateId(),
@@ -294,6 +400,10 @@ export function useChiefOfStaff() {
             status: itemValue.status || 'Planned',
           },
         });
+        setAcceptedStructuredItemMap((current) => ({
+          ...current,
+          [itemKey]: true,
+        }));
         setFeedback('Added a weekly priority from the structured AI output.');
       }
     } catch (error) {
@@ -302,8 +412,34 @@ export function useChiefOfStaff() {
       if (import.meta.env.DEV) {
         console.error('Failed to accept structured AI item', error);
       }
+    } finally {
+      setAcceptingStructuredItemMap((current) => {
+        if (!current[itemKey]) {
+          return current;
+        }
+
+        const next = { ...current };
+        delete next[itemKey];
+        return next;
+      });
     }
-  }, []);
+  }, [acceptedStructuredItemMap, acceptingStructuredItemMap]);
+
+  const isStructuredItemAccepted = useCallback(
+    (section, item) => {
+      const itemKey = createStructuredItemKey(section, item);
+      return itemKey ? Boolean(acceptedStructuredItemMap[itemKey]) : false;
+    },
+    [acceptedStructuredItemMap],
+  );
+
+  const isStructuredItemAccepting = useCallback(
+    (section, item) => {
+      const itemKey = createStructuredItemKey(section, item);
+      return itemKey ? Boolean(acceptingStructuredItemMap[itemKey]) : false;
+    },
+    [acceptingStructuredItemMap],
+  );
 
   return useMemo(
     () => ({
@@ -320,6 +456,8 @@ export function useChiefOfStaff() {
       appendPrompt,
       handleAction,
       acceptStructuredItem,
+      isStructuredItemAccepted,
+      isStructuredItemAccepting,
       clearWorkspace,
       refreshWorkspace: loadWorkspace,
     }),
@@ -337,6 +475,8 @@ export function useChiefOfStaff() {
       appendPrompt,
       handleAction,
       acceptStructuredItem,
+      isStructuredItemAccepted,
+      isStructuredItemAccepting,
       clearWorkspace,
       loadWorkspace,
     ],

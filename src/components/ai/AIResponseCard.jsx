@@ -72,6 +72,8 @@ function AIResponseCard({
   content,
   structuredPayload,
   onAcceptStructuredItem,
+  isStructuredItemAccepted,
+  isStructuredItemAccepting,
 }) {
   if (!content) {
     return null;
@@ -98,26 +100,33 @@ function AIResponseCard({
             <div key={section.key}>
               <p className="helper-text">{section.label}</p>
               <ul className="weekly-list">
-                {items.map((item, index) => (
-                  <li key={`${section.key}-${index}`} className="weekly-list__item">
-                    <span className="weekly-list__dot" aria-hidden="true" />
-                    <div className="weekly-list__content">
-                      <div className="weekly-list__details">
-                        <p className="weekly-note">{item.summary}</p>
+                {items.map((item, index) => {
+                  const isAccepting = Boolean(isStructuredItemAccepting?.(section.key, item.raw));
+                  const isAccepted = Boolean(isStructuredItemAccepted?.(section.key, item.raw));
+                  const actionLabel = isAccepting ? 'Adding...' : isAccepted ? 'Added' : 'Accept';
+
+                  return (
+                    <li key={`${section.key}-${index}`} className="weekly-list__item">
+                      <span className="weekly-list__dot" aria-hidden="true" />
+                      <div className="weekly-list__content">
+                        <div className="weekly-list__details">
+                          <p className="weekly-note">{item.summary}</p>
+                        </div>
+                        <div className="weekly-list__actions">
+                          <Button
+                            type="button"
+                            size="small"
+                            disabled={isAccepted || isAccepting}
+                            onClick={() => onAcceptStructuredItem?.(section.key, item.raw)}
+                            ariaLabel={`Accept ${section.label} item: ${item.summary}`}
+                          >
+                            {actionLabel}
+                          </Button>
+                        </div>
                       </div>
-                      <div className="weekly-list__actions">
-                        <Button
-                          type="button"
-                          size="small"
-                          onClick={() => onAcceptStructuredItem?.(section.key, item.raw)}
-                          ariaLabel={`Accept ${section.label} item: ${item.summary}`}
-                        >
-                          Accept
-                        </Button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           );

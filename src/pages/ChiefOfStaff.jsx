@@ -22,6 +22,8 @@ function ChiefOfStaff() {
     appendPrompt,
     handleAction,
     acceptStructuredItem,
+    isStructuredItemAccepted,
+    isStructuredItemAccepting,
     clearWorkspace,
   } = useChiefOfStaff();
 
@@ -58,6 +60,8 @@ function ChiefOfStaff() {
           hasHistory={hasHistory}
           responses={responses}
           onAcceptStructuredItem={acceptStructuredItem}
+          isStructuredItemAccepted={isStructuredItemAccepted}
+          isStructuredItemAccepting={isStructuredItemAccepting}
         />
       </div>
     </section>

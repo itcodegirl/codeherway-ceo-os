@@ -7,6 +7,8 @@ function AIOutputPanel({
   hasHistory,
   responses,
   onAcceptStructuredItem,
+  isStructuredItemAccepted,
+  isStructuredItemAccepting,
 }) {
   return (
     <SectionCard title="AI Output">
@@ -25,6 +27,8 @@ function AIOutputPanel({
               content={entry.content}
               structuredPayload={entry.structuredPayload}
               onAcceptStructuredItem={onAcceptStructuredItem}
+              isStructuredItemAccepted={isStructuredItemAccepted}
+              isStructuredItemAccepting={isStructuredItemAccepting}
             />
           ))
         ) : (
