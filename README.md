@@ -110,7 +110,7 @@ An AI-focused workspace for:
 
 ## 🗂 Folder Structure
 
-```bash
+```
 src/
 ├── components/
 │   ├── ai/
@@ -125,105 +125,84 @@ src/
 ├── lib/
 ├── pages/
 ├── styles/
-├── utils/
 ├── App.jsx
 └── main.jsx
+```
 
 ---
 
-🎨 Design Goals
+## 🎨 Design Goals
 
 The visual direction for CEO OS is:
 
-clean
-premium
-calm
-structured
-operational
+- **Clean** — no noise, strong whitespace
+- **Premium** — dark UI, soft contrast, layered surfaces
+- **Calm** — intentional pacing, no clutter
+- **Structured** — information hierarchy built in from the start
+- **Operational** — feels like a real internal tool, not a tutorial project
 
 I wanted the interface to feel like an actual internal executive tool rather than a tutorial-style dashboard. The design leans into dark UI, strong spacing, soft contrast, reusable cards, and a product-grade layout system.
 
 ---
 
-🧠 Challenges and Decisions
+## 🧠 Challenges and Decisions
 
 One of the biggest decisions in this project was treating it like a real product instead of a collection of disconnected pages.
 
 That meant focusing on:
 
-information hierarchy
-reusable layout patterns
-naming consistency
-scalable folder organization
-commit discipline
-UI that feels believable in a business context
+- information hierarchy
+- reusable layout patterns
+- naming consistency
+- scalable folder organization
+- commit discipline
+- UI that feels believable in a business context
 
 I also refactored the styling from a single large CSS file into dedicated files by layout and feature area, which made the project easier to maintain and more scalable as new pages were added.
 
 ---
 
-📌 What This Project Demonstrates
+## 📌 What This Project Demonstrates
 
 This project highlights my ability to:
 
-build modern React interfaces
-organize multi-page frontend applications
-translate abstract product ideas into structured UI
-create reusable design systems and layout patterns
-think like both a designer and a developer
-build portfolio work with stronger business and product relevance
+- build modern React interfaces
+- organize multi-page frontend applications
+- translate abstract product ideas into structured UI
+- create reusable design systems and layout patterns
+- think like both a designer and a developer
+- build portfolio work with stronger business and product relevance
 
-----
+---
 
-📸 Screenshots
-Dashboard
+## 📸 Screenshots
 
-Add screenshot here
+> Screenshots will be added once the live deployment is finalized. Clone the repo and run `npm run dev` to preview the full interface locally.
 
-Opportunities
+---
 
-Add screenshot here
+## 🚀 Live Demo
 
-Content OS
+> Live deployment coming soon. See [Local Development](#️-local-development) below to run the project locally.
 
-Add screenshot here
+---
 
-Weekly Brief
+## 💻 GitHub Repository
 
-Add screenshot here
+[github.com/itcodegirl/codeherway-ceo-os](https://github.com/itcodegirl/codeherway-ceo-os)
 
-Chief of Staff
+---
 
-Add screenshot here
-
-----
-
-🚀 Live Demo
-
-View Live Demo
-
-----
-
-💻 GitHub Repository
-
-View Repository
-
-----
 ## ⚙️ Local Development
-
-Clone the repo:
 
 ```bash
 git clone https://github.com/itcodegirl/codeherway-ceo-os.git
 cd codeherway-ceo-os
-
-```bash
 npm install
-
-```bash
 npm run dev
+```
 
-----
+---
 
 ## 🛣 Roadmap
 
@@ -258,43 +237,31 @@ npm run dev
 - [ ] Integrate calendar-based planning workflows
 - [ ] Add role-based access and user views
 
-----
+---
 
-🔮 Future Improvements
+## 🔮 Future Improvements
 
 Planned improvements include:
 
-real backend integration with Supabase
-secure AI workflows through backend endpoints
-richer executive analytics
-editable workflows and data persistence
-stronger accessibility support
-deeper responsive polish
-more advanced data visualizations
-
-----
-
-👩‍💻 Author
-
-Jenna Zawaski
-Frontend Developer | Designer | Builder of modern digital experiences
-
-GitHub: @itcodegirl
+- real backend integration with Supabase
+- secure AI workflows through backend endpoints
+- richer executive analytics
+- editable workflows and data persistence
+- stronger accessibility support
+- deeper responsive polish
+- more advanced data visualizations
 
 ---
 
-📝 Notes
+## 👩‍💻 Author
+
+**Jenna Zawaski**
+Frontend Developer | Designer | Builder of modern digital experiences
+
+GitHub: [@itcodegirl](https://github.com/itcodegirl)
+
+---
+
+## 📝 Notes
 
 This project is part of my broader portfolio work focused on building polished, product-minded frontend applications that combine design quality, interaction thinking, and real workflow utility.
-
-----
-## ⚙️ Local Development
-
-Clone the repo:
-
-```bash
-git clone https://github.com/itcodegirl/codeherway-ceo-os.git
-cd codeherway-ceo-os
-npm install
-npm run dev
-----
