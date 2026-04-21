@@ -16,6 +16,14 @@
 	height: 100%;
 }
 
+.opportunities-source-note {
+	margin-top: -0.4rem;
+}
+
+.opportunities-error {
+	color: #ffb4b4;
+}
+
 .crm-table {
 	display: flex;
 	flex-direction: column;
@@ -91,6 +99,30 @@
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	margin-bottom: 0.2rem;
+}
+
+.opportunity-modal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.65rem;
+}
+
+.opportunity-modal-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-list-gap);
+	margin-top: 0.4rem;
+}
+
+.opportunity-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-list-gap);
+}
+
+.opportunity-form__textarea {
+	resize: vertical;
+	min-height: 5rem;
 }
 
 @media (max-width: 1100px) {

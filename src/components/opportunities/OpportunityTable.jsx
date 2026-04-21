@@ -8,7 +8,7 @@ const stageTone = {
 };
 
 function OpportunityTable({ items, onSelect }) {
-  const rows = items && items.length ? items : mockOpportunities;
+  const rows = Array.isArray(items) ? items : mockOpportunities;
   const hasHandler = typeof onSelect === 'function';
 
   return (

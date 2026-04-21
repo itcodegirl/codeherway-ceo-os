@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 const supabaseEnv = {
   url: import.meta.env.VITE_SUPABASE_URL,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -17,3 +19,11 @@ export const getSupabaseConfig = () => ({
   url: supabaseEnv.url || '',
   anonKey: supabaseEnv.anonKey || '',
 });
+
+export const supabaseClient = isSupabaseConfigured
+  ? createClient(supabaseEnv.url, supabaseEnv.anonKey, {
+      auth: {
+        persistSession: false,
+      },
+    })
+  : null;
