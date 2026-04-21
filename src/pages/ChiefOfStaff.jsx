@@ -6,18 +6,12 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { aiConfig, generateChiefOfStaffResponse, getChiefActionTitle } from '../lib/openai';
 
 const INITIAL_NOTES = '';
 const INITIAL_RESPONSES = [];
 
 function ChiefOfStaff() {
-  useDocumentTitle(
-    'Chief of Staff',
-    'Convert rough notes into executive text, action recommendations, and draft-ready material.',
-  );
-
   const notesFieldId = useId();
 
   const [notes, setNotes] = usePersistentState('ceo-os-chief-notes', INITIAL_NOTES);

@@ -10,7 +10,6 @@ import { weeklyPriorities as defaultWeeklyPriorities } from '../data/mockData';
 import { listOpportunities } from '../lib/opportunitiesRepository';
 import { listContentItems } from '../lib/contentRepository';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/dashboard.css';
 
 const contentStatusTone = {
@@ -26,11 +25,6 @@ const recentActivity = [
 ];
 
 function Dashboard() {
-  useDocumentTitle(
-    'Dashboard',
-    'Track opportunities, content, and priorities from one executive view.',
-  );
-
   const [toastMessage, setToastMessage] = useState('');
   const [opportunityItems, setOpportunityItems] = useState([]);
   const [contentRows, setContentRows] = useState([]);

@@ -5,7 +5,6 @@ import PageHeader from '../components/ui/PageHeader';
 import WeeklyPriorities from '../components/weekly/WeeklyPriorities';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { usePersistentState } from '../hooks/usePersistentState';
 import '../styles/weekly.css';
 
@@ -50,10 +49,6 @@ function getDefaultFormValues(type) {
 }
 
 function WeeklyBrief() {
-  useDocumentTitle(
-    'Weekly Brief',
-    'A weekly planning and review checkpoint to keep momentum explicit.',
-  );
   const [storedPriorities, setStoredPriorities] = usePersistentState('ceo-os-weekly-priorities', defaultPriorities);
   const [storedWins, setStoredWins] = usePersistentState('ceo-os-weekly-wins', defaultWins);
   const [storedBlockers, setStoredBlockers] = usePersistentState('ceo-os-weekly-blockers', defaultBlockers);

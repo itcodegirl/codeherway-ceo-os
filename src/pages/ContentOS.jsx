@@ -13,7 +13,6 @@ import {
   listContentItems,
   updateContentItem,
 } from '../lib/contentRepository';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import '../styles/content.css';
 
 const statusTone = {
@@ -31,11 +30,6 @@ const DEFAULT_FORM = {
 };
 
 function ContentOS() {
-  useDocumentTitle(
-    'Content OS',
-    'Plan, track, and ship founder content across platforms with a clear publishing workflow.',
-  );
-
   const [isLoading, setIsLoading] = useState(true);
   const [contentRows, setContentRows] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);

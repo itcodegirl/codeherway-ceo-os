@@ -2,15 +2,9 @@ import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { DEFAULT_SETTINGS, resolveTimeZone } from '../lib/settings';
 
 function Settings() {
-  useDocumentTitle(
-    'Settings',
-    'Manage preferences that control your executive operating environment.',
-  );
-
   const [settings, setSettings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [savedAt, setSavedAt] = usePersistentState('ceo-os-settings-saved-at', 0);
   const teamNameFieldId = useId();
