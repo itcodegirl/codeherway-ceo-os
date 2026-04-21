@@ -16,17 +16,34 @@ function loadValue(key, initialValue) {
     }
 
     return JSON.parse(item);
-  } catch (error) {
+  } catch {
     return resolveInitialValue(initialValue);
   }
 }
 
-export function usePersistentState(key, initialValue) {
-  const [value, setValue] = useState(() => loadValue(key, initialValue));
+function resolveNextValue(nextValue, currentValue) {
+  return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
+}
 
-  useEffect(() => {
-    setValue(loadValue(key, initialValue));
-  }, [key, initialValue]);
+export function usePersistentState(key, initialValue) {
+  const [state, setState] = useState(() => ({
+    key,
+    value: loadValue(key, initialValue),
+  }));
+
+  const value = state.key === key ? state.value : loadValue(key, initialValue);
+
+  const setValue = (nextValue) => {
+    setState((currentState) => {
+      const currentValue =
+        currentState.key === key ? currentState.value : loadValue(key, initialValue);
+
+      return {
+        key,
+        value: resolveNextValue(nextValue, currentValue),
+      };
+    });
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -37,7 +54,6 @@ export function usePersistentState(key, initialValue) {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
       if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
         console.error('localStorage save failed', error);
       }
     }
@@ -58,14 +74,14 @@ export function usePersistentState(key, initialValue) {
       }
 
       if (event.key === null || event.newValue === null) {
-        setValue(resolveInitialValue(initialValue));
+        setState({ key, value: resolveInitialValue(initialValue) });
         return;
       }
 
       try {
-        setValue(JSON.parse(event.newValue));
-      } catch (error) {
-        setValue(resolveInitialValue(initialValue));
+        setState({ key, value: JSON.parse(event.newValue) });
+      } catch {
+        setState({ key, value: resolveInitialValue(initialValue) });
       }
     };
 

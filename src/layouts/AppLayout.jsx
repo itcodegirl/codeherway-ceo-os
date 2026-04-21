@@ -17,7 +17,7 @@ function AppLayout() {
 
     try {
       mainElement.focus({ preventScroll: true });
-    } catch (error) {
+    } catch {
       mainElement.focus();
     }
   }, [location.pathname]);
