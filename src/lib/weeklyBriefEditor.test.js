@@ -45,7 +45,7 @@ describe('weeklyBriefEditor helpers', () => {
   it('creates and trims priority payloads', () => {
     const result = buildWeeklyPayload(
       'priority',
-      { title: '  Review roadmap ', owner: ' Jenna ', status: 'In Progress' },
+      { title: '  Review roadmap ', owner: ' Team Member ', status: 'In Progress' },
       'priority-123',
     );
 
@@ -53,7 +53,7 @@ describe('weeklyBriefEditor helpers', () => {
       payload: {
         id: 'priority-123',
         title: 'Review roadmap',
-        owner: 'Jenna',
+        owner: 'Team Member',
         status: 'In Progress',
       },
     });
