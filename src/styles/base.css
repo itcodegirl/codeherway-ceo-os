@@ -189,8 +189,19 @@ textarea {
 	cursor: pointer;
 }
 
+.crm-table__row--interactive {
+	text-align: left;
+	border: 1px solid var(--border);
+	background: transparent;
+	color: inherit;
+	padding: var(--space-card-padding);
+	cursor: pointer;
+}
+
 .crm-table__row--button:hover,
-.crm-table__row--button:focus-visible {
+.crm-table__row--button:focus-visible,
+.crm-table__row--interactive:hover,
+.crm-table__row--interactive:focus-visible {
 	background: rgba(255, 255, 255, 0.03);
 }
 
@@ -199,7 +210,8 @@ textarea {
 	background: rgba(255, 255, 255, 0.02);
 }
 
-.crm-table__row--button:focus-visible {
+.crm-table__row--button:focus-visible,
+.crm-table__row--interactive:focus-visible {
 	outline: 2px solid rgba(142, 173, 255, 0.8);
 	outline-offset: 2px;
 }
