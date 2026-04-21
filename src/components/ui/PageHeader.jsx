@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Icon from './Icon';
 
 function PageHeader({
   title,
@@ -18,11 +19,13 @@ function PageHeader({
             aria-label={actionLabel || actionText}
           >
             {actionText}
+            <Icon name="action" size={14} className="action-button__icon" />
           </Link>
         )
       : (
           <button type="button" className="action-button" onClick={onAction} aria-label={actionLabel || actionText}>
             {actionText}
+            <Icon name="action" size={14} className="action-button__icon" />
           </button>
         )
     : null;

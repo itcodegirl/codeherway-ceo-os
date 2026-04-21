@@ -92,6 +92,23 @@
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+}
+
+.sidebar__link-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0.9;
+}
+
+.sidebar__link-label {
+	min-width: 0;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .sidebar__link:hover {

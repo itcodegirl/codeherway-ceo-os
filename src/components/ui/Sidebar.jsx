@@ -1,13 +1,14 @@
 import { NavLink } from 'react-router-dom';
+import Icon from './Icon';
 
 function Sidebar() {
   const navItems = [
-    { label: 'Dashboard', path: '/' },
-    { label: 'Opportunities', path: '/opportunities' },
-    { label: 'Content OS', path: '/content' },
-    { label: 'Weekly Brief', path: '/weekly-brief' },
-    { label: 'Chief of Staff', path: '/chief-of-staff' },
-    { label: 'Settings', path: '/settings' },
+    { label: 'Dashboard', path: '/', icon: 'dashboard' },
+    { label: 'Opportunities', path: '/opportunities', icon: 'opportunities' },
+    { label: 'Content OS', path: '/content', icon: 'content' },
+    { label: 'Weekly Brief', path: '/weekly-brief', icon: 'weekly' },
+    { label: 'Chief of Staff', path: '/chief-of-staff', icon: 'chief' },
+    { label: 'Settings', path: '/settings', icon: 'settings' },
   ];
 
   return (
@@ -28,7 +29,10 @@ function Sidebar() {
                   isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
                 }
               >
-                {item.label}
+                <span className="sidebar__link-icon" aria-hidden="true">
+                  <Icon name={item.icon} size={16} />
+                </span>
+                <span className="sidebar__link-label">{item.label}</span>
               </NavLink>
             </li>
           ))}
@@ -39,4 +43,3 @@ function Sidebar() {
 }
 
 export default Sidebar;
-

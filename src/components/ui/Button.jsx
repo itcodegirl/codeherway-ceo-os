@@ -1,3 +1,5 @@
+import Icon from './Icon';
+
 function Button({
   type = 'button',
   variant = 'default',
@@ -7,6 +9,7 @@ function Button({
   children,
   ariaLabel,
   className = '',
+  icon = null,
   ...props
 }) {
   const classList = [
@@ -31,6 +34,7 @@ function Button({
       {...props}
     >
       {children}
+      {icon ? <Icon name={icon.name || 'action'} size={icon.size || 14} className="action-button__icon" /> : null}
     </button>
   );
 }

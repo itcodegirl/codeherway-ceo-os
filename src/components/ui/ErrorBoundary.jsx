@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import Icon from './Icon';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -31,6 +32,7 @@ class ErrorBoundary extends Component {
               aria-label="Reload the current view"
             >
               Reload App
+              <Icon name="action" size={14} className="action-button__icon" />
             </button>
             <button
               type="button"
@@ -39,6 +41,7 @@ class ErrorBoundary extends Component {
               aria-label="Go back to previous page"
             >
               Go Back
+              <Icon name="action" size={14} className="action-button__icon" />
             </button>
           </div>
         </div>

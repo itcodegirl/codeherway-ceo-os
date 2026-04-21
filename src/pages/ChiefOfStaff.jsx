@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import AIResponseCard from '../components/ai/AIResponseCard';
 import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
+import Icon from '../components/ui/Icon';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 
@@ -137,6 +138,7 @@ function ChiefOfStaff() {
                 aria-label="Generate an executive summary from current notes"
               >
                 Summarize This Week
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
               <button
                 type="button"
@@ -146,6 +148,7 @@ function ChiefOfStaff() {
                 aria-label="Generate a LinkedIn post draft from current notes"
               >
                 Draft LinkedIn Post
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
               <button
                 type="button"
@@ -155,6 +158,7 @@ function ChiefOfStaff() {
                 aria-label="Generate action items from current notes"
               >
                 Convert to Action Items
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
               <button
                 type="button"
@@ -164,6 +168,7 @@ function ChiefOfStaff() {
                 aria-label="Generate next-priority recommendations from current notes"
               >
                 Suggest Next Priorities
+                <Icon name="action" size={14} className="action-button__icon" />
               </button>
             </div>
 
