@@ -6,6 +6,8 @@ function Textarea({
   error,
   rows = 4,
   className = '',
+  labelClassName = '',
+  controlClassName = '',
   ...props
 }) {
   const generatedId = useId();
@@ -16,14 +18,14 @@ function Textarea({
   return (
     <div className={`input-field ${className}`.trim()}>
       {label ? (
-        <label className="input-field__label" htmlFor={textareaId}>
+        <label className={`input-field__label ${labelClassName}`.trim()} htmlFor={textareaId}>
           {label}
         </label>
       ) : null}
       <textarea
         id={textareaId}
         rows={rows}
-        className={`textarea-field__control ${error ? 'textarea-field__control--error' : ''}`}
+        className={`textarea-field__control ${error ? 'textarea-field__control--error' : ''} ${controlClassName}`.trim()}
         aria-invalid={hasError || undefined}
         aria-describedby={hasError ? errorId : undefined}
         {...props}

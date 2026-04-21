@@ -1,10 +1,10 @@
 import { useId, useState } from 'react';
 import Button from '../ui/Button';
+import Textarea from '../ui/Textarea';
 
 function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization, or draft prompt...', isDisabled = false }) {
   const [value, setValue] = useState('');
   const trimmedValue = value.trim();
-  const promptLabelId = useId();
   const promptFieldId = useId();
   const promptHintId = useId();
   const canSubmit = Boolean(trimmedValue) && !isDisabled;
@@ -22,17 +22,16 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
 
   return (
     <form className="section-card" onSubmit={handleSubmit}>
-      <label htmlFor={promptFieldId} id={promptLabelId} className="sr-only">
-        Additional prompt input
-      </label>
-      <textarea
+      <Textarea
         id={promptFieldId}
-        className="chief-textarea"
+        label="Additional prompt input"
+        labelClassName="sr-only"
+        controlClassName="chief-textarea"
         placeholder={placeholder}
-        aria-labelledby={promptLabelId}
         aria-describedby={promptHintId}
         disabled={isDisabled}
         aria-disabled={isDisabled}
+        rows={4}
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />

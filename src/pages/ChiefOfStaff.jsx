@@ -4,6 +4,7 @@ import AIPromptBox from '../components/ai/AIPromptBox';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import Textarea from '../components/ui/Textarea';
 import '../styles/chief-of-staff.css';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { aiConfig, generateChiefOfStaffResponse, getChiefActionTitle } from '../lib/openai';
@@ -108,19 +109,19 @@ function ChiefOfStaff() {
       <div className="chief-grid">
         <SectionCard title="Prompt Workspace">
           <div aria-busy={isGenerating}>
-            <label className="settings-field" htmlFor={notesFieldId}>
-              <span className="settings-field__label">Paste notes and context</span>
-              <textarea
-                id={notesFieldId}
-                className="chief-textarea"
-                placeholder="Paste notes, priorities, meeting takeaways, or rough ideas..."
-                rows="10"
-                disabled={isGenerating}
-                aria-disabled={isGenerating}
-                value={notesText}
-                onChange={(event) => setNotes(event.target.value)}
-              />
-            </label>
+            <Textarea
+              id={notesFieldId}
+              label="Paste notes and context"
+              className="settings-field"
+              labelClassName="settings-field__label"
+              controlClassName="chief-textarea"
+              placeholder="Paste notes, priorities, meeting takeaways, or rough ideas..."
+              rows={10}
+              disabled={isGenerating}
+              aria-disabled={isGenerating}
+              value={notesText}
+              onChange={(event) => setNotes(event.target.value)}
+            />
 
             <div className="chief-actions">
               <Button
