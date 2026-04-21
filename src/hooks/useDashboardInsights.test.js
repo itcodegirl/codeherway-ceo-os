@@ -56,6 +56,119 @@ describe('useDashboardInsights', () => {
     ]);
   });
 
+  it('keeps snapshotText strictly derived from snapshotRows even with malformed row inputs', () => {
+    const { result } = renderHook(() => useDashboardInsights({
+      weeklyPriorities: [
+        {
+          title: 'Launch campaign',
+          status: 'In Progress',
+          owner: 'PM',
+        },
+        null,
+        'bad-priority',
+      ],
+      weeklyBlockers: [
+        null,
+        { text: 'Critical partner legal question' },
+      ],
+      opportunityItems: [
+        {
+          id: 'o1',
+          name: 'Acme Outreach',
+          company: 'Acme',
+          priority: 'High',
+          stage: 'In Progress',
+          status: 99,
+        },
+        {},
+        true,
+      ],
+      contentRows: [
+        {
+          id: 'c1',
+          title: 'Q2 memo',
+          platform: 'Notion',
+          status: 'Editing',
+          tone: 'weird',
+        },
+        77,
+        {},
+      ],
+      isDataLoading: false,
+      isLocalDashboardDemoMode: false,
+    }));
+
+    expect(result.current.snapshotRows).toEqual([
+      {
+        id: 'strategic-focus',
+        label: 'Strategic Focus',
+        value: 'Launch campaign',
+      },
+      {
+        id: 'top-risk',
+        label: 'Top Risk',
+        value: 'Critical partner legal question',
+      },
+      {
+        id: 'momentum',
+        label: 'Momentum',
+        value: result.current.dashboardInsights.momentumLabel,
+      },
+    ]);
+
+    expect(result.current.snapshotText).toBe(
+      result.current.snapshotRows.map((row) => `${row.label}: ${row.value}`).join('\n'),
+    );
+    expect(result.current.snapshotText.split('\n')).toHaveLength(3);
+  });
+
+  it('normalizes malformed item fields into safe dashboard rows', () => {
+    const { result } = renderHook(() => useDashboardInsights({
+      weeklyPriorities: [{}, '', null],
+      weeklyBlockers: [{}],
+      opportunityItems: ['bad-item', { status: 'Won' }],
+      contentRows: [null, { id: 'c', title: '', platform: '', status: 12 }],
+      isDataLoading: false,
+      isLocalDashboardDemoMode: false,
+    }));
+
+    expect(result.current.opportunityRows).toEqual([
+      {
+        id: 'opportunity-0',
+        name: 'Untitled opportunity',
+        company: 'Unknown company',
+        priorityTone: 'low',
+        priority: 'low',
+        stage: 'Unknown stage',
+      },
+      {
+        id: 'opportunity-1',
+        name: 'Untitled opportunity',
+        company: 'Unknown company',
+        priorityTone: 'low',
+        priority: 'low',
+        stage: 'Unknown stage',
+      },
+    ]);
+
+    expect(result.current.contentRows).toEqual([
+      {
+        id: 'content-0',
+        title: 'Untitled content',
+        platform: 'Unknown platform',
+        statusTone: 'default',
+        status: 'Drafting',
+      },
+      {
+        id: 'c',
+        title: 'Untitled content',
+        platform: 'Unknown platform',
+        statusTone: 'default',
+        status: 'Drafting',
+      },
+    ]);
+  });
+
   it('derives focus score and recent activity from loaded collections', () => {
     const { result } = renderHook(() => useDashboardInsights({
       weeklyPriorities: [

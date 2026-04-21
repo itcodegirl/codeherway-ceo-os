@@ -34,6 +34,15 @@ function normalizeStatusTone(status) {
   return status.toLowerCase();
 }
 
+function normalizeDisplayText(value, fallback) {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const normalized = value.trim();
+  return normalized || fallback;
+}
+
 export function useDashboardInsights({
   weeklyPriorities,
   weeklyBlockers,
@@ -150,7 +159,7 @@ export function useDashboardInsights({
     const leadPriority = safeWeeklyPriorities.find((item) => item?.title);
     const leadOpportunity = safeOpportunityItems.find((item) => item.priority === 'High')
       || safeOpportunityItems[0];
-    const leadContent = safeContentRows.find((item) => item.status === 'Scheduled')
+    const leadContent = safeContentRows.find((item) => item?.status === 'Scheduled')
       || safeContentRows[0];
     const topBlocker = safeWeeklyBlockers.find((item) => item?.text);
 
@@ -287,14 +296,14 @@ export function useDashboardInsights({
   const dashboardOpportunityRows = useMemo(
     () => safeOpportunityItems.map((item, index) => {
       const itemId = item?.id ?? `opportunity-${index}`;
-      const priority = item?.priority;
+      const priority = normalizeDisplayText(item?.priority, 'Low');
       return {
-        id: itemId,
-        name: item?.name || 'Untitled opportunity',
-        company: item?.company || 'Unknown company',
+        id: normalizeDisplayText(itemId, `opportunity-${index}`),
+        name: normalizeDisplayText(item?.name, 'Untitled opportunity'),
+        company: normalizeDisplayText(item?.company, 'Unknown company'),
         priorityTone: normalizeTone(priority),
         priority: normalizeStatusTone(priority),
-        stage: item?.stage || 'Unknown stage',
+        stage: normalizeDisplayText(item?.stage, 'Unknown stage'),
       };
     }),
     [safeOpportunityItems],
@@ -304,11 +313,11 @@ export function useDashboardInsights({
     () => safeContentRows.map((item, index) => {
       const itemId = item?.id ?? `content-${index}`;
       return {
-        id: itemId,
-        title: item?.title || 'Untitled content',
-        platform: item?.platform || 'Unknown platform',
+        id: normalizeDisplayText(itemId, `content-${index}`),
+        title: normalizeDisplayText(item?.title, 'Untitled content'),
+        platform: normalizeDisplayText(item?.platform, 'Unknown platform'),
         statusTone: normalizeStatusTone(item?.status),
-        status: item?.status || 'Drafting',
+        status: normalizeDisplayText(item?.status, 'Drafting'),
       };
     }),
     [safeContentRows],
@@ -357,4 +366,3 @@ export function useDashboardInsights({
     dashboardDemoNote: isLocalDashboardDemoMode ? dashboardDemoData.demoNote : '',
   };
 }
-
