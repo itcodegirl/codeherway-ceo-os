@@ -33,6 +33,8 @@ This project is a polished frontend prototype with partial persistence:
 - Topbar timing coverage for minute-boundary date updates near midnight
 - Dashboard hook coverage for stable event subscriptions while using the latest error callback on rerender
 - App layout regression coverage for skip-link targeting and main landmark focus restoration on navigation
+- CRM table interaction optimization using delegated `tbody` handlers to reduce per-row function churn
+- Large-dataset CRM table regression coverage for keyboard activation on high row counts
 
 ## Tech Stack
 
