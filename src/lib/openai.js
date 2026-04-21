@@ -11,6 +11,8 @@ if (!configuredProxyUrl && import.meta.env.DEV) {
 }
 
 const STRUCTURED_KEYS = ['priorities', 'opportunities', 'contentItems', 'tasks'];
+const MAX_STRUCTURED_ITEMS_PER_SECTION = 12;
+const MAX_STRUCTURED_TEXT_LENGTH = 280;
 
 export const aiConfig = {
   hasProxyEndpoint: Boolean(configuredProxyUrl),
@@ -48,37 +50,177 @@ function extractResponseText(payload) {
   return textParts.filter(Boolean).join('\n\n');
 }
 
-function normalizeStructuredItem(item) {
-  if (typeof item === 'string') {
-    const normalizedValue = item.trim();
-    return normalizedValue ? { title: normalizedValue } : null;
+function createEmptyStructuredPayload() {
+  return {
+    priorities: [],
+    opportunities: [],
+    contentItems: [],
+    tasks: [],
+  };
+}
+
+function sanitizeStructuredText(value) {
+  if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
+    return '';
+  }
+
+  const collapsed = String(value).replace(/\s+/g, ' ').trim();
+  if (!collapsed) {
+    return '';
+  }
+
+  return collapsed.slice(0, MAX_STRUCTURED_TEXT_LENGTH);
+}
+
+function coerceStructuredObject(item) {
+  if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+    const title = sanitizeStructuredText(item);
+    return title ? { title } : null;
   }
 
   if (!item || typeof item !== 'object' || Array.isArray(item)) {
     return null;
   }
 
-  const normalized = {};
-  Object.entries(item).forEach(([key, value]) => {
-    if (value === null || value === undefined) {
-      return;
-    }
+  return item;
+}
 
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (trimmed) {
-        normalized[key] = trimmed;
-      }
-      return;
-    }
-
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      normalized[key] = value;
-    }
-  });
-
-  if (Object.keys(normalized).length === 0) {
+function normalizePriorityLikeItem(item) {
+  const title = sanitizeStructuredText(item.title || item.text || item.summary || item.task || item.name);
+  if (!title) {
     return null;
+  }
+
+  const normalized = { title };
+  const owner = sanitizeStructuredText(item.owner || item.assignee);
+  const status = sanitizeStructuredText(item.status || item.state);
+  const dueDate = sanitizeStructuredText(item.dueDate || item.due_date || item.deadline);
+
+  if (owner) {
+    normalized.owner = owner;
+  }
+
+  if (status) {
+    normalized.status = status;
+  }
+
+  if (dueDate) {
+    normalized.dueDate = dueDate;
+  }
+
+  return normalized;
+}
+
+function normalizeOpportunityItem(item) {
+  const name = sanitizeStructuredText(item.name || item.title || item.text || item.summary || item.task);
+  if (!name) {
+    return null;
+  }
+
+  const normalized = { name };
+  const company = sanitizeStructuredText(item.company || item.organization);
+  const priority = sanitizeStructuredText(item.priority);
+  const stage = sanitizeStructuredText(item.stage);
+  const nextStep = sanitizeStructuredText(item.nextStep || item.next_step || item.action || item.actionItem);
+
+  if (company) {
+    normalized.company = company;
+  }
+
+  if (priority) {
+    normalized.priority = priority;
+  }
+
+  if (stage) {
+    normalized.stage = stage;
+  }
+
+  if (nextStep) {
+    normalized.nextStep = nextStep;
+  }
+
+  return normalized;
+}
+
+function normalizeContentItem(item) {
+  const title = sanitizeStructuredText(item.title || item.name || item.text || item.summary || item.task);
+  if (!title) {
+    return null;
+  }
+
+  const normalized = { title };
+  const platform = sanitizeStructuredText(item.platform || item.channel);
+  const status = sanitizeStructuredText(item.status || item.state);
+
+  if (platform) {
+    normalized.platform = platform;
+  }
+
+  if (status) {
+    normalized.status = status;
+  }
+
+  return normalized;
+}
+
+function normalizeStructuredItemForSection(sectionKey, item) {
+  const normalizedObject = coerceStructuredObject(item);
+  if (!normalizedObject) {
+    return null;
+  }
+
+  if (sectionKey === 'priorities' || sectionKey === 'tasks') {
+    return normalizePriorityLikeItem(normalizedObject);
+  }
+
+  if (sectionKey === 'opportunities') {
+    return normalizeOpportunityItem(normalizedObject);
+  }
+
+  if (sectionKey === 'contentItems') {
+    return normalizeContentItem(normalizedObject);
+  }
+
+  return null;
+}
+
+function buildStructuredItemSignature(sectionKey, item) {
+  if (sectionKey === 'opportunities') {
+    return `opportunities:${String(item.name || '').toLowerCase()}|${String(item.company || '').toLowerCase()}`;
+  }
+
+  if (sectionKey === 'contentItems') {
+    return `contentItems:${String(item.title || '').toLowerCase()}|${String(item.platform || '').toLowerCase()}`;
+  }
+
+  return `${sectionKey}:${String(item.title || '').toLowerCase()}|${String(item.owner || '').toLowerCase()}`;
+}
+
+function normalizeStructuredCollection(sectionKey, values) {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  const seen = new Set();
+  const normalized = [];
+
+  for (let index = 0; index < values.length; index += 1) {
+    if (normalized.length >= MAX_STRUCTURED_ITEMS_PER_SECTION) {
+      break;
+    }
+
+    const nextItem = normalizeStructuredItemForSection(sectionKey, values[index]);
+    if (!nextItem) {
+      continue;
+    }
+
+    const signature = buildStructuredItemSignature(sectionKey, nextItem);
+    if (seen.has(signature)) {
+      continue;
+    }
+
+    seen.add(signature);
+    normalized.push(nextItem);
   }
 
   return normalized;
@@ -86,26 +228,13 @@ function normalizeStructuredItem(item) {
 
 function normalizeStructuredPayload(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
-    return {
-      priorities: [],
-      opportunities: [],
-      contentItems: [],
-      tasks: [],
-    };
+    return createEmptyStructuredPayload();
   }
 
-  const normalized = {
-    priorities: [],
-    opportunities: [],
-    contentItems: [],
-    tasks: [],
-  };
+  const normalized = createEmptyStructuredPayload();
 
   STRUCTURED_KEYS.forEach((key) => {
-    const rawValues = Array.isArray(input[key]) ? input[key] : [];
-    normalized[key] = rawValues
-      .map(normalizeStructuredItem)
-      .filter(Boolean);
+    normalized[key] = normalizeStructuredCollection(key, input[key]);
   });
 
   return normalized;
@@ -203,16 +332,27 @@ function parseStructuredPayloadFromText(text) {
 
 function extractStructuredPayload(payload, textContent) {
   if (!payload || typeof payload !== 'object') {
-    return normalizeStructuredPayload(null);
+    return createEmptyStructuredPayload();
   }
 
-  const directStructured = payload.structured_payload || payload.structuredPayload;
-  const normalizedDirect = normalizeStructuredPayload(directStructured);
-  if (hasStructuredContent(normalizedDirect)) {
-    return normalizedDirect;
+  const directStructuredCandidates = [
+    payload.structured_payload,
+    payload.structuredPayload,
+    payload.data?.structured_payload,
+    payload.data?.structuredPayload,
+  ];
+
+  for (let index = 0; index < directStructuredCandidates.length; index += 1) {
+    const candidate = directStructuredCandidates[index];
+    const parsedCandidate = typeof candidate === 'string' ? parseJsonCandidate(candidate) : candidate;
+    const normalizedCandidate = normalizeStructuredPayload(parsedCandidate);
+    if (hasStructuredContent(normalizedCandidate)) {
+      return normalizedCandidate;
+    }
   }
 
-  const parsedFromText = parseStructuredPayloadFromText(textContent);
+  const responseText = textContent || extractResponseText(payload);
+  const parsedFromText = parseStructuredPayloadFromText(responseText);
   return normalizeStructuredPayload(parsedFromText);
 }
 
@@ -221,7 +361,7 @@ function createFallback(actionKey, notes) {
   return {
     title: config.title,
     content: config.fallback({ notes }),
-    structuredPayload: normalizeStructuredPayload(null),
+    structuredPayload: createEmptyStructuredPayload(),
     source: 'fallback',
   };
 }
@@ -235,7 +375,7 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     return {
       title: getChiefActionConfig(actionKey).title,
       content: '',
-      structuredPayload: normalizeStructuredPayload(null),
+      structuredPayload: createEmptyStructuredPayload(),
       source: 'empty',
     };
   }
