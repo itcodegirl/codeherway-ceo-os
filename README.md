@@ -1,267 +1,91 @@
 # CodeHerWay CEO OS
 
-An AI-powered executive operating system designed to help founders manage strategy, opportunities, content, weekly planning, and execution from one premium dashboard.
+CodeHerWay CEO OS is a product-minded React dashboard for founder and executive workflows.  
+It focuses on planning, pipeline visibility, and operational clarity across opportunities, content, and weekly execution.
 
----
+## Current State
 
-## 🚀 Overview
+This project is a polished frontend prototype with partial persistence:
 
-CodeHerWay CEO OS is a modern internal product concept built for founders, operators, and executive-minded builders who need a central workspace for high-level decision-making and day-to-day momentum.
+- Core pages, routing, and reusable UI system are implemented.
+- Settings and Chief of Staff notes use local persistence.
+- Supabase and OpenAI config scaffolding exists, but full backend/AI workflows are not yet wired end-to-end.
 
-This project combines the feel of a premium SaaS dashboard with the practical workflows of a founder command center. It brings together executive planning, opportunity tracking, content operations, and AI-assisted support into one cohesive interface.
+## Implemented Features
 
-Rather than building another generic CRUD app, I wanted to create something that reflects product thinking, operational design, and real-world workflow strategy.
+- Executive dashboard with:
+  - KPI cards
+  - top priorities
+  - opportunity/content snapshots
+  - momentum and activity widgets
+- Opportunities pipeline view with table + modal drill-down
+- Content OS workflow view with status tracking + modal drill-down
+- Weekly Brief view for priorities, wins, blockers, and review notes
+- Chief of Staff workspace for note-to-output drafting flows
+- Reusable UI components (`Button`, `Badge`, `SectionCard`, `Modal`, `PageHeader`, etc.)
+- Route-based metadata updates (`document.title`, description, OG/Twitter tags)
+- Responsive layout with accessible primitives (skip link, focus-trapped modal, semantic headings)
 
----
+## Tech Stack
 
-## 🎯 Why I Built This
+- React 19
+- React Router 7
+- Vite 8
+- ESLint 9
+- CSS (modularized by layout + feature)
 
-I built CEO OS to showcase more than just frontend styling.
+## Project Structure
 
-I wanted to create a project that demonstrates:
-- product-minded thinking
-- dashboard and systems design
-- multi-page application architecture
-- reusable UI patterns
-- workflow-driven UX
-- executive and founder-oriented problem solving
-
-This project reflects the kind of software I enjoy building most: polished, intentional digital products that help people think clearly, move faster, and operate with more confidence.
-
----
-
-## ✨ Core Features
-
-- Executive dashboard with KPI cards and strategic summaries
-- Opportunities pipeline for tracking roles, partnerships, and outreach
-- Content OS for managing publishing workflow across platforms
-- Weekly Brief page for priorities, wins, blockers, and planning
-- Chief of Staff workspace for AI-assisted executive support
-- Responsive multi-page layout with sidebar navigation
-- Reusable card, summary, and status UI patterns
-- Modular CSS architecture split by layout and feature area
-
----
-
-## 🧩 Product Areas
-
-### Dashboard
-A command-center style homepage with:
-- KPI overview cards
-- top priorities
-- executive snapshot
-- opportunities preview
-- content pipeline preview
-
-### Opportunities
-A CRM-style pipeline for:
-- partnerships
-- applications
-- collaborations
-- outreach tracking
-- next-step visibility
-
-### Content OS
-A publishing workflow view for:
-- content planning
-- status tracking
-- founder content operations
-- cross-platform visibility
-
-### Weekly Brief
-A planning and review workspace for:
-- weekly priorities
-- wins
-- blockers
-- executive notes
-- momentum tracking
-
-### Chief of Staff
-An AI-focused workspace for:
-- executive summaries
-- note-to-action workflows
-- content drafting
-- planning support
-- future AI integrations
-
----
-
-## 🛠 Tech Stack
-
-**Frontend**
-- React
-- Vite
-- React Router
-
-**Styling**
-- CSS
-- Modular stylesheet structure by feature and layout
-
-**Architecture**
-- Reusable UI components
-- Page-based layout organization
-- Mock data-driven UI sections
-
-**Planned Integrations**
-- Supabase
-- OpenAI API
-
----
-
-## 🗂 Folder Structure
-
-```
+```text
 src/
-├── components/
-│   ├── ai/
-│   ├── content/
-│   ├── dashboard/
-│   ├── opportunities/
-│   ├── ui/
-│   └── weekly/
-├── data/
-├── hooks/
-├── layouts/
-├── lib/
-├── pages/
-├── styles/
-├── App.jsx
-└── main.jsx
+  components/
+    ai/
+    content/
+    dashboard/
+    opportunities/
+    ui/
+    weekly/
+  data/
+  hooks/
+  layouts/
+  lib/
+  pages/
+  styles/
 ```
 
----
+## Environment Variables
 
-## 🎨 Design Goals
+Copy `.env.example` to `.env.local` and fill in values:
 
-The visual direction for CEO OS is:
+- `VITE_OPENAI_API_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-- **Clean** — no noise, strong whitespace
-- **Premium** — dark UI, soft contrast, layered surfaces
-- **Calm** — intentional pacing, no clutter
-- **Structured** — information hierarchy built in from the start
-- **Operational** — feels like a real internal tool, not a tutorial project
-
-I wanted the interface to feel like an actual internal executive tool rather than a tutorial-style dashboard. The design leans into dark UI, strong spacing, soft contrast, reusable cards, and a product-grade layout system.
-
----
-
-## 🧠 Challenges and Decisions
-
-One of the biggest decisions in this project was treating it like a real product instead of a collection of disconnected pages.
-
-That meant focusing on:
-
-- information hierarchy
-- reusable layout patterns
-- naming consistency
-- scalable folder organization
-- commit discipline
-- UI that feels believable in a business context
-
-I also refactored the styling from a single large CSS file into dedicated files by layout and feature area, which made the project easier to maintain and more scalable as new pages were added.
-
----
-
-## 📌 What This Project Demonstrates
-
-This project highlights my ability to:
-
-- build modern React interfaces
-- organize multi-page frontend applications
-- translate abstract product ideas into structured UI
-- create reusable design systems and layout patterns
-- think like both a designer and a developer
-- build portfolio work with stronger business and product relevance
-
----
-
-## 📸 Screenshots
-
-> Screenshots will be added once the live deployment is finalized. Clone the repo and run `npm run dev` to preview the full interface locally.
-
----
-
-## 🚀 Live Demo
-
-> Live deployment coming soon. See [Local Development](#️-local-development) below to run the project locally.
-
----
-
-## 💻 GitHub Repository
-
-[github.com/itcodegirl/codeherway-ceo-os](https://github.com/itcodegirl/codeherway-ceo-os)
-
----
-
-## ⚙️ Local Development
+## Local Development
 
 ```bash
-git clone https://github.com/itcodegirl/codeherway-ceo-os.git
-cd codeherway-ceo-os
 npm install
 npm run dev
 ```
 
----
+Useful commands:
 
-## 🛣 Roadmap
+```bash
+npm run lint
+npm run build
+```
 
-### Phase 1
-- [x] App shell and routing
-- [x] Executive dashboard
-- [x] Opportunities page
-- [x] Content OS page
-- [x] Weekly Brief page
-- [x] Chief of Staff UI
-- [x] CSS architecture refactor
+## Roadmap
 
-### Phase 2
-- [ ] Supabase integration
-- [ ] Authentication
-- [ ] Real CRUD operations
-- [ ] Editable opportunity records
-- [ ] Editable content workflow
-- [ ] Persistent weekly brief data
+High-impact next steps:
 
-### Phase 3
-- [ ] Connect Chief of Staff workspace to OpenAI
-- [ ] Generate AI-powered weekly executive briefs
-- [ ] Turn raw notes into prioritized action items
-- [ ] Draft founder content with AI assistance
-- [ ] Suggest next-step follow-ups for opportunities
+1. Real Supabase CRUD for opportunities/content workflows
+2. Auth and user-scoped data
+3. Real OpenAI-powered Chief of Staff pipeline via backend endpoint
+4. Automated tests (unit + integration)
+5. Analytics and production observability
 
-### Phase 4
-- [ ] Add executive analytics and dashboard charts
-- [ ] Build command palette for faster navigation
-- [ ] Export weekly and monthly reports
-- [ ] Integrate calendar-based planning workflows
-- [ ] Add role-based access and user views
+## Author
 
----
-
-## 🔮 Future Improvements
-
-Planned improvements include:
-
-- real backend integration with Supabase
-- secure AI workflows through backend endpoints
-- richer executive analytics
-- editable workflows and data persistence
-- stronger accessibility support
-- deeper responsive polish
-- more advanced data visualizations
-
----
-
-## 👩‍💻 Author
-
-**Jenna Zawaski**
-Frontend Developer | Designer | Builder of modern digital experiences
-
-GitHub: [@itcodegirl](https://github.com/itcodegirl)
-
----
-
-## 📝 Notes
-
-This project is part of my broader portfolio work focused on building polished, product-minded frontend applications that combine design quality, interaction thinking, and real workflow utility.
+Jenna Zawaski  
+Frontend developer focused on product-grade interfaces and workflow-driven UX.
