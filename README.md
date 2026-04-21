@@ -31,6 +31,8 @@ This project is a polished frontend prototype with partial persistence:
 - Dashboard regression coverage for derived KPI cards and focus score calculations from persisted workflow data
 - Dashboard hook coverage for no-op silent refreshes that avoid unnecessary rerenders
 - Topbar timing coverage for minute-boundary date updates near midnight
+- Dashboard hook coverage for stable event subscriptions while using the latest error callback on rerender
+- App layout regression coverage for skip-link targeting and main landmark focus restoration on navigation
 
 ## Tech Stack
 
