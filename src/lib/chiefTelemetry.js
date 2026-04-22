@@ -1,3 +1,5 @@
+import { recordChiefTelemetryEvent } from './chiefTelemetryRepository';
+
 export const CHIEF_TELEMETRY_EVENT = 'ceo-os:chief-telemetry';
 
 export function emitChiefTelemetry(eventName, payload = {}) {
@@ -15,6 +17,12 @@ export function emitChiefTelemetry(eventName, payload = {}) {
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new CustomEvent(CHIEF_TELEMETRY_EVENT, { detail }));
   }
+
+  void recordChiefTelemetryEvent(detail).catch((error) => {
+    if (import.meta.env.DEV) {
+      console.error('Unable to persist chief telemetry event.', error);
+    }
+  });
 
   if (import.meta.env.DEV) {
     console.info('[chief-telemetry]', detail);

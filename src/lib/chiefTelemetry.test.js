@@ -1,7 +1,21 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { recordChiefTelemetryEventMock } = vi.hoisted(() => ({
+  recordChiefTelemetryEventMock: vi.fn(async () => null),
+}));
+
+vi.mock('./chiefTelemetryRepository', () => ({
+  recordChiefTelemetryEvent: recordChiefTelemetryEventMock,
+}));
+
 import { CHIEF_TELEMETRY_EVENT, emitChiefTelemetry } from './chiefTelemetry';
 
 describe('src/lib/chiefTelemetry', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    recordChiefTelemetryEventMock.mockClear();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -29,6 +43,13 @@ describe('src/lib/chiefTelemetry', () => {
       event: 'generate_started',
       actionKey: 'plan',
     });
+    expect(recordChiefTelemetryEventMock).toHaveBeenCalledTimes(1);
+    expect(recordChiefTelemetryEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'generate_started',
+        actionKey: 'plan',
+      }),
+    );
 
     window.removeEventListener(CHIEF_TELEMETRY_EVENT, listener);
   });

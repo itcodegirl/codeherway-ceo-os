@@ -1,5 +1,6 @@
-﻿import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
+import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
+import { useChiefTelemetryHealth } from "../hooks/useChiefTelemetryHealth";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import "../styles/chief-of-staff.css";
 
@@ -52,6 +53,12 @@ export default function ChiefOfStaff() {
     isStructuredItemAccepting,
     clearWorkspace
   } = useChiefOfStaff();
+  const {
+    source: telemetrySource,
+    recentCount: telemetryRecentCount,
+    isLoading: isTelemetryLoading,
+    error: telemetryError
+  } = useChiefTelemetryHealth();
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
   const result = toPanelResult(latestResponse);
@@ -100,6 +107,14 @@ export default function ChiefOfStaff() {
 
           <p className="chief-feedback-text" role="status" aria-live="polite">
             {feedbackMessage}
+          </p>
+
+          <p className="chief-telemetry-text" role="status" aria-live="polite">
+            {telemetryError
+              ? telemetryError
+              : isTelemetryLoading
+                ? "Telemetry: checking engine health..."
+                : `Telemetry active (${telemetrySource}): ${telemetryRecentCount} recent events tracked.`}
           </p>
         </div>
       </div>
