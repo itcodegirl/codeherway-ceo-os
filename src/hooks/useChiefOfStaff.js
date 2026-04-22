@@ -4,6 +4,7 @@ import { createOpportunity, listOpportunities } from '../lib/opportunitiesReposi
 import { createContentItem, listContentItems } from '../lib/contentRepository';
 import { createWeeklyItem, getCurrentWeekStart, getWeeklyBriefByWeek } from '../lib/weeklyRepository';
 import { buildCreateId } from '../lib/utils';
+import { emitChiefTelemetry } from '../lib/chiefTelemetry';
 import {
   createChiefSession,
   getChiefSource,
@@ -116,6 +117,10 @@ export function useChiefOfStaff() {
   const notesText = resolveNotes(notes);
   const hasNotes = notesText.trim().length > 0;
   const canGenerate = hasNotes && !isGenerating;
+
+  const trackTelemetry = useCallback((eventName, payload = {}) => {
+    emitChiefTelemetry(eventName, payload);
+  }, []);
 
   const resetAcceptanceCaches = useCallback(() => {
     opportunitySignaturesRef.current = null;
@@ -370,6 +375,7 @@ export function useChiefOfStaff() {
     if (!canGenerate) {
       if (!hasNotes) {
         setFeedback('Paste notes first so we can produce a relevant draft or recommendation.');
+        trackTelemetry('generate_blocked_no_notes', { actionKey });
       }
       return;
     }
@@ -377,6 +383,10 @@ export function useChiefOfStaff() {
     setIsGenerating(true);
     setFeedback('Generating a new draft for your current notes.');
     setLoadError('');
+    trackTelemetry('generate_started', {
+      actionKey,
+      notesLength: notesText.length,
+    });
 
     try {
       const session = await createChiefSession({
@@ -395,6 +405,10 @@ export function useChiefOfStaff() {
 
       if (!nextResponse.content) {
         setFeedback('No output generated. Add more context and try again.');
+        trackTelemetry('generate_completed_empty', {
+          actionKey,
+          source: nextResponse.source || 'unknown',
+        });
         return;
       }
 
@@ -417,6 +431,25 @@ export function useChiefOfStaff() {
       } else {
         setFeedback(`Created: ${savedOutput.title}. Using local fallback output.`);
       }
+
+      trackTelemetry('generate_completed', {
+        actionKey,
+        source: nextResponse.source || 'unknown',
+        structuredCounts: {
+          priorities: Array.isArray(nextResponse.structuredPayload?.priorities)
+            ? nextResponse.structuredPayload.priorities.length
+            : 0,
+          opportunities: Array.isArray(nextResponse.structuredPayload?.opportunities)
+            ? nextResponse.structuredPayload.opportunities.length
+            : 0,
+          contentItems: Array.isArray(nextResponse.structuredPayload?.contentItems)
+            ? nextResponse.structuredPayload.contentItems.length
+            : 0,
+          tasks: Array.isArray(nextResponse.structuredPayload?.tasks)
+            ? nextResponse.structuredPayload.tasks.length
+            : 0,
+        },
+      });
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -427,12 +460,13 @@ export function useChiefOfStaff() {
       if (import.meta.env.DEV) {
         console.error('Chief workflow action failed', error);
       }
+      trackTelemetry('generate_failed', { actionKey });
     } finally {
       if (isMountedRef.current) {
         setIsGenerating(false);
       }
     }
-  }, [canGenerate, hasNotes, notesText]);
+  }, [canGenerate, hasNotes, notesText, trackTelemetry]);
 
   const setFeedbackIfAllowed = useCallback((message, suppressFeedback = false) => {
     if (!suppressFeedback) {
@@ -448,15 +482,27 @@ export function useChiefOfStaff() {
 
     if (!itemKey) {
       setFeedbackIfAllowed('This item is missing required details and cannot be saved yet.', suppressFeedback);
+      trackTelemetry('accept_item_skipped', {
+        section: sectionKey || 'unknown',
+        reason: 'missing_required_details',
+      });
       return ACCEPTANCE_STATUS.SKIPPED;
     }
 
     if (acceptedStructuredItemMap[itemKey]) {
       setFeedbackIfAllowed('This structured item was already added.', suppressFeedback);
+      trackTelemetry('accept_item_skipped', {
+        section: sectionKey || 'unknown',
+        reason: 'already_accepted',
+      });
       return ACCEPTANCE_STATUS.SKIPPED;
     }
 
     if (acceptingStructuredItemMap[itemKey] || acceptingStructuredItemRef.current.has(itemKey)) {
+      trackTelemetry('accept_item_skipped', {
+        section: sectionKey || 'unknown',
+        reason: 'in_flight',
+      });
       return ACCEPTANCE_STATUS.SKIPPED;
     }
 
@@ -471,6 +517,10 @@ export function useChiefOfStaff() {
         const name = resolveStructuredText(itemValue);
         if (!name) {
           setFeedbackIfAllowed('This opportunity entry is missing a name.', suppressFeedback);
+          trackTelemetry('accept_item_skipped', {
+            section: sectionKey,
+            reason: 'missing_name',
+          });
           return ACCEPTANCE_STATUS.SKIPPED;
         }
 
@@ -485,6 +535,10 @@ export function useChiefOfStaff() {
             [itemKey]: true,
           }));
           setFeedbackIfAllowed('That opportunity already exists.', suppressFeedback);
+          trackTelemetry('accept_item_skipped', {
+            section: sectionKey,
+            reason: 'already_exists',
+          });
           return ACCEPTANCE_STATUS.SKIPPED;
         }
 
@@ -503,6 +557,7 @@ export function useChiefOfStaff() {
           [itemKey]: true,
         }));
         setFeedbackIfAllowed('Added an opportunity from the structured AI output.', suppressFeedback);
+        trackTelemetry('accept_item_saved', { section: sectionKey });
         return ACCEPTANCE_STATUS.SAVED;
       }
 
@@ -510,6 +565,10 @@ export function useChiefOfStaff() {
         const title = resolveStructuredText(itemValue);
         if (!title) {
           setFeedbackIfAllowed('This content entry is missing a title.', suppressFeedback);
+          trackTelemetry('accept_item_skipped', {
+            section: sectionKey,
+            reason: 'missing_title',
+          });
           return ACCEPTANCE_STATUS.SKIPPED;
         }
 
@@ -524,6 +583,10 @@ export function useChiefOfStaff() {
             [itemKey]: true,
           }));
           setFeedbackIfAllowed('That content item already exists.', suppressFeedback);
+          trackTelemetry('accept_item_skipped', {
+            section: sectionKey,
+            reason: 'already_exists',
+          });
           return ACCEPTANCE_STATUS.SKIPPED;
         }
 
@@ -540,6 +603,7 @@ export function useChiefOfStaff() {
           [itemKey]: true,
         }));
         setFeedbackIfAllowed('Added a content item from the structured AI output.', suppressFeedback);
+        trackTelemetry('accept_item_saved', { section: sectionKey });
         return ACCEPTANCE_STATUS.SAVED;
       }
 
@@ -547,6 +611,10 @@ export function useChiefOfStaff() {
         const title = resolveStructuredText(itemValue);
         if (!title) {
           setFeedbackIfAllowed('This priority entry is missing a title.', suppressFeedback);
+          trackTelemetry('accept_item_skipped', {
+            section: sectionKey,
+            reason: 'missing_title',
+          });
           return ACCEPTANCE_STATUS.SKIPPED;
         }
 
@@ -559,6 +627,10 @@ export function useChiefOfStaff() {
             [itemKey]: true,
           }));
           setFeedbackIfAllowed('That weekly priority already exists.', suppressFeedback);
+          trackTelemetry('accept_item_skipped', {
+            section: sectionKey,
+            reason: 'already_exists',
+          });
           return ACCEPTANCE_STATUS.SKIPPED;
         }
 
@@ -580,10 +652,15 @@ export function useChiefOfStaff() {
           [itemKey]: true,
         }));
         setFeedbackIfAllowed('Added a weekly priority from the structured AI output.', suppressFeedback);
+        trackTelemetry('accept_item_saved', { section: sectionKey });
         return ACCEPTANCE_STATUS.SAVED;
       }
 
       setFeedbackIfAllowed('This structured item type is not supported yet.', suppressFeedback);
+      trackTelemetry('accept_item_skipped', {
+        section: sectionKey || 'unknown',
+        reason: 'unsupported_section',
+      });
       return ACCEPTANCE_STATUS.SKIPPED;
     } catch (error) {
       setLoadError('Unable to accept this structured AI item right now.');
@@ -591,6 +668,9 @@ export function useChiefOfStaff() {
       if (import.meta.env.DEV) {
         console.error('Failed to accept structured AI item', error);
       }
+      trackTelemetry('accept_item_failed', {
+        section: sectionKey || 'unknown',
+      });
       return ACCEPTANCE_STATUS.FAILED;
     } finally {
       acceptingStructuredItemRef.current.delete(itemKey);
@@ -611,6 +691,7 @@ export function useChiefOfStaff() {
     getOpportunitySignatures,
     getWeeklyPrioritySignatures,
     setFeedbackIfAllowed,
+    trackTelemetry,
   ]);
 
   const acceptAllStructured = useCallback(async (structuredPayload) => {
@@ -620,16 +701,19 @@ export function useChiefOfStaff() {
 
     if (!effectivePayload || typeof effectivePayload !== 'object') {
       setFeedback('No structured items are available to add.');
+      trackTelemetry('accept_all_skipped', { reason: 'no_payload' });
       return false;
     }
 
     if (acceptingAllRef.current) {
       setFeedback('Add all is already running.');
+      trackTelemetry('accept_all_skipped', { reason: 'already_running' });
       return false;
     }
 
     acceptingAllRef.current = true;
     setIsAcceptingAll(true);
+    trackTelemetry('accept_all_started');
 
     let saved = 0;
     let skipped = 0;
@@ -653,6 +737,7 @@ export function useChiefOfStaff() {
 
       if (!queue.length) {
         setFeedback('No valid structured items found to add.');
+        trackTelemetry('accept_all_skipped', { reason: 'no_valid_items' });
         return false;
       }
 
@@ -669,12 +754,17 @@ export function useChiefOfStaff() {
       }
 
       setFeedback(`Add all complete: ${saved} saved, ${skipped} skipped, ${failed} failed.`);
+      trackTelemetry('accept_all_completed', {
+        saved,
+        skipped,
+        failed,
+      });
       return failed === 0;
     } finally {
       acceptingAllRef.current = false;
       setIsAcceptingAll(false);
     }
-  }, [acceptStructuredItem, responses]);
+  }, [acceptStructuredItem, responses, trackTelemetry]);
 
   const isStructuredItemAccepted = useCallback(
     (section, item) => {
