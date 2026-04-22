@@ -44,6 +44,39 @@ function ContentTable({ items, onOpenItem }) {
     onOpenItem(item);
   }, [hasHandler, itemsById, onOpenItem]);
 
+  const handleRowKeyDown = useCallback((event) => {
+    if (!hasHandler) {
+      return;
+    }
+
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const row = target.closest('tr[data-item-id]');
+    if (!row) {
+      return;
+    }
+
+    const itemId = row.getAttribute('data-item-id');
+    if (!itemId) {
+      return;
+    }
+
+    const item = itemsById.get(itemId);
+    if (!item) {
+      return;
+    }
+
+    event.preventDefault();
+    onOpenItem(item);
+  }, [hasHandler, itemsById, onOpenItem]);
+
   if (!isValidItemsArray) {
     return null;
   }
@@ -64,6 +97,7 @@ function ContentTable({ items, onOpenItem }) {
         </thead>
         <tbody
           onClick={hasHandler ? handleRowClick : undefined}
+          onKeyDown={hasHandler ? handleRowKeyDown : undefined}
         >
           {normalizedItems.map((item) => (
             <tr
@@ -71,6 +105,8 @@ function ContentTable({ items, onOpenItem }) {
               data-item-id={String(item.id)}
               className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
               title={hasHandler ? `Open ${item.title} details` : undefined}
+              tabIndex={hasHandler ? 0 : undefined}
+              aria-label={hasHandler ? `Open ${item.title} details` : undefined}
             >
               <td className="crm-table__cell" data-label="Title">
                 <p className="crm-table__title">{item.title}</p>
