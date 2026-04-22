@@ -1,10 +1,12 @@
 import { defineConfig } from '@playwright/test';
 
 const PORT = 4173;
+const isCi = Boolean(globalThis.process?.env?.CI);
 
 export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
+  retries: isCi ? 1 : 0,
   expect: {
     timeout: 10_000,
   },
