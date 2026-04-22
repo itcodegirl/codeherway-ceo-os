@@ -298,11 +298,45 @@ textarea:focus-visible,
   justify-content: center;
 }
 
+.momentum-chart-panel {
+  margin: 0;
+}
+
 .momentum-chart {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.momentum-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-self: stretch;
+  min-height: 190px;
+  padding-bottom: 1.2rem;
+}
+
+.momentum-axis__tick {
+  display: flex;
+  align-items: center;
+}
+
+.momentum-axis__label {
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.momentum-points {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.6rem;
   align-items: end;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .momentum-point {
@@ -332,6 +366,13 @@ textarea:focus-visible,
   font-size: 0.72rem;
   text-align: center;
   line-height: 1.2;
+}
+
+@media (max-width: 640px) {
+  .momentum-points {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 0.9rem;
+  }
 }
 
 .momentum-chart__empty {

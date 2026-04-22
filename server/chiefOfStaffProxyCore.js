@@ -1,11 +1,5 @@
-import { getChiefActionConfig } from '../src/lib/chiefActions.js';
-import { extractChiefResponseText } from '../shared/chiefResponseText.js';
-import {
-  hasStructuredContent,
-  normalizeStructuredPayload,
-  parseJsonCandidate,
-  parseStructuredPayloadFromText,
-} from '../shared/chiefStructuredPayload.js';
+import { getChiefActionConfig } from '../shared/chiefActions.js';
+import { extractStructuredPayloadIfPresent } from '../shared/chiefStructuredPayload.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
@@ -194,39 +188,6 @@ function buildInput({ instruction, notes }) {
   ];
 }
 
-function normalizeStructuredPayloadCandidate(candidate) {
-  const parsedCandidate = typeof candidate === 'string' ? parseJsonCandidate(candidate) : candidate;
-  return normalizeStructuredPayload(parsedCandidate);
-}
-
-function extractStructuredPayload(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return null;
-  }
-
-  const directCandidates = [
-    payload.structured_payload,
-    payload.structuredPayload,
-    payload.data?.structured_payload,
-    payload.data?.structuredPayload,
-  ];
-
-  for (let index = 0; index < directCandidates.length; index += 1) {
-    const normalizedDirect = normalizeStructuredPayloadCandidate(directCandidates[index]);
-    if (hasStructuredContent(normalizedDirect)) {
-      return normalizedDirect;
-    }
-  }
-
-  const outputText = extractChiefResponseText(payload);
-  const normalizedTextPayload = normalizeStructuredPayload(parseStructuredPayloadFromText(outputText));
-  if (hasStructuredContent(normalizedTextPayload)) {
-    return normalizedTextPayload;
-  }
-
-  return null;
-}
-
 function buildResponse(status, body, requestId, correlationId) {
   const responseBody = body && typeof body === 'object' ? body : {};
 
@@ -350,7 +311,7 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     }, requestId, correlationId);
   }
 
-  const structuredPayload = extractStructuredPayload(upstreamPayload);
+  const structuredPayload = extractStructuredPayloadIfPresent(upstreamPayload);
   if (structuredPayload) {
     return buildResponse(200, {
       ...upstreamPayload,

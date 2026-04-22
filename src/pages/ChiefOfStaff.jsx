@@ -1,5 +1,6 @@
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
 import ChiefTelemetryDiagnostics from "../components/chief/ChiefTelemetryDiagnostics";
+import Button from "../components/ui/Button";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
 import { useChiefTelemetryHealth } from "../hooks/useChiefTelemetryHealth";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
@@ -54,6 +55,7 @@ export default function ChiefOfStaff() {
     isStructuredItemAccepting,
     clearWorkspace
   } = useChiefOfStaff();
+
   const {
     source: telemetrySource,
     recentCount: telemetryRecentCount,
@@ -82,9 +84,9 @@ export default function ChiefOfStaff() {
               <h3>Turn founder notes into action</h3>
             </div>
 
-            <button type="button" onClick={clearWorkspace}>
+            <Button type="button" variant="ghost" size="small" onClick={clearWorkspace} disabled={isGenerating}>
               Reset Workspace
-            </button>
+            </Button>
           </div>
 
           <p className="chief-helper-text">
@@ -96,23 +98,27 @@ export default function ChiefOfStaff() {
             className="chief-notes-input"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
-            placeholder="I need to follow up with XPAIRK, write a LinkedIn post, and figure out hiring strategy..."
+            placeholder="Paste founder notes, meeting takeaways, risks, priorities, or rough ideas here..."
+            disabled={isGenerating}
+            aria-disabled={isGenerating}
           />
 
           <div
             className={`chief-action-grid ${isGenerating ? "chief-action-grid--disabled" : ""}`.trim()}
+            aria-busy={isGenerating}
           >
-            <button
+            <Button
               type="button"
               onClick={() => handleAction("plan")}
               disabled={!notes.trim() || isGenerating}
+              icon={{ name: "weekly", size: 14 }}
             >
               {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
-            </button>
+            </Button>
           </div>
 
           <p className="chief-feedback-text" role="status" aria-live="polite">
-            {feedbackMessage}
+            {isGenerating ? "Generating recommendations from your notes..." : feedbackMessage}
           </p>
 
           <ChiefTelemetryDiagnostics

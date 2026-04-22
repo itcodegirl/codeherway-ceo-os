@@ -52,6 +52,7 @@ function resolveActionIconName(actionText, actionTo) {
 
 function ActionControl({
   actionText,
+  actionIconName,
   actionDisabled = false,
   actionTo,
   onAction,
@@ -65,7 +66,7 @@ function ActionControl({
   const shouldRenderLinkAction = Boolean(actionText && actionTo && !isSelfNavigation && !actionDisabled);
   const shouldRenderButtonAction = Boolean(actionText && onAction && (!actionTo || isSelfNavigation));
   const hasAction = shouldRenderLinkAction || shouldRenderButtonAction;
-  const actionIconName = resolveActionIconName(actionText, actionTo);
+  const resolvedActionIconName = actionIconName || resolveActionIconName(actionText, actionTo);
 
   if (!actionText || !hasAction) {
     return null;
@@ -79,7 +80,7 @@ function ActionControl({
         aria-label={actionLabel || actionText}
       >
         {actionText}
-        <Icon name={actionIconName} size={14} className="action-button__icon" />
+        <Icon name={resolvedActionIconName} size={14} className="action-button__icon" />
       </Link>
     );
   }
@@ -90,7 +91,7 @@ function ActionControl({
       onClick={onAction || undefined}
       disabled={actionDisabled}
       ariaLabel={actionLabel || actionText}
-      icon={{ name: actionIconName, size: 14 }}
+      icon={{ name: resolvedActionIconName, size: 14 }}
     >
       {actionText}
     </Button>

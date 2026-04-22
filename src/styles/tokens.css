@@ -44,7 +44,7 @@
   --action-font-size: var(--fs-helper);
   --action-padding-x: 1rem;
 
-  --font-display: Inter, Arial, sans-serif;
+  --font-display: "Inter Variable", Inter, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --fs-page-title: 2rem;
   --fw-page-title: 600;
   --fs-section-title: 1.1rem;

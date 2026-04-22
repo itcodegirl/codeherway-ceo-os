@@ -1,3 +1,5 @@
+import { extractChiefResponseText } from './chiefResponseText.js';
+
 export const STRUCTURED_KEYS = ['priorities', 'opportunities', 'contentItems', 'tasks'];
 export const MAX_STRUCTURED_ITEMS_PER_SECTION = 12;
 export const MAX_STRUCTURED_TEXT_LENGTH = 280;
@@ -239,8 +241,8 @@ export function parseStructuredPayloadFromText(text) {
 
   const sectionMap = createEmptyStructuredPayload();
   let activeSection = '';
-  const lines = trimmedText.split('\n').map((line) => line.trim()).filter(Boolean);
 
+  const lines = trimmedText.split('\n').map((line) => line.trim()).filter(Boolean);
   lines.forEach((line) => {
     const headingMatch = line.match(/^#{1,6}\s*(priorities|opportunities|content items?|tasks)\b:?/i);
     if (headingMatch) {
@@ -271,4 +273,39 @@ export function parseStructuredPayloadFromText(text) {
   });
 
   return hasStructuredContent(sectionMap) ? sectionMap : null;
+}
+
+export function extractResponseText(payload) {
+  return extractChiefResponseText(payload);
+}
+
+export function extractStructuredPayload(payload, textContent = '') {
+  if (!payload || typeof payload !== 'object') {
+    return createEmptyStructuredPayload();
+  }
+
+  const directStructuredCandidates = [
+    payload.structured_payload,
+    payload.structuredPayload,
+    payload.data?.structured_payload,
+    payload.data?.structuredPayload,
+  ];
+
+  for (let index = 0; index < directStructuredCandidates.length; index += 1) {
+    const candidate = directStructuredCandidates[index];
+    const parsedCandidate = typeof candidate === 'string' ? parseJsonCandidate(candidate) : candidate;
+    const normalizedCandidate = normalizeStructuredPayload(parsedCandidate);
+    if (hasStructuredContent(normalizedCandidate)) {
+      return normalizedCandidate;
+    }
+  }
+
+  const responseText = textContent || extractResponseText(payload);
+  const parsedFromText = parseStructuredPayloadFromText(responseText);
+  return normalizeStructuredPayload(parsedFromText);
+}
+
+export function extractStructuredPayloadIfPresent(payload, textContent = '') {
+  const normalizedPayload = extractStructuredPayload(payload, textContent);
+  return hasStructuredContent(normalizedPayload) ? normalizedPayload : null;
 }

@@ -1,13 +1,11 @@
 import { getChiefActionConfig } from './chiefActions';
 import { buildCreateId } from './utils';
-import { extractChiefResponseText } from '../../shared/chiefResponseText';
 import {
   createEmptyStructuredPayload,
+  extractResponseText,
+  extractStructuredPayload,
   hasStructuredContent,
-  normalizeStructuredPayload,
-  parseJsonCandidate,
-  parseStructuredPayloadFromText,
-} from '../../shared/chiefStructuredPayload';
+} from './chiefStructuredPayload';
 
 const configuredProxyUrl = (import.meta.env.VITE_OPENAI_PROXY_URL || '').trim();
 const fallbackProxyUrl = '/api/chief-of-staff';
@@ -46,32 +44,6 @@ function parseRequestId(value) {
   }
 
   return value.trim();
-}
-
-function extractStructuredPayload(payload, textContent) {
-  if (!payload || typeof payload !== 'object') {
-    return createEmptyStructuredPayload();
-  }
-
-  const directStructuredCandidates = [
-    payload.structured_payload,
-    payload.structuredPayload,
-    payload.data?.structured_payload,
-    payload.data?.structuredPayload,
-  ];
-
-  for (let index = 0; index < directStructuredCandidates.length; index += 1) {
-    const candidate = directStructuredCandidates[index];
-    const parsedCandidate = typeof candidate === 'string' ? parseJsonCandidate(candidate) : candidate;
-    const normalizedCandidate = normalizeStructuredPayload(parsedCandidate);
-    if (hasStructuredContent(normalizedCandidate)) {
-      return normalizedCandidate;
-    }
-  }
-
-  const responseText = textContent || extractChiefResponseText(payload);
-  const parsedFromText = parseStructuredPayloadFromText(responseText);
-  return normalizeStructuredPayload(parsedFromText);
 }
 
 function createFallback(actionKey, notes, metadata = {}) {
@@ -155,7 +127,7 @@ export async function generateChiefOfStaffResponse({ actionKey, notes, correlati
     const payload = await response.json();
     const requestId = parseRequestId(payload?.request_id);
     const responseCorrelationId = normalizeCorrelationId(payload?.correlation_id) || normalizedCorrelationId;
-    const output = extractChiefResponseText(payload);
+    const output = extractResponseText(payload);
     const structuredPayload = extractStructuredPayload(payload, output);
 
     if (!output) {
