@@ -1,4 +1,5 @@
 import { getChiefActionConfig } from './chiefActions';
+import { buildCreateId } from './utils';
 import { extractChiefResponseText } from '../../shared/chiefResponseText';
 import {
   createEmptyStructuredPayload,
@@ -26,6 +27,27 @@ export const aiConfig = {
   configuredEndpoint: configuredProxyUrl || null,
 };
 
+function normalizeCorrelationId(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.slice(0, 96);
+}
+
+function parseRequestId(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim();
+}
+
 function extractStructuredPayload(payload, textContent) {
   if (!payload || typeof payload !== 'object') {
     return createEmptyStructuredPayload();
@@ -52,17 +74,20 @@ function extractStructuredPayload(payload, textContent) {
   return normalizeStructuredPayload(parsedFromText);
 }
 
-function createFallback(actionKey, notes) {
+function createFallback(actionKey, notes, metadata = {}) {
   const config = getChiefActionConfig(actionKey);
   return {
     title: config.title,
     content: config.fallback({ notes }),
     structuredPayload: createEmptyStructuredPayload(),
     source: 'fallback',
+    requestId: parseRequestId(metadata.requestId),
+    correlationId: normalizeCorrelationId(metadata.correlationId),
   };
 }
 
-async function fetchChiefProxy(payload) {
+async function fetchChiefProxy(payload, options = {}) {
+  const correlationId = normalizeCorrelationId(options.correlationId);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
@@ -73,6 +98,7 @@ async function fetchChiefProxy(payload) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(correlationId ? { 'x-chief-correlation-id': correlationId } : {}),
       },
       signal: controller.signal,
       body: JSON.stringify(payload),
@@ -91,8 +117,9 @@ async function fetchChiefProxy(payload) {
 
 export const getChiefActionTitle = (actionKey) => getChiefActionConfig(actionKey).title;
 
-export async function generateChiefOfStaffResponse({ actionKey, notes }) {
+export async function generateChiefOfStaffResponse({ actionKey, notes, correlationId = '' }) {
   const normalizedNotes = notes?.trim() || '';
+  const normalizedCorrelationId = normalizeCorrelationId(correlationId) || buildCreateId();
 
   if (!normalizedNotes) {
     return {
@@ -100,11 +127,15 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
       content: '',
       structuredPayload: createEmptyStructuredPayload(),
       source: 'empty',
+      requestId: '',
+      correlationId: normalizedCorrelationId,
     };
   }
 
   if (!aiConfig.endpoint) {
-    return createFallback(actionKey, normalizedNotes);
+    return createFallback(actionKey, normalizedNotes, {
+      correlationId: normalizedCorrelationId,
+    });
   }
 
   const config = getChiefActionConfig(actionKey);
@@ -113,6 +144,8 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     const response = await fetchChiefProxy({
       actionKey,
       notes: normalizedNotes,
+    }, {
+      correlationId: normalizedCorrelationId,
     });
 
     if (!response.ok) {
@@ -120,6 +153,8 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     }
 
     const payload = await response.json();
+    const requestId = parseRequestId(payload?.request_id);
+    const responseCorrelationId = normalizeCorrelationId(payload?.correlation_id) || normalizedCorrelationId;
     const output = extractChiefResponseText(payload);
     const structuredPayload = extractStructuredPayload(payload, output);
 
@@ -130,6 +165,8 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
         structuredPayload: hasStructuredContent(structuredPayload)
           ? structuredPayload
           : fallback.structuredPayload,
+        requestId,
+        correlationId: responseCorrelationId,
       };
     }
 
@@ -138,8 +175,12 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
       content: output,
       structuredPayload,
       source: 'proxy',
+      requestId,
+      correlationId: responseCorrelationId,
     };
   } catch {
-    return createFallback(actionKey, normalizedNotes);
+    return createFallback(actionKey, normalizedNotes, {
+      correlationId: normalizedCorrelationId,
+    });
   }
 }

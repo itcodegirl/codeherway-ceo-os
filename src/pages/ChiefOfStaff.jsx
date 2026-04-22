@@ -58,6 +58,8 @@ export default function ChiefOfStaff() {
     source: telemetrySource,
     recentCount: telemetryRecentCount,
     lastEventTimestamp: telemetryLastEventTimestamp,
+    lastRequestId: telemetryLastRequestId,
+    lastCorrelationId: telemetryLastCorrelationId,
     recentEvents: telemetryRecentEvents,
     outcomeCounters: telemetryOutcomeCounters,
     isLoading: isTelemetryLoading,
@@ -117,6 +119,8 @@ export default function ChiefOfStaff() {
             source={telemetrySource}
             recentCount={telemetryRecentCount}
             lastEventTimestamp={telemetryLastEventTimestamp}
+            lastRequestId={telemetryLastRequestId}
+            lastCorrelationId={telemetryLastCorrelationId}
             recentEvents={telemetryRecentEvents}
             outcomeCounters={telemetryOutcomeCounters}
             isLoading={isTelemetryLoading}

@@ -57,6 +57,8 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
   const [lastEventTimestamp, setLastEventTimestamp] = useState('');
   const [recentEvents, setRecentEvents] = useState([]);
   const [outcomeCounters, setOutcomeCounters] = useState(DEFAULT_COUNTERS);
+  const [lastRequestId, setLastRequestId] = useState('');
+  const [lastCorrelationId, setLastCorrelationId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -72,6 +74,12 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
       setLastEventTimestamp(normalizedEvents[0]?.timestamp || '');
       setRecentEvents(normalizedEvents.slice(0, 6));
       setOutcomeCounters(deriveOutcomeCounters(normalizedEvents));
+      setLastRequestId(
+        normalizedEvents.find((event) => typeof event?.requestId === 'string' && event.requestId.trim())?.requestId || '',
+      );
+      setLastCorrelationId(
+        normalizedEvents.find((event) => typeof event?.correlationId === 'string' && event.correlationId.trim())?.correlationId || '',
+      );
     } catch {
       setError('Unable to load telemetry health right now.');
     } finally {
@@ -119,10 +127,23 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
       lastEventTimestamp,
       recentEvents,
       outcomeCounters,
+      lastRequestId,
+      lastCorrelationId,
       isLoading,
       error,
       refresh,
     }),
-    [source, recentCount, lastEventTimestamp, recentEvents, outcomeCounters, isLoading, error, refresh],
+    [
+      source,
+      recentCount,
+      lastEventTimestamp,
+      recentEvents,
+      outcomeCounters,
+      lastRequestId,
+      lastCorrelationId,
+      isLoading,
+      error,
+      refresh,
+    ],
   );
 }

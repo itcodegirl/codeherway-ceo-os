@@ -26,6 +26,8 @@ export default function ChiefTelemetryDiagnostics({
   source,
   recentCount,
   lastEventTimestamp,
+  lastRequestId,
+  lastCorrelationId,
   recentEvents = [],
   outcomeCounters,
   isLoading,
@@ -52,6 +54,12 @@ export default function ChiefTelemetryDiagnostics({
               ? "Refreshing telemetry..."
               : `Source: ${source || "local"} · Last event: ${latestTimestampLabel}`}
           </p>
+          {!isLoading && (lastRequestId || lastCorrelationId) ? (
+            <p className="chief-telemetry-copy">
+              {lastRequestId ? `Request: ${lastRequestId}` : "Request: n/a"}
+              {lastCorrelationId ? ` · Correlation: ${lastCorrelationId}` : ""}
+            </p>
+          ) : null}
 
           <div className="chief-telemetry-metrics">
             <span>Saved: {counters.saved || 0}</span>

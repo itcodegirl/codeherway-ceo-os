@@ -30,6 +30,8 @@ describe('src/lib/chiefTelemetryRepository', () => {
       event: 'generate_completed',
       actionKey: 'plan',
       source: 'proxy',
+      requestId: 'request-1',
+      correlationId: 'correlation-1',
       structuredCounts: {
         priorities: 2,
       },
@@ -41,6 +43,8 @@ describe('src/lib/chiefTelemetryRepository', () => {
       event: 'generate_completed',
       actionKey: 'plan',
       source: 'proxy',
+      requestId: 'request-1',
+      correlationId: 'correlation-1',
     });
     expect(typeof savedEvent.id).toBe('string');
     expect(typeof savedEvent.timestamp).toBe('string');
@@ -51,6 +55,8 @@ describe('src/lib/chiefTelemetryRepository', () => {
       event: 'generate_completed',
       actionKey: 'plan',
       source: 'proxy',
+      requestId: 'request-1',
+      correlationId: 'correlation-1',
       structuredCounts: {
         priorities: 2,
       },

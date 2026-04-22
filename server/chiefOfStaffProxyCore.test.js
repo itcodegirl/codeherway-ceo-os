@@ -36,6 +36,8 @@ describe('server/chiefOfStaffProxyCore', () => {
     expect(result.body.error_code).toBe('METHOD_NOT_ALLOWED');
     expect(typeof result.body.request_id).toBe('string');
     expect(result.body.request_id.length).toBeGreaterThan(0);
+    expect(typeof result.body.correlation_id).toBe('string');
+    expect(result.body.correlation_id.length).toBeGreaterThan(0);
   });
 
   it('classifies upstream timeout failures with explicit error code', async () => {
@@ -50,6 +52,7 @@ describe('server/chiefOfStaffProxyCore', () => {
     expect(result.status).toBe(504);
     expect(result.body.error_code).toBe('OPENAI_TIMEOUT');
     expect(typeof result.body.request_id).toBe('string');
+    expect(typeof result.body.correlation_id).toBe('string');
   });
 
   it('classifies upstream non-OK responses and preserves error details', async () => {
@@ -71,9 +74,10 @@ describe('server/chiefOfStaffProxyCore', () => {
     expect(result.body.error_code).toBe('OPENAI_FAILED');
     expect(result.body.details).toEqual({ message: 'Rate limit from upstream' });
     expect(typeof result.body.request_id).toBe('string');
+    expect(typeof result.body.correlation_id).toBe('string');
   });
 
-  it('adds request id to successful proxy responses', async () => {
+  it('adds request id and correlation id to successful proxy responses', async () => {
     globalThis.fetch.mockResolvedValue(
       createFetchResponse({
         ok: true,
@@ -91,5 +95,35 @@ describe('server/chiefOfStaffProxyCore', () => {
     expect(result.status).toBe(200);
     expect(result.body.output_text).toBe('Executive summary output');
     expect(typeof result.body.request_id).toBe('string');
+    expect(typeof result.body.correlation_id).toBe('string');
+  });
+
+  it('reuses incoming correlation id and forwards it upstream', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createFetchResponse({
+        ok: true,
+        status: 200,
+        payload: { output_text: 'Executive summary output' },
+      }),
+    );
+
+    const result = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'Generate summary', actionKey: 'summarize' },
+      headers: {
+        'x-chief-correlation-id': 'corr-inbound-777',
+      },
+    });
+
+    expect(result.status).toBe(200);
+    expect(result.body.correlation_id).toBe('corr-inbound-777');
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://api.openai.com/v1/responses',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'x-chief-correlation-id': 'corr-inbound-777',
+        }),
+      }),
+    );
   });
 });

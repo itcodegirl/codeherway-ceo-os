@@ -24,6 +24,19 @@ function createRequestId() {
   return `chief-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function normalizeCorrelationId(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.slice(0, 96);
+}
+
 function parseRateLimit(value) {
   if (!value) {
     return DEFAULT_RATE_LIMIT_PER_MINUTE;
@@ -53,6 +66,18 @@ function parseClientKey(headers) {
   }
 
   return headerValue.split(',')[0].trim() || 'anonymous';
+}
+
+function extractCorrelationId(headers) {
+  if (!headers || typeof headers !== 'object') {
+    return '';
+  }
+
+  const correlationHeader = headers['x-chief-correlation-id']
+    || headers['X-Chief-Correlation-Id']
+    || headers['X-CHIEF-CORRELATION-ID'];
+
+  return normalizeCorrelationId(correlationHeader);
 }
 
 function isRateLimited(headers) {
@@ -202,13 +227,14 @@ function extractStructuredPayload(payload) {
   return null;
 }
 
-function buildResponse(status, body, requestId) {
+function buildResponse(status, body, requestId, correlationId) {
   const responseBody = body && typeof body === 'object' ? body : {};
 
   return {
     status,
     body: {
       request_id: requestId,
+      correlation_id: correlationId,
       ...responseBody,
     },
   };
@@ -216,26 +242,27 @@ function buildResponse(status, body, requestId) {
 
 export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
   const requestId = createRequestId();
+  const correlationId = extractCorrelationId(headers) || requestId;
 
   if (method !== 'POST') {
     return buildResponse(405, {
       error: 'Method not allowed',
       error_code: 'METHOD_NOT_ALLOWED',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   if (!hasValidProxyToken(headers)) {
     return buildResponse(401, {
       error: 'Missing or invalid proxy authentication token',
       error_code: 'PROXY_AUTH_INVALID',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   if (isRateLimited(headers)) {
     return buildResponse(429, {
       error: 'Rate limit exceeded for this client',
       error_code: 'RATE_LIMITED',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
@@ -243,7 +270,7 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     return buildResponse(500, {
       error: 'OPENAI_API_KEY is not configured on the server',
       error_code: 'OPENAI_API_KEY_MISSING',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   const parsedBody = normalizeBody(body);
@@ -251,7 +278,7 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     return buildResponse(400, {
       error: 'Request body must be a JSON object',
       error_code: 'INVALID_BODY',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   const notes = normalizeNotes(parsedBody.notes);
@@ -262,7 +289,7 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     return buildResponse(400, {
       error: 'Notes are required',
       error_code: 'NOTES_REQUIRED',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   const actionConfig = getChiefActionConfig(actionKey);
@@ -280,6 +307,7 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
+        'x-chief-correlation-id': correlationId,
       },
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL,
@@ -299,6 +327,7 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
         error_code: timedOut ? 'OPENAI_TIMEOUT' : 'OPENAI_UNREACHABLE',
       },
       requestId,
+      correlationId,
     );
   } finally {
     clearTimeout(timeout);
@@ -311,14 +340,14 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
       error: 'OpenAI request failed',
       error_code: 'OPENAI_FAILED',
       details: upstreamPayload?.error || upstreamPayload,
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   if (!upstreamPayload) {
     return buildResponse(502, {
       error: 'Empty response from OpenAI',
       error_code: 'OPENAI_EMPTY_RESPONSE',
-    }, requestId);
+    }, requestId, correlationId);
   }
 
   const structuredPayload = extractStructuredPayload(upstreamPayload);
@@ -326,8 +355,8 @@ export async function handleChiefOfStaffProxy({ method, body, headers = {} }) {
     return buildResponse(200, {
       ...upstreamPayload,
       structured_payload: structuredPayload,
-    }, requestId);
+    }, requestId, correlationId);
   }
 
-  return buildResponse(200, upstreamPayload, requestId);
+  return buildResponse(200, upstreamPayload, requestId, correlationId);
 }

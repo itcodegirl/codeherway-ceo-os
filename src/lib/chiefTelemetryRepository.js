@@ -53,6 +53,8 @@ function normalizeEventValue(input) {
     'source',
     'reason',
     'notesLength',
+    'requestId',
+    'correlationId',
     'saved',
     'skipped',
     'failed',

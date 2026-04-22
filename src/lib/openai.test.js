@@ -193,4 +193,31 @@ describe('src/lib/openai', () => {
       { title: 'Close loop' },
     ]);
   });
+
+  it('forwards correlation ids and returns request metadata from proxy responses', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createProxyResponse({
+        request_id: 'server-request-123',
+        correlation_id: 'corr-server-123',
+        output_text: 'Decision engine response',
+      }),
+    );
+
+    const result = await generateChiefOfStaffResponse({
+      actionKey: 'summarize',
+      notes: 'Summarize this week',
+      correlationId: 'corr-client-abc',
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/chief-of-staff',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'x-chief-correlation-id': 'corr-client-abc',
+        }),
+      }),
+    );
+    expect(result.requestId).toBe('server-request-123');
+    expect(result.correlationId).toBe('corr-server-123');
+  });
 });

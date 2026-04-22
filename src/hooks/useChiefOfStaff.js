@@ -383,9 +383,11 @@ export function useChiefOfStaff() {
     setIsGenerating(true);
     setFeedback('Generating a new draft for your current notes.');
     setLoadError('');
+    const correlationId = buildCreateId();
     trackTelemetry('generate_started', {
       actionKey,
       notesLength: notesText.length,
+      correlationId,
     });
 
     try {
@@ -397,6 +399,7 @@ export function useChiefOfStaff() {
       const nextResponse = await generateChiefOfStaffResponse({
         actionKey,
         notes: notesText,
+        correlationId,
       });
 
       if (!isMountedRef.current) {
@@ -408,6 +411,8 @@ export function useChiefOfStaff() {
         trackTelemetry('generate_completed_empty', {
           actionKey,
           source: nextResponse.source || 'unknown',
+          correlationId: nextResponse.correlationId || correlationId,
+          requestId: nextResponse.requestId || '',
         });
         return;
       }
@@ -435,6 +440,8 @@ export function useChiefOfStaff() {
       trackTelemetry('generate_completed', {
         actionKey,
         source: nextResponse.source || 'unknown',
+        correlationId: nextResponse.correlationId || correlationId,
+        requestId: nextResponse.requestId || '',
         structuredCounts: {
           priorities: Array.isArray(nextResponse.structuredPayload?.priorities)
             ? nextResponse.structuredPayload.priorities.length
@@ -460,7 +467,10 @@ export function useChiefOfStaff() {
       if (import.meta.env.DEV) {
         console.error('Chief workflow action failed', error);
       }
-      trackTelemetry('generate_failed', { actionKey });
+      trackTelemetry('generate_failed', {
+        actionKey,
+        correlationId,
+      });
     } finally {
       if (isMountedRef.current) {
         setIsGenerating(false);

@@ -279,10 +279,11 @@ describe('useChiefOfStaff', () => {
         content: 'Fallback executive summary',
       });
     });
-    expect(generateChiefOfStaffResponse).toHaveBeenCalledWith({
+    expect(generateChiefOfStaffResponse).toHaveBeenCalledWith(expect.objectContaining({
       actionKey: 'summarize',
       notes: 'Status update: closed 3 opportunities',
-    });
+      correlationId: expect.any(String),
+    }));
     expect(createChiefSession).toHaveBeenCalledWith({
       actionKey: 'summarize',
       notes: 'Status update: closed 3 opportunities',
