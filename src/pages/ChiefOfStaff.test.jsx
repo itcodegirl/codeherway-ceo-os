@@ -42,7 +42,10 @@ describe("src/pages/ChiefOfStaff", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("No action plan yet")).toBeInTheDocument();
+    expect(screen.getByText("Ready to generate")).toBeInTheDocument();
+    expect(
+      screen.getByText("Paste your notes in the workspace, then choose an action above to generate output."),
+    ).toBeInTheDocument();
   });
 
   it("renders loading output state when generating", () => {
@@ -60,6 +63,7 @@ describe("src/pages/ChiefOfStaff", () => {
     );
 
     expect(screen.getByText("Building your action plan…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Building Action Plan..." })).toBeDisabled();
   });
 
   it("renders structured output sections from latest response", () => {

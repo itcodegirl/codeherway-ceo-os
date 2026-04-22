@@ -2,10 +2,9 @@
   return (
     <div className="chief-card chief-empty-state">
       <p className="chief-eyebrow">AI Output</p>
-      <h3>No action plan yet</h3>
+      <h3>Ready to generate</h3>
       <p>
-        Paste founder notes on the left, then generate structured priorities,
-        opportunities, and content ideas here.
+        Paste your notes in the workspace, then choose an action above to generate output.
       </p>
     </div>
   );
