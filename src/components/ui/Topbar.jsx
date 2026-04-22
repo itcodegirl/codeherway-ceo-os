@@ -10,7 +10,7 @@ function getMsUntilNextMinute(nowMs = Date.now()) {
   return elapsedMsInMinute === 0 ? ONE_MINUTE_MS : ONE_MINUTE_MS - elapsedMsInMinute;
 }
 
-function Topbar() {
+function Topbar({ pageTitle = 'Dashboard' }) {
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [now, setNow] = useState(() => new Date());
 
@@ -55,8 +55,8 @@ function Topbar() {
   return (
     <header className="topbar">
       <div className="topbar__left">
-        <p className="topbar__label">Executive Overview</p>
-        <p className="topbar__title">Welcome back, {teamName}</p>
+        <p className="topbar__label">Team: {teamName}</p>
+        <p className="topbar__title">{pageTitle}</p>
       </div>
 
       <div className="topbar__right">

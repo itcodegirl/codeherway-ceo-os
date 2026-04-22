@@ -1,10 +1,11 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { resolvePageMeta } from '../lib/pageMeta';
 import { resolveTeamName } from '../lib/settings';
 
 function AppLayout() {
@@ -14,6 +15,12 @@ function AppLayout() {
 
   const teamName = resolveTeamName(settings?.teamName);
   const appName = `${teamName} CEO OS`;
+  const currentPageTitle = useMemo(() => {
+    const pageMeta = resolvePageMeta(appName, location.pathname);
+    const topbarTitle = String(pageMeta?.title || '').split('|')[0].trim();
+    return topbarTitle || 'Dashboard';
+  }, [appName, location.pathname]);
+
   usePageMeta(appName);
 
   useEffect(() => {
@@ -37,7 +44,7 @@ function AppLayout() {
       </a>
       <Sidebar />
       <div className="app-main">
-        <Topbar />
+        <Topbar pageTitle={currentPageTitle} />
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
           <ErrorBoundary>
             <Outlet />

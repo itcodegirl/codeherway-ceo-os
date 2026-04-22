@@ -26,7 +26,7 @@ describe('src/components/ui/Topbar', () => {
     vi.useRealTimers();
   });
 
-  it('renders persistent team name and locale/date metadata from settings', () => {
+  it('renders persistent team name, route title, and locale/date metadata from settings', () => {
     window.localStorage.setItem(
       'ceo-os-settings',
       JSON.stringify({
@@ -35,9 +35,10 @@ describe('src/components/ui/Topbar', () => {
       }),
     );
 
-    render(<Topbar />);
+    render(<Topbar pageTitle="Chief of Staff" />);
 
-    expect(screen.getByText('Welcome back, Jenna')).toBeInTheDocument();
+    expect(screen.getByText('Team: Jenna')).toBeInTheDocument();
+    expect(screen.getByText('Chief of Staff')).toBeInTheDocument();
     expect(screen.getByRole('time')).toHaveTextContent(dateFormatter.format(new Date('2026-04-20T23:58:00.000Z')));
     expect(screen.getByRole('time')).toHaveAttribute('dateTime', formatIsoDate(new Date('2026-04-20T23:58:00.000Z'), 'UTC'));
   });
