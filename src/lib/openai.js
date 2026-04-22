@@ -10,10 +10,11 @@ import {
 const configuredProxyUrl = (import.meta.env.VITE_OPENAI_PROXY_URL || '').trim();
 const fallbackProxyUrl = '/api/chief-of-staff';
 const OPENAI_PROXY_URL = configuredProxyUrl || fallbackProxyUrl;
+const shouldLogProxyDebug = import.meta.env.DEV && import.meta.env.VITE_CHIEF_PROXY_DEBUG === 'true';
 
-if (!configuredProxyUrl && import.meta.env.DEV) {
-  console.warn(
-    'OpenAI proxy URL is not explicitly configured. Using the bundled default endpoint for live responses.',
+if (!configuredProxyUrl && shouldLogProxyDebug) {
+  console.info(
+    'Chief proxy URL is not explicitly configured. Using the default /api/chief-of-staff endpoint.',
   );
 }
 
