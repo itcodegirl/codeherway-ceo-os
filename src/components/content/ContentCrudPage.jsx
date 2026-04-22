@@ -131,68 +131,82 @@ function ContentCrudPage() {
 
   return (
     <CrudPageTemplate
-      pageClassName="content-page"
-      pageTitle="Content OS"
-      pageDescription="Plan, track, and ship founder content across platforms with a clear publishing workflow."
-      sourceNote={source === 'supabase'
-        ? 'Data source: Supabase (live persistence).'
-        : 'Sample data — configure Supabase to use real data.'}
-      sourceNoteClassName="content-source-note"
-      loadError={loadError}
-      loadErrorClassName="content-error"
-      loadingAnnouncement="Loading content board data."
-      isLoading={isLoading}
-      summaryLoadingContent={(
-        <SummaryCards
-          className="content-summary"
-          isLoading
-          loadingCount={3}
-          loadingKeyPrefix="content-summary"
-        />
-      )}
-      summaryContent={(
-        <SummaryCards
-          className="content-summary"
-          cards={summaryCards}
-        />
-      )}
-      sectionTitle="Publishing Workflow"
-      sectionIconName="content"
-      sectionActionText="Add Content"
-      onSectionAction={handleOpenCreateModal}
-      sectionActionLabel="Create a new content item"
-      sectionLoadingContent={(
-        <div className="content-board" role="list" aria-label="Publishing workflow cards" aria-busy={isLoading}>
-          <p className="sr-only" role="status" aria-live="polite">
-            Loading content cards.
-          </p>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <article className="content-card" key={index} role="listitem">
-              <div className="content-card__header">
-                <div>
-                  <div className="skeleton-line skeleton-line--value" />
-                  <div className="skeleton-line skeleton-line--offset" />
+      page={{
+        className: 'content-page',
+        title: 'Content OS',
+        description: 'Plan, track, and ship founder content across platforms with a clear publishing workflow.',
+      }}
+      source={{
+        note: source === 'supabase'
+          ? 'Data source: Supabase (live persistence).'
+          : 'Sample data — configure Supabase to use real data.',
+        noteClassName: 'content-source-note',
+      }}
+      status={{
+        loadError,
+        loadErrorClassName: 'content-error',
+        loadingAnnouncement: 'Loading content board data.',
+        isLoading,
+      }}
+      summary={{
+        loadingContent: (
+          <SummaryCards
+            className="content-summary"
+            isLoading
+            loadingCount={3}
+            loadingKeyPrefix="content-summary"
+          />
+        ),
+        content: (
+          <SummaryCards
+            className="content-summary"
+            cards={summaryCards}
+          />
+        ),
+      }}
+      section={{
+        title: 'Publishing Workflow',
+        iconName: 'content',
+        actionText: 'Add Content',
+        actionIconName: 'add',
+        onAction: handleOpenCreateModal,
+        actionLabel: 'Create a new content item',
+        loadingContent: (
+          <div className="content-board" role="list" aria-label="Publishing workflow cards" aria-busy={isLoading}>
+            <p className="sr-only" role="status" aria-live="polite">
+              Loading content cards.
+            </p>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <article className="content-card" key={index} role="listitem">
+                <div className="content-card__header">
+                  <div>
+                    <div className="skeleton-line skeleton-line--value" />
+                    <div className="skeleton-line skeleton-line--offset" />
+                  </div>
+                  <div className="skeleton-line skeleton-line--meta-wide" />
                 </div>
-                <div className="skeleton-line skeleton-line--meta-wide" />
-              </div>
-              <div className="content-card__footer">
-                <div className="skeleton-line skeleton-line--meta-narrow" />
-                <div className="skeleton-line skeleton-line--meta-narrow" />
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-      isEmpty={contentRows.length === 0}
-      emptyStateTitle="No content items yet"
-      emptyStateDescription="Add your first draft to begin tracking your publishing pipeline."
-      emptyStateAction={(
-        <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
-          Add Content
-        </Button>
-      )}
-      sectionContent={<ContentTable items={contentRows} onOpenItem={setSelectedItem} />}
-      itemModal={(
+                <div className="content-card__footer">
+                  <div className="skeleton-line skeleton-line--meta-narrow" />
+                  <div className="skeleton-line skeleton-line--meta-narrow" />
+                </div>
+              </article>
+            ))}
+          </div>
+        ),
+        isEmpty: contentRows.length === 0,
+        emptyState: {
+          title: 'No content items yet',
+          description: 'Add your first draft to begin tracking your publishing pipeline.',
+          action: (
+            <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
+              Add Content
+            </Button>
+          ),
+        },
+        content: <ContentTable items={contentRows} onOpenItem={setSelectedItem} />,
+      }}
+      modals={{
+        item: (
         <Modal
           isOpen={Boolean(selectedItem)}
           title={selectedItem ? selectedItem.title : ''}
@@ -227,8 +241,8 @@ function ContentCrudPage() {
             </div>
           ) : null}
         </Modal>
-      )}
-      formModal={(
+        ),
+        form: (
         <Modal
           isOpen={isFormOpen}
           title={selectedItem ? 'Edit Content Item' : 'Add Content Item'}
@@ -297,8 +311,8 @@ function ContentCrudPage() {
             </div>
           </form>
         </Modal>
-      )}
-      deleteConfirmModal={(
+        ),
+        deleteConfirm: (
         <DeleteConfirmModal
           isOpen={isDeleteConfirmOpen}
           title="Delete Content Item"
@@ -307,7 +321,8 @@ function ContentCrudPage() {
           onConfirm={handleConfirmDeleteSelected}
           isDeleting={isDeleting}
         />
-      )}
+        ),
+      }}
     />
   );
 }

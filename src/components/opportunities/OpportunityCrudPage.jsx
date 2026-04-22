@@ -146,82 +146,96 @@ function OpportunityCrudPage() {
 
   return (
     <CrudPageTemplate
-      pageClassName="opportunities-page"
-      pageTitle="Opportunities"
-      pageDescription="Track partnerships, roles, and outreach as an executive-grade pipeline."
-      sourceNote={source === 'supabase'
-        ? 'Data source: Supabase (live persistence).'
-        : 'Sample data — configure Supabase to use real data.'}
-      sourceNoteClassName="opportunities-source-note"
-      loadError={loadError}
-      loadErrorClassName="opportunities-error"
-      loadingAnnouncement="Loading opportunities data."
-      isLoading={isLoading}
-      summaryLoadingContent={(
-        <SummaryCards
-          className="opportunities-summary"
-          isLoading
-          loadingCount={3}
-          loadingKeyPrefix="opportunities-summary"
-        />
-      )}
-      summaryContent={(
-        <SummaryCards
-          className="opportunities-summary"
-          cards={summaryCards}
-        />
-      )}
-      sectionTitle="Pipeline Overview"
-      sectionIconName="opportunities"
-      sectionActionText="Add Opportunity"
-      onSectionAction={handleOpenCreateModal}
-      sectionActionLabel="Create a new opportunity"
-      sectionLoadingContent={(
-        <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
-          <p className="sr-only" role="status" aria-live="polite">
-            Loading pipeline rows.
-          </p>
-          <div className="crm-table__header" role="row">
-            <p role="columnheader">Opportunity</p>
-            <p role="columnheader">Company</p>
-            <p role="columnheader">Priority</p>
-            <p role="columnheader">Stage / Next Step</p>
-          </div>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="crm-table__row" role="row">
-              <div className="crm-table__cell" role="cell" data-label="Opportunity">
-                <div className="skeleton-line" />
-              </div>
-              <div className="crm-table__cell" role="cell" data-label="Company">
-                <div className="skeleton-line" />
-              </div>
-              <div className="crm-table__cell" role="cell" data-label="Priority">
-                <div className="skeleton-line" />
-              </div>
-              <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
-                <div className="skeleton-line" />
-              </div>
+      page={{
+        className: 'opportunities-page',
+        title: 'Opportunities',
+        description: 'Track partnerships, roles, and outreach as an executive-grade pipeline.',
+      }}
+      source={{
+        note: source === 'supabase'
+          ? 'Data source: Supabase (live persistence).'
+          : 'Sample data — configure Supabase to use real data.',
+        noteClassName: 'opportunities-source-note',
+      }}
+      status={{
+        loadError,
+        loadErrorClassName: 'opportunities-error',
+        loadingAnnouncement: 'Loading opportunities data.',
+        isLoading,
+      }}
+      summary={{
+        loadingContent: (
+          <SummaryCards
+            className="opportunities-summary"
+            isLoading
+            loadingCount={3}
+            loadingKeyPrefix="opportunities-summary"
+          />
+        ),
+        content: (
+          <SummaryCards
+            className="opportunities-summary"
+            cards={summaryCards}
+          />
+        ),
+      }}
+      section={{
+        title: 'Pipeline Overview',
+        iconName: 'opportunities',
+        actionText: 'Add Opportunity',
+        actionIconName: 'add',
+        onAction: handleOpenCreateModal,
+        actionLabel: 'Create a new opportunity',
+        loadingContent: (
+          <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
+            <p className="sr-only" role="status" aria-live="polite">
+              Loading pipeline rows.
+            </p>
+            <div className="crm-table__header" role="row">
+              <p role="columnheader">Opportunity</p>
+              <p role="columnheader">Company</p>
+              <p role="columnheader">Priority</p>
+              <p role="columnheader">Stage / Next Step</p>
             </div>
-          ))}
-        </div>
-      )}
-      isEmpty={opportunityItems.length === 0}
-      emptyStateTitle="No opportunities yet"
-      emptyStateDescription="Add your first opportunity to start tracking outreach and next steps."
-      emptyStateAction={(
-        <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
-          Add Opportunity
-        </Button>
-      )}
-      sectionContent={(
-        <div>
-          <p className="sr-only" role="status" aria-live="polite">
-            Showing {opportunityItems.length} opportunities.
-          </p>
-          <OpportunityTable items={opportunityItems} onSelect={setSelectedOpportunity} />
-        </div>
-      )}
-      itemModal={(
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="crm-table__row" role="row">
+                <div className="crm-table__cell" role="cell" data-label="Opportunity">
+                  <div className="skeleton-line" />
+                </div>
+                <div className="crm-table__cell" role="cell" data-label="Company">
+                  <div className="skeleton-line" />
+                </div>
+                <div className="crm-table__cell" role="cell" data-label="Priority">
+                  <div className="skeleton-line" />
+                </div>
+                <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
+                  <div className="skeleton-line" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+        isEmpty: opportunityItems.length === 0,
+        emptyState: {
+          title: 'No opportunities yet',
+          description: 'Add your first opportunity to start tracking outreach and next steps.',
+          action: (
+            <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
+              Add Opportunity
+            </Button>
+          ),
+        },
+        content: (
+          <div>
+            <p className="sr-only" role="status" aria-live="polite">
+              Showing {opportunityItems.length} opportunities.
+            </p>
+            <OpportunityTable items={opportunityItems} onSelect={setSelectedOpportunity} />
+          </div>
+        ),
+      }}
+      modals={{
+        item: (
         <Modal
           isOpen={Boolean(selectedOpportunity)}
           title={selectedOpportunity ? selectedOpportunity.name : ''}
@@ -260,8 +274,8 @@ function OpportunityCrudPage() {
             </div>
           ) : null}
         </Modal>
-      )}
-      formModal={(
+        ),
+        form: (
         <Modal
           isOpen={isFormOpen}
           title={selectedOpportunity ? 'Edit Opportunity' : 'Add Opportunity'}
@@ -356,8 +370,8 @@ function OpportunityCrudPage() {
             </div>
           </form>
         </Modal>
-      )}
-      deleteConfirmModal={(
+        ),
+        deleteConfirm: (
         <DeleteConfirmModal
           isOpen={isDeleteConfirmOpen}
           title="Delete Opportunity"
@@ -366,7 +380,8 @@ function OpportunityCrudPage() {
           onConfirm={handleConfirmDeleteSelected}
           isDeleting={isDeleting}
         />
-      )}
+        ),
+      }}
     />
   );
 }

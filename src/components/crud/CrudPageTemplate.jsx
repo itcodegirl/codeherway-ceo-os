@@ -3,32 +3,55 @@ import SectionCard from '../ui/SectionCard';
 import EmptyState from '../ui/EmptyState';
 
 function CrudPageTemplate({
-  pageClassName,
-  pageTitle,
-  pageDescription,
-  sourceNote,
-  sourceNoteClassName,
-  loadError,
-  loadErrorClassName,
-  loadingAnnouncement,
-  isLoading,
-  summaryLoadingContent,
-  summaryContent,
-  sectionTitle,
-  sectionIconName,
-  sectionActionText,
-  onSectionAction,
-  sectionActionLabel,
-  sectionLoadingContent,
-  isEmpty,
-  emptyStateTitle,
-  emptyStateDescription,
-  emptyStateAction,
-  sectionContent,
-  itemModal,
-  formModal,
-  deleteConfirmModal,
+  page,
+  source,
+  status,
+  summary,
+  section,
+  modals,
 }) {
+  const {
+    className: pageClassName,
+    title: pageTitle,
+    description: pageDescription,
+  } = page;
+  const {
+    note: sourceNote,
+    noteClassName: sourceNoteClassName = '',
+  } = source;
+  const {
+    loadError,
+    loadErrorClassName = '',
+    loadingAnnouncement,
+    isLoading = false,
+  } = status;
+  const {
+    loadingContent: summaryLoadingContent,
+    content: summaryContent,
+  } = summary;
+  const {
+    title: sectionTitle,
+    iconName: sectionIconName,
+    actionText: sectionActionText,
+    actionIconName: sectionActionIconName,
+    onAction: onSectionAction,
+    actionLabel: sectionActionLabel,
+    loadingContent: sectionLoadingContent,
+    isEmpty,
+    emptyState,
+    content: sectionContent,
+  } = section;
+  const {
+    title: emptyStateTitle,
+    description: emptyStateDescription,
+    action: emptyStateAction,
+  } = emptyState;
+  const {
+    item: itemModal,
+    form: formModal,
+    deleteConfirm: deleteConfirmModal,
+  } = modals;
+
   return (
     <section className={pageClassName}>
       <PageHeader title={pageTitle} description={pageDescription} />
@@ -51,6 +74,7 @@ function CrudPageTemplate({
         title={sectionTitle}
         iconName={sectionIconName}
         actionText={sectionActionText}
+        actionIconName={sectionActionIconName}
         onAction={onSectionAction}
         actionLabel={sectionActionLabel}
       >
