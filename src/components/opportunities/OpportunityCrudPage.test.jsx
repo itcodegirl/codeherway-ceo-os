@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OpportunityCrudPage from './OpportunityCrudPage';
@@ -114,5 +114,86 @@ describe('OpportunityCrudPage', () => {
     expect(screen.getByRole('table', { name: 'Opportunity pipeline' })).toBeInTheDocument();
     expect(screen.getByText('Advisory Partnership')).toBeInTheDocument();
     expect(screen.getByText('Studio North')).toBeInTheDocument();
+  });
+
+  it('handles create interactions through workspace action and form submit', () => {
+    const handleOpenCreateModal = vi.fn();
+    const handleFormChange = vi.fn();
+    const handleFormSubmit = vi.fn((event) => event?.preventDefault?.());
+
+    useCrudPage.mockReturnValue(
+      createCrudState({
+        isFormOpen: true,
+        formValues: {
+          name: 'Advisory partnership',
+          company: 'Studio North',
+          priority: 'High',
+          stage: 'In Progress',
+          nextStep: 'Send intro',
+        },
+        handleOpenCreateModal,
+        handleFormChange,
+        handleFormSubmit,
+      }),
+    );
+    getOpportunitiesSource.mockReturnValue('local');
+
+    renderWithRouter(<OpportunityCrudPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create a new opportunity' }));
+    fireEvent.change(screen.getByLabelText('Opportunity'), { target: { value: 'Advisory partnership updated' } });
+    fireEvent.change(screen.getByLabelText('Company'), { target: { value: 'Studio North Labs' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create opportunity' }));
+
+    expect(handleOpenCreateModal).toHaveBeenCalledTimes(1);
+    expect(handleFormChange).toHaveBeenCalledWith('name', 'Advisory partnership updated');
+    expect(handleFormChange).toHaveBeenCalledWith('company', 'Studio North Labs');
+    expect(handleFormSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles edit and delete interactions for selected opportunity', () => {
+    const handleOpenEditModal = vi.fn();
+    const handleOpenDeleteConfirm = vi.fn();
+    const handleConfirmDeleteSelected = vi.fn();
+    const handleFormSubmit = vi.fn((event) => event?.preventDefault?.());
+
+    useCrudPage.mockReturnValue(
+      createCrudState({
+        selectedItem: {
+          id: 'opp-1',
+          name: 'Advisory Partnership',
+          company: 'Studio North',
+          priority: 'High',
+          stage: 'In Progress',
+          nextStep: 'Send deck follow-up',
+        },
+        isFormOpen: true,
+        isDeleteConfirmOpen: true,
+        formValues: {
+          name: 'Advisory Partnership',
+          company: 'Studio North',
+          priority: 'High',
+          stage: 'In Progress',
+          nextStep: 'Send deck follow-up',
+        },
+        handleOpenEditModal,
+        handleOpenDeleteConfirm,
+        handleConfirmDeleteSelected,
+        handleFormSubmit,
+      }),
+    );
+    getOpportunitiesSource.mockReturnValue('local');
+
+    renderWithRouter(<OpportunityCrudPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit selected opportunity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected opportunity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save opportunity changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    expect(handleOpenEditModal).toHaveBeenCalledTimes(1);
+    expect(handleOpenDeleteConfirm).toHaveBeenCalledTimes(1);
+    expect(handleFormSubmit).toHaveBeenCalledTimes(1);
+    expect(handleConfirmDeleteSelected).toHaveBeenCalledTimes(1);
   });
 });

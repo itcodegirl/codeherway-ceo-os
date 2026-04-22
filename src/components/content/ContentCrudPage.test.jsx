@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ContentCrudPage from './ContentCrudPage';
@@ -110,5 +110,80 @@ describe('ContentCrudPage', () => {
     expect(screen.getByRole('table', { name: 'Content pipeline' })).toBeInTheDocument();
     expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
     expect(screen.getByText('LinkedIn')).toBeInTheDocument();
+  });
+
+  it('handles create interactions through workspace action and form submit', () => {
+    const handleOpenCreateModal = vi.fn();
+    const handleFormChange = vi.fn();
+    const handleFormSubmit = vi.fn((event) => event?.preventDefault?.());
+
+    useCrudPage.mockReturnValue(
+      createCrudState({
+        isFormOpen: true,
+        formValues: {
+          title: 'Founder Memo',
+          platform: 'LinkedIn',
+          status: 'Drafting',
+        },
+        handleOpenCreateModal,
+        handleFormChange,
+        handleFormSubmit,
+      }),
+    );
+    getContentSource.mockReturnValue('local');
+
+    renderWithRouter(<ContentCrudPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create a new content item' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Founder Memo Updated' } });
+    fireEvent.change(screen.getByLabelText('Platform'), { target: { value: 'LinkedIn Carousel' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
+
+    expect(handleOpenCreateModal).toHaveBeenCalledTimes(1);
+    expect(handleFormChange).toHaveBeenCalledWith('title', 'Founder Memo Updated');
+    expect(handleFormChange).toHaveBeenCalledWith('platform', 'LinkedIn Carousel');
+    expect(handleFormSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles edit and delete interactions for selected content item', () => {
+    const handleOpenEditModal = vi.fn();
+    const handleOpenDeleteConfirm = vi.fn();
+    const handleConfirmDeleteSelected = vi.fn();
+    const handleFormSubmit = vi.fn((event) => event?.preventDefault?.());
+
+    useCrudPage.mockReturnValue(
+      createCrudState({
+        selectedItem: {
+          id: 'content-1',
+          title: 'Founder Weekly Brief',
+          platform: 'LinkedIn',
+          status: 'Editing',
+        },
+        isFormOpen: true,
+        isDeleteConfirmOpen: true,
+        formValues: {
+          title: 'Founder Weekly Brief',
+          platform: 'LinkedIn',
+          status: 'Editing',
+        },
+        handleOpenEditModal,
+        handleOpenDeleteConfirm,
+        handleConfirmDeleteSelected,
+        handleFormSubmit,
+      }),
+    );
+    getContentSource.mockReturnValue('local');
+
+    renderWithRouter(<ContentCrudPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit selected content item' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected content item' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save content changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    expect(handleOpenEditModal).toHaveBeenCalledTimes(1);
+    expect(handleOpenDeleteConfirm).toHaveBeenCalledTimes(1);
+    expect(handleFormSubmit).toHaveBeenCalledTimes(1);
+    expect(handleConfirmDeleteSelected).toHaveBeenCalledTimes(1);
   });
 });
