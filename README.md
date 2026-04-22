@@ -122,6 +122,7 @@ npm run typecheck
   - `profiles`
   - `chief_sessions`
   - `chief_outputs`
+  - `chief_telemetry_events`
 
 ## Roadmap
 
