@@ -1,0 +1,40 @@
+name: Enforce Branch Protection
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to protect
+        required: true
+        default: main
+      required_check:
+        description: Status check context to require
+        required: true
+        default: Unit + E2E
+
+permissions:
+  contents: read
+  administration: write
+
+jobs:
+  apply:
+    name: Apply Protection Rule
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply branch protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ inputs.branch }}
+          REQUIRED_CHECK: ${{ inputs.required_check }}
+        run: npm run configure:branch-protection

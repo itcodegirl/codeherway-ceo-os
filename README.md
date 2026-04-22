@@ -98,6 +98,16 @@ npm run test:run
 npm run typecheck
 ```
 
+### Branch protection automation
+
+- Dry run locally:
+
+```bash
+npm run configure:branch-protection:dry -- --repo owner/repo --branch main
+```
+
+- Apply from GitHub Actions: run the **Enforce Branch Protection** workflow and keep required check set to `Unit + E2E`.
+
 ## Configuration
 
 ### Frontend environment

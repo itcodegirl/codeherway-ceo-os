@@ -13,7 +13,9 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "check:crud-template-legacy": "node scripts/check-crud-template-legacy-props.mjs"
+    "check:crud-template-legacy": "node scripts/check-crud-template-legacy-props.mjs",
+    "configure:branch-protection": "node scripts/configure-branch-protection.mjs",
+    "configure:branch-protection:dry": "node scripts/configure-branch-protection.mjs --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
