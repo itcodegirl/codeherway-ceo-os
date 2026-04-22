@@ -1,4 +1,5 @@
 import { getChiefActionConfig } from '../src/lib/chiefActions.js';
+import { extractChiefResponseText } from '../shared/chiefResponseText.js';
 import {
   hasStructuredContent,
   normalizeStructuredPayload,
@@ -168,35 +169,6 @@ function buildInput({ instruction, notes }) {
   ];
 }
 
-function extractOutputText(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return '';
-  }
-
-  if (typeof payload.output_text === 'string' && payload.output_text.trim()) {
-    return payload.output_text.trim();
-  }
-
-  if (!Array.isArray(payload.output)) {
-    return '';
-  }
-
-  const textParts = [];
-  payload.output.forEach((item) => {
-    if (!Array.isArray(item?.content)) {
-      return;
-    }
-
-    item.content.forEach((contentPart) => {
-      if (contentPart?.type === 'output_text' && typeof contentPart.text === 'string') {
-        textParts.push(contentPart.text.trim());
-      }
-    });
-  });
-
-  return textParts.filter(Boolean).join('\n\n');
-}
-
 function normalizeStructuredPayloadCandidate(candidate) {
   const parsedCandidate = typeof candidate === 'string' ? parseJsonCandidate(candidate) : candidate;
   return normalizeStructuredPayload(parsedCandidate);
@@ -221,7 +193,7 @@ function extractStructuredPayload(payload) {
     }
   }
 
-  const outputText = extractOutputText(payload);
+  const outputText = extractChiefResponseText(payload);
   const normalizedTextPayload = normalizeStructuredPayload(parseStructuredPayloadFromText(outputText));
   if (hasStructuredContent(normalizedTextPayload)) {
     return normalizedTextPayload;

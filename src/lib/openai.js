@@ -1,4 +1,5 @@
 import { getChiefActionConfig } from './chiefActions';
+import { extractChiefResponseText } from '../../shared/chiefResponseText';
 import {
   createEmptyStructuredPayload,
   hasStructuredContent,
@@ -25,63 +26,6 @@ export const aiConfig = {
   configuredEndpoint: configuredProxyUrl || null,
 };
 
-function extractResponseText(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return '';
-  }
-
-  const readOutputTextValue = (value) => {
-    if (typeof value === 'string') {
-      return value.trim();
-    }
-
-    if (Array.isArray(value)) {
-      return value
-        .map((entry) => readOutputTextValue(entry))
-        .filter(Boolean)
-        .join('\n\n');
-    }
-
-    return '';
-  };
-
-  const outputText = readOutputTextValue(payload.output_text);
-  if (outputText) {
-    return outputText;
-  }
-
-  if (!Array.isArray(payload.output)) {
-    return '';
-  }
-
-  const textParts = [];
-
-  payload.output.forEach((item) => {
-    if (!Array.isArray(item?.content)) {
-      return;
-    }
-
-    item.content.forEach((contentPart) => {
-      if (contentPart?.type === 'output_text' && typeof contentPart.text === 'string') {
-        textParts.push(contentPart.text.trim());
-        return;
-      }
-
-      if (
-        contentPart?.type === 'output_text'
-        && Array.isArray(contentPart.text)
-      ) {
-        contentPart.text
-          .map((entry) => readOutputTextValue(entry))
-          .filter(Boolean)
-          .forEach((entryText) => textParts.push(entryText));
-      }
-    });
-  });
-
-  return textParts.filter(Boolean).join('\n\n');
-}
-
 function extractStructuredPayload(payload, textContent) {
   if (!payload || typeof payload !== 'object') {
     return createEmptyStructuredPayload();
@@ -103,7 +47,7 @@ function extractStructuredPayload(payload, textContent) {
     }
   }
 
-  const responseText = textContent || extractResponseText(payload);
+  const responseText = textContent || extractChiefResponseText(payload);
   const parsedFromText = parseStructuredPayloadFromText(responseText);
   return normalizeStructuredPayload(parsedFromText);
 }
@@ -176,7 +120,7 @@ export async function generateChiefOfStaffResponse({ actionKey, notes }) {
     }
 
     const payload = await response.json();
-    const output = extractResponseText(payload);
+    const output = extractChiefResponseText(payload);
     const structuredPayload = extractStructuredPayload(payload, output);
 
     if (!output) {
