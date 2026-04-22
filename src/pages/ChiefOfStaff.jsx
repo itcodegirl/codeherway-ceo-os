@@ -1,4 +1,5 @@
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
+import ChiefTelemetryDiagnostics from "../components/chief/ChiefTelemetryDiagnostics";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
 import { useChiefTelemetryHealth } from "../hooks/useChiefTelemetryHealth";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
@@ -56,6 +57,9 @@ export default function ChiefOfStaff() {
   const {
     source: telemetrySource,
     recentCount: telemetryRecentCount,
+    lastEventTimestamp: telemetryLastEventTimestamp,
+    recentEvents: telemetryRecentEvents,
+    outcomeCounters: telemetryOutcomeCounters,
     isLoading: isTelemetryLoading,
     error: telemetryError
   } = useChiefTelemetryHealth();
@@ -109,13 +113,15 @@ export default function ChiefOfStaff() {
             {feedbackMessage}
           </p>
 
-          <p className="chief-telemetry-text" role="status" aria-live="polite">
-            {telemetryError
-              ? telemetryError
-              : isTelemetryLoading
-                ? "Telemetry: checking engine health..."
-                : `Telemetry active (${telemetrySource}): ${telemetryRecentCount} recent events tracked.`}
-          </p>
+          <ChiefTelemetryDiagnostics
+            source={telemetrySource}
+            recentCount={telemetryRecentCount}
+            lastEventTimestamp={telemetryLastEventTimestamp}
+            recentEvents={telemetryRecentEvents}
+            outcomeCounters={telemetryOutcomeCounters}
+            isLoading={isTelemetryLoading}
+            error={telemetryError}
+          />
         </div>
       </div>
 
