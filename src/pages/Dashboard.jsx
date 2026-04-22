@@ -127,6 +127,7 @@ function Dashboard() {
           title="Top Priorities"
           iconName="weekly"
           actionText="View Plan"
+          actionIconName="weekly"
           actionTo="/weekly-brief"
           actionLabel="Open weekly plan and priority focus"
         >
@@ -147,8 +148,9 @@ function Dashboard() {
 
         <SectionCard
           title="Executive Snapshot"
-          iconName="dashboard"
+          iconName="spark"
           actionText={isSnapshotCopied ? 'Copied!' : 'Copy Snapshot'}
+          actionIconName="copy"
           actionDisabled={isSnapshotCopied}
           onAction={handleCopySnapshot}
           actionLabel="Copy executive snapshot"
@@ -168,6 +170,7 @@ function Dashboard() {
           title="Opportunities Pipeline"
           iconName="opportunities"
           actionText="Open CRM"
+          actionIconName="opportunities"
           actionTo="/opportunities"
           actionLabel="Open opportunities pipeline dashboard"
         >
@@ -200,6 +203,7 @@ function Dashboard() {
           title="Content Pipeline"
           iconName="content"
           actionText="Open Content OS"
+          actionIconName="content"
           actionTo="/content"
           actionLabel="Open content operating system dashboard"
         >
@@ -230,11 +234,11 @@ function Dashboard() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Momentum Trend" iconName="dashboard">
+        <SectionCard title="Momentum Trend" iconName="trend">
           <MomentumChart values={dashboardInsights.momentumValues} />
         </SectionCard>
 
-        <SectionCard title="Recent Activity" iconName="dashboard">
+        <SectionCard title="Recent Activity" iconName="activity">
           {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
           <ActivityFeed items={dashboardInsights.recentActivity} />
         </SectionCard>
