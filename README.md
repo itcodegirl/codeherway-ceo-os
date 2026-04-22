@@ -18,6 +18,7 @@ The project is intentionally local-first by default with a first-class Supabase 
 - Data orchestration and side effects live in `src/hooks`.
 - Repository modules under `src/lib` own normalization, persistence, and transport concerns.
 - The app shell owns shared structure and meta behaviors, not domain logic.
+- CRUD domain pages now use a slot-based template contract (`header`, `status`, `summary`, `section`, `modals`) instead of a flat prop list, which keeps page scaffolding maintainable as features grow.
 
 ### 2) Repository pattern across domains
 
@@ -61,6 +62,7 @@ Each repository follows the same contract:
 - Clear loading, empty, and fallback states
 - Source/status messaging for persistence mode
 - Controlled keyboard interactions and form behavior in core workflows
+- Interactive data rows in opportunities/content tables support keyboard activation (`Enter` / `Space`) in addition to pointer interaction.
 
 ### 6) Test and quality culture
 
