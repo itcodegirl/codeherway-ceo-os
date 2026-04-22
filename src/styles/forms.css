@@ -10,7 +10,7 @@
 }
 
 .input-field__error {
-  color: #ffb4b4;
+  color: var(--danger-text);
 }
 
 .input-field__control,
@@ -18,7 +18,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-action);
   padding: 0.6rem 0.7rem;
-  background: #121824;
+  background: var(--surface-input);
   color: var(--text);
 }
 

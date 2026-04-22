@@ -31,7 +31,7 @@
 	display: flex;
 	align-items: baseline;
 	gap: 0.75rem;
-	color: #dbe2ea;
+	color: var(--text-sidebar-hover);
 }
 
 .weekly-list__content {
@@ -60,7 +60,7 @@
 	width: 10px;
 	height: 10px;
 	border-radius: 999px;
-	background: #6d5dfc;
+	background: var(--accent);
 	margin-top: 0.12rem;
 	flex-shrink: 0;
 	line-height: 1;
@@ -68,19 +68,19 @@
 }
 
 .weekly-list__dot--success {
-	background: #8ed6b5;
+	background: var(--success);
 }
 
 .weekly-list__dot--warning {
-	background: #ffd58f;
+	background: var(--warning);
 }
 
 .weekly-list__dot--high {
-	background: #ff8f8f;
+	background: var(--danger);
 }
 
 .weekly-note {
-	color: #dbe2ea;
+	color: var(--text-sidebar-hover);
 	line-height: 1.7;
 }
 
@@ -108,7 +108,7 @@
 }
 
 .weekly-error {
-	color: #ffb4b4;
+	color: var(--danger-text);
 }
 
 @media (max-width: 1100px) {

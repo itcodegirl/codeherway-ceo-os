@@ -21,7 +21,7 @@
 }
 
 .opportunities-error {
-	color: #ffb4b4;
+	color: var(--danger-text);
 }
 
 .crm-table {
@@ -88,7 +88,7 @@
 
 .crm-stage,
 .crm-next-step {
-	color: #dbe2ea;
+	color: var(--text-sidebar-hover);
 	font-size: var(--fs-helper);
 }
 
@@ -105,7 +105,7 @@
 .crm-table__open-button {
 	border: 1px solid rgba(200, 194, 255, 0.35);
 	background: rgba(109, 93, 252, 0.16);
-	color: #efeaff;
+	color: var(--accent-soft-strong);
 	border-radius: var(--radius-action);
 	padding: 0.4rem 0.7rem;
 	font-size: 0.8rem;

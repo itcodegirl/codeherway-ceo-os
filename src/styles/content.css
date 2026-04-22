@@ -9,7 +9,7 @@
 }
 
 .content-error {
-	color: #ffb4b4;
+	color: var(--danger-text);
 }
 
 .content-page .crm-table__header,
@@ -103,19 +103,19 @@
 
 .content-status--drafting {
 	background: rgba(97, 218, 251, 0.22);
-	color: #b4ecff;
+	color: var(--info-soft);
 	border-color: rgba(159, 232, 255, 0.4);
 }
 
 .content-status--editing {
 	background: rgba(255, 193, 92, 0.22);
-	color: #ffe3b0;
+	color: var(--warning-soft);
 	border-color: rgba(255, 213, 137, 0.4);
 }
 
 .content-status--scheduled {
 	background: rgba(142, 214, 181, 0.22);
-	color: #c0f1d8;
+	color: var(--success-soft);
 	border-color: rgba(154, 240, 199, 0.4);
 }
 
