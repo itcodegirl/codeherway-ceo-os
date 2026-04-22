@@ -47,7 +47,7 @@ function AIPromptBox({ onSubmit, placeholder = 'Ask for a brief, prioritization,
           type="submit"
           disabled={!canSubmit}
           ariaLabel="Generate follow-up instruction"
-          icon={{ name: 'action', size: 14 }}
+          icon={{ name: 'spark', size: 14 }}
         >
           Generate
         </Button>

@@ -28,7 +28,7 @@ class ErrorBoundary extends Component {
               type="button"
               onClick={() => window.location.reload()}
               ariaLabel="Reload the current view"
-              icon={{ name: 'action', size: 14 }}
+              icon={{ name: 'refresh', size: 14 }}
             >
               Reload App
             </Button>
@@ -37,7 +37,7 @@ class ErrorBoundary extends Component {
               variant="ghost"
               onClick={() => window.history.back()}
               ariaLabel="Go back to previous page"
-              icon={{ name: 'action', size: 14 }}
+              icon={{ name: 'back', size: 14 }}
             >
               Go Back
             </Button>

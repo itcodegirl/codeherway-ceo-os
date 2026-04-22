@@ -131,7 +131,7 @@ function WeeklyEditorModal({
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" icon={{ name: 'action', size: 14 }}>
+          <Button type="submit" icon={{ name: 'check', size: 14 }}>
             {isEditing ? 'Save Changes' : 'Create'}
           </Button>
         </div>

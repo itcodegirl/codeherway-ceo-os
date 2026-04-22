@@ -3,6 +3,53 @@ import Button from './Button';
 import Icon from './Icon';
 import { normalizePath } from '../../lib/utils';
 
+function resolveActionIconName(actionText, actionTo) {
+  const normalizedActionText = typeof actionText === 'string' ? actionText.toLowerCase() : '';
+
+  if (normalizedActionText.includes('add') || normalizedActionText.includes('create')) {
+    return 'add';
+  }
+
+  if (normalizedActionText.includes('copy')) {
+    return 'copy';
+  }
+
+  if (
+    normalizedActionText.includes('reset')
+    || normalizedActionText.includes('retry')
+    || normalizedActionText.includes('reload')
+    || normalizedActionText.includes('refresh')
+  ) {
+    return 'refresh';
+  }
+
+  if (normalizedActionText.includes('delete') || normalizedActionText.includes('remove')) {
+    return 'delete';
+  }
+
+  if (normalizedActionText.includes('edit')) {
+    return 'edit';
+  }
+
+  if (normalizedActionText.includes('save')) {
+    return 'check';
+  }
+
+  if (normalizedActionText.includes('close')) {
+    return 'close';
+  }
+
+  if (normalizedActionText.includes('back')) {
+    return 'back';
+  }
+
+  if (actionTo) {
+    return 'action';
+  }
+
+  return 'spark';
+}
+
 function ActionControl({
   actionText,
   actionTo,
@@ -17,6 +64,7 @@ function ActionControl({
   const shouldRenderLinkAction = Boolean(actionText && actionTo && !isSelfNavigation);
   const shouldRenderButtonAction = Boolean(actionText && onAction && (!actionTo || isSelfNavigation));
   const hasAction = shouldRenderLinkAction || shouldRenderButtonAction;
+  const actionIconName = resolveActionIconName(actionText, actionTo);
 
   if (!actionText || !hasAction) {
     return null;
@@ -30,7 +78,7 @@ function ActionControl({
         aria-label={actionLabel || actionText}
       >
         {actionText}
-        <Icon name="action" size={14} className="action-button__icon" />
+        <Icon name={actionIconName} size={14} className="action-button__icon" />
       </Link>
     );
   }
@@ -40,7 +88,7 @@ function ActionControl({
       type="button"
       onClick={onAction || undefined}
       ariaLabel={actionLabel || actionText}
-      icon={{ name: 'action', size: 14 }}
+      icon={{ name: actionIconName, size: 14 }}
     >
       {actionText}
     </Button>

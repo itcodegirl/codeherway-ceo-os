@@ -34,7 +34,7 @@ function PromptWorkspace({
             onClick={() => onAction('summarize')}
             disabled={!canGenerate}
             aria-label="Generate an executive summary from current notes"
-            icon={{ name: 'action', size: 14 }}
+            icon={{ name: 'spark', size: 14 }}
           >
             Summarize This Week
           </Button>
@@ -42,7 +42,7 @@ function PromptWorkspace({
             onClick={() => onAction('draft')}
             disabled={!canGenerate}
             aria-label="Generate a LinkedIn post draft from current notes"
-            icon={{ name: 'action', size: 14 }}
+            icon={{ name: 'content', size: 14 }}
           >
             Draft LinkedIn Post
           </Button>
@@ -50,7 +50,7 @@ function PromptWorkspace({
             onClick={() => onAction('actions')}
             disabled={!canGenerate}
             aria-label="Generate action items from current notes"
-            icon={{ name: 'action', size: 14 }}
+            icon={{ name: 'add', size: 14 }}
           >
             Convert to Action Items
           </Button>
@@ -58,7 +58,7 @@ function PromptWorkspace({
             onClick={() => onAction('priorities')}
             disabled={!canGenerate}
             aria-label="Generate next-priority recommendations from current notes"
-            icon={{ name: 'action', size: 14 }}
+            icon={{ name: 'weekly', size: 14 }}
           >
             Suggest Next Priorities
           </Button>

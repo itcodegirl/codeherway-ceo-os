@@ -47,6 +47,48 @@ function Icon({ name = 'spark', size = 16, className = '' }) {
         <path d="M8 4v16" {...commonProps} />
       </>
     ),
+    trend: <path d="M4 16h16M6 14l4-4 3 3 5-6" {...commonProps} />,
+    activity: (
+      <>
+        <path d="M3 12h4l2.2-5 3.6 10 2.2-5H21" {...commonProps} />
+      </>
+    ),
+    add: (
+      <>
+        <path d="M12 5v14M5 12h14" {...commonProps} />
+      </>
+    ),
+    copy: (
+      <>
+        <rect x="9" y="9" width="11" height="11" rx="2" {...commonProps} />
+        <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" {...commonProps} />
+      </>
+    ),
+    refresh: <path d="M20 11a8 8 0 1 0 2 5.5M20 11v5h-5" {...commonProps} />,
+    close: (
+      <>
+        <path d="m6 6 12 12M18 6 6 18" {...commonProps} />
+      </>
+    ),
+    edit: (
+      <>
+        <path d="M4 20h4l10-10-4-4L4 16v4Z" {...commonProps} />
+        <path d="m12 6 4 4" {...commonProps} />
+      </>
+    ),
+    delete: (
+      <>
+        <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M7 7l1 12a1 1 0 0 0 1 .9h6a1 1 0 0 0 1-.9l1-12" {...commonProps} />
+      </>
+    ),
+    check: <path d="m5 13 4 4L19 7" {...commonProps} />,
+    back: <path d="M20 12H6m6 6-6-6 6-6" {...commonProps} />,
+    warning: (
+      <>
+        <path d="M12 4 3 20h18L12 4Z" {...commonProps} />
+        <path d="M12 10v4M12 17h.01" {...commonProps} />
+      </>
+    ),
     action: <path d="M7 17 17 7M8 7h9v9" {...commonProps} />,
     spark: (
       <>

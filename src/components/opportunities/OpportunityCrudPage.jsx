@@ -208,7 +208,7 @@ function OpportunityCrudPage() {
       emptyStateTitle="No opportunities yet"
       emptyStateDescription="Add your first opportunity to start tracking outreach and next steps."
       emptyStateAction={(
-        <Button onClick={handleOpenCreateModal} icon={{ name: 'action', size: 14 }}>
+        <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
           Add Opportunity
         </Button>
       )}
@@ -241,7 +241,7 @@ function OpportunityCrudPage() {
                   type="button"
                   onClick={handleOpenEditModal}
                   aria-label="Edit selected opportunity"
-                  icon={{ name: 'action', size: 14 }}
+                  icon={{ name: 'edit', size: 14 }}
                 >
                   Edit
                 </Button>
@@ -251,7 +251,7 @@ function OpportunityCrudPage() {
                   onClick={handleOpenDeleteConfirm}
                   disabled={isDeleting}
                   aria-label="Delete selected opportunity"
-                  icon={{ name: 'action', size: 14 }}
+                  icon={{ name: 'delete', size: 14 }}
                 >
                   Delete
                 </Button>
@@ -348,7 +348,7 @@ function OpportunityCrudPage() {
                 type="submit"
                 disabled={isSaving}
                 aria-label={selectedOpportunity ? 'Save opportunity changes' : 'Create opportunity'}
-                icon={{ name: 'action', size: 14 }}
+                icon={{ name: 'check', size: 14 }}
               >
                 {isSaving ? 'Saving...' : selectedOpportunity ? 'Save Changes' : 'Create Opportunity'}
               </Button>

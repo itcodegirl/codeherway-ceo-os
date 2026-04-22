@@ -118,7 +118,7 @@ function Modal({ isOpen, title, onClose, children }) {
             size="small"
             onClick={() => onClose?.()}
             ariaLabel="Close dialog"
-            icon={{ name: 'action', size: 12 }}
+            icon={{ name: 'close', size: 12 }}
           >
             Close
           </Button>

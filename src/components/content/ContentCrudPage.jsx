@@ -186,7 +186,7 @@ function ContentCrudPage() {
       emptyStateTitle="No content items yet"
       emptyStateDescription="Add your first draft to begin tracking your publishing pipeline."
       emptyStateAction={(
-        <Button onClick={handleOpenCreateModal} icon={{ name: 'action', size: 14 }}>
+        <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
           Add Content
         </Button>
       )}
@@ -208,7 +208,7 @@ function ContentCrudPage() {
                   type="button"
                   onClick={handleOpenEditModal}
                   aria-label="Edit selected content item"
-                  icon={{ name: 'action', size: 14 }}
+                  icon={{ name: 'edit', size: 14 }}
                 >
                   Edit
                 </Button>
@@ -218,7 +218,7 @@ function ContentCrudPage() {
                   onClick={handleOpenDeleteConfirm}
                   disabled={isDeleting}
                   aria-label="Delete selected content item"
-                  icon={{ name: 'action', size: 14 }}
+                  icon={{ name: 'delete', size: 14 }}
                 >
                   Delete
                 </Button>
@@ -289,7 +289,7 @@ function ContentCrudPage() {
                 type="submit"
                 disabled={isSaving}
                 aria-label={selectedItem ? 'Save content changes' : 'Create content item'}
-                icon={{ name: 'action', size: 14 }}
+                icon={{ name: 'check', size: 14 }}
               >
                 {isSaving ? 'Saving...' : selectedItem ? 'Save Changes' : 'Create Content'}
               </Button>

@@ -25,7 +25,7 @@ function ConfirmModal({
           onClick={onConfirm}
           disabled={isConfirming}
           aria-label={confirmAriaLabel}
-          icon={{ name: 'action', size: 14 }}
+          icon={{ name: 'check', size: 14 }}
         >
           {confirmLabel}
         </Button>
