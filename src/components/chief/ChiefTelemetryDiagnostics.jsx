@@ -51,13 +51,13 @@ export default function ChiefTelemetryDiagnostics({
         <>
           <p className="chief-telemetry-copy">
             {isLoading
-              ? "Refreshing telemetry..."
-              : `Source: ${source || "local"} · Last event: ${latestTimestampLabel}`}
+              ? 'Refreshing telemetry...'
+              : `Source: ${source || 'local'} - Last event: ${latestTimestampLabel}`}
           </p>
           {!isLoading && (lastRequestId || lastCorrelationId) ? (
             <p className="chief-telemetry-copy">
-              {lastRequestId ? `Request: ${lastRequestId}` : "Request: n/a"}
-              {lastCorrelationId ? ` · Correlation: ${lastCorrelationId}` : ""}
+              {lastRequestId ? `Request: ${lastRequestId}` : 'Request: n/a'}
+              {lastCorrelationId ? ` - Correlation: ${lastCorrelationId}` : ''}
             </p>
           ) : null}
 

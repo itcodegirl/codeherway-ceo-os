@@ -127,5 +127,6 @@ export const dashboardDemoData = {
   focusScore: {
     demoSuffix: 'Demo heuristic',
   },
-  demoNote: 'Sample data — configure Supabase to use real data.',
+  demoNote: 'Sample data - configure Supabase to use real data.',
 };
+

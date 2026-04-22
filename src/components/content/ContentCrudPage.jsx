@@ -14,6 +14,7 @@ import {
   listContentItems,
   updateContentItem,
 } from '../../lib/contentRepository';
+import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/content.css';
@@ -134,8 +135,8 @@ function ContentCrudPage() {
       }}
       status={{
         sourceNote: source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Sample data - configure Supabase to use real data.',
+          ? SOURCE_NOTICE_SUPABASE
+          : SOURCE_NOTICE_SAMPLE_DATA,
         sourceNoteClassName: 'content-source-note',
         loadError,
         loadErrorClassName: 'content-error',

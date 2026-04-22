@@ -14,6 +14,7 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../../lib/opportunitiesRepository';
+import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/opportunities.css';
@@ -147,8 +148,8 @@ function OpportunityCrudPage() {
       }}
       status={{
         sourceNote: source === 'supabase'
-          ? 'Data source: Supabase (live persistence).'
-          : 'Sample data - configure Supabase to use real data.',
+          ? SOURCE_NOTICE_SUPABASE
+          : SOURCE_NOTICE_SAMPLE_DATA,
         sourceNoteClassName: 'opportunities-source-note',
         loadError,
         loadErrorClassName: 'opportunities-error',

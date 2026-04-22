@@ -1,9 +1,10 @@
 import Button from './Button';
+import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
 
 function SourceStatusNotice({
   source = 'local',
-  supabaseText = 'Data source: Supabase (live persistence).',
-  localText = 'Sample data — configure Supabase to use real data.',
+  supabaseText = SOURCE_NOTICE_SUPABASE,
+  localText = SOURCE_NOTICE_SAMPLE_DATA,
   loadError = '',
   onRetry = null,
   retryAriaLabel = 'Retry loading data',

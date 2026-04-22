@@ -12,6 +12,7 @@ import { useDashboardInsights } from '../hooks/useDashboardInsights';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { contentStatusTone } from '../lib/statusMaps';
+import { buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
 function Dashboard() {
@@ -104,8 +105,8 @@ function Dashboard() {
       <PageHeader title="Dashboard" description="Track opportunities, content, and priorities from one executive view." />
       <SourceStatusNotice
         source={weeklySource}
-        supabaseText="Weekly data source: Supabase."
-        localText="Weekly data source: Sample data — configure Supabase to use real data."
+        supabaseText={buildSourceNotice('supabase', { supabasePrefix: 'Weekly data source: ' })}
+        localText={buildSourceNotice('local', { localPrefix: 'Weekly data source: ' })}
         loadError={weeklyLoadError}
         onRetry={refreshWeeklyBrief}
         retryAriaLabel="Retry loading weekly dashboard data"
@@ -250,3 +251,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+

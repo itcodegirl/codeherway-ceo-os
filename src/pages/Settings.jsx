@@ -5,6 +5,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
+import { SOURCE_NOTICE_SAMPLE_DATA } from '../lib/uiCopy';
 import '../styles/forms.css';
 
 function Settings() {
@@ -160,7 +161,7 @@ function Settings() {
       <div className="helper-text" role="status" aria-live="polite">
         {source === 'supabase'
           ? 'Changes sync to your Supabase profile.'
-          : 'Sample data — configure Supabase to use real data.'}
+          : SOURCE_NOTICE_SAMPLE_DATA}
         {savedAt ? (
           <span className="settings-saved-indicator">
             {' '}
@@ -173,3 +174,4 @@ function Settings() {
 }
 
 export default Settings;
+
