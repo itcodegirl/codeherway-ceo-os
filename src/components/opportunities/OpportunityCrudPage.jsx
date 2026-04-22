@@ -1,14 +1,11 @@
 import { useMemo } from 'react';
 import CrudPageTemplate from '../crud/CrudPageTemplate';
 import OpportunityTable from './OpportunityTable';
-import Modal from '../ui/Modal';
-import DeleteConfirmModal from '../ui/DeleteConfirmModal';
-import Badge from '../ui/Badge';
+import OpportunityItemModal from './OpportunityItemModal';
+import OpportunityFormModal from './OpportunityFormModal';
+import OpportunityDeleteConfirmModal from './OpportunityDeleteConfirmModal';
 import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Select from '../ui/Select';
 import SummaryCards from '../ui/SummaryCards';
-import Textarea from '../ui/Textarea';
 import { CrudTableLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
   createOpportunity,
@@ -17,7 +14,6 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../../lib/opportunitiesRepository';
-import { opportunityStageTone } from '../../lib/statusMaps';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/opportunities.css';
@@ -29,9 +25,6 @@ const DEFAULT_FORM = {
   stage: 'New',
   nextStep: '',
 };
-
-const PRIORITY_OPTIONS = ['High', 'Medium', 'Low'];
-const STAGE_OPTIONS = ['In Progress', 'Awaiting Reply', 'New'];
 
 function mapOpportunityToFormValues(item) {
   return {
@@ -218,145 +211,29 @@ function OpportunityCrudPage() {
       }}
       modals={{
         item: (
-          <Modal
-            isOpen={Boolean(selectedOpportunity)}
-            title={selectedOpportunity ? selectedOpportunity.name : ''}
+          <OpportunityItemModal
+            selectedOpportunity={selectedOpportunity}
+            isDeleting={isDeleting}
             onClose={() => setSelectedOpportunity(null)}
-          >
-            {selectedOpportunity ? (
-              <div className="opportunity-modal-content">
-                <p className="helper-text">Company: {selectedOpportunity.company}</p>
-                <p className="helper-text">
-                  Priority: <Badge label={selectedOpportunity.priority} tone={selectedOpportunity.priority.toLowerCase()} />
-                </p>
-                <p className="helper-text">
-                  Stage: <Badge label={selectedOpportunity.stage} tone={opportunityStageTone[selectedOpportunity.stage] || 'low'} />
-                </p>
-                <p className="helper-text">Next step: {selectedOpportunity.nextStep}</p>
-                <div className="opportunity-modal-actions">
-                  <Button
-                    type="button"
-                    onClick={handleOpenEditModal}
-                    aria-label="Edit selected opportunity"
-                    icon={{ name: 'edit', size: 14 }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleOpenDeleteConfirm}
-                    disabled={isDeleting}
-                    aria-label="Delete selected opportunity"
-                    icon={{ name: 'delete', size: 14 }}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </Modal>
+            onEdit={handleOpenEditModal}
+            onDelete={handleOpenDeleteConfirm}
+          />
         ),
         form: (
-          <Modal
+          <OpportunityFormModal
             isOpen={isFormOpen}
-            title={selectedOpportunity ? 'Edit Opportunity' : 'Add Opportunity'}
+            selectedOpportunity={selectedOpportunity}
+            isSaving={isSaving}
+            formValues={formValues}
+            formError={formError}
             onClose={handleCloseFormModal}
-          >
-            <form className="opportunity-form" onSubmit={handleFormSubmit}>
-              <Input
-                id="opportunity-name"
-                label="Opportunity"
-                className="form-field"
-                value={formValues.name}
-                onChange={(event) => handleFormChange('name', event.target.value)}
-                required
-                disabled={isSaving}
-              />
-
-              <Input
-                id="opportunity-company"
-                label="Company"
-                className="form-field"
-                value={formValues.company}
-                onChange={(event) => handleFormChange('company', event.target.value)}
-                required
-                disabled={isSaving}
-              />
-
-              <Select
-                id="opportunity-priority"
-                label="Priority"
-                className="form-field"
-                value={formValues.priority}
-                onChange={(event) => handleFormChange('priority', event.target.value)}
-                disabled={isSaving}
-              >
-                {PRIORITY_OPTIONS.map((priority) => (
-                  <option key={priority} value={priority}>
-                    {priority}
-                  </option>
-                ))}
-              </Select>
-
-              <Select
-                id="opportunity-stage"
-                label="Stage"
-                className="form-field"
-                value={formValues.stage}
-                onChange={(event) => handleFormChange('stage', event.target.value)}
-                disabled={isSaving}
-              >
-                {STAGE_OPTIONS.map((stage) => (
-                  <option key={stage} value={stage}>
-                    {stage}
-                  </option>
-                ))}
-              </Select>
-
-              <Textarea
-                id="opportunity-next-step"
-                label="Next Step"
-                className="form-field opportunity-form__textarea-field"
-                value={formValues.nextStep}
-                onChange={(event) => handleFormChange('nextStep', event.target.value)}
-                required
-                disabled={isSaving}
-                rows={3}
-              />
-
-              {formError ? (
-                <p className="helper-text opportunities-error" role="alert">
-                  {formError}
-                </p>
-              ) : null}
-
-              <div className="opportunity-modal-actions">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleCloseFormModal}
-                  disabled={isSaving}
-                  aria-label="Cancel opportunity form"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSaving}
-                  aria-label={selectedOpportunity ? 'Save opportunity changes' : 'Create opportunity'}
-                  icon={{ name: 'check', size: 14 }}
-                >
-                  {isSaving ? 'Saving...' : selectedOpportunity ? 'Save Changes' : 'Create Opportunity'}
-                </Button>
-              </div>
-            </form>
-          </Modal>
+            onChange={handleFormChange}
+            onSubmit={handleFormSubmit}
+          />
         ),
         deleteConfirm: (
-          <DeleteConfirmModal
+          <OpportunityDeleteConfirmModal
             isOpen={isDeleteConfirmOpen}
-            title="Delete Opportunity"
             message={deletePrompt}
             onCancel={handleCloseDeleteConfirm}
             onConfirm={handleConfirmDeleteSelected}

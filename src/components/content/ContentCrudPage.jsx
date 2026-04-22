@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
 import CrudPageTemplate from '../crud/CrudPageTemplate';
 import ContentTable from './ContentTable';
-import Modal from '../ui/Modal';
-import DeleteConfirmModal from '../ui/DeleteConfirmModal';
-import Badge from '../ui/Badge';
+import ContentItemModal from './ContentItemModal';
+import ContentFormModal from './ContentFormModal';
+import ContentDeleteConfirmModal from './ContentDeleteConfirmModal';
 import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Select from '../ui/Select';
 import SummaryCards from '../ui/SummaryCards';
 import { CrudCardGridLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
@@ -16,12 +14,9 @@ import {
   listContentItems,
   updateContentItem,
 } from '../../lib/contentRepository';
-import { contentStatusTone } from '../../lib/statusMaps';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/content.css';
-
-const STATUS_OPTIONS = ['Drafting', 'Editing', 'Scheduled'];
 
 const DEFAULT_FORM = {
   title: '',
@@ -191,115 +186,29 @@ function ContentCrudPage() {
       }}
       modals={{
         item: (
-          <Modal
-            isOpen={Boolean(selectedItem)}
-            title={selectedItem ? selectedItem.title : ''}
+          <ContentItemModal
+            selectedItem={selectedItem}
+            isDeleting={isDeleting}
             onClose={() => setSelectedItem(null)}
-          >
-            {selectedItem ? (
-              <div className="content-modal-content">
-                <p className="helper-text">Platform: {selectedItem.platform}</p>
-                <p className="helper-text">
-                  Status: <Badge label={selectedItem.status} tone={contentStatusTone[selectedItem.status] || 'default'} />
-                </p>
-                <div className="content-modal-actions">
-                  <Button
-                    type="button"
-                    onClick={handleOpenEditModal}
-                    aria-label="Edit selected content item"
-                    icon={{ name: 'edit', size: 14 }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleOpenDeleteConfirm}
-                    disabled={isDeleting}
-                    aria-label="Delete selected content item"
-                    icon={{ name: 'delete', size: 14 }}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </Modal>
+            onEdit={handleOpenEditModal}
+            onDelete={handleOpenDeleteConfirm}
+          />
         ),
         form: (
-          <Modal
+          <ContentFormModal
             isOpen={isFormOpen}
-            title={selectedItem ? 'Edit Content Item' : 'Add Content Item'}
+            selectedItem={selectedItem}
+            isSaving={isSaving}
+            formValues={formValues}
+            formError={formError}
             onClose={handleCloseFormModal}
-          >
-            <form className="content-form" onSubmit={handleFormSubmit}>
-              <Input
-                id="content-title"
-                label="Title"
-                className="form-field"
-                value={formValues.title}
-                onChange={(event) => handleFormChange('title', event.target.value)}
-                required
-                disabled={isSaving}
-              />
-
-              <Input
-                id="content-platform"
-                label="Platform"
-                className="form-field"
-                value={formValues.platform}
-                onChange={(event) => handleFormChange('platform', event.target.value)}
-                required
-                disabled={isSaving}
-              />
-
-              <Select
-                id="content-status"
-                label="Status"
-                className="form-field"
-                value={formValues.status}
-                onChange={(event) => handleFormChange('status', event.target.value)}
-                disabled={isSaving}
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </Select>
-
-              {formError ? (
-                <p className="helper-text content-error" role="alert">
-                  {formError}
-                </p>
-              ) : null}
-
-              <div className="content-modal-actions">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleCloseFormModal}
-                  disabled={isSaving}
-                  aria-label="Cancel content form"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSaving}
-                  aria-label={selectedItem ? 'Save content changes' : 'Create content item'}
-                  icon={{ name: 'check', size: 14 }}
-                >
-                  {isSaving ? 'Saving...' : selectedItem ? 'Save Changes' : 'Create Content'}
-                </Button>
-              </div>
-            </form>
-          </Modal>
+            onChange={handleFormChange}
+            onSubmit={handleFormSubmit}
+          />
         ),
         deleteConfirm: (
-          <DeleteConfirmModal
+          <ContentDeleteConfirmModal
             isOpen={isDeleteConfirmOpen}
-            title="Delete Content Item"
             message={deletePrompt}
             onCancel={handleCloseDeleteConfirm}
             onConfirm={handleConfirmDeleteSelected}
