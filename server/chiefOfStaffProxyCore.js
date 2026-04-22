@@ -1,5 +1,5 @@
-import { getChiefActionConfig } from '../src/lib/chiefActions.js';
-import { extractStructuredPayloadIfPresent } from '../src/lib/chiefStructuredPayload.js';
+import { getChiefActionConfig } from '../shared/chiefActions.js';
+import { extractStructuredPayloadIfPresent } from '../shared/chiefStructuredPayload.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
