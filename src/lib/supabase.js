@@ -5,12 +5,12 @@ const supabaseEnv = {
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
 };
 
-if (!supabaseEnv.url || !supabaseEnv.anonKey) {
-  if (import.meta.env.DEV) {
-    console.warn(
-      'Supabase environment variables are missing. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
-    );
-  }
+const shouldLogSupabaseDebug = import.meta.env.DEV && import.meta.env.VITE_SUPABASE_DEBUG === 'true';
+
+if ((!supabaseEnv.url || !supabaseEnv.anonKey) && shouldLogSupabaseDebug) {
+  console.info(
+    'Supabase is not configured; running in local-first mode. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable live persistence.',
+  );
 }
 
 export const isSupabaseConfigured = Boolean(supabaseEnv.url && supabaseEnv.anonKey);
