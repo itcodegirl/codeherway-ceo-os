@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConfirmDelete } from './useConfirmDelete';
 
+function isValidCrudItem(value) {
+  return Boolean(value && typeof value === 'object' && typeof value.id === 'string' && value.id.trim());
+}
+
 export function useCrudPage(config) {
   const {
     listFn,
@@ -75,6 +79,9 @@ export function useCrudPage(config) {
       }
 
       try {
+        if (typeof deleteItemFn !== 'function') {
+          throw new Error('Delete operation is not configured.');
+        }
         await deleteItemFn(itemToDelete.id);
         setItems((current) => current.filter((item) => item.id !== itemToDelete.id));
         setSelectedItemState(null);
@@ -102,6 +109,14 @@ export function useCrudPage(config) {
     const load = async () => {
       setIsLoading(true);
       setLoadError('');
+      if (typeof listItemsFn !== 'function') {
+        if (isActive) {
+          setItems([]);
+          setLoadError(loadErrorMessage);
+          setIsLoading(false);
+        }
+        return;
+      }
       try {
         const nextItems = await listItemsFn();
         if (!Array.isArray(nextItems)) {
@@ -195,17 +210,33 @@ export function useCrudPage(config) {
       return;
     }
 
+    if (selectedItem && typeof updateItemFn !== 'function') {
+      setFormError(saveErrorMessage);
+      return;
+    }
+    if (!selectedItem && typeof createItemFn !== 'function') {
+      setFormError(saveErrorMessage);
+      return;
+    }
+
     setIsSaving(true);
     setFormError('');
+    setLoadError('');
 
     try {
       if (selectedItem) {
         const updated = await updateItemFn(selectedItem.id, payload);
+        if (!isValidCrudItem(updated)) {
+          throw new Error('Update operation returned an invalid item shape.');
+        }
         setItems((current) =>
           current.map((item) => (item.id === updated.id ? updated : item)));
         setSelectedItemState(updated);
       } else {
         const created = await createItemFn(payload);
+        if (!isValidCrudItem(created)) {
+          throw new Error('Create operation returned an invalid item shape.');
+        }
         setItems((current) => [created, ...current]);
       }
 

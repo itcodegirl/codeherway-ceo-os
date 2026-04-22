@@ -112,4 +112,55 @@ describe('useCrudPage', () => {
     expect(result.current.loadError).toBe('Unable to load items right now.');
     expect(result.current.items).toEqual([]);
   });
+
+  it('handles missing list function as a recoverable load error', async () => {
+    const { result } = renderHook(() => useCrudPage({
+      createFn: () => Promise.resolve({ id: '1' }),
+      updateFn: () => Promise.resolve({ id: '1' }),
+      deleteFn: () => Promise.resolve({ id: '1' }),
+      defaultFormValues: {},
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.loadError).toBe('Unable to load items right now.');
+    expect(result.current.items).toEqual([]);
+  });
+
+  it('surfaces save errors when create returns malformed data', async () => {
+    const listItems = vi.fn(() => Promise.resolve([]));
+    const createItem = vi.fn(() => Promise.resolve({ name: 'Missing Id' }));
+    const updateItem = vi.fn(() => Promise.resolve({ id: '1', name: 'Valid' }));
+    const deleteItem = vi.fn(() => Promise.resolve({ id: '1' }));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: createItem,
+      updateFn: updateItem,
+      deleteFn: deleteItem,
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.handleOpenCreateModal();
+      result.current.handleFormChange('name', 'Draft item');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    expect(result.current.formError).toBe('Unable to save item right now.');
+    expect(result.current.items).toEqual([]);
+  });
 });
