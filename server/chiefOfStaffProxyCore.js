@@ -73,7 +73,7 @@ function isRateLimited(headers) {
 }
 
 function getAllowedActionKeys() {
-  return new Set(['summarize', 'draft', 'actions', 'priorities']);
+  return new Set(['plan', 'summarize', 'draft', 'actions', 'priorities']);
 }
 
 function normalizeBody(body) {

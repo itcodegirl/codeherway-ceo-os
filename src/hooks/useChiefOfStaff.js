@@ -88,6 +88,12 @@ function createStructuredItemKey(section, item) {
   return '';
 }
 
+const ACCEPTANCE_STATUS = {
+  SAVED: 'saved',
+  SKIPPED: 'skipped',
+  FAILED: 'failed',
+};
+
 export function useChiefOfStaff() {
   const [notes, setNotesState] = useState('');
   const [responses, setResponses] = useState([]);
@@ -98,8 +104,10 @@ export function useChiefOfStaff() {
   const [loadError, setLoadError] = useState('');
   const [acceptedStructuredItemMap, setAcceptedStructuredItemMap] = useState({});
   const [acceptingStructuredItemMap, setAcceptingStructuredItemMap] = useState({});
+  const [isAcceptingAll, setIsAcceptingAll] = useState(false);
   const isMountedRef = useRef(true);
   const acceptingStructuredItemRef = useRef(new Set());
+  const acceptingAllRef = useRef(false);
   const opportunitySignaturesRef = useRef(null);
   const contentSignaturesRef = useRef(null);
   const weeklyPrioritySignaturesByWeekRef = useRef(new Map());
@@ -248,6 +256,8 @@ export function useChiefOfStaff() {
       setSource(workspace.source || getChiefSource());
       setAcceptedStructuredItemMap({});
       setAcceptingStructuredItemMap({});
+      setIsAcceptingAll(false);
+      acceptingAllRef.current = false;
       resetAcceptanceCaches();
       void hydrateAcceptedStructuredItems(workspaceResponses);
     } catch (error) {
@@ -340,7 +350,9 @@ export function useChiefOfStaff() {
       setLoadError('');
       setAcceptedStructuredItemMap({});
       setAcceptingStructuredItemMap({});
+      setIsAcceptingAll(false);
       acceptingStructuredItemRef.current.clear();
+      acceptingAllRef.current = false;
       resetAcceptanceCaches();
     } catch (error) {
       if (!isMountedRef.current) {
@@ -422,27 +434,30 @@ export function useChiefOfStaff() {
     }
   }, [canGenerate, hasNotes, notesText]);
 
-  const acceptStructuredItem = useCallback(async (section, item) => {
+  const setFeedbackIfAllowed = useCallback((message, suppressFeedback = false) => {
+    if (!suppressFeedback) {
+      setFeedback(message);
+    }
+  }, []);
+
+  const acceptStructuredItem = useCallback(async (section, item, options = {}) => {
+    const { suppressFeedback = false } = options;
     const sectionKey = typeof section === 'string' ? section : '';
     const itemValue = item && typeof item === 'object' ? item : resolveStructuredText(item);
     const itemKey = createStructuredItemKey(sectionKey, itemValue);
 
     if (!itemKey) {
-      setFeedback('This item is missing required details and cannot be saved yet.');
-      return;
+      setFeedbackIfAllowed('This item is missing required details and cannot be saved yet.', suppressFeedback);
+      return ACCEPTANCE_STATUS.SKIPPED;
     }
 
     if (acceptedStructuredItemMap[itemKey]) {
-      setFeedback('This structured item was already added.');
-      return;
+      setFeedbackIfAllowed('This structured item was already added.', suppressFeedback);
+      return ACCEPTANCE_STATUS.SKIPPED;
     }
 
-    if (acceptingStructuredItemMap[itemKey]) {
-      return;
-    }
-
-    if (acceptingStructuredItemRef.current.has(itemKey)) {
-      return;
+    if (acceptingStructuredItemMap[itemKey] || acceptingStructuredItemRef.current.has(itemKey)) {
+      return ACCEPTANCE_STATUS.SKIPPED;
     }
 
     acceptingStructuredItemRef.current.add(itemKey);
@@ -455,8 +470,8 @@ export function useChiefOfStaff() {
       if (sectionKey === 'opportunities') {
         const name = resolveStructuredText(itemValue);
         if (!name) {
-          setFeedback('This opportunity entry is missing a name.');
-          return;
+          setFeedbackIfAllowed('This opportunity entry is missing a name.', suppressFeedback);
+          return ACCEPTANCE_STATUS.SKIPPED;
         }
 
         const signature = buildOpportunitySignature({
@@ -469,8 +484,8 @@ export function useChiefOfStaff() {
             ...current,
             [itemKey]: true,
           }));
-          setFeedback('That opportunity already exists.');
-          return;
+          setFeedbackIfAllowed('That opportunity already exists.', suppressFeedback);
+          return ACCEPTANCE_STATUS.SKIPPED;
         }
 
         await createOpportunity({
@@ -487,15 +502,15 @@ export function useChiefOfStaff() {
           ...current,
           [itemKey]: true,
         }));
-        setFeedback('Added an opportunity from the structured AI output.');
-        return;
+        setFeedbackIfAllowed('Added an opportunity from the structured AI output.', suppressFeedback);
+        return ACCEPTANCE_STATUS.SAVED;
       }
 
       if (sectionKey === 'contentItems') {
         const title = resolveStructuredText(itemValue);
         if (!title) {
-          setFeedback('This content entry is missing a title.');
-          return;
+          setFeedbackIfAllowed('This content entry is missing a title.', suppressFeedback);
+          return ACCEPTANCE_STATUS.SKIPPED;
         }
 
         const signature = buildContentSignature({
@@ -508,8 +523,8 @@ export function useChiefOfStaff() {
             ...current,
             [itemKey]: true,
           }));
-          setFeedback('That content item already exists.');
-          return;
+          setFeedbackIfAllowed('That content item already exists.', suppressFeedback);
+          return ACCEPTANCE_STATUS.SKIPPED;
         }
 
         await createContentItem({
@@ -524,15 +539,15 @@ export function useChiefOfStaff() {
           ...current,
           [itemKey]: true,
         }));
-        setFeedback('Added a content item from the structured AI output.');
-        return;
+        setFeedbackIfAllowed('Added a content item from the structured AI output.', suppressFeedback);
+        return ACCEPTANCE_STATUS.SAVED;
       }
 
       if (sectionKey === 'priorities' || sectionKey === 'tasks') {
         const title = resolveStructuredText(itemValue);
         if (!title) {
-          setFeedback('This priority entry is missing a title.');
-          return;
+          setFeedbackIfAllowed('This priority entry is missing a title.', suppressFeedback);
+          return ACCEPTANCE_STATUS.SKIPPED;
         }
 
         const currentWeekStart = getCurrentWeekStart();
@@ -543,8 +558,8 @@ export function useChiefOfStaff() {
             ...current,
             [itemKey]: true,
           }));
-          setFeedback('That weekly priority already exists.');
-          return;
+          setFeedbackIfAllowed('That weekly priority already exists.', suppressFeedback);
+          return ACCEPTANCE_STATUS.SKIPPED;
         }
 
         await createWeeklyItem({
@@ -564,17 +579,19 @@ export function useChiefOfStaff() {
           ...current,
           [itemKey]: true,
         }));
-        setFeedback('Added a weekly priority from the structured AI output.');
-        return;
+        setFeedbackIfAllowed('Added a weekly priority from the structured AI output.', suppressFeedback);
+        return ACCEPTANCE_STATUS.SAVED;
       }
 
-      setFeedback('This structured item type is not supported yet.');
+      setFeedbackIfAllowed('This structured item type is not supported yet.', suppressFeedback);
+      return ACCEPTANCE_STATUS.SKIPPED;
     } catch (error) {
       setLoadError('Unable to accept this structured AI item right now.');
-      setFeedback('Unable to save this item right now. Try again.');
+      setFeedbackIfAllowed('Unable to save this item right now. Try again.', suppressFeedback);
       if (import.meta.env.DEV) {
         console.error('Failed to accept structured AI item', error);
       }
+      return ACCEPTANCE_STATUS.FAILED;
     } finally {
       acceptingStructuredItemRef.current.delete(itemKey);
       setAcceptingStructuredItemMap((current) => {
@@ -593,7 +610,71 @@ export function useChiefOfStaff() {
     getContentSignatures,
     getOpportunitySignatures,
     getWeeklyPrioritySignatures,
+    setFeedbackIfAllowed,
   ]);
+
+  const acceptAllStructured = useCallback(async (structuredPayload) => {
+    const effectivePayload = structuredPayload && typeof structuredPayload === 'object'
+      ? structuredPayload
+      : responses[0]?.structuredPayload;
+
+    if (!effectivePayload || typeof effectivePayload !== 'object') {
+      setFeedback('No structured items are available to add.');
+      return false;
+    }
+
+    if (acceptingAllRef.current) {
+      setFeedback('Add all is already running.');
+      return false;
+    }
+
+    acceptingAllRef.current = true;
+    setIsAcceptingAll(true);
+
+    let saved = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    try {
+      const queue = [
+        ...(Array.isArray(effectivePayload.priorities)
+          ? effectivePayload.priorities.map((item) => ({ section: 'priorities', item }))
+          : []),
+        ...(Array.isArray(effectivePayload.opportunities)
+          ? effectivePayload.opportunities.map((item) => ({ section: 'opportunities', item }))
+          : []),
+        ...(Array.isArray(effectivePayload.contentItems)
+          ? effectivePayload.contentItems.map((item) => ({ section: 'contentItems', item }))
+          : []),
+        ...(Array.isArray(effectivePayload.tasks)
+          ? effectivePayload.tasks.map((item) => ({ section: 'tasks', item }))
+          : []),
+      ];
+
+      if (!queue.length) {
+        setFeedback('No valid structured items found to add.');
+        return false;
+      }
+
+      for (let index = 0; index < queue.length; index += 1) {
+        const { section, item } = queue[index];
+        const status = await acceptStructuredItem(section, item, { suppressFeedback: true });
+        if (status === ACCEPTANCE_STATUS.SAVED) {
+          saved += 1;
+        } else if (status === ACCEPTANCE_STATUS.FAILED) {
+          failed += 1;
+        } else {
+          skipped += 1;
+        }
+      }
+
+      setFeedback(`Add all complete: ${saved} saved, ${skipped} skipped, ${failed} failed.`);
+      return failed === 0;
+    } finally {
+      acceptingAllRef.current = false;
+      setIsAcceptingAll(false);
+    }
+  }, [acceptStructuredItem, responses]);
 
   const isStructuredItemAccepted = useCallback(
     (section, item) => {
@@ -626,6 +707,8 @@ export function useChiefOfStaff() {
       appendPrompt,
       handleAction,
       acceptStructuredItem,
+      acceptAllStructured,
+      isAcceptingAll,
       isStructuredItemAccepted,
       isStructuredItemAccepting,
       clearWorkspace,
@@ -645,6 +728,8 @@ export function useChiefOfStaff() {
       appendPrompt,
       handleAction,
       acceptStructuredItem,
+      acceptAllStructured,
+      isAcceptingAll,
       isStructuredItemAccepted,
       isStructuredItemAccepting,
       clearWorkspace,

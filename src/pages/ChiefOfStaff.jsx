@@ -1,31 +1,62 @@
 ﻿import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
-import { useChiefDemoState } from "../hooks/useChiefDemoState";
+import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
+import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import "../styles/chief-of-staff.css";
+
+function parseStructuredText(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function toPanelResult(entry) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const parsedContent = parseStructuredText(entry.content);
+
+  return normalizeChiefOutput({
+    title: parsedContent?.title || entry.title || "Executive Action Plan",
+    summary: parsedContent?.summary || entry.content || "",
+    source: entry.source || "proxy",
+    structured: entry.structuredPayload || parsedContent?.structured || {}
+  });
+}
 
 export default function ChiefOfStaff() {
   const {
     notes,
     setNotes,
+    responses,
+    feedback,
+    loadError,
     isGenerating,
     isAcceptingAll,
-    feedback,
-    result,
-    handleBuildActionPlan,
-    resetWorkspace,
-    acceptPriority,
-    acceptOpportunity,
-    acceptContent,
-    acceptTask,
-    acceptAll,
-    isPriorityAccepted,
-    isPriorityAccepting,
-    isOpportunityAccepted,
-    isOpportunityAccepting,
-    isContentAccepted,
-    isContentAccepting,
-    isTaskAccepted,
-    isTaskAccepting
-  } = useChiefDemoState();
+    handleAction,
+    acceptStructuredItem,
+    acceptAllStructured,
+    isStructuredItemAccepted,
+    isStructuredItemAccepting,
+    clearWorkspace
+  } = useChiefOfStaff();
+
+  const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
+  const result = toPanelResult(latestResponse);
+
+  const feedbackMessage = loadError || feedback;
 
   return (
     <section className="chief-page-grid">
@@ -38,7 +69,7 @@ export default function ChiefOfStaff() {
               <h3>Turn founder notes into action</h3>
             </div>
 
-            <button type="button" onClick={resetWorkspace}>
+            <button type="button" onClick={clearWorkspace}>
               Reset Workspace
             </button>
           </div>
@@ -58,7 +89,7 @@ export default function ChiefOfStaff() {
           <div className="chief-action-grid">
             <button
               type="button"
-              onClick={handleBuildActionPlan}
+              onClick={() => handleAction("plan")}
               disabled={!notes.trim() || isGenerating}
             >
               {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
@@ -66,7 +97,7 @@ export default function ChiefOfStaff() {
           </div>
 
           <p className="chief-feedback-text" role="status" aria-live="polite">
-            {feedback}
+            {feedbackMessage}
           </p>
         </div>
       </div>
@@ -75,20 +106,34 @@ export default function ChiefOfStaff() {
         <ChiefOutputPanel
           isGenerating={isGenerating}
           result={result}
-          onAcceptPriority={acceptPriority}
-          onAcceptOpportunity={acceptOpportunity}
-          onAcceptContent={acceptContent}
-          onAcceptTask={acceptTask}
-          onAcceptAll={acceptAll}
+          onAcceptPriority={(item) => acceptStructuredItem("priorities", item)}
+          onAcceptOpportunity={(item) =>
+            acceptStructuredItem("opportunities", item)
+          }
+          onAcceptContent={(item) => acceptStructuredItem("contentItems", item)}
+          onAcceptTask={(item) => acceptStructuredItem("tasks", item)}
+          onAcceptAll={() => acceptAllStructured(result?.structured)}
           isAcceptingAll={isAcceptingAll}
-          isPriorityAccepted={isPriorityAccepted}
-          isPriorityAccepting={isPriorityAccepting}
-          isOpportunityAccepted={isOpportunityAccepted}
-          isOpportunityAccepting={isOpportunityAccepting}
-          isContentAccepted={isContentAccepted}
-          isContentAccepting={isContentAccepting}
-          isTaskAccepted={isTaskAccepted}
-          isTaskAccepting={isTaskAccepting}
+          isPriorityAccepted={(item) =>
+            isStructuredItemAccepted("priorities", item)
+          }
+          isPriorityAccepting={(item) =>
+            isStructuredItemAccepting("priorities", item)
+          }
+          isOpportunityAccepted={(item) =>
+            isStructuredItemAccepted("opportunities", item)
+          }
+          isOpportunityAccepting={(item) =>
+            isStructuredItemAccepting("opportunities", item)
+          }
+          isContentAccepted={(item) =>
+            isStructuredItemAccepted("contentItems", item)
+          }
+          isContentAccepting={(item) =>
+            isStructuredItemAccepting("contentItems", item)
+          }
+          isTaskAccepted={(item) => isStructuredItemAccepted("tasks", item)}
+          isTaskAccepting={(item) => isStructuredItemAccepting("tasks", item)}
         />
       </div>
     </section>

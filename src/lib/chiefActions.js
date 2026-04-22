@@ -1,4 +1,11 @@
 export const CHIEF_ACTIONS = {
+  plan: {
+    title: 'Executive Action Plan',
+    instruction:
+      'Return a concise founder action plan with structured sections for priorities, opportunities, content items, and tasks. Include practical next steps this week.',
+    fallback: ({ notes }) =>
+      `Executive Action Plan:\n- Priority: Clarify top execution lane for this week.\n- Opportunity: Follow up active partner or pipeline threads.\n- Content: Draft one founder-facing leadership update.\n- Task: Convert notes into owned actions.\n\nContext:\n${notes.slice(0, 280)}`,
+  },
   summarize: {
     title: 'Executive Summary',
     instruction:

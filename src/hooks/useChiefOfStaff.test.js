@@ -42,7 +42,8 @@ vi.mock('../lib/chiefRepository', () => ({
 }));
 
 import { createOpportunity, listOpportunities } from '../lib/opportunitiesRepository';
-import { listContentItems } from '../lib/contentRepository';
+import { createContentItem, listContentItems } from '../lib/contentRepository';
+import { createWeeklyItem } from '../lib/weeklyRepository';
 import { createChiefSession, loadChiefWorkspace, saveChiefOutput } from '../lib/chiefRepository';
 import { generateChiefOfStaffResponse } from '../lib/openai';
 
@@ -295,5 +296,50 @@ describe('useChiefOfStaff', () => {
     }));
     expect(result.current.feedback).toBe('Created: summarize title. Using local fallback output.');
     expect(result.current.hasHistory).toBe(true);
+  });
+
+  it('accepts all structured items from the latest saved live response', async () => {
+    listOpportunities.mockResolvedValue([]);
+    listContentItems.mockResolvedValue([]);
+    createOpportunity.mockResolvedValue({ id: 'opp-1' });
+    createContentItem.mockResolvedValue({ id: 'content-1' });
+    createWeeklyItem.mockResolvedValue({ id: 'weekly-1' });
+    loadChiefWorkspace.mockResolvedValue({
+      notes: 'Initial notes',
+      responses: [
+        {
+          id: 'output-1',
+          title: 'Executive Action Plan',
+          content: 'Generated plan content',
+          source: 'proxy',
+          structuredPayload: {
+            priorities: [{ title: 'Priority A' }],
+            opportunities: [{ name: 'Opportunity A', company: 'Acme' }],
+            contentItems: [{ title: 'Content A', platform: 'LinkedIn' }],
+            tasks: [{ title: 'Task A' }],
+          },
+        },
+      ],
+      source: 'local',
+    });
+
+    const { result } = renderHook(() => useChiefOfStaff());
+
+    await waitFor(() => {
+      expect(loadChiefWorkspace).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(result.current.responses).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.acceptAllStructured();
+    });
+
+    expect(createOpportunity).toHaveBeenCalledTimes(1);
+    expect(createContentItem).toHaveBeenCalledTimes(1);
+    expect(createWeeklyItem).toHaveBeenCalledTimes(2);
+    expect(result.current.feedback).toBe('Add all complete: 4 saved, 0 skipped, 0 failed.');
+    expect(result.current.isAcceptingAll).toBe(false);
   });
 });
