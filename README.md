@@ -133,6 +133,10 @@ npm run typecheck
 - Expand acceptance criteria snapshots for AI-generated structured outputs.
 - Publish a portfolio case study with architecture decision records and tradeoff notes.
 
+## Tracked migrations
+
+- [MIG-CRUD-TEMPLATE-SLOTS-2026-09-30](./docs/tracking/CRUD_TEMPLATE_SLOTS_MIGRATION_2026-09-30.md): remove deprecated `CrudPageTemplate` legacy props (`summary`, `section`, `modals`) after migration to `slots.*`.
+
 ## Portfolio assets
 
 - [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
