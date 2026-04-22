@@ -125,10 +125,9 @@ function OpportunityTable({ items, onSelect }) {
               </td>
               <td className="crm-table__cell crm-table__cell--action" data-label="Details">
                 {hasHandler ? (
-                  <button type="button" className="crm-table__open-button">
+                  <span className="crm-table__open-button" aria-hidden="true">
                     Open
-                    <span className="sr-only"> {item.name} opportunity from {item.company}</span>
-                  </button>
+                  </span>
                 ) : null}
               </td>
             </tr>

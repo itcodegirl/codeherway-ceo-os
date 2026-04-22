@@ -119,10 +119,9 @@ function ContentTable({ items, onOpenItem }) {
               </td>
               <td className="crm-table__cell crm-table__cell--action" data-label="Details">
                 {hasHandler ? (
-                  <button type="button" className="crm-table__open-button">
+                  <span className="crm-table__open-button" aria-hidden="true">
                     Open
-                    <span className="sr-only"> {item.title} on {item.platform}</span>
-                  </button>
+                  </span>
                 ) : null}
               </td>
             </tr>

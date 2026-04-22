@@ -119,6 +119,18 @@
 	border-color: rgba(154, 240, 199, 0.4);
 }
 
+.crm-table__open-button {
+	border: 1px solid rgba(200, 194, 255, 0.35);
+	background: rgba(109, 93, 252, 0.16);
+	color: var(--accent-soft-strong);
+	border-radius: var(--radius-action);
+	padding: 0.4rem 0.7rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+}
+
 .content-modal-content {
 	display: flex;
 	flex-direction: column;

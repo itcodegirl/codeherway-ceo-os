@@ -110,16 +110,8 @@
 	padding: 0.4rem 0.7rem;
 	font-size: 0.8rem;
 	font-weight: 600;
-	cursor: pointer;
-}
-
-.crm-table__open-button:hover {
-	background: rgba(109, 93, 252, 0.25);
-}
-
-.crm-table__open-button:focus-visible {
-	outline: 2px solid rgba(142, 173, 255, 0.85);
-	outline-offset: 2px;
+	display: inline-flex;
+	align-items: center;
 }
 
 .crm-table__cell::before {
