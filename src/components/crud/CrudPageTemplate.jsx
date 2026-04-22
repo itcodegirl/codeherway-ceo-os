@@ -3,12 +3,12 @@ import SectionCard from '../ui/SectionCard';
 import EmptyState from '../ui/EmptyState';
 
 function CrudPageTemplate({
-  page,
-  source,
-  status,
-  summary,
-  section,
-  modals,
+  page = {},
+  source = {},
+  status = {},
+  summary = {},
+  section = {},
+  modals = {},
 }) {
   const {
     className: pageClassName,
@@ -38,7 +38,7 @@ function CrudPageTemplate({
     actionLabel: sectionActionLabel,
     loadingContent: sectionLoadingContent,
     isEmpty,
-    emptyState,
+    emptyState = {},
     content: sectionContent,
   } = section;
   const {
