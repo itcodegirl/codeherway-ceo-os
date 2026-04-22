@@ -4,46 +4,72 @@ import EmptyState from '../ui/EmptyState';
 
 function CrudPageTemplate({
   pageClassName,
-  pageTitle,
-  pageDescription,
-  sourceNote,
-  sourceNoteClassName,
-  loadError,
-  loadErrorClassName,
-  loadingAnnouncement,
-  isLoading,
-  summaryLoadingContent,
-  summaryContent,
-  sectionTitle,
-  sectionIconName,
-  sectionActionText,
-  onSectionAction,
-  sectionActionLabel,
-  sectionLoadingContent,
-  isEmpty,
-  emptyStateTitle,
-  emptyStateDescription,
-  emptyStateAction,
-  sectionContent,
-  itemModal,
-  formModal,
-  deleteConfirmModal,
+  header = {},
+  status = {},
+  summary = {},
+  section = {},
+  modals = {},
 }) {
+  const {
+    title: pageTitle,
+    description: pageDescription,
+  } = header;
+
+  const {
+    sourceNote,
+    sourceNoteClassName,
+    loadError,
+    loadErrorClassName,
+    loadingAnnouncement,
+    isLoading = false,
+  } = status;
+
+  const {
+    loadingContent: summaryLoadingContent,
+    content: summaryContent,
+  } = summary;
+
+  const {
+    title: sectionTitle,
+    iconName: sectionIconName,
+    actionText: sectionActionText,
+    onAction: onSectionAction,
+    actionLabel: sectionActionLabel,
+    loadingContent: sectionLoadingContent,
+    isEmpty = false,
+    emptyState = {},
+    content: sectionContent,
+  } = section;
+
+  const {
+    title: emptyStateTitle,
+    description: emptyStateDescription,
+    action: emptyStateAction,
+  } = emptyState;
+
+  const {
+    item: itemModal,
+    form: formModal,
+    deleteConfirm: deleteConfirmModal,
+  } = modals;
+
   return (
     <section className={pageClassName}>
       <PageHeader title={pageTitle} description={pageDescription} />
 
-      <p className={`helper-text ${sourceNoteClassName}`.trim()}>
-        {sourceNote}
-      </p>
+      {sourceNote ? (
+        <p className={`helper-text ${sourceNoteClassName || ''}`.trim()}>
+          {sourceNote}
+        </p>
+      ) : null}
 
       {loadError ? (
-        <p className={`helper-text ${loadErrorClassName}`.trim()} role="alert">
+        <p className={`helper-text ${loadErrorClassName || ''}`.trim()} role="alert">
           {loadError}
         </p>
       ) : null}
 
-      {isLoading ? <p className="sr-only" role="status" aria-live="polite">{loadingAnnouncement}</p> : null}
+      {isLoading && loadingAnnouncement ? <p className="sr-only" role="status" aria-live="polite">{loadingAnnouncement}</p> : null}
 
       {isLoading ? summaryLoadingContent : summaryContent}
 
