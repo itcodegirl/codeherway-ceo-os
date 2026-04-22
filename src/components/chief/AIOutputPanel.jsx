@@ -11,7 +11,7 @@ function AIOutputPanel({
   isStructuredItemAccepting,
 }) {
   return (
-    <SectionCard title="AI Output">
+    <SectionCard title="AI Output" iconName="chief">
       <div aria-busy={isGenerating}>
         <p className="helper-text" role="status" aria-live="polite">
           {feedback}

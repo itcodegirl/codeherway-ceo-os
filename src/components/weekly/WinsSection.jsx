@@ -32,6 +32,7 @@ function WinsSection({ items, setItems, defaultItems }) {
     <>
       <SectionCard
         title="Wins / Momentum"
+        iconName="weekly"
         actionText="Add Win"
         onAction={openCreateEditor}
         actionLabel="Add weekly win"

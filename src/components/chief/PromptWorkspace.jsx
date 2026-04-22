@@ -13,7 +13,7 @@ function PromptWorkspace({
   canGenerate,
 }) {
   return (
-    <SectionCard title="Prompt Workspace">
+    <SectionCard title="Prompt Workspace" iconName="chief">
       <div aria-busy={isGenerating}>
         <Textarea
           id={notesFieldId}

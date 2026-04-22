@@ -94,7 +94,7 @@ function WeeklyBrief() {
           defaultItems={defaultBlockers}
         />
 
-        <SectionCard title="Next Review Notes">
+        <SectionCard title="Next Review Notes" iconName="weekly">
           <Textarea
             id="weekly-review-notes"
             label="Close-Of-Week Reflection"

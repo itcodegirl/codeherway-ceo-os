@@ -105,6 +105,7 @@ function Dashboard() {
       <div className="dashboard-grid dashboard-grid--main">
         <SectionCard
           title="Top Priorities"
+          iconName="weekly"
           actionText="View Plan"
           actionTo="/weekly-brief"
           actionLabel="Open weekly plan and priority focus"
@@ -126,6 +127,7 @@ function Dashboard() {
 
         <SectionCard
           title="Executive Snapshot"
+          iconName="dashboard"
           actionText="Copy Snapshot"
           onAction={handleCopySnapshot}
           actionLabel="Copy executive snapshot"
@@ -143,6 +145,7 @@ function Dashboard() {
 
         <SectionCard
           title="Opportunities Pipeline"
+          iconName="opportunities"
           actionText="Open CRM"
           actionTo="/opportunities"
           actionLabel="Open opportunities pipeline dashboard"
@@ -174,6 +177,7 @@ function Dashboard() {
 
         <SectionCard
           title="Content Pipeline"
+          iconName="content"
           actionText="Open Content OS"
           actionTo="/content"
           actionLabel="Open content operating system dashboard"
@@ -205,11 +209,11 @@ function Dashboard() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Momentum Trend">
+        <SectionCard title="Momentum Trend" iconName="dashboard">
           <MomentumChart values={dashboardInsights.momentumValues} />
         </SectionCard>
 
-        <SectionCard title="Recent Activity">
+        <SectionCard title="Recent Activity" iconName="dashboard">
           {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
           <ActivityFeed items={dashboardInsights.recentActivity} />
         </SectionCard>

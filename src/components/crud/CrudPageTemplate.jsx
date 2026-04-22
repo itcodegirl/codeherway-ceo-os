@@ -15,6 +15,7 @@ function CrudPageTemplate({
   summaryLoadingContent,
   summaryContent,
   sectionTitle,
+  sectionIconName,
   sectionActionText,
   onSectionAction,
   sectionActionLabel,
@@ -48,6 +49,7 @@ function CrudPageTemplate({
 
       <SectionCard
         title={sectionTitle}
+        iconName={sectionIconName}
         actionText={sectionActionText}
         onAction={onSectionAction}
         actionLabel={sectionActionLabel}

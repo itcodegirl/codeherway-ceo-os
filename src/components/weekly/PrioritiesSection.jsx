@@ -32,6 +32,7 @@ function PrioritiesSection({ items, setItems, defaultItems }) {
     <>
       <SectionCard
         title="Priority Track"
+        iconName="weekly"
         actionText="Add Priority"
         onAction={openCreateEditor}
         actionLabel="Add weekly priority"

@@ -172,6 +172,7 @@ function OpportunityCrudPage() {
         />
       )}
       sectionTitle="Pipeline Overview"
+      sectionIconName="opportunities"
       sectionActionText="Add Opportunity"
       onSectionAction={handleOpenCreateModal}
       sectionActionLabel="Create a new opportunity"

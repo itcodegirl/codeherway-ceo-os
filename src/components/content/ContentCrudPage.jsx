@@ -157,6 +157,7 @@ function ContentCrudPage() {
         />
       )}
       sectionTitle="Publishing Workflow"
+      sectionIconName="content"
       sectionActionText="Add Content"
       onSectionAction={handleOpenCreateModal}
       sectionActionLabel="Create a new content item"

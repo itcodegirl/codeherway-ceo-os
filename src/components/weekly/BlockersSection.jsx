@@ -32,6 +32,7 @@ function BlockersSection({ items, setItems, defaultItems }) {
     <>
       <SectionCard
         title="Top Blockers"
+        iconName="weekly"
         actionText="Add Blocker"
         onAction={openCreateEditor}
         actionLabel="Add weekly blocker"

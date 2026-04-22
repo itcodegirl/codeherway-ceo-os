@@ -62,6 +62,7 @@ function Settings() {
       <form className="settings-grid" onSubmit={handleSubmit}>
         <SectionCard
           title="Workspace"
+          iconName="settings"
           actionText="Save Profile"
           onAction={() => {
             if (!canSave) {
@@ -116,6 +117,7 @@ function Settings() {
 
         <SectionCard
           title="Experience"
+          iconName="settings"
           actionText="Apply"
           onAction={() => {
             if (!canSave) {
