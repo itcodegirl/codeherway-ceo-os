@@ -100,4 +100,40 @@ describe('CrudPageTemplate', () => {
     expect(screen.getByRole('button', { name: 'Add Content' })).toBeInTheDocument();
     expect(screen.queryByText('Loaded section')).not.toBeInTheDocument();
   });
+
+  it('supports slots-based api for summary, section, and modals', () => {
+    renderWithRouter(
+      <CrudPageTemplate
+        pageClassName="content-page"
+        header={{
+          title: 'Content OS',
+          description: 'Track content workflow.',
+        }}
+        status={{
+          isLoading: false,
+        }}
+        slots={{
+          summary: {
+            content: <p>Slots summary content</p>,
+          },
+          section: {
+            title: 'Publishing Workflow',
+            iconName: 'content',
+            content: <p>Slots section body</p>,
+          },
+          modals: {
+            item: <p>Item modal slot</p>,
+            form: <p>Form modal slot</p>,
+            deleteConfirm: <p>Delete modal slot</p>,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Slots summary content')).toBeInTheDocument();
+    expect(screen.getByText('Slots section body')).toBeInTheDocument();
+    expect(screen.getByText('Item modal slot')).toBeInTheDocument();
+    expect(screen.getByText('Form modal slot')).toBeInTheDocument();
+    expect(screen.getByText('Delete modal slot')).toBeInTheDocument();
+  });
 });

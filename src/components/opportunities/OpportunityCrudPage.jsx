@@ -155,91 +155,93 @@ function OpportunityCrudPage() {
         loadingAnnouncement: 'Loading opportunities data.',
         isLoading,
       }}
-      summary={{
-        loadingContent: (
-          <SummaryCards
-            className="opportunities-summary"
-            isLoading
-            loadingCount={3}
-            loadingKeyPrefix="opportunities-summary"
-          />
-        ),
-        content: (
-          <SummaryCards
-            className="opportunities-summary"
-            cards={summaryCards}
-          />
-        ),
-      }}
-      section={{
-        title: 'Pipeline Overview',
-        iconName: 'opportunities',
-        actionText: 'Add Opportunity',
-        onAction: handleOpenCreateModal,
-        actionLabel: 'Create a new opportunity',
-        loadingContent: (
-          <CrudTableLoadingSkeleton
-            ariaLabel="Opportunity pipeline"
-            loadingMessage="Loading pipeline rows."
-            rows={3}
-            columns={[
-              { key: 'opportunity', label: 'Opportunity', dataLabel: 'Opportunity' },
-              { key: 'company', label: 'Company', dataLabel: 'Company' },
-              { key: 'priority', label: 'Priority', dataLabel: 'Priority' },
-              { key: 'stage', label: 'Stage / Next Step', dataLabel: 'Stage / Next Step' },
-            ]}
-          />
-        ),
-        isEmpty: opportunityItems.length === 0,
-        emptyState: {
-          title: 'No opportunities yet',
-          description: 'Add your first opportunity to start tracking outreach and next steps.',
-          action: (
-            <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
-              Add Opportunity
-            </Button>
+      slots={{
+        summary: {
+          loadingContent: (
+            <SummaryCards
+              className="opportunities-summary"
+              isLoading
+              loadingCount={3}
+              loadingKeyPrefix="opportunities-summary"
+            />
+          ),
+          content: (
+            <SummaryCards
+              className="opportunities-summary"
+              cards={summaryCards}
+            />
           ),
         },
-        content: (
-          <div>
-            <p className="sr-only" role="status" aria-live="polite">
-              Showing {opportunityItems.length} opportunities.
-            </p>
-            <OpportunityTable items={opportunityItems} onSelect={setSelectedOpportunity} />
-          </div>
-        ),
-      }}
-      modals={{
-        item: (
-          <OpportunityItemModal
-            selectedOpportunity={selectedOpportunity}
-            isDeleting={isDeleting}
-            onClose={() => setSelectedOpportunity(null)}
-            onEdit={handleOpenEditModal}
-            onDelete={handleOpenDeleteConfirm}
-          />
-        ),
-        form: (
-          <OpportunityFormModal
-            isOpen={isFormOpen}
-            selectedOpportunity={selectedOpportunity}
-            isSaving={isSaving}
-            formValues={formValues}
-            formError={formError}
-            onClose={handleCloseFormModal}
-            onChange={handleFormChange}
-            onSubmit={handleFormSubmit}
-          />
-        ),
-        deleteConfirm: (
-          <OpportunityDeleteConfirmModal
-            isOpen={isDeleteConfirmOpen}
-            message={deletePrompt}
-            onCancel={handleCloseDeleteConfirm}
-            onConfirm={handleConfirmDeleteSelected}
-            isDeleting={isDeleting}
-          />
-        ),
+        section: {
+          title: 'Pipeline Overview',
+          iconName: 'opportunities',
+          actionText: 'Add Opportunity',
+          onAction: handleOpenCreateModal,
+          actionLabel: 'Create a new opportunity',
+          loadingContent: (
+            <CrudTableLoadingSkeleton
+              ariaLabel="Opportunity pipeline"
+              loadingMessage="Loading pipeline rows."
+              rows={3}
+              columns={[
+                { key: 'opportunity', label: 'Opportunity', dataLabel: 'Opportunity' },
+                { key: 'company', label: 'Company', dataLabel: 'Company' },
+                { key: 'priority', label: 'Priority', dataLabel: 'Priority' },
+                { key: 'stage', label: 'Stage / Next Step', dataLabel: 'Stage / Next Step' },
+              ]}
+            />
+          ),
+          isEmpty: opportunityItems.length === 0,
+          emptyState: {
+            title: 'No opportunities yet',
+            description: 'Add your first opportunity to start tracking outreach and next steps.',
+            action: (
+              <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
+                Add Opportunity
+              </Button>
+            ),
+          },
+          content: (
+            <div>
+              <p className="sr-only" role="status" aria-live="polite">
+                Showing {opportunityItems.length} opportunities.
+              </p>
+              <OpportunityTable items={opportunityItems} onSelect={setSelectedOpportunity} />
+            </div>
+          ),
+        },
+        modals: {
+          item: (
+            <OpportunityItemModal
+              selectedOpportunity={selectedOpportunity}
+              isDeleting={isDeleting}
+              onClose={() => setSelectedOpportunity(null)}
+              onEdit={handleOpenEditModal}
+              onDelete={handleOpenDeleteConfirm}
+            />
+          ),
+          form: (
+            <OpportunityFormModal
+              isOpen={isFormOpen}
+              selectedOpportunity={selectedOpportunity}
+              isSaving={isSaving}
+              formValues={formValues}
+              formError={formError}
+              onClose={handleCloseFormModal}
+              onChange={handleFormChange}
+              onSubmit={handleFormSubmit}
+            />
+          ),
+          deleteConfirm: (
+            <OpportunityDeleteConfirmModal
+              isOpen={isDeleteConfirmOpen}
+              message={deletePrompt}
+              onCancel={handleCloseDeleteConfirm}
+              onConfirm={handleConfirmDeleteSelected}
+              isDeleting={isDeleting}
+            />
+          ),
+        },
       }}
     />
   );

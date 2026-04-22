@@ -6,6 +6,7 @@ function CrudPageTemplate({
   pageClassName,
   header = {},
   status = {},
+  slots = {},
   summary = {},
   section = {},
   modals = {},
@@ -24,10 +25,14 @@ function CrudPageTemplate({
     isLoading = false,
   } = status;
 
+  const summarySlot = slots.summary || summary;
+  const sectionSlot = slots.section || section;
+  const modalsSlot = slots.modals || modals;
+
   const {
     loadingContent: summaryLoadingContent,
     content: summaryContent,
-  } = summary;
+  } = summarySlot;
 
   const {
     title: sectionTitle,
@@ -39,7 +44,7 @@ function CrudPageTemplate({
     isEmpty = false,
     emptyState = {},
     content: sectionContent,
-  } = section;
+  } = sectionSlot;
 
   const {
     title: emptyStateTitle,
@@ -51,7 +56,7 @@ function CrudPageTemplate({
     item: itemModal,
     form: formModal,
     deleteConfirm: deleteConfirmModal,
-  } = modals;
+  } = modalsSlot;
 
   return (
     <section className={pageClassName}>

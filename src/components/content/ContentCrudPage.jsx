@@ -142,79 +142,81 @@ function ContentCrudPage() {
         loadingAnnouncement: 'Loading content board data.',
         isLoading,
       }}
-      summary={{
-        loadingContent: (
-          <SummaryCards
-            className="content-summary"
-            isLoading
-            loadingCount={3}
-            loadingKeyPrefix="content-summary"
-          />
-        ),
-        content: (
-          <SummaryCards
-            className="content-summary"
-            cards={summaryCards}
-          />
-        ),
-      }}
-      section={{
-        title: 'Publishing Workflow',
-        iconName: 'content',
-        actionText: 'Add Content',
-        onAction: handleOpenCreateModal,
-        actionLabel: 'Create a new content item',
-        loadingContent: (
-          <CrudCardGridLoadingSkeleton
-            className="content-board"
-            ariaLabel="Publishing workflow cards"
-            loadingMessage="Loading content cards."
-            cards={3}
-          />
-        ),
-        isEmpty: contentRows.length === 0,
-        emptyState: {
-          title: 'No content items yet',
-          description: 'Add your first draft to begin tracking your publishing pipeline.',
-          action: (
-            <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
-              Add Content
-            </Button>
+      slots={{
+        summary: {
+          loadingContent: (
+            <SummaryCards
+              className="content-summary"
+              isLoading
+              loadingCount={3}
+              loadingKeyPrefix="content-summary"
+            />
+          ),
+          content: (
+            <SummaryCards
+              className="content-summary"
+              cards={summaryCards}
+            />
           ),
         },
-        content: <ContentTable items={contentRows} onOpenItem={setSelectedItem} />,
-      }}
-      modals={{
-        item: (
-          <ContentItemModal
-            selectedItem={selectedItem}
-            isDeleting={isDeleting}
-            onClose={() => setSelectedItem(null)}
-            onEdit={handleOpenEditModal}
-            onDelete={handleOpenDeleteConfirm}
-          />
-        ),
-        form: (
-          <ContentFormModal
-            isOpen={isFormOpen}
-            selectedItem={selectedItem}
-            isSaving={isSaving}
-            formValues={formValues}
-            formError={formError}
-            onClose={handleCloseFormModal}
-            onChange={handleFormChange}
-            onSubmit={handleFormSubmit}
-          />
-        ),
-        deleteConfirm: (
-          <ContentDeleteConfirmModal
-            isOpen={isDeleteConfirmOpen}
-            message={deletePrompt}
-            onCancel={handleCloseDeleteConfirm}
-            onConfirm={handleConfirmDeleteSelected}
-            isDeleting={isDeleting}
-          />
-        ),
+        section: {
+          title: 'Publishing Workflow',
+          iconName: 'content',
+          actionText: 'Add Content',
+          onAction: handleOpenCreateModal,
+          actionLabel: 'Create a new content item',
+          loadingContent: (
+            <CrudCardGridLoadingSkeleton
+              className="content-board"
+              ariaLabel="Publishing workflow cards"
+              loadingMessage="Loading content cards."
+              cards={3}
+            />
+          ),
+          isEmpty: contentRows.length === 0,
+          emptyState: {
+            title: 'No content items yet',
+            description: 'Add your first draft to begin tracking your publishing pipeline.',
+            action: (
+              <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
+                Add Content
+              </Button>
+            ),
+          },
+          content: <ContentTable items={contentRows} onOpenItem={setSelectedItem} />,
+        },
+        modals: {
+          item: (
+            <ContentItemModal
+              selectedItem={selectedItem}
+              isDeleting={isDeleting}
+              onClose={() => setSelectedItem(null)}
+              onEdit={handleOpenEditModal}
+              onDelete={handleOpenDeleteConfirm}
+            />
+          ),
+          form: (
+            <ContentFormModal
+              isOpen={isFormOpen}
+              selectedItem={selectedItem}
+              isSaving={isSaving}
+              formValues={formValues}
+              formError={formError}
+              onClose={handleCloseFormModal}
+              onChange={handleFormChange}
+              onSubmit={handleFormSubmit}
+            />
+          ),
+          deleteConfirm: (
+            <ContentDeleteConfirmModal
+              isOpen={isDeleteConfirmOpen}
+              message={deletePrompt}
+              onCancel={handleCloseDeleteConfirm}
+              onConfirm={handleConfirmDeleteSelected}
+              isDeleting={isDeleting}
+            />
+          ),
+        },
       }}
     />
   );
