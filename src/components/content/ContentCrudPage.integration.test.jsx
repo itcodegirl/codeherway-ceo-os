@@ -1,0 +1,99 @@
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import ContentCrudPage from './ContentCrudPage';
+
+vi.mock('../../lib/contentRepository', () => ({
+  createContentItem: vi.fn(),
+  deleteContentItem: vi.fn(),
+  getContentSource: vi.fn(),
+  listContentItems: vi.fn(),
+  updateContentItem: vi.fn(),
+}));
+
+import {
+  createContentItem,
+  deleteContentItem,
+  getContentSource,
+  listContentItems,
+  updateContentItem,
+} from '../../lib/contentRepository';
+
+function renderWithRouter(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
+describe('ContentCrudPage integration', () => {
+  let records = [];
+  let idCounter = 2;
+
+  beforeEach(() => {
+    records = [
+      {
+        id: 'content-1',
+        title: 'Founder Weekly Brief',
+        platform: 'LinkedIn',
+        status: 'Drafting',
+      },
+    ];
+    idCounter = 2;
+
+    getContentSource.mockReturnValue('local');
+    listContentItems.mockImplementation(async () => records.map((item) => ({ ...item })));
+    createContentItem.mockImplementation(async (payload) => {
+      const created = { id: `content-${idCounter}`, ...payload };
+      idCounter += 1;
+      records = [created, ...records];
+      return { ...created };
+    });
+    updateContentItem.mockImplementation(async (id, payload) => {
+      const updated = { id, ...payload };
+      records = records.map((item) => (item.id === id ? updated : item));
+      return { ...updated };
+    });
+    deleteContentItem.mockImplementation(async (id) => {
+      records = records.filter((item) => item.id !== id);
+    });
+  });
+
+  it('supports create, edit, and delete through live crud interactions', async () => {
+    renderWithRouter(<ContentCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create a new content item' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Founder Strategy Update' } });
+    fireEvent.change(screen.getByLabelText('Platform'), { target: { value: 'Newsletter' } });
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'Editing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Founder Strategy Update')).toBeInTheDocument();
+      expect(screen.getByText('Newsletter')).toBeInTheDocument();
+    });
+    expect(createContentItem).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByText('Founder Strategy Update'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit selected content item' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Founder Strategy Memo' } });
+    fireEvent.change(screen.getByLabelText('Platform'), { target: { value: 'LinkedIn' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save content changes' }));
+
+    const table = screen.getByRole('table', { name: 'Content pipeline' });
+    await waitFor(() => {
+      expect(within(table).getByText('Founder Strategy Memo')).toBeInTheDocument();
+    });
+    expect(updateContentItem).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(table).getByText('Founder Strategy Memo'));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected content item' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    await waitFor(() => {
+      expect(within(table).queryByText('Founder Strategy Memo')).not.toBeInTheDocument();
+    });
+    expect(deleteContentItem).toHaveBeenCalledTimes(1);
+  });
+});
