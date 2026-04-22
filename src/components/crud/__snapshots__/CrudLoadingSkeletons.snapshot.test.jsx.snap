@@ -1,0 +1,202 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CrudLoadingSkeletons snapshots > matches card-grid loading skeleton snapshot 1`] = `
+<div
+  aria-busy="true"
+  aria-label="Publishing workflow cards"
+  class="content-board"
+  role="list"
+>
+  <p
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    Loading content cards.
+  </p>
+  <article
+    class="content-card"
+    role="listitem"
+  >
+    <div
+      class="content-card__header"
+    >
+      <div>
+        <div
+          class="skeleton-line skeleton-line--value"
+        />
+        <div
+          class="skeleton-line skeleton-line--offset"
+        />
+      </div>
+      <div
+        class="skeleton-line skeleton-line--meta-wide"
+      />
+    </div>
+    <div
+      class="content-card__footer"
+    >
+      <div
+        class="skeleton-line skeleton-line--meta-narrow"
+      />
+      <div
+        class="skeleton-line skeleton-line--meta-narrow"
+      />
+    </div>
+  </article>
+  <article
+    class="content-card"
+    role="listitem"
+  >
+    <div
+      class="content-card__header"
+    >
+      <div>
+        <div
+          class="skeleton-line skeleton-line--value"
+        />
+        <div
+          class="skeleton-line skeleton-line--offset"
+        />
+      </div>
+      <div
+        class="skeleton-line skeleton-line--meta-wide"
+      />
+    </div>
+    <div
+      class="content-card__footer"
+    >
+      <div
+        class="skeleton-line skeleton-line--meta-narrow"
+      />
+      <div
+        class="skeleton-line skeleton-line--meta-narrow"
+      />
+    </div>
+  </article>
+</div>
+`;
+
+exports[`CrudLoadingSkeletons snapshots > matches table loading skeleton snapshot 1`] = `
+<div
+  aria-busy="true"
+  aria-label="Opportunity pipeline"
+  class="crm-table"
+  role="table"
+>
+  <p
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    Loading pipeline rows.
+  </p>
+  <div
+    class="crm-table__header"
+    role="row"
+  >
+    <p
+      role="columnheader"
+    >
+      Opportunity
+    </p>
+    <p
+      role="columnheader"
+    >
+      Company
+    </p>
+    <p
+      role="columnheader"
+    >
+      Priority
+    </p>
+    <p
+      role="columnheader"
+    >
+      Stage / Next Step
+    </p>
+  </div>
+  <div
+    class="crm-table__row"
+    role="row"
+  >
+    <div
+      class="crm-table__cell"
+      data-label="Opportunity"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+    <div
+      class="crm-table__cell"
+      data-label="Company"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+    <div
+      class="crm-table__cell"
+      data-label="Priority"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+    <div
+      class="crm-table__cell"
+      data-label="Stage / Next Step"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+  </div>
+  <div
+    class="crm-table__row"
+    role="row"
+  >
+    <div
+      class="crm-table__cell"
+      data-label="Opportunity"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+    <div
+      class="crm-table__cell"
+      data-label="Company"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+    <div
+      class="crm-table__cell"
+      data-label="Priority"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+    <div
+      class="crm-table__cell"
+      data-label="Stage / Next Step"
+      role="cell"
+    >
+      <div
+        class="skeleton-line"
+      />
+    </div>
+  </div>
+</div>
+`;

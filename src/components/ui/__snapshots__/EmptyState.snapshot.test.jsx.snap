@@ -1,0 +1,44 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`EmptyState snapshots > matches empty state snapshot with action 1`] = `
+<div
+  class="empty-state"
+>
+  <p
+    class="empty-state__title"
+  >
+    No content items yet
+  </p>
+  <p
+    class="empty-state__description"
+  >
+    Add your first draft to begin tracking your publishing pipeline.
+  </p>
+  <div
+    class="empty-state__action"
+  >
+    <button
+      type="button"
+    >
+      Add Content
+    </button>
+  </div>
+</div>
+`;
+
+exports[`EmptyState snapshots > matches empty state snapshot without action 1`] = `
+<div
+  class="empty-state"
+>
+  <p
+    class="empty-state__title"
+  >
+    No opportunities yet
+  </p>
+  <p
+    class="empty-state__description"
+  >
+    Add your first opportunity to start tracking outreach and next steps.
+  </p>
+</div>
+`;
