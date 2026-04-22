@@ -33,6 +33,9 @@ jobs:
       - name: Run Build
         run: npm run build
 
+      - name: Check Crud Template Legacy Props Deadline
+        run: npm run check:crud-template-legacy
+
       - name: Run Unit Tests
         run: npm run test:run
 
