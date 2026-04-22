@@ -79,6 +79,7 @@ export function useCrudPage(config) {
       }
 
       try {
+        setLoadError('');
         if (typeof deleteItemFn !== 'function') {
           throw new Error('Delete operation is not configured.');
         }

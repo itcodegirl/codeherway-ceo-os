@@ -101,4 +101,64 @@ describe('OpportunityCrudPage integration', () => {
     });
     expect(deleteOpportunity).toHaveBeenCalledTimes(1);
   });
+
+  it('shows save error and allows retry from the same create form', async () => {
+    createOpportunity.mockImplementationOnce(async () => {
+      throw new Error('save failed');
+    });
+
+    renderWithRouter(<OpportunityCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Advisory Partnership')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create a new opportunity' }));
+    fireEvent.change(screen.getByLabelText('Opportunity'), { target: { value: 'Retry Opportunity' } });
+    fireEvent.change(screen.getByLabelText('Company'), { target: { value: 'Retry Co' } });
+    fireEvent.change(screen.getByLabelText('Next Step'), { target: { value: 'Follow up tomorrow' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create opportunity' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Unable to save opportunity right now.');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create opportunity' }));
+
+    const table = screen.getByRole('table', { name: 'Opportunity pipeline' });
+    await waitFor(() => {
+      expect(within(table).getByText('Retry Opportunity')).toBeInTheDocument();
+    });
+    expect(createOpportunity.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('shows delete error and allows retry to complete deletion', async () => {
+    deleteOpportunity.mockImplementationOnce(async () => {
+      throw new Error('delete failed');
+    });
+
+    renderWithRouter(<OpportunityCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Advisory Partnership')).toBeInTheDocument();
+    });
+    const table = screen.getByRole('table', { name: 'Opportunity pipeline' });
+
+    fireEvent.click(within(table).getByText('Advisory Partnership'));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected opportunity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Unable to delete opportunity right now.');
+      expect(within(table).getByText('Advisory Partnership')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    await waitFor(() => {
+      expect(within(table).queryByText('Advisory Partnership')).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText('Unable to delete opportunity right now.')).not.toBeInTheDocument();
+    expect(deleteOpportunity.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
 });

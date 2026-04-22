@@ -96,4 +96,63 @@ describe('ContentCrudPage integration', () => {
     });
     expect(deleteContentItem).toHaveBeenCalledTimes(1);
   });
+
+  it('shows save error and allows retry from the same create form', async () => {
+    createContentItem.mockImplementationOnce(async () => {
+      throw new Error('save failed');
+    });
+
+    renderWithRouter(<ContentCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create a new content item' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Retry Content Item' } });
+    fireEvent.change(screen.getByLabelText('Platform'), { target: { value: 'Newsletter' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Unable to save content item right now.');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
+
+    const table = screen.getByRole('table', { name: 'Content pipeline' });
+    await waitFor(() => {
+      expect(within(table).getByText('Retry Content Item')).toBeInTheDocument();
+    });
+    expect(createContentItem.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('shows delete error and allows retry to complete deletion', async () => {
+    deleteContentItem.mockImplementationOnce(async () => {
+      throw new Error('delete failed');
+    });
+
+    renderWithRouter(<ContentCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
+    });
+    const table = screen.getByRole('table', { name: 'Content pipeline' });
+
+    fireEvent.click(within(table).getByText('Founder Weekly Brief'));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected content item' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Unable to delete content item right now.');
+      expect(within(table).getByText('Founder Weekly Brief')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    await waitFor(() => {
+      expect(within(table).queryByText('Founder Weekly Brief')).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText('Unable to delete content item right now.')).not.toBeInTheDocument();
+    expect(deleteContentItem.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
 });
