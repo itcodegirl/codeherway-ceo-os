@@ -85,7 +85,7 @@ function Dashboard() {
       <SourceStatusNotice
         source={weeklySource}
         supabaseText="Weekly data source: Supabase."
-        localText="Weekly data source: local persistent storage."
+        localText="Weekly data source: Sample data — configure Supabase to use real data."
         loadError={weeklyLoadError}
         onRetry={refreshWeeklyBrief}
         retryAriaLabel="Retry loading weekly dashboard data"

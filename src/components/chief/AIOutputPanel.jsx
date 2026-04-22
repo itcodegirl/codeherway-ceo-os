@@ -32,11 +32,10 @@ function AIOutputPanel({
             />
           ))
         ) : (
-          <article className="chief-response" aria-label="Starter copy">
-            <p className="chief-response__label">Starter Copy</p>
+          <article className="chief-response" aria-label="AI output empty state">
+            <p className="chief-response__label">Ready to Generate</p>
             <p className="chief-response__text">
-              This week's momentum is strong. Core product structure is in place, and the next move is to
-              convert these notes into editable plans and content that can be shipped this week.
+              Paste your notes in the workspace, then choose an action above to generate output.
             </p>
           </article>
         )}

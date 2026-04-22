@@ -127,5 +127,5 @@ export const dashboardDemoData = {
   focusScore: {
     demoSuffix: 'Demo heuristic',
   },
-  demoNote: 'Static demo framing: values are generated from local sample data in this browser.',
+  demoNote: 'Sample data — configure Supabase to use real data.',
 };

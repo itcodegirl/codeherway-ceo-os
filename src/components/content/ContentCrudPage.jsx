@@ -136,7 +136,7 @@ function ContentCrudPage() {
       pageDescription="Plan, track, and ship founder content across platforms with a clear publishing workflow."
       sourceNote={source === 'supabase'
         ? 'Data source: Supabase (live persistence).'
-        : 'Data source: local demo storage. Configure Supabase env vars to persist to backend.'}
+        : 'Sample data — configure Supabase to use real data.'}
       sourceNoteClassName="content-source-note"
       loadError={loadError}
       loadErrorClassName="content-error"

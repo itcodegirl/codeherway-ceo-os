@@ -151,7 +151,7 @@ function OpportunityCrudPage() {
       pageDescription="Track partnerships, roles, and outreach as an executive-grade pipeline."
       sourceNote={source === 'supabase'
         ? 'Data source: Supabase (live persistence).'
-        : 'Data source: local demo storage. Configure Supabase env vars to persist to backend.'}
+        : 'Sample data — configure Supabase to use real data.'}
       sourceNoteClassName="opportunities-source-note"
       loadError={loadError}
       loadErrorClassName="opportunities-error"

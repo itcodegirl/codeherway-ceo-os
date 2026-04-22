@@ -2,6 +2,7 @@ import { useId } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
 import '../styles/forms.css';
@@ -63,15 +64,6 @@ function Settings() {
         <SectionCard
           title="Workspace"
           iconName="settings"
-          actionText="Save Profile"
-          onAction={() => {
-            if (!canSave) {
-              return;
-            }
-
-            void markSave();
-          }}
-          actionLabel="Save workspace profile details"
         >
           <Input
             id={teamNameFieldId}
@@ -118,15 +110,6 @@ function Settings() {
         <SectionCard
           title="Experience"
           iconName="settings"
-          actionText="Apply"
-          onAction={() => {
-            if (!canSave) {
-              return;
-            }
-
-            void markSave();
-          }}
-          actionLabel="Save workspace and accessibility settings"
         >
           <label className="settings-toggle" htmlFor={autoSaveToggleId}>
             <input
@@ -161,12 +144,23 @@ function Settings() {
             <span>Enable keyboard shortcuts</span>
           </label>
         </SectionCard>
+
+        <div className="settings-actions">
+          <Button
+            type="submit"
+            disabled={!canSave}
+            ariaLabel="Save settings"
+            icon={{ name: 'check', size: 14 }}
+          >
+            {isSaving ? 'Saving...' : 'Save Settings'}
+          </Button>
+        </div>
       </form>
 
       <div className="helper-text" role="status" aria-live="polite">
         {source === 'supabase'
           ? 'Changes sync to your Supabase profile.'
-          : 'Changes persist in browser memory for now and can sync to your account in a configured Supabase environment.'}
+          : 'Sample data — configure Supabase to use real data.'}
         {savedAt ? (
           <span className="settings-saved-indicator">
             {' '}

@@ -75,6 +75,10 @@ function WeeklyBrief() {
         ]}
       />
 
+      <p className="helper-text">
+        Use each section&apos;s <strong>Add</strong> button to open the editor, then use row-level <strong>Edit</strong> and <strong>Delete</strong> actions to manage items.
+      </p>
+
       <div className="weekly-grid">
         <PrioritiesSection
           items={priorityItems}
@@ -106,7 +110,7 @@ function WeeklyBrief() {
             rows={5}
             placeholder="Capture outcomes at close of week in plain language: what moved, what stalled, and what your next executive move is for the coming seven days."
           />
-          <p className="helper-text">Notes are saved automatically in your browser.</p>
+          <p className="helper-text">Notes are saved automatically for this workspace.</p>
         </SectionCard>
       </div>
     </section>

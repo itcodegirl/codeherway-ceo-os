@@ -3,7 +3,7 @@ import Button from './Button';
 function SourceStatusNotice({
   source = 'local',
   supabaseText = 'Data source: Supabase (live persistence).',
-  localText = 'Data source: local persistent storage in this browser.',
+  localText = 'Sample data — configure Supabase to use real data.',
   loadError = '',
   onRetry = null,
   retryAriaLabel = 'Retry loading data',

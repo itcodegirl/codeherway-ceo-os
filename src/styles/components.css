@@ -426,6 +426,12 @@ textarea:focus-visible,
   align-items: start;
 }
 
+.settings-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .app-shell-load {
   min-height: 100vh;
   display: grid;
