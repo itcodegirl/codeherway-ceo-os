@@ -79,6 +79,7 @@
   color: inherit;
   padding: var(--space-card-padding);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .crm-table__row--button:hover,
@@ -86,6 +87,14 @@
 .crm-table__row--interactive:hover,
 .crm-table__row--interactive:focus-visible {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.crm-table__row--interactive:hover {
+  border-color: rgba(200, 194, 255, 0.35);
+}
+
+.crm-table__row--interactive td {
+  cursor: pointer;
 }
 
 .crm-table__row--button:disabled {
@@ -110,6 +119,10 @@
   gap: 0.5rem;
   justify-content: center;
   height: 100%;
+}
+
+.crm-table__hint {
+  margin: 0 0 0.2rem;
 }
 
 .summary-card__label {
@@ -461,6 +474,11 @@ textarea:focus-visible,
 .toast--dashboard {
   right: clamp(1rem, 2.5vw, 2rem);
   bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+.chief-actions--disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {

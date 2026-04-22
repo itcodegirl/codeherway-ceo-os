@@ -66,6 +66,11 @@
   margin-top: 1rem;
 }
 
+.chief-action-grid--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .chief-feedback-text {
   margin-top: 0.75rem;
   min-height: 1.2rem;

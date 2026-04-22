@@ -38,6 +38,7 @@ function MomentumChart({ values = [] }) {
             className="momentum-point"
             role="listitem"
             aria-label={`${label}: ${normalizedValue}`}
+            title={`${label}: ${normalizedValue}`}
           >
             <span className="momentum-point__value">{normalizedValue}</span>
             <div

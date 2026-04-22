@@ -6,6 +6,7 @@ function SectionCard({
   children,
   iconName = 'section',
   actionText,
+  actionDisabled = false,
   actionTo,
   onAction,
   actionLabel,
@@ -19,6 +20,7 @@ function SectionCard({
         </h2>
         <ActionControl
           actionText={actionText}
+          actionDisabled={actionDisabled}
           actionTo={actionTo}
           onAction={onAction}
           actionLabel={actionLabel}

@@ -86,7 +86,9 @@ export default function ChiefOfStaff() {
             placeholder="I need to follow up with XPAIRK, write a LinkedIn post, and figure out hiring strategy..."
           />
 
-          <div className="chief-action-grid">
+          <div
+            className={`chief-action-grid ${isGenerating ? "chief-action-grid--disabled" : ""}`.trim()}
+          >
             <button
               type="button"
               onClick={() => handleAction("plan")}

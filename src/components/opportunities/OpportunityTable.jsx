@@ -50,6 +50,9 @@ function OpportunityTable({ items, onSelect }) {
 
   return (
     <div className="crm-table">
+      {hasHandler ? (
+        <p className="helper-text crm-table__hint">Click any row to view details.</p>
+      ) : null}
       <table className="crm-table__native" aria-label="Opportunity pipeline">
         <thead>
           <tr className="crm-table__header">
@@ -68,6 +71,7 @@ function OpportunityTable({ items, onSelect }) {
               key={item.id}
               data-item-id={String(item.id)}
               className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
+              title={hasHandler ? `Open ${item.name} details` : undefined}
             >
               <td className="crm-table__cell" data-label="Opportunity">
                 <p className="crm-table__title crm-table__title--row">{item.name}</p>

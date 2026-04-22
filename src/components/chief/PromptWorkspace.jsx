@@ -29,7 +29,7 @@ function PromptWorkspace({
           onChange={(event) => onNotesChange(event.target.value)}
         />
 
-        <div className="chief-actions">
+        <div className={`chief-actions ${isGenerating ? 'chief-actions--disabled' : ''}`.trim()}>
           <Button
             onClick={() => onAction('summarize')}
             disabled={!canGenerate}

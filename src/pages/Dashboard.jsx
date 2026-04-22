@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import StatCard from '../components/ui/StatCard';
 import SectionCard from '../components/ui/SectionCard';
 import Toast from '../components/ui/Toast';
@@ -20,6 +20,15 @@ function Dashboard() {
     isToastVisible,
     showToast,
   } = useToast();
+  const [isSnapshotCopied, setIsSnapshotCopied] = useState(false);
+  const snapshotResetTimeoutRef = useRef(null);
+
+  useEffect(() => () => {
+    if (snapshotResetTimeoutRef.current) {
+      window.clearTimeout(snapshotResetTimeoutRef.current);
+    }
+  }, []);
+
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh dashboard data right now.');
     if (import.meta.env.DEV) {
@@ -63,6 +72,10 @@ function Dashboard() {
   });
 
   const handleCopySnapshot = async () => {
+    if (isSnapshotCopied) {
+      return;
+    }
+
     if (!navigator?.clipboard?.writeText) {
       showToast('Clipboard access is not available in this environment.');
       return;
@@ -71,6 +84,13 @@ function Dashboard() {
     try {
       await navigator.clipboard.writeText(snapshotText);
       showToast('Executive snapshot copied to clipboard.');
+      setIsSnapshotCopied(true);
+      if (snapshotResetTimeoutRef.current) {
+        window.clearTimeout(snapshotResetTimeoutRef.current);
+      }
+      snapshotResetTimeoutRef.current = window.setTimeout(() => {
+        setIsSnapshotCopied(false);
+      }, 1500);
     } catch (error) {
       showToast('Unable to copy snapshot right now.');
       if (import.meta.env.DEV) {
@@ -128,7 +148,8 @@ function Dashboard() {
         <SectionCard
           title="Executive Snapshot"
           iconName="dashboard"
-          actionText="Copy Snapshot"
+          actionText={isSnapshotCopied ? 'Copied!' : 'Copy Snapshot'}
+          actionDisabled={isSnapshotCopied}
           onAction={handleCopySnapshot}
           actionLabel="Copy executive snapshot"
         >

@@ -52,6 +52,7 @@ function resolveActionIconName(actionText, actionTo) {
 
 function ActionControl({
   actionText,
+  actionDisabled = false,
   actionTo,
   onAction,
   actionLabel,
@@ -61,7 +62,7 @@ function ActionControl({
   const normalizedTargetPath = normalizePath(actionTo);
   const isSelfNavigation = Boolean(actionTo && normalizedTargetPath === normalizedCurrentPath);
 
-  const shouldRenderLinkAction = Boolean(actionText && actionTo && !isSelfNavigation);
+  const shouldRenderLinkAction = Boolean(actionText && actionTo && !isSelfNavigation && !actionDisabled);
   const shouldRenderButtonAction = Boolean(actionText && onAction && (!actionTo || isSelfNavigation));
   const hasAction = shouldRenderLinkAction || shouldRenderButtonAction;
   const actionIconName = resolveActionIconName(actionText, actionTo);
@@ -87,6 +88,7 @@ function ActionControl({
     <Button
       type="button"
       onClick={onAction || undefined}
+      disabled={actionDisabled}
       ariaLabel={actionLabel || actionText}
       icon={{ name: actionIconName, size: 14 }}
     >
