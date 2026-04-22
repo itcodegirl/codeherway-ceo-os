@@ -43,7 +43,7 @@ vi.mock('../lib/chiefRepository', () => ({
 
 import { createOpportunity, listOpportunities } from '../lib/opportunitiesRepository';
 import { createContentItem, listContentItems } from '../lib/contentRepository';
-import { createWeeklyItem } from '../lib/weeklyRepository';
+import { createWeeklyItem, getWeeklyBriefByWeek } from '../lib/weeklyRepository';
 import { createChiefSession, loadChiefWorkspace, saveChiefOutput } from '../lib/chiefRepository';
 import { generateChiefOfStaffResponse } from '../lib/openai';
 
@@ -229,6 +229,39 @@ describe('useChiefOfStaff', () => {
     expect(result.current.isStructuredItemAccepted('contentItems', { title: '', platform: 'LinkedIn' })).toBe(
       false,
     );
+  });
+
+  it('hydrates accepted task entries using task section keys', async () => {
+    listOpportunities.mockResolvedValue([]);
+    listContentItems.mockResolvedValue([]);
+    getWeeklyBriefByWeek.mockResolvedValue({
+      priorities: [{ title: 'Follow up with partner' }],
+    });
+    loadChiefWorkspace.mockResolvedValue({
+      notes: 'Initial notes',
+      responses: [
+        {
+          structuredPayload: {
+            priorities: [],
+            opportunities: [],
+            contentItems: [],
+            tasks: [{ title: 'Follow up with partner' }],
+          },
+        },
+      ],
+      source: 'local',
+    });
+
+    const { result } = renderHook(() => useChiefOfStaff());
+
+    await waitFor(() => {
+      expect(loadChiefWorkspace).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isStructuredItemAccepted('tasks', { title: 'Follow up with partner' })).toBe(true);
+    });
+    expect(result.current.isStructuredItemAccepted('priorities', { title: 'Follow up with partner' })).toBe(false);
   });
 
   it('adds a structured fallback output to local responses when proxy returns fallback source', async () => {

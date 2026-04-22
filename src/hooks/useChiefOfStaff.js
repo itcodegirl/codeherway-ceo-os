@@ -215,10 +215,22 @@ export function useChiefOfStaff() {
           });
         }
 
-        const priorityLike = [...(Array.isArray(payload.priorities) ? payload.priorities : []),
-          ...(Array.isArray(payload.tasks) ? payload.tasks : [])];
-        priorityLike.forEach((item) => {
+        const priorities = Array.isArray(payload.priorities) ? payload.priorities : [];
+        priorities.forEach((item) => {
           const key = createStructuredItemKey('priorities', item);
+          const signature = buildPrioritySignature(item);
+          if (!key || !signature) {
+            return;
+          }
+
+          if (weeklySignatures.has(signature)) {
+            accepted[key] = true;
+          }
+        });
+
+        const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+        tasks.forEach((item) => {
+          const key = createStructuredItemKey('tasks', item);
           const signature = buildPrioritySignature(item);
           if (!key || !signature) {
             return;

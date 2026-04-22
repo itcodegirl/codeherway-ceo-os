@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import CrudPageTemplate from './CrudPageTemplate';
 
 function renderWithRouter(ui) {
@@ -135,5 +135,39 @@ describe('CrudPageTemplate', () => {
     expect(screen.getByText('Item modal slot')).toBeInTheDocument();
     expect(screen.getByText('Form modal slot')).toBeInTheDocument();
     expect(screen.getByText('Delete modal slot')).toBeInTheDocument();
+  });
+
+  it('forwards slot section actionIconName to SectionCard action control', () => {
+    const onAction = vi.fn();
+
+    renderWithRouter(
+      <CrudPageTemplate
+        pageClassName="content-page"
+        header={{
+          title: 'Content OS',
+          description: 'Track content workflow.',
+        }}
+        status={{
+          isLoading: false,
+        }}
+        slots={{
+          summary: {
+            content: <p>Summary content</p>,
+          },
+          section: {
+            title: 'Publishing Workflow',
+            iconName: 'content',
+            actionText: 'Save Changes',
+            actionIconName: 'back',
+            onAction,
+            content: <p>Slots section body</p>,
+          },
+        }}
+      />,
+    );
+
+    const actionButton = screen.getByRole('button', { name: 'Save Changes' });
+    expect(actionButton).toBeInTheDocument();
+    expect(actionButton.querySelector('path[d="M20 12H6m6 6-6-6 6-6"]')).toBeInTheDocument();
   });
 });

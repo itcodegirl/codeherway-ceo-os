@@ -70,6 +70,7 @@ function CrudPageTemplate({
     title: sectionTitle,
     iconName: sectionIconName,
     actionText: sectionActionText,
+    actionIconName: sectionActionIconName,
     onAction: onSectionAction,
     actionLabel: sectionActionLabel,
     loadingContent: sectionLoadingContent,
@@ -114,6 +115,7 @@ function CrudPageTemplate({
         title={sectionTitle}
         iconName={sectionIconName}
         actionText={sectionActionText}
+        actionIconName={sectionActionIconName}
         onAction={onSectionAction}
         actionLabel={sectionActionLabel}
       >
