@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 const DEFAULT_POINT_LABELS = [
   'Opportunity',
   'Content',
@@ -13,6 +15,8 @@ function resolvePointLabel(index) {
 }
 
 function MomentumChart({ values = [] }) {
+  const chartLabelId = useId();
+  const chartTableId = useId();
   const points = Array.isArray(values) ? values : [];
   const ariaLabel = points.length
     ? `Momentum trend chart values by metric: ${points.join(', ')}`
@@ -27,9 +31,11 @@ function MomentumChart({ values = [] }) {
   }
 
   return (
-    <figure className="momentum-chart-panel" role="group" aria-label={ariaLabel}>
-      <figcaption className="sr-only">Momentum trend chart by category with values from 0 to 100.</figcaption>
-      <div className="momentum-chart" role="list" aria-label="Momentum categories">
+    <figure className="momentum-chart-panel" aria-labelledby={chartLabelId} aria-describedby={chartTableId}>
+      <figcaption className="sr-only" id={chartLabelId}>
+        Momentum trend chart by category with values from 0 to 100. {ariaLabel}
+      </figcaption>
+      <div className="momentum-chart" aria-label="Momentum categories">
         <div className="momentum-axis" aria-hidden="true">
           {AXIS_TICKS.map((tick) => (
             <div key={tick} className="momentum-axis__tick">
@@ -37,16 +43,15 @@ function MomentumChart({ values = [] }) {
             </div>
           ))}
         </div>
-        <div className="momentum-points" role="presentation">
+        <ul className="momentum-points">
           {points.map((value, index) => {
             const normalizedValue = Math.max(0, Math.min(100, Number(value) || 0));
             const label = resolvePointLabel(index);
             const height = Math.max(24, normalizedValue) * 1.35;
             return (
-              <div
+              <li
                 key={index}
                 className="momentum-point"
-                role="listitem"
                 aria-label={`${label}: ${normalizedValue}`}
                 title={`${label}: ${normalizedValue}`}
               >
@@ -57,12 +62,12 @@ function MomentumChart({ values = [] }) {
                   aria-hidden="true"
                 />
                 <span className="momentum-point__label">{label}</span>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
-      <table className="sr-only" aria-label="Momentum trend data table">
+      <table className="sr-only" id={chartTableId} aria-label="Momentum trend data table">
         <thead>
           <tr>
             <th scope="col">Metric</th>
