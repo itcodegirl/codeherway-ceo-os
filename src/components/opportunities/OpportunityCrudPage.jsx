@@ -9,6 +9,7 @@ import Input from '../ui/Input';
 import Select from '../ui/Select';
 import SummaryCards from '../ui/SummaryCards';
 import Textarea from '../ui/Textarea';
+import { CrudTableLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
   createOpportunity,
   deleteOpportunity,
@@ -184,33 +185,17 @@ function OpportunityCrudPage() {
         onAction: handleOpenCreateModal,
         actionLabel: 'Create a new opportunity',
         loadingContent: (
-          <div className="crm-table" role="table" aria-label="Opportunity pipeline" aria-busy={isLoading}>
-            <p className="sr-only" role="status" aria-live="polite">
-              Loading pipeline rows.
-            </p>
-            <div className="crm-table__header" role="row">
-              <p role="columnheader">Opportunity</p>
-              <p role="columnheader">Company</p>
-              <p role="columnheader">Priority</p>
-              <p role="columnheader">Stage / Next Step</p>
-            </div>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="crm-table__row" role="row">
-                <div className="crm-table__cell" role="cell" data-label="Opportunity">
-                  <div className="skeleton-line" />
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Company">
-                  <div className="skeleton-line" />
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Priority">
-                  <div className="skeleton-line" />
-                </div>
-                <div className="crm-table__cell" role="cell" data-label="Stage / Next Step">
-                  <div className="skeleton-line" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <CrudTableLoadingSkeleton
+            ariaLabel="Opportunity pipeline"
+            loadingMessage="Loading pipeline rows."
+            rows={3}
+            columns={[
+              { key: 'opportunity', label: 'Opportunity', dataLabel: 'Opportunity' },
+              { key: 'company', label: 'Company', dataLabel: 'Company' },
+              { key: 'priority', label: 'Priority', dataLabel: 'Priority' },
+              { key: 'stage', label: 'Stage / Next Step', dataLabel: 'Stage / Next Step' },
+            ]}
+          />
         ),
         isEmpty: opportunityItems.length === 0,
         emptyState: {

@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import SummaryCards from '../ui/SummaryCards';
+import { CrudCardGridLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
   createContentItem,
   deleteContentItem,
@@ -169,26 +170,12 @@ function ContentCrudPage() {
         onAction: handleOpenCreateModal,
         actionLabel: 'Create a new content item',
         loadingContent: (
-          <div className="content-board" role="list" aria-label="Publishing workflow cards" aria-busy={isLoading}>
-            <p className="sr-only" role="status" aria-live="polite">
-              Loading content cards.
-            </p>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <article className="content-card" key={index} role="listitem">
-                <div className="content-card__header">
-                  <div>
-                    <div className="skeleton-line skeleton-line--value" />
-                    <div className="skeleton-line skeleton-line--offset" />
-                  </div>
-                  <div className="skeleton-line skeleton-line--meta-wide" />
-                </div>
-                <div className="content-card__footer">
-                  <div className="skeleton-line skeleton-line--meta-narrow" />
-                  <div className="skeleton-line skeleton-line--meta-narrow" />
-                </div>
-              </article>
-            ))}
-          </div>
+          <CrudCardGridLoadingSkeleton
+            className="content-board"
+            ariaLabel="Publishing workflow cards"
+            loadingMessage="Loading content cards."
+            cards={3}
+          />
         ),
         isEmpty: contentRows.length === 0,
         emptyState: {
