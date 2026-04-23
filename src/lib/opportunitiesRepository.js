@@ -1,6 +1,6 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
 import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
-import { buildCreateId } from './utils';
+import { buildCreateId, safeLocalStorageSetItem } from './utils';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
@@ -29,13 +29,11 @@ function readLocalOpportunities() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const seeded = getSeededLocalItems();
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-      } catch (error) {
-        if (import.meta.env?.DEV) {
-          console.warn('Failed to seed opportunities in localStorage', error);
-        }
-      }
+      safeLocalStorageSetItem(
+        STORAGE_KEY,
+        JSON.stringify(seeded),
+        'Failed to seed opportunities in localStorage',
+      );
       return seeded;
     }
 
@@ -51,17 +49,11 @@ function readLocalOpportunities() {
 }
 
 function writeLocalOpportunities(items) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  } catch (error) {
-    if (import.meta.env?.DEV) {
-      console.warn('Failed to persist opportunities to localStorage', error);
-    }
-  }
+  safeLocalStorageSetItem(
+    STORAGE_KEY,
+    JSON.stringify(items),
+    'Failed to persist opportunities to localStorage',
+  );
 }
 
 function notifyOpportunitiesUpdated(detail = {}) {

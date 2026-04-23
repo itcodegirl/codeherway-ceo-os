@@ -4,7 +4,7 @@ import {
   defaultPriorities,
   defaultWins,
 } from './weeklyData';
-import { buildCreateId } from './utils';
+import { buildCreateId, safeLocalStorageSetItem } from './utils';
 import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
@@ -201,17 +201,11 @@ function readLocalWeekStore() {
 }
 
 function writeLocalWeekStore(store) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(LOCAL_WEEKLY_BRIEFS_KEY, JSON.stringify(store));
-  } catch (error) {
-    if (import.meta.env?.DEV) {
-      console.warn('Failed to persist weekly brief data to localStorage', error);
-    }
-  }
+  safeLocalStorageSetItem(
+    LOCAL_WEEKLY_BRIEFS_KEY,
+    JSON.stringify(store),
+    'Failed to persist weekly brief data to localStorage',
+  );
 }
 
 function resolveLocalWeekPayload(weekStart) {
