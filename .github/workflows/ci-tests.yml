@@ -33,6 +33,9 @@ jobs:
       - name: Run Build
         run: npm run build
 
+      - name: Check Route Performance Budgets
+        run: npm run check:route-budgets
+
       - name: Check Crud Template Legacy Props Deadline
         run: npm run check:crud-template-legacy
 
