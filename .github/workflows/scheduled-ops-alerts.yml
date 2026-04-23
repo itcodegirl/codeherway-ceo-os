@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   issues: write
 
@@ -89,6 +90,79 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Build Daily SLO Trend Snapshot
+        if: always()
+        env:
+          ROUTE_TREND_OUTCOME: ${{ steps.route_trend.outcome }}
+          TELEMETRY_HEALTH_OUTCOME: ${{ steps.telemetry_health.outcome }}
+          TELEMETRY_ENDPOINT_SLO_OUTCOME: ${{ steps.telemetry_endpoint_slo.outcome }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: npm run build:slo-trend-snapshot
+
+      - name: Upload Daily SLO Trend Snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-slo-trend-snapshot-${{ github.run_id }}
+          path: artifacts/slo-trend-snapshot.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Build SLO Snapshot Artifact Index
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const prefix = 'scheduled-slo-trend-snapshot-';
+            const { owner, repo } = context.repo;
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, {
+              owner,
+              repo,
+              per_page: 100,
+            });
+
+            const matching = artifacts
+              .filter((artifact) => artifact.name && artifact.name.startsWith(prefix) && !artifact.expired)
+              .sort((left, right) => new Date(right.created_at) - new Date(left.created_at))
+              .slice(0, 90);
+
+            const rows = matching.map((artifact) => ({
+              id: artifact.id,
+              name: artifact.name,
+              size_in_bytes: artifact.size_in_bytes,
+              created_at: artifact.created_at,
+              expires_at: artifact.expires_at,
+              archive_download_url: artifact.archive_download_url,
+            }));
+
+            const markdown = [
+              '# SLO Snapshot Artifact Index',
+              '',
+              `Generated at: ${new Date().toISOString()}`,
+              '',
+              '| Artifact | Created | Expires | Size (bytes) | Download |',
+              '| --- | --- | --- | ---: | --- |',
+              ...rows.map((row) => `| ${row.name} | ${row.created_at} | ${row.expires_at} | ${row.size_in_bytes} | ${row.archive_download_url} |`),
+            ].join('\n');
+
+            fs.mkdirSync(path.resolve(process.cwd(), 'artifacts'), { recursive: true });
+            fs.writeFileSync(path.resolve(process.cwd(), 'artifacts', 'slo-snapshot-artifact-index.md'), markdown, 'utf8');
+            fs.writeFileSync(path.resolve(process.cwd(), 'artifacts', 'slo-snapshot-artifact-index.json'), JSON.stringify(rows, null, 2), 'utf8');
+            core.info(`Indexed ${rows.length} SLO snapshot artifacts.`);
+
+      - name: Upload SLO Snapshot Artifact Index
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-slo-snapshot-index
+          path: |
+            artifacts/slo-snapshot-artifact-index.md
+            artifacts/slo-snapshot-artifact-index.json
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Publish Monitor Summary
         id: publish_summary
         if: always()
@@ -135,10 +209,47 @@ jobs:
             core.summary.addRaw(summary).write();
             core.setOutput('alert_triggered', alertTriggered ? 'true' : 'false');
 
+      - name: Lookup Existing Ops Alert Issue
+        id: lookup_ops_alert_issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- ops-alert-monitor -->';
+            const title = '[Ops Alert] Route/telemetry reliability degradation detected';
+            const { owner, repo } = context.repo;
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const existingIssue = openIssues.find((issue) => (
+              !issue.pull_request
+              && issue.title === title
+              && typeof issue.body === 'string'
+              && issue.body.includes(marker)
+            ));
+
+            if (existingIssue) {
+              core.setOutput('issue_number', String(existingIssue.number));
+              core.setOutput('issue_url', existingIssue.html_url);
+              core.setOutput('issue_state', existingIssue.state);
+              core.info(`Found open ops alert issue #${existingIssue.number}.`);
+            } else {
+              core.setOutput('issue_number', '');
+              core.setOutput('issue_url', '');
+              core.setOutput('issue_state', '');
+              core.info('No open ops alert issue found.');
+            }
+
       - name: Upsert Ops Alert Issue
         id: upsert_ops_alert_issue
         if: always() && steps.publish_summary.outputs.alert_triggered == 'true'
         uses: actions/github-script@v7
+        env:
+          EXISTING_ISSUE_NUMBER: ${{ steps.lookup_ops_alert_issue.outputs.issue_number }}
+          EXISTING_ISSUE_URL: ${{ steps.lookup_ops_alert_issue.outputs.issue_url }}
         with:
           script: |
             const fs = require('node:fs');
@@ -180,54 +291,77 @@ jobs:
             ].join('\n');
 
             const { owner, repo } = context.repo;
-            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
-              owner,
-              repo,
-              state: 'open',
-              per_page: 100,
-            });
-            const existingIssue = openIssues.find((issue) => (
-              !issue.pull_request
-              && issue.title === title
-              && typeof issue.body === 'string'
-              && issue.body.includes(marker)
-            ));
-
-            if (existingIssue) {
+            const existingIssueNumber = Number(process.env.EXISTING_ISSUE_NUMBER || 0);
+            if (existingIssueNumber > 0) {
               await github.rest.issues.update({
                 owner,
                 repo,
-                issue_number: existingIssue.number,
+                issue_number: existingIssueNumber,
                 title,
                 body,
               });
-              core.info(`Updated ops alert issue #${existingIssue.number}.`);
-              core.setOutput('issue_number', String(existingIssue.number));
-              core.setOutput('issue_url', existingIssue.html_url);
+              core.info(`Updated ops alert issue #${existingIssueNumber}.`);
+              core.setOutput('issue_number', String(existingIssueNumber));
+              core.setOutput('issue_url', process.env.EXISTING_ISSUE_URL || '');
               core.setOutput('issue_action', 'updated');
-            } else {
-              const created = await github.rest.issues.create({
-                owner,
-                repo,
-                title,
-                body,
-                labels: ['ops-alert'],
-              }).catch(async (error) => {
-                if (error.status === 422) {
-                  return github.rest.issues.create({
-                    owner,
-                    repo,
-                    title,
-                    body,
-                  });
-                }
-                throw error;
-              });
-              core.info(`Created ops alert issue #${created.data.number}.`);
-              core.setOutput('issue_number', String(created.data.number));
-              core.setOutput('issue_url', created.data.html_url);
-              core.setOutput('issue_action', 'created');
+              return;
             }
+
+            const created = await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body,
+              labels: ['ops-alert'],
+            }).catch(async (error) => {
+              if (error.status === 422) {
+                return github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body,
+                });
+              }
+              throw error;
+            });
+            core.info(`Created ops alert issue #${created.data.number}.`);
+            core.setOutput('issue_number', String(created.data.number));
+            core.setOutput('issue_url', created.data.html_url);
+            core.setOutput('issue_action', 'created');
+
+      - name: Close Ops Alert Issue On Recovery
+        id: close_ops_alert_issue
+        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && steps.lookup_ops_alert_issue.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ steps.lookup_ops_alert_issue.outputs.issue_number }}
+          ISSUE_URL: ${{ steps.lookup_ops_alert_issue.outputs.issue_url }}
+        with:
+          script: |
+            const issueNumber = Number(process.env.ISSUE_NUMBER || 0);
+            if (issueNumber <= 0) {
+              core.setOutput('issue_closed', 'false');
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              body: `Recovery detected in scheduled checks on ${new Date().toISOString()}. Closing this alert issue.`,
+            });
+            await github.rest.issues.update({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              state: 'closed',
+            });
+
+            core.info(`Closed ops alert issue #${issueNumber} after healthy checks.`);
+            core.setOutput('issue_closed', 'true');
+            core.setOutput('issue_number', String(issueNumber));
+            core.setOutput('issue_url', process.env.ISSUE_URL || '');
 
       - name: Notify Slack On Alert
         if: always() && steps.publish_summary.outputs.alert_triggered == 'true' && secrets.SLACK_OPS_WEBHOOK_URL != ''
@@ -243,7 +377,6 @@ jobs:
           script: |
             const webhookUrl = process.env.SLACK_OPS_WEBHOOK_URL;
             if (!webhookUrl) {
-              core.info('Slack webhook URL missing. Skipping Slack notification.');
               return;
             }
 
@@ -259,24 +392,46 @@ jobs:
               `- Workflow run: ${runUrl}`,
             ];
 
-            try {
-              const response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  text: lines.join('\n'),
-                }),
-              });
+            const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: lines.join('\n') }),
+            });
 
-              if (!response.ok) {
-                const details = await response.text().catch(() => '');
-                core.warning(`Slack notification failed (${response.status}): ${details}`);
-                return;
-              }
+            if (!response.ok) {
+              const details = await response.text().catch(() => '');
+              core.warning(`Slack notification failed (${response.status}): ${details}`);
+            }
 
-              core.info('Slack notification sent.');
-            } catch (error) {
-              core.warning(`Slack notification threw an error: ${error.message}`);
+      - name: Notify Slack On Recovery
+        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && steps.close_ops_alert_issue.outputs.issue_closed == 'true' && secrets.SLACK_OPS_WEBHOOK_URL != ''
+        uses: actions/github-script@v7
+        env:
+          SLACK_OPS_WEBHOOK_URL: ${{ secrets.SLACK_OPS_WEBHOOK_URL }}
+          ISSUE_URL: ${{ steps.close_ops_alert_issue.outputs.issue_url }}
+        with:
+          script: |
+            const webhookUrl = process.env.SLACK_OPS_WEBHOOK_URL;
+            if (!webhookUrl) {
+              return;
+            }
+
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const lines = [
+              '*CEO OS Scheduled Ops Recovery*',
+              '- Route and telemetry checks are healthy in this run.',
+              `- Closed issue: ${process.env.ISSUE_URL || 'n/a'}`,
+              `- Workflow run: ${runUrl}`,
+            ];
+            const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: lines.join('\n') }),
+            });
+
+            if (!response.ok) {
+              const details = await response.text().catch(() => '');
+              core.warning(`Slack recovery notification failed (${response.status}): ${details}`);
             }
 
       - name: Notify PagerDuty On Alert
@@ -293,7 +448,6 @@ jobs:
           script: |
             const routingKey = process.env.PAGERDUTY_EVENTS_ROUTING_KEY;
             if (!routingKey) {
-              core.info('PagerDuty routing key missing. Skipping PagerDuty notification.');
               return;
             }
 
@@ -303,43 +457,80 @@ jobs:
             const dedupKey = `${context.repo.owner}/${context.repo.repo}:scheduled-ops-alert`;
             const summary = `CEO OS ops alert (${issueAction}) route=${process.env.ROUTE_OUTCOME}, telemetryHealth=${process.env.TELEMETRY_HEALTH_OUTCOME}, endpointSLO=${process.env.TELEMETRY_ENDPOINT_SLO_OUTCOME}`;
 
-            const payload = {
-              routing_key: routingKey,
-              event_action: 'trigger',
-              dedup_key: dedupKey,
-              payload: {
-                summary,
-                source: context.repo.repo,
-                severity: 'error',
-                component: 'scheduled-ops-alerts',
-                custom_details: {
-                  route_outcome: process.env.ROUTE_OUTCOME,
-                  telemetry_health_outcome: process.env.TELEMETRY_HEALTH_OUTCOME,
-                  telemetry_endpoint_slo_outcome: process.env.TELEMETRY_ENDPOINT_SLO_OUTCOME,
-                  issue_url: issueUrl,
-                  workflow_run_url: runUrl,
+            const response = await fetch('https://events.pagerduty.com/v2/enqueue', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                routing_key: routingKey,
+                event_action: 'trigger',
+                dedup_key: dedupKey,
+                payload: {
+                  summary,
+                  source: context.repo.repo,
+                  severity: 'error',
+                  component: 'scheduled-ops-alerts',
+                  custom_details: {
+                    route_outcome: process.env.ROUTE_OUTCOME,
+                    telemetry_health_outcome: process.env.TELEMETRY_HEALTH_OUTCOME,
+                    telemetry_endpoint_slo_outcome: process.env.TELEMETRY_ENDPOINT_SLO_OUTCOME,
+                    issue_url: issueUrl,
+                    workflow_run_url: runUrl,
+                  },
                 },
-              },
-              links: [
-                ...(issueUrl ? [{ href: issueUrl, text: 'Ops alert issue' }] : []),
-                { href: runUrl, text: 'Workflow run' },
-              ],
-            };
+                links: [
+                  ...(issueUrl ? [{ href: issueUrl, text: 'Ops alert issue' }] : []),
+                  { href: runUrl, text: 'Workflow run' },
+                ],
+              }),
+            });
 
-            try {
-              const response = await fetch('https://events.pagerduty.com/v2/enqueue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-              });
+            if (!response.ok) {
+              const details = await response.text().catch(() => '');
+              core.warning(`PagerDuty trigger notification failed (${response.status}): ${details}`);
+            }
 
-              if (!response.ok) {
-                const details = await response.text().catch(() => '');
-                core.warning(`PagerDuty notification failed (${response.status}): ${details}`);
-                return;
-              }
+      - name: Notify PagerDuty On Recovery
+        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && secrets.PAGERDUTY_EVENTS_ROUTING_KEY != ''
+        uses: actions/github-script@v7
+        env:
+          PAGERDUTY_EVENTS_ROUTING_KEY: ${{ secrets.PAGERDUTY_EVENTS_ROUTING_KEY }}
+          ISSUE_URL: ${{ steps.close_ops_alert_issue.outputs.issue_url }}
+        with:
+          script: |
+            const routingKey = process.env.PAGERDUTY_EVENTS_ROUTING_KEY;
+            if (!routingKey) {
+              return;
+            }
 
-              core.info('PagerDuty notification sent.');
-            } catch (error) {
-              core.warning(`PagerDuty notification threw an error: ${error.message}`);
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const dedupKey = `${context.repo.owner}/${context.repo.repo}:scheduled-ops-alert`;
+            const summary = 'CEO OS ops alert resolved: scheduled checks are healthy';
+
+            const response = await fetch('https://events.pagerduty.com/v2/enqueue', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                routing_key: routingKey,
+                event_action: 'resolve',
+                dedup_key: dedupKey,
+                payload: {
+                  summary,
+                  source: context.repo.repo,
+                  severity: 'info',
+                  component: 'scheduled-ops-alerts',
+                  custom_details: {
+                    issue_url: process.env.ISSUE_URL || '',
+                    workflow_run_url: runUrl,
+                  },
+                },
+                links: [
+                  ...(process.env.ISSUE_URL ? [{ href: process.env.ISSUE_URL, text: 'Resolved ops issue' }] : []),
+                  { href: runUrl, text: 'Workflow run' },
+                ],
+              }),
+            });
+
+            if (!response.ok) {
+              const details = await response.text().catch(() => '');
+              core.warning(`PagerDuty resolve notification failed (${response.status}): ${details}`);
             }
