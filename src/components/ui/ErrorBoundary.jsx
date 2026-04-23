@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import Button from './Button';
+import { emitAppErrorTelemetry } from '../../lib/appErrorTelemetry';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -12,6 +13,10 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    emitAppErrorTelemetry(error, info, {
+      boundary: this.props.name || 'ErrorBoundary',
+    });
+
     if (import.meta.env.DEV) {
       console.error('App ErrorBoundary caught:', error, info);
     }
