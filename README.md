@@ -96,7 +96,18 @@ npm run lint
 npm run build
 npm run test:run
 npm run typecheck
+npm run check:route-budgets
+npm run check:route-budgets:trend
+npm run report:route-budgets
 ```
+
+### Route baseline governance
+
+- Route performance baseline is tracked in `scripts/route-performance-baseline.json`.
+- Baseline refresh is release-governed:
+  - run workflow **Release Route Baseline Refresh** on `release` publish or manual dispatch
+  - workflow executes `npm run update:route-budgets:baseline:release` with release approval env
+- PR CI enforces static budgets + trend regression checks, and publishes `route-size-report` artifact.
 
 ### Branch protection automation
 
@@ -122,6 +133,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `OPENAI_MODEL` (optional)
 - `CHIEF_STAFF_PROXY_TOKEN` (optional)
 - `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
+- `APP_ERROR_TELEMETRY_INGEST_TOKEN` (optional, validates telemetry ingest requests when set)
 
 ## Data model references
 
