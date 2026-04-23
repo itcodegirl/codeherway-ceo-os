@@ -30,6 +30,10 @@ describe('server/appErrorTelemetryIngestCore', () => {
     process.env = { ...originalEnv };
     delete process.env.APP_ERROR_TELEMETRY_INGEST_TOKEN;
     delete process.env.APP_ERROR_TELEMETRY_HMAC_SECRET;
+    delete process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT;
+    delete process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT;
+    delete process.env.APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM;
+    delete process.env.APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL;
     vi.spyOn(telemetryRepository, 'persistAppErrorTelemetryBatch').mockResolvedValue({
       persisted: false,
       duplicate: false,
@@ -135,6 +139,71 @@ describe('server/appErrorTelemetryIngestCore', () => {
     expect(validSignatureResult.status).toBe(202);
     expect(validSignatureResult.body.signature_verified).toBe(true);
     expect(validSignatureResult.body.signature_required).toBe(true);
+    expect(validSignatureResult.body.signature_key_id).toBe('legacy');
+  });
+
+  it('accepts current and next rotation keys within active windows', async () => {
+    process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT = 'hmac-current';
+    process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT = 'hmac-next';
+    process.env.APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM = '2000-01-01T00:00:00.000Z';
+    process.env.APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL = '2999-01-01T00:00:00.000Z';
+    const payload = createValidPayload();
+    const rawBody = JSON.stringify(payload);
+
+    const currentSignature = crypto
+      .createHmac('sha256', process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT)
+      .update(rawBody)
+      .digest('hex');
+    const currentResult = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature': `sha256=${currentSignature}`,
+      },
+    });
+    expect(currentResult.status).toBe(202);
+    expect(currentResult.body.signature_key_id).toBe('current');
+
+    const nextSignature = crypto
+      .createHmac('sha256', process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT)
+      .update(rawBody)
+      .digest('hex');
+    const nextResult = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature': `sha256=${nextSignature}`,
+      },
+    });
+    expect(nextResult.status).toBe(202);
+    expect(nextResult.body.signature_key_id).toBe('next');
+  });
+
+  it('rejects keys outside configured rotation windows', async () => {
+    process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT = 'hmac-current';
+    process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT = 'hmac-next';
+    process.env.APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM = '2999-01-01T00:00:00.000Z';
+    process.env.APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL = '2000-01-01T00:00:00.000Z';
+    const payload = createValidPayload();
+    const rawBody = JSON.stringify(payload);
+    const currentSignature = crypto
+      .createHmac('sha256', process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT)
+      .update(rawBody)
+      .digest('hex');
+
+    const result = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature': `sha256=${currentSignature}`,
+      },
+    });
+
+    expect(result.status).toBe(503);
+    expect(result.body.error_code).toBe('INGEST_SIGNATURE_CONFIG_INVALID');
   });
 
   it('persists valid payloads and forwards explicit idempotency keys', async () => {

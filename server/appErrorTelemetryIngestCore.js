@@ -96,8 +96,70 @@ function hasValidIngestToken(headers) {
   return extractRequestToken(headers) === configuredToken;
 }
 
-function getConfiguredHmacSecret() {
-  return normalizeText(process.env.APP_ERROR_TELEMETRY_HMAC_SECRET);
+function parseOptionalDateMs(value) {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const parsed = Date.parse(normalizedValue);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+function isValidHex(value) {
+  return Boolean(value && /^[0-9a-f]+$/i.test(value) && value.length % 2 === 0);
+}
+
+function buildHmacConfigState(nowMs = Date.now()) {
+  const legacySecret = normalizeText(process.env.APP_ERROR_TELEMETRY_HMAC_SECRET);
+  const currentSecret = normalizeText(process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT);
+  const nextSecret = normalizeText(process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT);
+  const nextValidFrom = parseOptionalDateMs(process.env.APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM);
+  const currentValidUntil = parseOptionalDateMs(process.env.APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL);
+
+  if (Number.isNaN(nextValidFrom) || Number.isNaN(currentValidUntil)) {
+    return {
+      required: true,
+      candidates: [],
+      configError: 'Telemetry HMAC key window configuration is invalid',
+      errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
+      errorStatus: 503,
+    };
+  }
+
+  const candidates = [];
+
+  if (currentSecret && (currentValidUntil === null || nowMs <= currentValidUntil)) {
+    candidates.push({ keyId: 'current', secret: currentSecret });
+  }
+
+  if (nextSecret && (nextValidFrom === null || nowMs >= nextValidFrom)) {
+    candidates.push({ keyId: 'next', secret: nextSecret });
+  }
+
+  if (!currentSecret && !nextSecret && legacySecret) {
+    candidates.push({ keyId: 'legacy', secret: legacySecret });
+  }
+
+  const required = Boolean(currentSecret || nextSecret || legacySecret);
+
+  if (required && !candidates.length) {
+    return {
+      required: true,
+      candidates: [],
+      configError: 'No active telemetry HMAC key is configured for the current time window',
+      errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
+      errorStatus: 503,
+    };
+  }
+
+  return {
+    required,
+    candidates,
+    configError: '',
+    errorCode: '',
+    errorStatus: 401,
+  };
 }
 
 function normalizeSignatureHeader(headers) {
@@ -142,47 +204,73 @@ function normalizeRawBody(rawBody, parsedBody) {
 }
 
 function verifyHmacSignature(headers, rawBody) {
-  const hmacSecret = getConfiguredHmacSecret();
-  if (!hmacSecret) {
+  const hmacConfigState = buildHmacConfigState();
+
+  if (hmacConfigState.configError) {
+    return {
+      required: true,
+      verified: false,
+      keyId: '',
+      error: hmacConfigState.configError,
+      errorCode: hmacConfigState.errorCode,
+      errorStatus: hmacConfigState.errorStatus,
+    };
+  }
+
+  if (!hmacConfigState.required) {
     return {
       required: false,
       verified: false,
+      keyId: '',
       error: '',
+      errorCode: '',
+      errorStatus: 401,
     };
   }
 
   const providedSignature = normalizeSignatureHeader(headers);
-  if (!providedSignature) {
+  if (!isValidHex(providedSignature)) {
     return {
       required: true,
       verified: false,
+      keyId: '',
       error: 'Missing or invalid telemetry signature header',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
     };
   }
 
-  const expectedSignature = crypto
-    .createHmac('sha256', hmacSecret)
-    .update(rawBody)
-    .digest('hex');
+  for (const candidate of hmacConfigState.candidates) {
+    const expectedSignature = crypto
+      .createHmac('sha256', candidate.secret)
+      .update(rawBody)
+      .digest('hex');
 
-  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-  const providedBuffer = Buffer.from(providedSignature, 'hex');
+    if (!isValidHex(expectedSignature) || expectedSignature.length !== providedSignature.length) {
+      continue;
+    }
 
-  if (
-    expectedBuffer.length !== providedBuffer.length
-    || !crypto.timingSafeEqual(expectedBuffer, providedBuffer)
-  ) {
-    return {
-      required: true,
-      verified: false,
-      error: 'Missing or invalid telemetry signature header',
-    };
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    const providedBuffer = Buffer.from(providedSignature, 'hex');
+    if (crypto.timingSafeEqual(expectedBuffer, providedBuffer)) {
+      return {
+        required: true,
+        verified: true,
+        keyId: candidate.keyId,
+        error: '',
+        errorCode: '',
+        errorStatus: 401,
+      };
+    }
   }
 
   return {
     required: true,
-    verified: true,
-    error: '',
+    verified: false,
+    keyId: '',
+    error: 'Missing or invalid telemetry signature header',
+    errorCode: 'INGEST_SIGNATURE_INVALID',
+    errorStatus: 401,
   };
 }
 
@@ -331,9 +419,9 @@ export async function handleAppErrorTelemetryIngest({
   const resolvedRawBody = normalizeRawBody(rawBody, parsedBody);
   const signatureStatus = verifyHmacSignature(headers, resolvedRawBody);
   if (signatureStatus.error) {
-    return buildResponse(401, {
+    return buildResponse(signatureStatus.errorStatus || 401, {
       error: signatureStatus.error,
-      error_code: 'INGEST_SIGNATURE_INVALID',
+      error_code: signatureStatus.errorCode || 'INGEST_SIGNATURE_INVALID',
     });
   }
 
@@ -360,6 +448,7 @@ export async function handleAppErrorTelemetryIngest({
       idempotency_key: idempotencyKey,
       signature_verified: Boolean(signatureStatus.verified),
       signature_required: Boolean(signatureStatus.required),
+      signature_key_id: signatureStatus.keyId || '',
     }, requestId);
   } catch (error) {
     return buildResponse(503, {
