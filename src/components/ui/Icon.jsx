@@ -23,6 +23,12 @@ function Icon({ name = 'spark', size = 16, className = '' }) {
         <path d="M14 3v6h6M9 13h6M9 17h6" {...commonProps} />
       </>
     ),
+    capture: (
+      <>
+        <rect x="4" y="4" width="16" height="16" rx="2.5" {...commonProps} />
+        <path d="M8 9h8M8 13h5M8 17h6" {...commonProps} />
+      </>
+    ),
     weekly: (
       <>
         <rect x="3" y="5" width="18" height="16" rx="2" {...commonProps} />

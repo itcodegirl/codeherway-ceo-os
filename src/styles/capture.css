@@ -1,0 +1,84 @@
+.capture-page {
+	display: grid;
+	gap: var(--space-page-section-gap);
+}
+
+.capture-page h2 {
+	margin: 0;
+	font-size: 1.02rem;
+}
+
+.capture-composer {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.capture-composer__form {
+	display: grid;
+	gap: 0.6rem;
+}
+
+.capture-composer__form textarea {
+	resize: vertical;
+	min-height: 6.4rem;
+}
+
+.capture-composer__actions {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.capture-wall {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.capture-wall__header {
+	display: grid;
+	gap: 0.3rem;
+}
+
+.sticky-note {
+	display: grid;
+	gap: 0.65rem;
+}
+
+.sticky-note__meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.sticky-note textarea {
+	resize: vertical;
+	min-height: 7.5rem;
+	background: transparent;
+}
+
+.sticky-note__controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.sticky-note__controls select {
+	min-width: 9.5rem;
+}
+
+@media (max-width: 640px) {
+	.capture-composer__actions .action-button {
+		width: 100%;
+	}
+
+	.sticky-note__controls {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.sticky-note__controls .action-button,
+	.sticky-note__controls select {
+		width: 100%;
+	}
+}

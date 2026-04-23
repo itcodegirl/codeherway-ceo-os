@@ -8,6 +8,10 @@ export function buildPageMetaByRoute(appName) {
       title: `Opportunities | ${appName}`,
       description: 'Track partnerships, role pipelines, and strategic outreach in one opportunity workspace.',
     },
+    '/capture': {
+      title: `Capture | ${appName}`,
+      description: 'Capture ideas, tasks, opportunities, and journal fragments fast with sticky-note simplicity.',
+    },
     '/content': {
       title: `Content OS | ${appName}`,
       description: 'Plan, monitor, and ship founder content across channels with a clear publishing workflow.',

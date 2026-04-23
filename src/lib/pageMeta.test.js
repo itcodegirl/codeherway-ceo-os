@@ -19,6 +19,10 @@ describe('src/lib/pageMeta', () => {
       title: 'Opportunities | Acme CEO OS',
       description: expect.any(String),
     });
+    expect(meta['/capture']).toMatchObject({
+      title: 'Capture | Acme CEO OS',
+      description: expect.any(String),
+    });
     expect(meta['/content']).toMatchObject({
       title: 'Content OS | Acme CEO OS',
       description: expect.any(String),
