@@ -3,32 +3,45 @@ import { describe, expect, it, vi } from 'vitest';
 import SourceStatusNotice from './SourceStatusNotice';
 
 describe('SourceStatusNotice', () => {
-  it('renders default local source copy', () => {
-    render(<SourceStatusNotice source="local" />);
+  it('renders local source copy by default', () => {
+    render(<SourceStatusNotice />);
 
-    expect(screen.getByText('Sample data - configure Supabase to use real data.')).toBeInTheDocument();
+    expect(screen.getByText('Sample data — configure Supabase to use real data.')).toBeInTheDocument();
   });
 
-  it('renders default supabase source copy', () => {
-    render(<SourceStatusNotice source="supabase" />);
-
-    expect(screen.getByText('Data source: Supabase (live persistence).')).toBeInTheDocument();
-  });
-
-  it('renders retry action when load error and handler are provided', () => {
-    const onRetry = vi.fn().mockResolvedValue(undefined);
-
+  it('renders supabase source copy when source is supabase', () => {
     render(
       <SourceStatusNotice
-        source="local"
-        loadError="Unable to refresh data."
-        onRetry={onRetry}
+        source="supabase"
+        supabaseText="Weekly data source: Supabase."
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retry loading data' }));
+    expect(screen.getByText('Weekly data source: Supabase.')).toBeInTheDocument();
+  });
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Unable to refresh data.');
+  it('shows alert and retry action when loadError is present', () => {
+    const onRetry = vi.fn();
+
+    render(
+      <SourceStatusNotice
+        loadError="Unable to load weekly brief right now."
+        onRetry={onRetry}
+        retryAriaLabel="Retry loading weekly dashboard data"
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load weekly brief right now.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry loading weekly dashboard data' }));
+
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides retry action when no retry callback is provided', () => {
+    render(<SourceStatusNotice loadError="Source unavailable" />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Source unavailable');
+    expect(screen.queryByRole('button', { name: 'Retry loading data' })).not.toBeInTheDocument();
   });
 });
