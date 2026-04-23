@@ -4,7 +4,7 @@
   padding: 0 var(--action-padding-x);
   border-radius: var(--radius-action);
   border: 1px solid transparent;
-  background: rgba(109, 93, 252, 0.14);
+  background: var(--bg-accent-subtle);
   color: var(--accent-soft);
   display: inline-flex;
   align-items: center;
@@ -28,10 +28,10 @@
 
 .action-button:hover,
 .action-button:focus-visible {
-  border-color: rgba(200, 194, 255, 0.42);
+  border-color: var(--border-accent-strong);
   color: var(--text-inverse);
   transform: translateY(-1px);
-  background: rgba(109, 93, 252, 0.22);
+  background: var(--bg-accent);
   outline: none;
 }
 
@@ -42,7 +42,7 @@
 .action-button--ghost {
   background: transparent;
   color: var(--text);
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: var(--border-contrast-soft);
 }
 
 .action-button--small {
@@ -86,11 +86,11 @@
 .crm-table__row--button:focus-visible,
 .crm-table__row--interactive:hover,
 .crm-table__row--interactive:focus-visible {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-overlay-soft);
 }
 
 .crm-table__row--interactive:hover {
-  border-color: rgba(200, 194, 255, 0.35);
+  border-color: var(--border-accent);
 }
 
 .crm-table__row--interactive td {
@@ -98,13 +98,13 @@
 }
 
 .crm-table__row--button:disabled {
-  color: rgba(180, 195, 220, 0.5);
-  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-disabled);
+  background: var(--surface-overlay-subtle);
 }
 
 .crm-table__row--button:focus-visible,
 .crm-table__row--interactive:focus-visible {
-  outline: 2px solid rgba(142, 173, 255, 0.8);
+  outline: 2px solid var(--focus-ring-soft);
   outline-offset: 2px;
 }
 
@@ -181,7 +181,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--border-contrast);
   backdrop-filter: blur(6px);
 }
 
@@ -196,7 +196,7 @@
   width: 100%;
   max-width: 280px;
   border-radius: 10px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
+  background: linear-gradient(90deg, var(--border), var(--surface-overlay-bright), var(--border));
   background-size: 200% 100%;
   animation: shimmer 1.2s infinite;
 }
@@ -234,8 +234,8 @@
   flex-direction: column;
   gap: 0.55rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 130, 130, 0.38);
-  background: rgba(255, 110, 110, 0.09);
+  border: 1px solid var(--border-danger);
+  background: var(--danger-surface);
   border-radius: var(--radius-lg);
 }
 
@@ -259,7 +259,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 .action-button:focus-visible {
-  outline: 2px solid rgba(142, 173, 255, 0.85);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -409,7 +409,7 @@ textarea:focus-visible,
   align-items: center;
   justify-content: center;
   padding: 1.2rem;
-  background: rgba(7, 9, 15, 0.7);
+  background: var(--overlay-modal);
   z-index: 50;
 }
 
@@ -446,31 +446,31 @@ textarea:focus-visible,
 .pill--medium,
 .pill--low,
 .content-status {
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.22);
+  text-shadow: var(--text-shadow-soft);
 }
 
 .pill--high {
-  background: rgba(255, 107, 107, 0.22);
+  background: var(--pill-high-bg);
   color: var(--danger-soft);
-  border-color: rgba(255, 156, 156, 0.4);
+  border-color: var(--border-danger-soft);
 }
 
 .pill--medium {
-  background: rgba(255, 193, 92, 0.22);
+  background: var(--pill-medium-bg);
   color: var(--warning-soft);
-  border-color: rgba(255, 213, 137, 0.4);
+  border-color: var(--border-warning-soft);
 }
 
 .pill--warning {
-  background: rgba(255, 198, 122, 0.22);
+  background: var(--pill-warning-bg);
   color: var(--warning-soft);
-  border-color: rgba(255, 211, 150, 0.4);
+  border-color: var(--border-warning-subtle);
 }
 
 .pill--low {
-  background: rgba(97, 218, 251, 0.22);
+  background: var(--pill-low-bg);
   color: var(--info-soft);
-  border-color: rgba(159, 232, 255, 0.4);
+  border-color: var(--border-info-soft);
 }
 
 .settings-grid {
@@ -503,10 +503,10 @@ textarea:focus-visible,
   max-width: min(420px, calc(100vw - 2rem));
   padding: 0.75rem 0.95rem;
   border-radius: var(--radius-action);
-  border: 1px solid rgba(183, 173, 255, 0.42);
-  background: rgba(24, 31, 46, 0.96);
+  border: 1px solid var(--border-accent);
+  background: var(--surface-toast);
   color: var(--text);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+  box-shadow: var(--shadow-overlay);
   font-size: 0.9rem;
   line-height: 1.35;
   pointer-events: none;
@@ -539,3 +539,4 @@ textarea:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+

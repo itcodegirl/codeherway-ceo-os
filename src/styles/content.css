@@ -96,32 +96,32 @@
 	font-size: 0.8rem;
 	font-weight: 600;
 	white-space: nowrap;
-	border: 1px solid rgba(255, 255, 255, 0.16);
+	border: 1px solid var(--border-contrast);
 	line-height: 1;
 	align-self: center;
 }
 
 .content-status--drafting {
-	background: rgba(97, 218, 251, 0.22);
+	background: var(--pill-low-bg);
 	color: var(--info-soft);
-	border-color: rgba(159, 232, 255, 0.4);
+	border-color: var(--border-info-soft);
 }
 
 .content-status--editing {
-	background: rgba(255, 193, 92, 0.22);
+	background: var(--pill-medium-bg);
 	color: var(--warning-soft);
-	border-color: rgba(255, 213, 137, 0.4);
+	border-color: var(--border-warning-soft);
 }
 
 .content-status--scheduled {
-	background: rgba(142, 214, 181, 0.22);
+	background: var(--status-scheduled-bg);
 	color: var(--success-soft);
-	border-color: rgba(154, 240, 199, 0.4);
+	border-color: var(--border-success-soft);
 }
 
 .crm-table__open-button {
-	border: 1px solid rgba(200, 194, 255, 0.35);
-	background: rgba(109, 93, 252, 0.16);
+	border: 1px solid var(--border-accent);
+	background: var(--bg-accent-soft);
 	color: var(--accent-soft-strong);
 	border-radius: var(--radius-action);
 	padding: 0.4rem 0.7rem;
@@ -176,3 +176,4 @@
 		align-items: flex-start;
 	}
 }
+

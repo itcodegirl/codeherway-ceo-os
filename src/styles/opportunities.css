@@ -103,8 +103,8 @@
 }
 
 .crm-table__open-button {
-	border: 1px solid rgba(200, 194, 255, 0.35);
-	background: rgba(109, 93, 252, 0.16);
+	border: 1px solid var(--border-accent);
+	background: var(--bg-accent-soft);
 	color: var(--accent-soft-strong);
 	border-radius: var(--radius-action);
 	padding: 0.4rem 0.7rem;
@@ -187,3 +187,4 @@
 		justify-content: flex-start;
 	}
 }
+
