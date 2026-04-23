@@ -7,8 +7,30 @@ const MAX_NOTES_LENGTH = 12000;
 const REQUEST_TIMEOUT_MS = 10000;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 0;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_TRACKED_CLIENTS = 1000;
 
 const requestTimestampsByClient = new Map();
+
+function pruneStaleClients(windowStart) {
+  for (const [clientKey, timestamps] of requestTimestampsByClient) {
+    const latest = timestamps.length > 0 ? timestamps[timestamps.length - 1] : 0;
+    if (latest < windowStart) {
+      requestTimestampsByClient.delete(clientKey);
+    }
+  }
+
+  if (requestTimestampsByClient.size > MAX_TRACKED_CLIENTS) {
+    const overflow = requestTimestampsByClient.size - MAX_TRACKED_CLIENTS;
+    const iterator = requestTimestampsByClient.keys();
+    for (let i = 0; i < overflow; i += 1) {
+      const { value, done } = iterator.next();
+      if (done) {
+        break;
+      }
+      requestTimestampsByClient.delete(value);
+    }
+  }
+}
 
 function createRequestId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -82,11 +104,13 @@ function isRateLimited(headers) {
 
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  pruneStaleClients(windowStart);
   const clientKey = parseClientKey(headers);
   const requestHistory = requestTimestampsByClient.get(clientKey) || [];
 
   const activeRequests = requestHistory.filter((timestamp) => timestamp >= windowStart);
   if (activeRequests.length >= limit) {
+    requestTimestampsByClient.set(clientKey, activeRequests);
     return true;
   }
 
@@ -158,11 +182,14 @@ function extractRequestToken(headers) {
 
 function hasValidProxyToken(headers) {
   const configuredToken = process.env.CHIEF_STAFF_PROXY_TOKEN?.trim();
+  const requestToken = extractRequestToken(headers);
+
   if (!configuredToken) {
-    return true;
+    const requireToken = process.env.CHIEF_STAFF_REQUIRE_TOKEN === 'true';
+    return !requireToken;
   }
 
-  return extractRequestToken(headers) === configuredToken;
+  return requestToken === configuredToken;
 }
 
 function buildInput({ instruction, notes }) {
