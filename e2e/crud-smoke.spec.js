@@ -43,6 +43,14 @@ async function failNextStorageWrite(page, storageKey) {
   }, storageKey);
 }
 
+async function navigateToPrimaryRouteWithKeyboard(page, routeName) {
+  const routeLink = page
+    .getByRole('navigation', { name: 'Main navigation' })
+    .getByRole('link', { name: routeName, exact: true });
+  await routeLink.focus();
+  await page.keyboard.press('Enter');
+}
+
 test.describe('CRUD smoke flows', () => {
   test('opportunities page supports create edit delete from routed entry', async ({ page }) => {
     const createdName = `Playwright Opportunity ${Date.now()}`;
@@ -118,6 +126,60 @@ test.describe('CRUD smoke flows', () => {
     await page.getByRole('button', { name: 'Confirm delete' }).click();
 
     await expect(table.locator('tbody tr').filter({ hasText: editedTitle })).toHaveCount(0);
+  });
+
+  test('opportunities page supports keyboard-only row selection and edit-modal open/close', async ({ page }) => {
+    await resetToSeedState(page);
+    await navigateToPrimaryRouteWithKeyboard(page, 'Opportunities');
+    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+
+    const table = page.getByRole('table', { name: 'Opportunity pipeline' });
+    const firstRow = table.locator('tbody tr').first();
+    await firstRow.focus();
+    await page.keyboard.press('Enter');
+
+    const itemDialog = page.getByRole('dialog');
+    await expect(itemDialog).toBeVisible();
+
+    const editButton = page.getByRole('button', { name: 'Edit selected opportunity' });
+    await editButton.focus();
+    await page.keyboard.press('Enter');
+
+    const editDialog = page.getByRole('dialog', { name: 'Edit Opportunity' });
+    await expect(editDialog).toBeVisible();
+    await editDialog.getByRole('button', { name: 'Cancel opportunity form' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(editDialog).toHaveCount(0);
+
+    await page.keyboard.press('Escape');
+    await expect(itemDialog).toHaveCount(0);
+  });
+
+  test('content page supports keyboard-only row selection and edit-modal open/close', async ({ page }) => {
+    await resetToSeedState(page);
+    await navigateToPrimaryRouteWithKeyboard(page, 'Content OS');
+    await expect(page.getByRole('heading', { name: 'Content OS' })).toBeVisible();
+
+    const table = page.getByRole('table', { name: 'Content pipeline' });
+    const firstRow = table.locator('tbody tr').first();
+    await firstRow.focus();
+    await page.keyboard.press('Space');
+
+    const itemDialog = page.getByRole('dialog');
+    await expect(itemDialog).toBeVisible();
+
+    const editButton = page.getByRole('button', { name: 'Edit selected content item' });
+    await editButton.focus();
+    await page.keyboard.press('Enter');
+
+    const editDialog = page.getByRole('dialog', { name: 'Edit Content Item' });
+    await expect(editDialog).toBeVisible();
+    await editDialog.getByRole('button', { name: 'Cancel content form' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(editDialog).toHaveCount(0);
+
+    await page.keyboard.press('Escape');
+    await expect(itemDialog).toHaveCount(0);
   });
 
   test('opportunities page shows error and recovers on retry for create and delete', async ({ page }) => {
