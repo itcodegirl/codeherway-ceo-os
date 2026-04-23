@@ -254,6 +254,75 @@
 	background: var(--bg-accent-subtle);
 }
 
+.system-pulse {
+	margin: 0 clamp(1rem, 2.5vw, 2rem);
+	margin-top: 0.8rem;
+	padding: 0.85rem 1rem;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: color-mix(in srgb, var(--surface-card) 84%, rgba(63, 153, 235, 0.16) 16%);
+	display: grid;
+	gap: 0.65rem;
+}
+
+.system-pulse__header {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.8rem;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+
+.system-pulse__eyebrow {
+	margin: 0;
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+}
+
+.system-pulse__next-move {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--text-soft-strong);
+}
+
+.system-pulse__nodes {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 0.55rem;
+}
+
+.system-pulse__node {
+	border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
+	border-radius: 11px;
+	padding: 0.5rem 0.6rem;
+	display: grid;
+	gap: 0.12rem;
+	background: color-mix(in srgb, var(--surface-card) 88%, rgba(70, 163, 244, 0.12) 12%);
+}
+
+.system-pulse__node-label {
+	font-size: 0.72rem;
+	color: var(--text-muted);
+}
+
+.system-pulse__node-value {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+.system-pulse__node--warning .system-pulse__node-value {
+	color: var(--warning-soft);
+}
+
+.system-pulse__node--positive .system-pulse__node-value {
+	color: var(--success);
+}
+
 .app-content {
 	padding: clamp(1rem, 2vw, 2rem);
 	min-width: 0;
@@ -284,6 +353,10 @@
 	.topbar__right {
 		width: 100%;
 		justify-content: flex-start;
+	}
+
+	.system-pulse__nodes {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 
@@ -339,6 +412,11 @@
 	.topbar__right {
 		flex-wrap: wrap;
 	}
+
+	.system-pulse {
+		margin: 0 1rem;
+		margin-top: 0.75rem;
+	}
 }
 
 @media (max-width: 768px) {
@@ -372,6 +450,15 @@
 		align-items: flex-start;
 	}
 
+	.system-pulse {
+		margin: 0 clamp(0.95rem, 4vw, 1.25rem);
+		margin-top: 0.7rem;
+	}
+
+	.system-pulse__nodes {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
 	.topbar__meta,
 	.topbar__status {
 		white-space: nowrap;
@@ -403,6 +490,10 @@
 	.topbar__status {
 		padding: 0.22rem 0.56rem;
 		font-size: 0.73rem;
+	}
+
+	.system-pulse__nodes {
+		grid-template-columns: 1fr;
 	}
 }
 

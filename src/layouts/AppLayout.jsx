@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
+import SystemPulse from '../components/ui/SystemPulse';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
@@ -45,6 +46,7 @@ function AppLayout() {
       <Sidebar />
       <div className="app-main">
         <Topbar pageTitle={currentPageTitle} />
+        <SystemPulse />
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
           <ErrorBoundary>
             <Outlet />
