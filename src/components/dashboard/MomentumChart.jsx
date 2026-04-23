@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { memo, useId } from 'react';
 
 const DEFAULT_POINT_LABELS = [
   'Opportunity',
@@ -14,7 +14,7 @@ function resolvePointLabel(index) {
   return DEFAULT_POINT_LABELS[index] || `Metric ${index + 1}`;
 }
 
-function MomentumChart({ values = [] }) {
+function MomentumChartComponent({ values = [] }) {
   const chartLabelId = useId();
   const chartTableId = useId();
   const points = Array.isArray(values) ? values : [];
@@ -91,5 +91,7 @@ function MomentumChart({ values = [] }) {
     </figure>
   );
 }
+
+const MomentumChart = memo(MomentumChartComponent);
 
 export default MomentumChart;

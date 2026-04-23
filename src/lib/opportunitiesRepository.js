@@ -49,11 +49,14 @@ function readLocalOpportunities() {
 }
 
 function writeLocalOpportunities(items) {
-  safeLocalStorageSetItem(
+  const didPersist = safeLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(items),
     'Failed to persist opportunities to localStorage',
   );
+  if (!didPersist) {
+    throw new Error('Failed to persist opportunities to localStorage');
+  }
 }
 
 function notifyOpportunitiesUpdated(detail = {}) {

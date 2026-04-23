@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 function resolveToneClass(tone) {
   if (tone === 'positive') {
     return 'stat-card--tone-positive';
@@ -10,7 +12,7 @@ function resolveToneClass(tone) {
   return '';
 }
 
-function StatCard({
+function StatCardComponent({
   label,
   value,
   change,
@@ -27,5 +29,7 @@ function StatCard({
     </article>
   );
 }
+
+const StatCard = memo(StatCardComponent);
 
 export default StatCard;

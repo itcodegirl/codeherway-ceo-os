@@ -47,11 +47,14 @@ function readLocalContentItems() {
 }
 
 function writeLocalContentItems(items) {
-  safeLocalStorageSetItem(
+  const didPersist = safeLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(items),
     'Failed to persist content items to localStorage',
   );
+  if (!didPersist) {
+    throw new Error('Failed to persist content items to localStorage');
+  }
 }
 
 function notifyContentItemsUpdated(detail = {}) {

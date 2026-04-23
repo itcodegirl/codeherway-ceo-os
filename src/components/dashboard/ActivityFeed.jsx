@@ -1,4 +1,6 @@
-function ActivityFeed({ items = [] }) {
+import { memo } from 'react';
+
+function ActivityFeedComponent({ items = [] }) {
   const normalizedItems = Array.isArray(items) ? items : [];
 
   if (!normalizedItems.length) {
@@ -24,5 +26,7 @@ function ActivityFeed({ items = [] }) {
     </ul>
   );
 }
+
+const ActivityFeed = memo(ActivityFeedComponent);
 
 export default ActivityFeed;
