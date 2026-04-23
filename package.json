@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "check:route-budgets": "node scripts/check-route-performance-budgets.mjs",
+    "check:route-budgets:trend": "node scripts/check-route-performance-budgets.mjs --baseline scripts/route-performance-baseline.json --max-regression-pct 8 --require-baseline",
     "check:crud-template-legacy": "node scripts/check-crud-template-legacy-props.mjs",
     "configure:branch-protection": "node scripts/configure-branch-protection.mjs",
     "configure:branch-protection:dry": "node scripts/configure-branch-protection.mjs --dry-run"

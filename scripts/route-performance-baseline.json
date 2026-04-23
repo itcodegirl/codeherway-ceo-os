@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-04-22",
+  "routes": {
+    "Dashboard": {
+      "js": { "rawKb": 15.17, "gzipKb": 4.94 },
+      "css": { "rawKb": 2.53, "gzipKb": 0.74 }
+    },
+    "Opportunities": {
+      "js": { "rawKb": 9.52, "gzipKb": 2.97 },
+      "css": { "rawKb": 2.86, "gzipKb": 0.89 }
+    },
+    "ContentOS": {
+      "js": { "rawKb": 7.7, "gzipKb": 2.54 },
+      "css": { "rawKb": 2.94, "gzipKb": 0.86 }
+    },
+    "WeeklyBrief": {
+      "js": { "rawKb": 12.81, "gzipKb": 3.49 },
+      "css": { "rawKb": 1.7, "gzipKb": 0.58 }
+    },
+    "ChiefOfStaff": {
+      "js": { "rawKb": 39.98, "gzipKb": 11.45 },
+      "css": { "rawKb": 2.48, "gzipKb": 0.86 }
+    },
+    "Settings": {
+      "js": { "rawKb": 3.34, "gzipKb": 1.3 }
+    }
+  }
+}
