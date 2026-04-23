@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from './settings';
+import { safeLocalStorageSetItem } from './utils';
 
 const LOCAL_SETTINGS_KEY = 'ceo-os-settings';
 const LOCAL_SETTINGS_SAVED_AT_KEY = 'ceo-os-settings-saved-at';
@@ -74,12 +75,16 @@ function readLocalSavedAt() {
 }
 
 function writeLocalSettings(settings, savedAt = Date.now()) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
-  window.localStorage.setItem(LOCAL_SETTINGS_SAVED_AT_KEY, String(savedAt));
+  safeLocalStorageSetItem(
+    LOCAL_SETTINGS_KEY,
+    JSON.stringify(settings),
+    'Failed to persist settings to localStorage',
+  );
+  safeLocalStorageSetItem(
+    LOCAL_SETTINGS_SAVED_AT_KEY,
+    String(savedAt),
+    'Failed to persist settings to localStorage',
+  );
 }
 
 function mapSettingsToProfileFields(settings) {

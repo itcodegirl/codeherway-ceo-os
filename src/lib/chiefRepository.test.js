@@ -138,4 +138,5 @@ describe('chiefRepository', () => {
     expect(persisted).toHaveLength(1);
     expect(persisted[0].title).toBe('Fallback response');
   });
+
 });

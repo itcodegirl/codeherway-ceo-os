@@ -66,6 +66,18 @@
   margin-top: 1rem;
 }
 
+.chief-notes-meta {
+  margin: 0.55rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.78;
+  text-align: right;
+}
+
+.chief-notes-meta--limit {
+  color: #f8a2b4;
+  opacity: 1;
+}
+
 .chief-action-grid--disabled {
   opacity: 0.5;
   pointer-events: none;

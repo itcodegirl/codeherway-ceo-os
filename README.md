@@ -117,6 +117,15 @@ npm run transition:ops-incident-state
 - When `SUPABASE_TEST_URL` and `SUPABASE_TEST_SERVICE_ROLE_KEY` secrets are available, CI also runs durable telemetry ingest integration tests against the real Supabase test project.
 - `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), persists snapshot rows into `ops_slo_snapshots`, records incident lifecycle transitions (`open`/`acknowledged`/`recovered`) in `ops_incident_lifecycle_events` for notification dedupe, publishes artifacts, upserts a tracked GitHub issue when thresholds are breached, fans out to Slack/PagerDuty when configured, and emits daily JSON snapshot artifacts plus an artifact index for trend analysis.
 
+### Continuous integration
+
+GitHub Actions runs the quality gate on every push to `main` and every pull request:
+
+- `npm run lint`
+- `npm run build`
+- `npm run test:run`
+- `npm run typecheck`
+
 ### Branch protection automation
 
 - Dry run locally:
@@ -144,6 +153,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `OPENAI_API_KEY` (required for proxy responses)
 - `OPENAI_MODEL` (optional)
 - `CHIEF_STAFF_PROXY_TOKEN` (optional)
+- `CHIEF_STAFF_REQUIRE_TOKEN` (optional, set to `true` to reject requests when no proxy token is configured)
 - `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
 - `APP_ERROR_TELEMETRY_INGEST_TOKEN` (optional, validates telemetry ingest requests when set)
 - `APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT` (optional, active HMAC key for ingest signature validation)
@@ -278,9 +288,11 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 ### Production readiness checklist
 
 - Secrets and API endpoints are resolved from environment configuration.
+- Pull requests and pushes to `main` are validated by GitHub Actions before merge.
 - Local-first behavior remains default, with authenticated Supabase opt-in path available.
 - Metadata and accessibility defaults are handled in shell-level orchestration.
 - AI responses preserve fallback behavior when proxy output is missing or invalid.
+- Chief-of-staff proxy authentication can be made fail-secure with `CHIEF_STAFF_REQUIRE_TOKEN=true`.
 - Repository includes architecture decision records and tradeoffs via:
   - `README.md`
   - `CASE_STUDY.md`
@@ -303,4 +315,3 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 ## Author
 
 Jenna Zawaski - frontend product engineering with workflow-first architecture focus.
-

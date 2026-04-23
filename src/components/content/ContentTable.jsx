@@ -49,33 +49,18 @@ function ContentTable({ items, onOpenItem }) {
       return;
     }
 
+    const target = event.target;
+    if (target instanceof Element && target.closest('button, a, input, textarea, select, [role="button"]')) {
+      return;
+    }
+
     if (event.key !== 'Enter' && event.key !== ' ') {
       return;
     }
 
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const row = target.closest('tr[data-item-id]');
-    if (!row) {
-      return;
-    }
-
-    const itemId = row.getAttribute('data-item-id');
-    if (!itemId) {
-      return;
-    }
-
-    const item = itemsById.get(itemId);
-    if (!item) {
-      return;
-    }
-
     event.preventDefault();
-    onOpenItem(item);
-  }, [hasHandler, itemsById, onOpenItem]);
+    handleRowClick(event);
+  }, [handleRowClick, hasHandler]);
 
   if (!isValidItemsArray) {
     return null;
@@ -84,7 +69,7 @@ function ContentTable({ items, onOpenItem }) {
   return (
     <div className="crm-table">
       {hasHandler ? (
-        <p className="helper-text crm-table__hint">Click any row to view details.</p>
+        <p className="helper-text crm-table__hint">Click any row or press Enter/Space to view details.</p>
       ) : null}
       <table className="crm-table__native" aria-label="Content pipeline">
         <thead>
@@ -106,11 +91,10 @@ function ContentTable({ items, onOpenItem }) {
               className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
               title={hasHandler ? `Open ${item.title} details` : undefined}
               tabIndex={hasHandler ? 0 : undefined}
-              aria-label={hasHandler ? `Open ${item.title} details` : undefined}
             >
-              <td className="crm-table__cell" data-label="Title">
+              <th scope="row" className="crm-table__cell" data-label="Title">
                 <p className="crm-table__title">{item.title}</p>
-              </td>
+              </th>
               <td className="crm-table__cell" data-label="Platform">
                 <p className="crm-table__subtitle">{item.platform}</p>
               </td>
@@ -119,9 +103,10 @@ function ContentTable({ items, onOpenItem }) {
               </td>
               <td className="crm-table__cell crm-table__cell--action" data-label="Details">
                 {hasHandler ? (
-                  <span className="crm-table__open-button" aria-hidden="true">
+                  <button type="button" className="crm-table__open-button">
                     Open
-                  </span>
+                    <span className="sr-only"> {item.title} on {item.platform}</span>
+                  </button>
                 ) : null}
               </td>
             </tr>

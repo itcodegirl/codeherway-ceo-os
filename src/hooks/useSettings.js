@@ -95,6 +95,7 @@ export function useSettings() {
         keyboardShortcuts: normalizedSettings.keyboardShortcuts,
         autoSave: normalizedSettings.autoSave,
       }));
+      setIsSaving(false);
       return;
     }
 

@@ -126,4 +126,41 @@ describe('server/chiefOfStaffProxyCore', () => {
       }),
     );
   });
+
+  it('rejects unauthenticated requests when CHIEF_STAFF_REQUIRE_TOKEN is enabled', async () => {
+    process.env.CHIEF_STAFF_REQUIRE_TOKEN = 'true';
+
+    const result = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'Generate summary', actionKey: 'summarize' },
+      headers: {},
+    });
+
+    expect(result.status).toBe(401);
+    expect(result.body.error_code).toBe('PROXY_AUTH_INVALID');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('enforces rate limits per client within the configured window', async () => {
+    process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE = '1';
+    globalThis.fetch.mockResolvedValue(
+      createFetchResponse({ ok: true, status: 200, payload: { output_text: 'ok' } }),
+    );
+
+    const firstResult = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'first', actionKey: 'summarize' },
+      headers: { 'x-forwarded-for': '10.0.0.1' },
+    });
+
+    const secondResult = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'second', actionKey: 'summarize' },
+      headers: { 'x-forwarded-for': '10.0.0.1' },
+    });
+
+    expect(firstResult.status).toBe(200);
+    expect(secondResult.status).toBe(429);
+    expect(secondResult.body.error_code).toBe('RATE_LIMITED');
+  });
 });

@@ -1,4 +1,4 @@
-import { buildCreateId } from './utils';
+import { buildCreateId, safeLocalStorageSetItem } from './utils';
 
 const CHIEF_NOTES_STORAGE_KEY = 'ceo-os-chief-notes';
 const CHIEF_RESPONSES_STORAGE_KEY = 'ceo-os-chief-responses';
@@ -45,11 +45,11 @@ function readLocalChiefNotes() {
 }
 
 function writeLocalChiefNotes(notes) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(CHIEF_NOTES_STORAGE_KEY, notes);
+  safeLocalStorageSetItem(
+    CHIEF_NOTES_STORAGE_KEY,
+    notes,
+    'Failed to persist chief notes to localStorage',
+  );
 }
 
 function readLocalChiefResponses() {
@@ -70,11 +70,11 @@ function readLocalChiefResponses() {
 }
 
 function writeLocalChiefResponses(responses) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(CHIEF_RESPONSES_STORAGE_KEY, JSON.stringify(responses));
+  safeLocalStorageSetItem(
+    CHIEF_RESPONSES_STORAGE_KEY,
+    JSON.stringify(responses),
+    'Failed to persist chief responses to localStorage',
+  );
 }
 
 function isSupabaseAuthError(error) {

@@ -4,7 +4,7 @@ import {
   defaultPriorities,
   defaultWins,
 } from './weeklyData';
-import { buildCreateId } from './utils';
+import { buildCreateId, safeLocalStorageSetItem } from './utils';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -214,11 +214,11 @@ function readLocalWeekStore() {
 }
 
 function writeLocalWeekStore(store) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(LOCAL_WEEKLY_BRIEFS_KEY, JSON.stringify(store));
+  safeLocalStorageSetItem(
+    LOCAL_WEEKLY_BRIEFS_KEY,
+    JSON.stringify(store),
+    'Failed to persist weekly brief data to localStorage',
+  );
 }
 
 function resolveLocalWeekPayload(weekStart) {

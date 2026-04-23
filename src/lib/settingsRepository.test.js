@@ -140,4 +140,5 @@ describe('settingsRepository', () => {
     expect(result.savedAt).toBe(Date.parse('2026-04-21T14:00:00.000Z'));
     expect(from).toHaveBeenCalledWith('profiles');
   });
+
 });

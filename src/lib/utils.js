@@ -32,3 +32,19 @@ export function normalizePath(path) {
 
   return normalized || '/';
 }
+
+export function safeLocalStorageSetItem(key, value, warningMessage = 'Failed to persist local data') {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn(warningMessage, error);
+    }
+    return false;
+  }
+}

@@ -1,5 +1,5 @@
 import { contentItems as mockContentItems } from '../data/mockData';
-import { buildCreateId } from './utils';
+import { buildCreateId, safeLocalStorageSetItem } from './utils';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
@@ -40,7 +40,11 @@ function readLocalContentItems() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const seeded = getSeededLocalItems();
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      safeLocalStorageSetItem(
+        STORAGE_KEY,
+        JSON.stringify(seeded),
+        'Failed to seed content items in localStorage',
+      );
       return seeded;
     }
 
@@ -56,11 +60,11 @@ function readLocalContentItems() {
 }
 
 function writeLocalContentItems(items) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  safeLocalStorageSetItem(
+    STORAGE_KEY,
+    JSON.stringify(items),
+    'Failed to persist content items to localStorage',
+  );
 }
 
 function notifyContentItemsUpdated(detail = {}) {

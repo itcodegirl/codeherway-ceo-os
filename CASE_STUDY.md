@@ -36,6 +36,7 @@ The following assets are referenced for portfolio review and should be kept curr
 ## 2) Architecture and decisions
 
 ### Decision: route-level thin composition + repository ownership
+
 - **Goal:** minimize churn in pages while keeping behavior testable.
 - **Implementation:** route pages primarily compose components and hooks; domain hooks coordinate lifecycle + state; repositories own persistence and API boundaries.
 - **Evidence:** dashboard/weekly/chief workflows are split across:
@@ -45,12 +46,14 @@ The following assets are referenced for portfolio review and should be kept curr
 - **Visual tie-in:** the dashboard and weekly brief screenshots should show unchanged page-level composition while data orchestration remains hook/repository-driven.
 
 ### Decision: local-first with Supabase upgrade path
+
 - **Goal:** preserve usability even without backend credentials.
 - **Implementation:** repositories first attempt local storage fallback, and prefer Supabase when configured.
 - **Evidence:** source-aware flags (`local` / `supabase`) are surfaced to the UI and tests validate fallback behavior.
 - **Visual tie-in:** settings and dashboard captures should include source-status cues to demonstrate local-first transparency.
 
 ### Decision: AI through a server proxy
+
 - **Goal:** avoid client-exposed provider secrets and keep response failure handling explicit.
 - **Implementation:** route-side proxy endpoints for Vercel and Netlify; `src/lib/openai.js` performs output extraction and structured parsing with fallback handling.
 - **Evidence:** parser tests cover direct payloads, fenced JSON, fallback content paths, and tool-output text arrays.
@@ -72,6 +75,8 @@ The following assets are referenced for portfolio review and should be kept curr
 - Explicit user feedback for generation/acceptance outcomes and errors
 - Deterministic metadata and shell behavior for route transitions
 - Event-driven refresh strategy to keep screens synchronized after mutations
+- CI enforcement for lint, build, test, and typecheck on every pull request
+- Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
 
 ## 4) Accessibility and UX posture
 
