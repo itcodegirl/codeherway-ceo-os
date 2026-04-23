@@ -240,16 +240,73 @@ jobs:
             ));
 
             if (existingIssue) {
+              const labels = Array.isArray(existingIssue.labels)
+                ? existingIssue.labels.map((label) => {
+                  if (typeof label === 'string') {
+                    return label;
+                  }
+                  if (label && typeof label === 'object') {
+                    return label.name || '';
+                  }
+                  return '';
+                }).filter(Boolean)
+                : [];
+              const issueAcknowledged = labels.includes('ops-alert-acknowledged');
               core.setOutput('issue_number', String(existingIssue.number));
               core.setOutput('issue_url', existingIssue.html_url);
               core.setOutput('issue_state', existingIssue.state);
+              core.setOutput('issue_acknowledged', issueAcknowledged ? 'true' : 'false');
               core.info(`Found open ops alert issue #${existingIssue.number}.`);
             } else {
               core.setOutput('issue_number', '');
               core.setOutput('issue_url', '');
               core.setOutput('issue_state', '');
+              core.setOutput('issue_acknowledged', 'false');
               core.info('No open ops alert issue found.');
             }
+
+      - name: Resolve Incident Lifecycle State
+        id: resolve_incident_state
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          ALERT_TRIGGERED: ${{ steps.publish_summary.outputs.alert_triggered }}
+          ISSUE_ACKNOWLEDGED: ${{ steps.lookup_ops_alert_issue.outputs.issue_acknowledged }}
+        with:
+          script: |
+            const alertTriggered = process.env.ALERT_TRIGGERED === 'true';
+            const issueAcknowledged = process.env.ISSUE_ACKNOWLEDGED === 'true';
+
+            const nextState = alertTriggered
+              ? (issueAcknowledged ? 'acknowledged' : 'open')
+              : 'recovered';
+            const reason = alertTriggered
+              ? (issueAcknowledged
+                ? 'Alert remains active and has been acknowledged.'
+                : 'Alert remains active and is not yet acknowledged.')
+              : 'Scheduled checks are healthy.';
+
+            core.setOutput('next_state', nextState);
+            core.setOutput('reason', reason);
+            core.info(`Resolved incident lifecycle state: ${nextState}`);
+
+      - name: Persist Incident Lifecycle Transition
+        id: persist_incident_state
+        if: always()
+        continue-on-error: true
+        env:
+          OPS_INCIDENT_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          OPS_INCIDENT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+          OPS_INCIDENT_KEY: ${{ github.repository }}:scheduled-ops-alert
+          OPS_INCIDENT_NEXT_STATE: ${{ steps.resolve_incident_state.outputs.next_state }}
+          OPS_INCIDENT_REASON: ${{ steps.resolve_incident_state.outputs.reason }}
+          OPS_INCIDENT_ROUTE_OUTCOME: ${{ steps.route_trend.outcome }}
+          OPS_INCIDENT_TELEMETRY_HEALTH_OUTCOME: ${{ steps.telemetry_health.outcome }}
+          OPS_INCIDENT_TELEMETRY_ENDPOINT_SLO_OUTCOME: ${{ steps.telemetry_endpoint_slo.outcome }}
+          OPS_INCIDENT_ISSUE_NUMBER: ${{ steps.lookup_ops_alert_issue.outputs.issue_number }}
+          OPS_INCIDENT_ISSUE_URL: ${{ steps.lookup_ops_alert_issue.outputs.issue_url }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: npm run transition:ops-incident-state
 
       - name: Upsert Ops Alert Issue
         id: upsert_ops_alert_issue
@@ -372,7 +429,7 @@ jobs:
             core.setOutput('issue_url', process.env.ISSUE_URL || '');
 
       - name: Notify Slack On Alert
-        if: always() && steps.publish_summary.outputs.alert_triggered == 'true' && secrets.SLACK_OPS_WEBHOOK_URL != ''
+        if: always() && steps.publish_summary.outputs.alert_triggered == 'true' && (steps.persist_incident_state.outcome == 'failure' || steps.persist_incident_state.outputs.state_changed == 'true') && secrets.SLACK_OPS_WEBHOOK_URL != ''
         uses: actions/github-script@v7
         env:
           SLACK_OPS_WEBHOOK_URL: ${{ secrets.SLACK_OPS_WEBHOOK_URL }}
@@ -412,7 +469,7 @@ jobs:
             }
 
       - name: Notify Slack On Recovery
-        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && steps.close_ops_alert_issue.outputs.issue_closed == 'true' && secrets.SLACK_OPS_WEBHOOK_URL != ''
+        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && (steps.persist_incident_state.outcome == 'failure' || steps.persist_incident_state.outputs.state_changed == 'true') && secrets.SLACK_OPS_WEBHOOK_URL != ''
         uses: actions/github-script@v7
         env:
           SLACK_OPS_WEBHOOK_URL: ${{ secrets.SLACK_OPS_WEBHOOK_URL }}
@@ -443,7 +500,7 @@ jobs:
             }
 
       - name: Notify PagerDuty On Alert
-        if: always() && steps.publish_summary.outputs.alert_triggered == 'true' && secrets.PAGERDUTY_EVENTS_ROUTING_KEY != ''
+        if: always() && steps.publish_summary.outputs.alert_triggered == 'true' && (steps.persist_incident_state.outcome == 'failure' || steps.persist_incident_state.outputs.state_changed == 'true') && secrets.PAGERDUTY_EVENTS_ROUTING_KEY != ''
         uses: actions/github-script@v7
         env:
           PAGERDUTY_EVENTS_ROUTING_KEY: ${{ secrets.PAGERDUTY_EVENTS_ROUTING_KEY }}
@@ -498,7 +555,7 @@ jobs:
             }
 
       - name: Notify PagerDuty On Recovery
-        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && secrets.PAGERDUTY_EVENTS_ROUTING_KEY != ''
+        if: always() && steps.publish_summary.outputs.alert_triggered != 'true' && (steps.persist_incident_state.outcome == 'failure' || steps.persist_incident_state.outputs.state_changed == 'true') && secrets.PAGERDUTY_EVENTS_ROUTING_KEY != ''
         uses: actions/github-script@v7
         env:
           PAGERDUTY_EVENTS_ROUTING_KEY: ${{ secrets.PAGERDUTY_EVENTS_ROUTING_KEY }}

@@ -104,6 +104,7 @@ npm run check:telemetry-ingest:health
 npm run check:telemetry-ingest:slo
 npm run build:slo-trend-snapshot
 npm run persist:slo-trend-snapshot
+npm run transition:ops-incident-state
 ```
 
 ### Route baseline governance
@@ -114,7 +115,7 @@ npm run persist:slo-trend-snapshot
   - workflow executes `npm run update:route-budgets:baseline:release` with release approval env
 - PR CI enforces static budgets + trend regression checks, and publishes `route-size-report` artifact.
 - When `SUPABASE_TEST_URL` and `SUPABASE_TEST_SERVICE_ROLE_KEY` secrets are available, CI also runs durable telemetry ingest integration tests against the real Supabase test project.
-- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), persists snapshot rows into `ops_slo_snapshots` when Supabase service-role secrets are available, publishes artifacts, upserts a tracked GitHub issue when thresholds are breached, fans out to Slack/PagerDuty when configured, and emits daily JSON snapshot artifacts plus an artifact index for trend analysis.
+- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), persists snapshot rows into `ops_slo_snapshots`, records incident lifecycle transitions (`open`/`acknowledged`/`recovered`) in `ops_incident_lifecycle_events` for notification dedupe, publishes artifacts, upserts a tracked GitHub issue when thresholds are breached, fans out to Slack/PagerDuty when configured, and emits daily JSON snapshot artifacts plus an artifact index for trend analysis.
 
 ### Branch protection automation
 
@@ -166,6 +167,9 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `SUPABASE_SERVICE_ROLE_KEY` (required for durable telemetry ingest persistence)
 - `APP_ERROR_TELEMETRY_RETENTION_DAYS` (optional, defaults to `45`)
 - `APP_ERROR_TELEMETRY_MAX_ROWS` (optional, defaults to `50000`)
+- `OPS_INCIDENT_SUPABASE_URL` (optional, durable lifecycle state persistence for scheduled ops incidents)
+- `OPS_INCIDENT_SUPABASE_SERVICE_ROLE_KEY` (optional service role key for lifecycle event writes)
+- `OPS_INCIDENT_KEY` (optional override for incident dedupe key, defaults to `<repo>:scheduled-ops-alert`)
 - `TELEMETRY_INGEST_MONITOR_URL` (optional, used by scheduled SLO probe job)
 - `TELEMETRY_INGEST_MONITOR_TOKEN` (optional ingest token for SLO probe requests)
 - `TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE` (optional: `hmac-sha256` or `ed25519`)
@@ -188,6 +192,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
   - `app_error_telemetry_events`
   - `app_error_telemetry_key_audit_events`
   - `ops_slo_snapshots`
+  - `ops_incident_lifecycle_events`
 
 ## Roadmap
 
