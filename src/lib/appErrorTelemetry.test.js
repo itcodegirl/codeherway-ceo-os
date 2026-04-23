@@ -2,13 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ERROR_TELEMETRY_EVENT,
   emitAppErrorTelemetry,
+  flushAppErrorTelemetryRemote,
+  isAppErrorTelemetryRemoteEnabled,
   listAppErrorTelemetryEvents,
+  listPendingAppErrorTelemetryRemoteEvents,
+  resetAppErrorTelemetryStateForTests,
 } from './appErrorTelemetry';
 
 describe('src/lib/appErrorTelemetry', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    resetAppErrorTelemetryStateForTests();
   });
 
   it('persists and dispatches error boundary telemetry details', () => {
@@ -56,5 +62,35 @@ describe('src/lib/appErrorTelemetry', () => {
     expect(events).toHaveLength(25);
     expect(events[0].message).toBe('error-30');
     expect(events[24].message).toBe('error-6');
+  });
+
+  it('flushes queued app errors to an env-gated remote endpoint in batches', async () => {
+    vi.stubEnv('VITE_APP_ERROR_TELEMETRY_URL', 'https://telemetry.example.com/errors');
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    emitAppErrorTelemetry(new Error('remote-1'), null, { source: 'test' });
+    emitAppErrorTelemetry(new Error('remote-2'), null, { source: 'test' });
+    await flushAppErrorTelemetryRemote();
+
+    expect(isAppErrorTelemetryRemoteEnabled()).toBe(true);
+    expect(fetchMock).toHaveBeenCalled();
+    expect(listPendingAppErrorTelemetryRemoteEvents()).toHaveLength(0);
+    const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(payload.events).toHaveLength(2);
+    expect(payload.events[0].message).toBe('remote-1');
+    expect(payload.events[1].message).toBe('remote-2');
+  });
+
+  it('keeps queued app errors when remote upload fails', async () => {
+    vi.stubEnv('VITE_APP_ERROR_TELEMETRY_URL', 'https://telemetry.example.com/errors');
+    const fetchMock = vi.fn(async () => ({ ok: false }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    emitAppErrorTelemetry(new Error('remote-fail'), null, { source: 'test' });
+    await flushAppErrorTelemetryRemote();
+
+    expect(fetchMock).toHaveBeenCalled();
+    expect(listPendingAppErrorTelemetryRemoteEvents()).toHaveLength(1);
   });
 });
