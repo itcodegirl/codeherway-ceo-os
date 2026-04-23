@@ -5,6 +5,10 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     name: Unit + E2E
@@ -80,3 +84,63 @@ jobs:
           path: artifacts/route-size-report.md
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Comment Route Size Diff on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          ROUTE_REPORT_PATH: artifacts/route-size-report.md
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- route-size-diff-report -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request?.number;
+
+            if (!issue_number) {
+              core.info('No pull request number in event context. Skipping route-size comment.');
+              return;
+            }
+
+            let reportContent = 'Route-size report was not generated in this run.';
+            if (fs.existsSync(process.env.ROUTE_REPORT_PATH)) {
+              const rawReport = fs.readFileSync(process.env.ROUTE_REPORT_PATH, 'utf8').trim();
+              reportContent = rawReport || reportContent;
+            }
+
+            const body = `${marker}\n${reportContent}`;
+
+            try {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number,
+                per_page: 100,
+              });
+
+              const existing = comments.find((comment) => (
+                comment.user?.type === 'Bot'
+                && typeof comment.body === 'string'
+                && comment.body.includes(marker)
+              ));
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                  body,
+                });
+                core.info(`Updated existing route-size report comment (${existing.id}).`);
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body,
+                });
+                core.info('Posted new route-size report comment.');
+              }
+            } catch (error) {
+              core.warning(`Unable to post route-size report PR comment: ${error.message}`);
+            }
