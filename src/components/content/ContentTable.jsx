@@ -87,9 +87,9 @@ function ContentTable({ items, onOpenItem }) {
               title={hasHandler ? `Open ${item.title} details` : undefined}
               tabIndex={hasHandler ? 0 : undefined}
             >
-              <td className="crm-table__cell" data-label="Title">
+              <th scope="row" className="crm-table__cell" data-label="Title">
                 <p className="crm-table__title">{item.title}</p>
-              </td>
+              </th>
               <td className="crm-table__cell" data-label="Platform">
                 <p className="crm-table__subtitle">{item.platform}</p>
               </td>

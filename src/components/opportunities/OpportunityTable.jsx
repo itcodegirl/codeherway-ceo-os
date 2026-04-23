@@ -88,9 +88,9 @@ function OpportunityTable({ items, onSelect }) {
               title={hasHandler ? `Open ${item.name} details` : undefined}
               tabIndex={hasHandler ? 0 : undefined}
             >
-              <td className="crm-table__cell" data-label="Opportunity">
+              <th scope="row" className="crm-table__cell" data-label="Opportunity">
                 <p className="crm-table__title crm-table__title--row">{item.name}</p>
-              </td>
+              </th>
               <td className="crm-table__cell" data-label="Company">
                 <p className="crm-table__subtitle">{item.company}</p>
               </td>
