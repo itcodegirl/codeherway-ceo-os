@@ -101,6 +101,7 @@ npm run check:route-budgets
 npm run check:route-budgets:trend
 npm run report:route-budgets
 npm run check:telemetry-ingest:health
+npm run check:telemetry-ingest:slo
 ```
 
 ### Route baseline governance
@@ -112,6 +113,7 @@ npm run check:telemetry-ingest:health
 - PR CI enforces static budgets + trend regression checks, and publishes `route-size-report` artifact.
 - When `SUPABASE_TEST_URL` and `SUPABASE_TEST_SERVICE_ROLE_KEY` secrets are available, CI also runs durable telemetry ingest integration tests against the real Supabase test project.
 - `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate health, publishes artifacts, and upserts a tracked GitHub issue when thresholds are breached.
+- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), publishes artifacts, and upserts a tracked GitHub issue when thresholds are breached.
 
 ### Branch protection automation
 
@@ -151,6 +153,10 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `SUPABASE_SERVICE_ROLE_KEY` (required for durable telemetry ingest persistence)
 - `APP_ERROR_TELEMETRY_RETENTION_DAYS` (optional, defaults to `45`)
 - `APP_ERROR_TELEMETRY_MAX_ROWS` (optional, defaults to `50000`)
+- `TELEMETRY_INGEST_MONITOR_URL` (optional, used by scheduled SLO probe job)
+- `TELEMETRY_INGEST_MONITOR_TOKEN` (optional ingest token for SLO probe requests)
+- `TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE` (optional: `hmac-sha256` or `ed25519`)
+- `TELEMETRY_INGEST_MONITOR_SIGNATURE_KEY_ID` (optional key-id header for SLO probe signatures)
 
 ## Data model references
 

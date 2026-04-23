@@ -47,6 +47,21 @@ jobs:
           TELEMETRY_HEALTH_MAX_FAILURE_RATE_PCT: 20
         run: npm run check:telemetry-ingest:health
 
+      - name: Check Telemetry Ingest Endpoint SLO
+        id: telemetry_endpoint_slo
+        continue-on-error: true
+        env:
+          TELEMETRY_INGEST_MONITOR_URL: ${{ secrets.TELEMETRY_INGEST_MONITOR_URL }}
+          TELEMETRY_INGEST_MONITOR_TOKEN: ${{ secrets.TELEMETRY_INGEST_MONITOR_TOKEN }}
+          TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE: ${{ secrets.TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE }}
+          TELEMETRY_INGEST_MONITOR_SIGNATURE_KEY_ID: ${{ secrets.TELEMETRY_INGEST_MONITOR_SIGNATURE_KEY_ID }}
+          TELEMETRY_INGEST_MONITOR_HMAC_SECRET: ${{ secrets.TELEMETRY_INGEST_MONITOR_HMAC_SECRET }}
+          TELEMETRY_INGEST_MONITOR_ED25519_PRIVATE_KEY_PEM: ${{ secrets.TELEMETRY_INGEST_MONITOR_ED25519_PRIVATE_KEY_PEM }}
+          TELEMETRY_INGEST_MONITOR_PROBE_COUNT: 10
+          TELEMETRY_INGEST_MONITOR_MAX_P95_MS: 1200
+          TELEMETRY_INGEST_MONITOR_MAX_ERROR_RATE_PCT: 5
+        run: npm run check:telemetry-ingest:slo
+
       - name: Upload Route Size Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -65,6 +80,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Upload Telemetry Endpoint SLO Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-telemetry-endpoint-slo-report
+          path: artifacts/telemetry-ingest-slo-report.md
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Publish Monitor Summary
         id: publish_summary
         if: always()
@@ -74,19 +98,26 @@ jobs:
             const fs = require('node:fs');
             const routeOutcome = '${{ steps.route_trend.outcome }}';
             const telemetryOutcome = '${{ steps.telemetry_health.outcome }}';
+            const endpointSloOutcome = '${{ steps.telemetry_endpoint_slo.outcome }}';
             const routeReport = fs.existsSync('artifacts/route-size-report.md')
               ? fs.readFileSync('artifacts/route-size-report.md', 'utf8').trim()
               : 'Route-size report missing.';
             const telemetryReport = fs.existsSync('artifacts/telemetry-ingest-health-report.md')
               ? fs.readFileSync('artifacts/telemetry-ingest-health-report.md', 'utf8').trim()
               : 'Telemetry ingest health report missing.';
-            const alertTriggered = routeOutcome === 'failure' || telemetryOutcome === 'failure';
+            const endpointSloReport = fs.existsSync('artifacts/telemetry-ingest-slo-report.md')
+              ? fs.readFileSync('artifacts/telemetry-ingest-slo-report.md', 'utf8').trim()
+              : 'Telemetry endpoint SLO report missing.';
+            const alertTriggered = routeOutcome === 'failure'
+              || telemetryOutcome === 'failure'
+              || endpointSloOutcome === 'failure';
 
             const summary = [
               '# Scheduled Ops Alert Summary',
               '',
               `- Route trend check: ${routeOutcome}`,
               `- Telemetry ingest health check: ${telemetryOutcome}`,
+              `- Telemetry endpoint SLO check: ${endpointSloOutcome}`,
               '',
               '## Route-size report',
               '',
@@ -95,6 +126,10 @@ jobs:
               '## Telemetry ingest report',
               '',
               telemetryReport,
+              '',
+              '## Telemetry endpoint SLO report',
+              '',
+              endpointSloReport,
             ].join('\n');
 
             core.summary.addRaw(summary).write();
@@ -107,15 +142,19 @@ jobs:
           script: |
             const fs = require('node:fs');
             const marker = '<!-- ops-alert-monitor -->';
-            const title = '[Ops Alert] Route regression or telemetry ingest health degraded';
+            const title = '[Ops Alert] Route/telemetry reliability degradation detected';
             const routeOutcome = '${{ steps.route_trend.outcome }}';
             const telemetryOutcome = '${{ steps.telemetry_health.outcome }}';
+            const endpointSloOutcome = '${{ steps.telemetry_endpoint_slo.outcome }}';
             const routeReport = fs.existsSync('artifacts/route-size-report.md')
               ? fs.readFileSync('artifacts/route-size-report.md', 'utf8').trim()
               : 'Route-size report missing.';
             const telemetryReport = fs.existsSync('artifacts/telemetry-ingest-health-report.md')
               ? fs.readFileSync('artifacts/telemetry-ingest-health-report.md', 'utf8').trim()
               : 'Telemetry ingest health report missing.';
+            const endpointSloReport = fs.existsSync('artifacts/telemetry-ingest-slo-report.md')
+              ? fs.readFileSync('artifacts/telemetry-ingest-slo-report.md', 'utf8').trim()
+              : 'Telemetry endpoint SLO report missing.';
 
             const body = [
               marker,
@@ -123,6 +162,7 @@ jobs:
               '',
               `- Route trend check: ${routeOutcome}`,
               `- Telemetry ingest health check: ${telemetryOutcome}`,
+              `- Telemetry endpoint SLO check: ${endpointSloOutcome}`,
               `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               '',
               '## Route-size report',
@@ -132,6 +172,10 @@ jobs:
               '## Telemetry ingest report',
               '',
               telemetryReport,
+              '',
+              '## Telemetry endpoint SLO report',
+              '',
+              endpointSloReport,
             ].join('\n');
 
             const { owner, repo } = context.repo;
