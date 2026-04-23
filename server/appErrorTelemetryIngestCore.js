@@ -373,6 +373,13 @@ function verifyHmacSignature(headers, rawBody) {
 
 async function verifyAsymmetricSignature(headers, rawBody) {
   const keyState = await resolveTelemetryVerificationKeys();
+  const buildAsymmetricKeyMetadata = (entry) => ({
+    ...(keyState.metadata || {}),
+    ...(entry?.kmsKeyId ? { kms_key_id: entry.kmsKeyId } : {}),
+    ...(entry?.createdAtMs ? { key_created_at: new Date(entry.createdAtMs).toISOString() } : {}),
+    ...(entry?.keyProvenance ? { key_provenance: entry.keyProvenance } : {}),
+  });
+
   if (!keyState.configured) {
     return {
       configured: false,
@@ -400,7 +407,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: '',
       keySource: keyState.source || '',
       keyVersion: '',
-      keyMetadata: keyState.metadata || {},
+      keyMetadata: buildAsymmetricKeyMetadata(),
       error: keyState.configError,
       errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
       errorStatus: 503,
@@ -419,7 +426,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: 'ed25519',
       keySource: keyState.source || '',
       keyVersion: '',
-      keyMetadata: keyState.metadata || {},
+      keyMetadata: buildAsymmetricKeyMetadata(),
       error: 'Missing telemetry signature key id header',
       errorCode: 'INGEST_SIGNATURE_INVALID',
       errorStatus: 401,
@@ -437,7 +444,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: 'ed25519',
       keySource: keyState.source || '',
       keyVersion: '',
-      keyMetadata: keyState.metadata || {},
+      keyMetadata: buildAsymmetricKeyMetadata(),
       error: 'Unknown telemetry signature key id',
       errorCode: 'INGEST_SIGNATURE_INVALID',
       errorStatus: 401,
@@ -455,10 +462,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: declaredAlgorithm,
       keySource: keyEntry.source || keyState.source || '',
       keyVersion: keyEntry.version || '',
-      keyMetadata: {
-        ...keyState.metadata,
-        kms_key_id: keyEntry.kmsKeyId || '',
-      },
+      keyMetadata: buildAsymmetricKeyMetadata(keyEntry),
       error: 'Unsupported telemetry signature algorithm',
       errorCode: 'INGEST_SIGNATURE_INVALID',
       errorStatus: 401,
@@ -476,10 +480,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: declaredAlgorithm,
       keySource: keyEntry.source || keyState.source || '',
       keyVersion: keyEntry.version || '',
-      keyMetadata: {
-        ...keyState.metadata,
-        kms_key_id: keyEntry.kmsKeyId || '',
-      },
+      keyMetadata: buildAsymmetricKeyMetadata(keyEntry),
       error: 'Missing or invalid telemetry signature header',
       errorCode: 'INGEST_SIGNATURE_INVALID',
       errorStatus: 401,
@@ -504,10 +505,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
         algorithm: declaredAlgorithm,
         keySource: keyEntry.source || keyState.source || '',
         keyVersion: keyEntry.version || '',
-        keyMetadata: {
-          ...keyState.metadata,
-          kms_key_id: keyEntry.kmsKeyId || '',
-        },
+        keyMetadata: buildAsymmetricKeyMetadata(keyEntry),
         error: 'Missing or invalid telemetry signature header',
         errorCode: 'INGEST_SIGNATURE_INVALID',
         errorStatus: 401,
@@ -523,10 +521,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: declaredAlgorithm,
       keySource: keyEntry.source || keyState.source || '',
       keyVersion: keyEntry.version || '',
-      keyMetadata: {
-        ...keyState.metadata,
-        kms_key_id: keyEntry.kmsKeyId || '',
-      },
+      keyMetadata: buildAsymmetricKeyMetadata(keyEntry),
       error: '',
       errorCode: '',
       errorStatus: 401,
@@ -541,10 +536,7 @@ async function verifyAsymmetricSignature(headers, rawBody) {
       algorithm: declaredAlgorithm,
       keySource: keyEntry.source || keyState.source || '',
       keyVersion: keyEntry.version || '',
-      keyMetadata: {
-        ...keyState.metadata,
-        kms_key_id: keyEntry.kmsKeyId || '',
-      },
+      keyMetadata: buildAsymmetricKeyMetadata(keyEntry),
       error: 'Telemetry public key verification failed',
       errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
       errorStatus: 503,

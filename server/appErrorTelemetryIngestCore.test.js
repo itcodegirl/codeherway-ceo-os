@@ -41,6 +41,14 @@ describe('server/appErrorTelemetryIngestCore', () => {
     delete process.env.APP_ERROR_TELEMETRY_KMS_KEYS_URL;
     delete process.env.APP_ERROR_TELEMETRY_KMS_AUTH_TOKEN;
     delete process.env.APP_ERROR_TELEMETRY_KMS_CACHE_MS;
+    delete process.env.APP_ERROR_TELEMETRY_KEY_PROVIDER;
+    delete process.env.APP_ERROR_TELEMETRY_AWS_KMS_KEYS_JSON;
+    delete process.env.APP_ERROR_TELEMETRY_GCP_KMS_KEYS_JSON;
+    delete process.env.APP_ERROR_TELEMETRY_AZURE_KV_KEYS_JSON;
+    delete process.env.APP_ERROR_TELEMETRY_AWS_REGION;
+    delete process.env.APP_ERROR_TELEMETRY_ROTATION_MAX_KEY_AGE_DAYS;
+    delete process.env.APP_ERROR_TELEMETRY_ROTATION_MIN_ACTIVE_KEYS;
+    delete process.env.APP_ERROR_TELEMETRY_ROTATION_REQUIRE_FUTURE_KEY;
     resetTelemetryKeyProviderCacheForTests();
     vi.spyOn(telemetryRepository, 'persistAppErrorTelemetryBatch').mockResolvedValue({
       persisted: false,
