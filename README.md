@@ -133,6 +133,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `VITE_APP_ERROR_TELEMETRY_URL` (optional remote ingest endpoint for app error telemetry)
 - `VITE_APP_ERROR_TELEMETRY_TOKEN` (optional shared ingest token header)
 - `VITE_APP_ERROR_TELEMETRY_HMAC_SECRET` (optional HMAC signing secret for trusted/internal deployments only)
+- `VITE_APP_ERROR_TELEMETRY_SIGNATURE_KEY_ID` (optional key-id header used with signed payloads)
 
 ### Server runtime environment
 
@@ -146,6 +147,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM` (optional ISO datetime cutoff for when `*_NEXT` becomes valid)
 - `APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL` (optional ISO datetime cutoff for current key sunset)
 - `APP_ERROR_TELEMETRY_HMAC_SECRET` (optional legacy fallback when rotation keys are not configured)
+- `APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON` (optional JSON map of `keyId -> PEM public key` for ed25519 verification)
 - `SUPABASE_SERVICE_ROLE_KEY` (required for durable telemetry ingest persistence)
 - `APP_ERROR_TELEMETRY_RETENTION_DAYS` (optional, defaults to `45`)
 - `APP_ERROR_TELEMETRY_MAX_ROWS` (optional, defaults to `50000`)

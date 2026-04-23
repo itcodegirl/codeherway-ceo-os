@@ -103,6 +103,7 @@ describe('src/lib/appErrorTelemetry', () => {
   it('adds an HMAC signature header when telemetry signing secret is configured', async () => {
     vi.stubEnv('VITE_APP_ERROR_TELEMETRY_URL', 'https://telemetry.example.com/errors');
     vi.stubEnv('VITE_APP_ERROR_TELEMETRY_HMAC_SECRET', 'hmac-secret');
+    vi.stubEnv('VITE_APP_ERROR_TELEMETRY_SIGNATURE_KEY_ID', 'telemetry-key-2026-04');
     const fetchMock = vi.fn(async () => ({ ok: true }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -112,6 +113,7 @@ describe('src/lib/appErrorTelemetry', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
       'x-app-telemetry-signature': expect.stringMatching(/^sha256=/),
+      'x-app-telemetry-signature-key-id': 'telemetry-key-2026-04',
     });
   });
 });

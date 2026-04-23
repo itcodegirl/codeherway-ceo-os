@@ -94,6 +94,10 @@ function getRemoteTelemetryHmacSecret() {
   return normalizeText(import.meta.env.VITE_APP_ERROR_TELEMETRY_HMAC_SECRET);
 }
 
+function getRemoteTelemetrySignatureKeyId() {
+  return normalizeText(import.meta.env.VITE_APP_ERROR_TELEMETRY_SIGNATURE_KEY_ID);
+}
+
 function stableSerialize(value) {
   if (Array.isArray(value)) {
     return `[${value.map((item) => stableSerialize(item)).join(',')}]`;
@@ -228,6 +232,7 @@ async function postRemoteBatch(events) {
   };
   const requestBody = JSON.stringify(requestPayload);
   const hmacSignature = await computeHmacSignature(requestBody);
+  const signatureKeyId = getRemoteTelemetrySignatureKeyId();
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -235,6 +240,7 @@ async function postRemoteBatch(events) {
       'Content-Type': 'application/json',
       ...(ingestToken ? { 'x-app-telemetry-token': ingestToken } : {}),
       ...(hmacSignature ? { 'x-app-telemetry-signature': hmacSignature } : {}),
+      ...(hmacSignature && signatureKeyId ? { 'x-app-telemetry-signature-key-id': signatureKeyId } : {}),
     },
     body: requestBody,
     keepalive: true,

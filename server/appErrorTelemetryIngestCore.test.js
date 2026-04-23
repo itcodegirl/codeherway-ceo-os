@@ -34,6 +34,7 @@ describe('server/appErrorTelemetryIngestCore', () => {
     delete process.env.APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT;
     delete process.env.APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM;
     delete process.env.APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL;
+    delete process.env.APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON;
     vi.spyOn(telemetryRepository, 'persistAppErrorTelemetryBatch').mockResolvedValue({
       persisted: false,
       duplicate: false,
@@ -140,6 +141,7 @@ describe('server/appErrorTelemetryIngestCore', () => {
     expect(validSignatureResult.body.signature_verified).toBe(true);
     expect(validSignatureResult.body.signature_required).toBe(true);
     expect(validSignatureResult.body.signature_key_id).toBe('legacy');
+    expect(validSignatureResult.body.signature_algorithm).toBe('hmac-sha256');
   });
 
   it('accepts current and next rotation keys within active windows', async () => {
@@ -204,6 +206,57 @@ describe('server/appErrorTelemetryIngestCore', () => {
 
     expect(result.status).toBe(503);
     expect(result.body.error_code).toBe('INGEST_SIGNATURE_CONFIG_INVALID');
+  });
+
+  it('supports asymmetric ed25519 verification with key-id headers', async () => {
+    const keyPair = crypto.generateKeyPairSync('ed25519');
+    const publicKeyPem = keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    process.env.APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON = JSON.stringify({
+      'telemetry-key-2026-04': publicKeyPem,
+    });
+    const payload = createValidPayload();
+    const rawBody = JSON.stringify(payload);
+    const signature = crypto.sign(null, Buffer.from(rawBody), keyPair.privateKey).toString('base64');
+
+    const result = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature-key-id': 'telemetry-key-2026-04',
+        'x-app-telemetry-signature': `ed25519=${signature}`,
+      },
+    });
+
+    expect(result.status).toBe(202);
+    expect(result.body.signature_verified).toBe(true);
+    expect(result.body.signature_required).toBe(true);
+    expect(result.body.signature_key_id).toBe('telemetry-key-2026-04');
+    expect(result.body.signature_algorithm).toBe('ed25519');
+  });
+
+  it('rejects unknown asymmetric key ids safely', async () => {
+    const keyPair = crypto.generateKeyPairSync('ed25519');
+    const publicKeyPem = keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    process.env.APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON = JSON.stringify({
+      'telemetry-key-2026-04': publicKeyPem,
+    });
+    const payload = createValidPayload();
+    const rawBody = JSON.stringify(payload);
+    const signature = crypto.sign(null, Buffer.from(rawBody), keyPair.privateKey).toString('base64');
+
+    const result = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature-key-id': 'unknown-key',
+        'x-app-telemetry-signature': `ed25519=${signature}`,
+      },
+    });
+
+    expect(result.status).toBe(401);
+    expect(result.body.error_code).toBe('INGEST_SIGNATURE_INVALID');
   });
 
   it('persists valid payloads and forwards explicit idempotency keys', async () => {

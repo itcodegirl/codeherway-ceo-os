@@ -96,6 +96,10 @@ function hasValidIngestToken(headers) {
   return extractRequestToken(headers) === configuredToken;
 }
 
+function getSignatureKeyId(headers) {
+  return normalizeText(getHeaderValue(headers, 'x-app-telemetry-signature-key-id'));
+}
+
 function parseOptionalDateMs(value) {
   const normalizedValue = normalizeText(value);
   if (!normalizedValue) {
@@ -108,6 +112,23 @@ function parseOptionalDateMs(value) {
 
 function isValidHex(value) {
   return Boolean(value && /^[0-9a-f]+$/i.test(value) && value.length % 2 === 0);
+}
+
+function normalizeBase64ToBuffer(value) {
+  const normalized = normalizeText(value)
+    .replaceAll('-', '+')
+    .replaceAll('_', '/');
+  if (!normalized) {
+    return null;
+  }
+
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  try {
+    const buffer = Buffer.from(padded, 'base64');
+    return buffer.length ? buffer : null;
+  } catch {
+    return null;
+  }
 }
 
 function buildHmacConfigState(nowMs = Date.now()) {
@@ -165,18 +186,211 @@ function buildHmacConfigState(nowMs = Date.now()) {
 function normalizeSignatureHeader(headers) {
   const signatureHeader = getHeaderValue(headers, 'x-app-telemetry-signature');
   if (!signatureHeader) {
-    return '';
+    return { algorithm: '', value: '' };
   }
 
-  if (signatureHeader.includes('=')) {
-    const [prefix, value] = signatureHeader.split('=');
-    if (prefix?.trim().toLowerCase() !== 'sha256') {
-      return '';
+  const delimiterIndex = signatureHeader.indexOf('=');
+  if (delimiterIndex > 0) {
+    const algorithm = normalizeText(signatureHeader.slice(0, delimiterIndex)).toLowerCase();
+    const value = normalizeText(signatureHeader.slice(delimiterIndex + 1));
+    return { algorithm, value };
+  }
+
+  return {
+    algorithm: '',
+    value: signatureHeader,
+  };
+}
+
+function parseAsymmetricPublicKeyConfig(rawConfig) {
+  const normalizedConfig = normalizeText(rawConfig);
+  if (!normalizedConfig) {
+    return {
+      configured: false,
+      keys: {},
+      configError: '',
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(normalizedConfig);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {
+        configured: true,
+        keys: {},
+        configError: 'Telemetry asymmetric key configuration must be a JSON object',
+      };
     }
-    return normalizeText(value).toLowerCase();
+
+    const keys = Object.entries(parsed).reduce((accumulator, [keyId, keyValue]) => {
+      const normalizedKeyId = normalizeText(keyId);
+      const normalizedKeyValue = normalizeText(keyValue);
+      if (!normalizedKeyId || !normalizedKeyValue) {
+        return accumulator;
+      }
+
+      accumulator[normalizedKeyId] = normalizedKeyValue;
+      return accumulator;
+    }, {});
+
+    return {
+      configured: true,
+      keys,
+      configError: '',
+    };
+  } catch {
+    return {
+      configured: true,
+      keys: {},
+      configError: 'Telemetry asymmetric key configuration contains invalid JSON',
+    };
+  }
+}
+
+function verifyAsymmetricSignature(headers, rawBody) {
+  const asymmetricConfig = parseAsymmetricPublicKeyConfig(
+    process.env.APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON,
+  );
+  if (!asymmetricConfig.configured) {
+    return {
+      configured: false,
+      required: false,
+      verified: false,
+      keyId: '',
+      algorithm: '',
+      error: '',
+      errorCode: '',
+      errorStatus: 401,
+    };
   }
 
-  return signatureHeader.toLowerCase();
+  if (asymmetricConfig.configError) {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: '',
+      algorithm: '',
+      error: asymmetricConfig.configError,
+      errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
+      errorStatus: 503,
+    };
+  }
+
+  const configuredKeyIds = Object.keys(asymmetricConfig.keys);
+  if (!configuredKeyIds.length) {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: '',
+      algorithm: '',
+      error: 'No asymmetric telemetry public keys are configured',
+      errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
+      errorStatus: 503,
+    };
+  }
+
+  const signatureKeyId = getSignatureKeyId(headers);
+  if (!signatureKeyId) {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: '',
+      algorithm: 'ed25519',
+      error: 'Missing telemetry signature key id header',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
+    };
+  }
+
+  const publicKeyPem = asymmetricConfig.keys[signatureKeyId];
+  if (!publicKeyPem) {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: signatureKeyId,
+      algorithm: 'ed25519',
+      error: 'Unknown telemetry signature key id',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
+    };
+  }
+
+  const signatureHeader = normalizeSignatureHeader(headers);
+  const declaredAlgorithm = signatureHeader.algorithm || 'ed25519';
+  if (declaredAlgorithm !== 'ed25519') {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: signatureKeyId,
+      algorithm: declaredAlgorithm,
+      error: 'Unsupported telemetry signature algorithm',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
+    };
+  }
+
+  const signatureBuffer = normalizeBase64ToBuffer(signatureHeader.value);
+  if (!signatureBuffer) {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: signatureKeyId,
+      algorithm: declaredAlgorithm,
+      error: 'Missing or invalid telemetry signature header',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
+    };
+  }
+
+  try {
+    const verified = crypto.verify(
+      null,
+      Buffer.from(rawBody),
+      publicKeyPem,
+      signatureBuffer,
+    );
+
+    if (!verified) {
+      return {
+        configured: true,
+        required: true,
+        verified: false,
+        keyId: signatureKeyId,
+        algorithm: declaredAlgorithm,
+        error: 'Missing or invalid telemetry signature header',
+        errorCode: 'INGEST_SIGNATURE_INVALID',
+        errorStatus: 401,
+      };
+    }
+
+    return {
+      configured: true,
+      required: true,
+      verified: true,
+      keyId: signatureKeyId,
+      algorithm: declaredAlgorithm,
+      error: '',
+      errorCode: '',
+      errorStatus: 401,
+    };
+  } catch {
+    return {
+      configured: true,
+      required: true,
+      verified: false,
+      keyId: signatureKeyId,
+      algorithm: declaredAlgorithm,
+      error: 'Telemetry public key verification failed',
+      errorCode: 'INGEST_SIGNATURE_CONFIG_INVALID',
+      errorStatus: 503,
+    };
+  }
 }
 
 function normalizeRawBody(rawBody, parsedBody) {
@@ -204,13 +418,15 @@ function normalizeRawBody(rawBody, parsedBody) {
 }
 
 function verifyHmacSignature(headers, rawBody) {
+  const signatureKeyId = getSignatureKeyId(headers);
   const hmacConfigState = buildHmacConfigState();
 
   if (hmacConfigState.configError) {
     return {
       required: true,
       verified: false,
-      keyId: '',
+      keyId: signatureKeyId,
+      algorithm: 'hmac-sha256',
       error: hmacConfigState.configError,
       errorCode: hmacConfigState.errorCode,
       errorStatus: hmacConfigState.errorStatus,
@@ -222,25 +438,61 @@ function verifyHmacSignature(headers, rawBody) {
       required: false,
       verified: false,
       keyId: '',
+      algorithm: '',
       error: '',
       errorCode: '',
       errorStatus: 401,
     };
   }
 
-  const providedSignature = normalizeSignatureHeader(headers);
+  const signatureHeader = normalizeSignatureHeader(headers);
+  const normalizedAlgorithm = signatureHeader.algorithm.toLowerCase();
+  if (
+    normalizedAlgorithm
+    && normalizedAlgorithm !== 'sha256'
+    && normalizedAlgorithm !== 'hmac-sha256'
+  ) {
+    return {
+      required: true,
+      verified: false,
+      keyId: signatureKeyId,
+      algorithm: normalizedAlgorithm,
+      error: 'Unsupported telemetry signature algorithm',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
+    };
+  }
+
+  const providedSignature = normalizeText(signatureHeader.value).toLowerCase();
   if (!isValidHex(providedSignature)) {
     return {
       required: true,
       verified: false,
-      keyId: '',
+      keyId: signatureKeyId,
+      algorithm: 'hmac-sha256',
       error: 'Missing or invalid telemetry signature header',
       errorCode: 'INGEST_SIGNATURE_INVALID',
       errorStatus: 401,
     };
   }
 
-  for (const candidate of hmacConfigState.candidates) {
+  const matchingCandidates = signatureKeyId
+    ? hmacConfigState.candidates.filter((candidate) => candidate.keyId === signatureKeyId)
+    : hmacConfigState.candidates;
+
+  if (signatureKeyId && !matchingCandidates.length) {
+    return {
+      required: true,
+      verified: false,
+      keyId: signatureKeyId,
+      algorithm: 'hmac-sha256',
+      error: 'Unknown telemetry signature key id',
+      errorCode: 'INGEST_SIGNATURE_INVALID',
+      errorStatus: 401,
+    };
+  }
+
+  for (const candidate of matchingCandidates) {
     const expectedSignature = crypto
       .createHmac('sha256', candidate.secret)
       .update(rawBody)
@@ -257,6 +509,7 @@ function verifyHmacSignature(headers, rawBody) {
         required: true,
         verified: true,
         keyId: candidate.keyId,
+        algorithm: 'hmac-sha256',
         error: '',
         errorCode: '',
         errorStatus: 401,
@@ -267,11 +520,21 @@ function verifyHmacSignature(headers, rawBody) {
   return {
     required: true,
     verified: false,
-    keyId: '',
+    keyId: signatureKeyId,
+    algorithm: 'hmac-sha256',
     error: 'Missing or invalid telemetry signature header',
     errorCode: 'INGEST_SIGNATURE_INVALID',
     errorStatus: 401,
   };
+}
+
+function verifyTelemetrySignature(headers, rawBody) {
+  const asymmetricStatus = verifyAsymmetricSignature(headers, rawBody);
+  if (asymmetricStatus.configured) {
+    return asymmetricStatus;
+  }
+
+  return verifyHmacSignature(headers, rawBody);
 }
 
 function isValidTimestamp(value) {
@@ -417,7 +680,7 @@ export async function handleAppErrorTelemetryIngest({
   }
 
   const resolvedRawBody = normalizeRawBody(rawBody, parsedBody);
-  const signatureStatus = verifyHmacSignature(headers, resolvedRawBody);
+  const signatureStatus = verifyTelemetrySignature(headers, resolvedRawBody);
   if (signatureStatus.error) {
     return buildResponse(signatureStatus.errorStatus || 401, {
       error: signatureStatus.error,
@@ -449,6 +712,7 @@ export async function handleAppErrorTelemetryIngest({
       signature_verified: Boolean(signatureStatus.verified),
       signature_required: Boolean(signatureStatus.required),
       signature_key_id: signatureStatus.keyId || '',
+      signature_algorithm: signatureStatus.algorithm || '',
     }, requestId);
   } catch (error) {
     return buildResponse(503, {
