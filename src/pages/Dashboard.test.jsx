@@ -102,6 +102,20 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText(/Pause for 60 seconds/i)).toBeInTheDocument();
   });
 
+  it('supports keyboard mode switching across support-state radios', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    const planningChip = screen.getByRole('radio', { name: 'Planning' });
+    expect(planningChip).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.keyDown(planningChip, { key: 'ArrowRight' });
+    expect(screen.getByRole('radio', { name: 'Reflection' })).toHaveAttribute('aria-checked', 'true');
+  });
+
   it('adds reminders and allows marking them complete', () => {
     render(
       <MemoryRouter>

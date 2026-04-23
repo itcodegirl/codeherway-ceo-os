@@ -50,6 +50,10 @@ function Journal() {
   }, [dateKey]);
 
   const savedAtLabel = useMemo(() => formatSavedAt(lastSavedAt), [lastSavedAt]);
+  const isEntryEmpty = useMemo(
+    () => JOURNAL_PROMPTS.every((prompt) => !(entry[prompt.id] || '').trim()),
+    [entry],
+  );
 
   const handleDateChange = (nextDateKey) => {
     setDateKey(nextDateKey);
@@ -108,6 +112,9 @@ function Journal() {
 
         <p className="helper-text" role="status">{savedAtLabel}</p>
         {errorMessage ? <p role="alert" className="form-error">{errorMessage}</p> : null}
+        {isEntryEmpty ? (
+          <p className="helper-text">Start with one sentence. Small reflections count.</p>
+        ) : null}
 
         <div className="journal-prompts">
           {JOURNAL_PROMPTS.map((prompt) => (

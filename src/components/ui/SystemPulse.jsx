@@ -4,7 +4,7 @@ function SystemPulse() {
   const { isLoading, items, nextMove } = useSystemPulse();
 
   return (
-    <section className="system-pulse" aria-label="System pulse">
+    <section className="system-pulse" aria-label="System pulse" aria-busy={isLoading}>
       <div className="system-pulse__header">
         <p className="system-pulse__eyebrow">Command Signal</p>
         <p className="system-pulse__next-move">

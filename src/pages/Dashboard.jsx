@@ -330,6 +330,31 @@ function Dashboard() {
     'Set a 15-minute timer. Ignore everything else until it ends.',
   ], [displayedNextMove]);
 
+  const handleFocusModeKeyDown = (event, currentIndex) => {
+    const key = event.key;
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(key)) {
+      return;
+    }
+
+    event.preventDefault();
+    let nextIndex = currentIndex;
+    if (key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % FOCUS_MODES.length;
+    } else if (key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + FOCUS_MODES.length) % FOCUS_MODES.length;
+    } else if (key === 'Home') {
+      nextIndex = 0;
+    } else if (key === 'End') {
+      nextIndex = FOCUS_MODES.length - 1;
+    }
+
+    const nextMode = FOCUS_MODES[nextIndex];
+    setFocusMode(nextMode.id);
+    const container = event.currentTarget?.closest?.('.focus-mode__chips');
+    const nextButton = container?.querySelector?.(`[data-focus-mode="${nextMode.id}"]`);
+    nextButton?.focus?.();
+  };
+
   const modeClassName = FOCUS_MODES.some((mode) => mode.id === focusMode)
     ? focusMode
     : 'planning';
@@ -351,14 +376,16 @@ function Dashboard() {
 
       <section className="focus-mode" aria-label="ADHD support layer">
         <div className="focus-mode__chips" role="radiogroup" aria-label="Choose your support mode">
-          {FOCUS_MODES.map((mode) => (
+          {FOCUS_MODES.map((mode, index) => (
             <button
               key={mode.id}
+              data-focus-mode={mode.id}
               type="button"
               role="radio"
               aria-checked={focusMode === mode.id}
               className={focusMode === mode.id ? 'focus-chip focus-chip--active' : 'focus-chip'}
               onClick={() => setFocusMode(mode.id)}
+              onKeyDown={(event) => handleFocusModeKeyDown(event, index)}
             >
               {mode.label}
             </button>
@@ -454,7 +481,7 @@ function Dashboard() {
           </ul>
 
           <p className="focus-home__subheading">Suggestions</p>
-          <ul className="focus-list">
+          <ul className="focus-list" aria-live="polite">
             {suggestions.map((item) => (
               <li key={item.id}>
                 <p>{item.text}</p>

@@ -1,12 +1,13 @@
 # CodeHerWay CEO OS
 
-CodeHerWay CEO OS is a React + Vite executive operations workspace for founder-facing workflows:
+CodeHerWay CEO OS is a React + Vite blueprint-style command center for founder-facing workflows:
 
-- Opportunities and deal tracking
-- Content planning and production
-- Weekly planning and review
-- AI-assisted chief-of-staff outputs
-- Settings and accessibility-aware UX
+- Focus Home command center with ADHD-supportive states and reset flow
+- Sticky-note Capture workspace for fast brain-dump input
+- Private Journal prompts with local daily autosave
+- Deterministic reminders + suggestion layer (no AI required)
+- Opportunities, Content OS, Weekly Brief, and Chief of Staff workflows
+- Shared System Pulse that keeps Focus, Momentum, Blockers, Ideas, and Reset connected
 
 The project is intentionally local-first by default with a first-class Supabase path for authenticated, account-scoped persistence.
 
@@ -27,14 +28,25 @@ npm run test:run
 npm run build
 ```
 
+## Launch the site
+
+Use these exact commands:
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/` in your browser.
+
 ## 5-minute product walkthrough
 
 Use this exact flow for portfolio demos or recruiter screenshares:
 
-1. Dashboard: show source-status messaging, KPI cards, and executive snapshot copy action.
-2. Opportunities: add one item, edit stage/next step, and verify the pipeline updates immediately.
-3. Content OS: add one content item and move it from `Drafting` to `Scheduled`.
-4. Weekly Brief: add one priority and one blocker, then return to Dashboard to show cross-page impact.
+1. Focus Home: show support mode chips, next-move CTA, reminders, suggestions, and overwhelmed reset.
+2. Capture: add one sticky note as `idea`, then edit text/category inline.
+3. Journal: answer one prompt and show immediate autosave status.
+4. Weekly Brief + Opportunities: add one blocker or in-progress item and return to Focus Home.
 5. Chief of Staff: paste notes, generate output, and accept at least one structured recommendation.
 
 ## What this repository demonstrates
@@ -56,6 +68,9 @@ Implemented across:
 - `src/lib/weeklyRepository.js`
 - `src/lib/settingsRepository.js`
 - `src/lib/chiefRepository.js`
+- `src/lib/captureRepository.js`
+- `src/lib/journalRepository.js`
+- `src/lib/remindersRepository.js`
 
 Each repository follows the same contract:
 
@@ -63,6 +78,8 @@ Each repository follows the same contract:
 - Read/write from the active source (`local` vs `supabase`)  
 - Emit domain events after changes for lightweight synchronization
 - Keep consumers independent of storage transport details
+
+The deterministic recommendation layer is handled by `src/lib/suggestions.js`, and shared cross-route pulse orchestration is handled by `src/hooks/useSystemPulse.js`.
 
 ### 3) Reliable local-first + optional cloud workflows
 
@@ -258,7 +275,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 
 | Product area | Asset path | Proof focus |
 | --- | --- | --- |
-| Dashboard | `docs/assets/screenshots/dashboard-overview.png` | Executive KPIs, snapshot card, momentum context |
+| Focus Home | `docs/assets/screenshots/dashboard-overview.png` | Focus command center, next move flow, and system signal |
 | Opportunities | `docs/assets/screenshots/opportunities-pipeline.png` | Pipeline clarity, status flow, action readiness |
 | Weekly Brief | `docs/assets/screenshots/weekly-brief-planning.png` | Priorities, blockers, and weekly operating rhythm |
 | Chief of Staff | `docs/assets/screenshots/chief-of-staff-structured-output.png` | AI output quality, structured acceptance workflow |
@@ -266,9 +283,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 
 ### Screenshot gallery
 
-#### Dashboard
+#### Focus Home
 
-![Dashboard overview](docs/assets/screenshots/dashboard-overview.png)
+![Focus Home overview](docs/assets/screenshots/dashboard-overview.png)
 
 #### Opportunities pipeline
 
@@ -289,7 +306,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 ### Demo target
 
 - Walkthrough capture: `docs/assets/demo/ceo-os-workflow-walkthrough.webm`
-- Suggested scope: dashboard snapshot -> weekly planning -> chief-of-staff generation -> structured acceptance.
+- Suggested scope: focus-home command center -> weekly planning -> chief-of-staff generation -> structured acceptance.
 - Current walkthrough asset: [ceo-os-workflow-walkthrough.webm](./docs/assets/demo/ceo-os-workflow-walkthrough.webm)
 
 ## Portfolio and production readiness
@@ -342,6 +359,13 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `f5ae62c` - test: stabilize source status copy assertion
   - `07f3213` - feat: improve dashboard credibility and accessibility semantics
   - `3da3eae` - refactor: centralize supabase runtime access
+- Blueprint redesign foundation cycle (April 23, 2026):
+  - `2e02795` - feat: establish blueprint design system foundation
+  - `541f140` - feat: replace dashboard with focus command center
+  - `eba9561` - feat: add sticky-note capture workspace with local persistence
+  - `a13bd86` - feat: add journal page with local daily prompt autosave
+  - `eec8c74` - feat: add deterministic reminders and suggestion layer
+  - `0c15d13` - feat: add shared system pulse across the app shell
 
 ## Author
 

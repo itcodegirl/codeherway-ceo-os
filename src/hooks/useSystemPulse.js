@@ -63,10 +63,18 @@ function buildPulseItems({
   ];
 }
 
+const DEFAULT_PULSE_ITEMS = [
+  { id: 'focus', label: 'Focus', value: '--', tone: 'neutral' },
+  { id: 'momentum', label: 'Momentum', value: '--', tone: 'neutral' },
+  { id: 'blockers', label: 'Blockers', value: '--', tone: 'neutral' },
+  { id: 'ideas', label: 'Ideas', value: '--', tone: 'neutral' },
+  { id: 'reset', label: 'Reset', value: '--', tone: 'neutral' },
+];
+
 export function useSystemPulse() {
   const [pulse, setPulse] = useState({
     isLoading: true,
-    items: [],
+    items: DEFAULT_PULSE_ITEMS,
     nextMove: 'Syncing command signal...',
   });
   const requestIdRef = useRef(0);
@@ -123,11 +131,7 @@ export function useSystemPulse() {
       setPulse({
         isLoading: false,
         items: [
-          { id: 'focus', label: 'Focus', value: '--', tone: 'neutral' },
-          { id: 'momentum', label: 'Momentum', value: '--', tone: 'neutral' },
-          { id: 'blockers', label: 'Blockers', value: '--', tone: 'neutral' },
-          { id: 'ideas', label: 'Ideas', value: '--', tone: 'neutral' },
-          { id: 'reset', label: 'Reset', value: '--', tone: 'neutral' },
+          ...DEFAULT_PULSE_ITEMS,
         ],
         nextMove: 'Unable to refresh command signal right now.',
       });
