@@ -1,0 +1,179 @@
+name: Scheduled Ops Alerts
+
+on:
+  schedule:
+    - cron: '15 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  monitor:
+    name: Route + Telemetry Health Monitor
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Check Route Performance Trend Baseline
+        id: route_trend
+        continue-on-error: true
+        run: npm run check:route-budgets:trend
+
+      - name: Generate Route Size Diff Report
+        if: always()
+        run: npm run report:route-budgets
+
+      - name: Check Telemetry Ingest Health
+        id: telemetry_health
+        continue-on-error: true
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+          TELEMETRY_HEALTH_ATTEMPTS: 5
+          TELEMETRY_HEALTH_MAX_FAILURE_RATE_PCT: 20
+        run: npm run check:telemetry-ingest:health
+
+      - name: Upload Route Size Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-route-size-report
+          path: artifacts/route-size-report.md
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Telemetry Health Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-telemetry-health-report
+          path: artifacts/telemetry-ingest-health-report.md
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Publish Monitor Summary
+        id: publish_summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const routeOutcome = '${{ steps.route_trend.outcome }}';
+            const telemetryOutcome = '${{ steps.telemetry_health.outcome }}';
+            const routeReport = fs.existsSync('artifacts/route-size-report.md')
+              ? fs.readFileSync('artifacts/route-size-report.md', 'utf8').trim()
+              : 'Route-size report missing.';
+            const telemetryReport = fs.existsSync('artifacts/telemetry-ingest-health-report.md')
+              ? fs.readFileSync('artifacts/telemetry-ingest-health-report.md', 'utf8').trim()
+              : 'Telemetry ingest health report missing.';
+            const alertTriggered = routeOutcome === 'failure' || telemetryOutcome === 'failure';
+
+            const summary = [
+              '# Scheduled Ops Alert Summary',
+              '',
+              `- Route trend check: ${routeOutcome}`,
+              `- Telemetry ingest health check: ${telemetryOutcome}`,
+              '',
+              '## Route-size report',
+              '',
+              routeReport,
+              '',
+              '## Telemetry ingest report',
+              '',
+              telemetryReport,
+            ].join('\n');
+
+            core.summary.addRaw(summary).write();
+            core.setOutput('alert_triggered', alertTriggered ? 'true' : 'false');
+
+      - name: Upsert Ops Alert Issue
+        if: always() && steps.publish_summary.outputs.alert_triggered == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- ops-alert-monitor -->';
+            const title = '[Ops Alert] Route regression or telemetry ingest health degraded';
+            const routeOutcome = '${{ steps.route_trend.outcome }}';
+            const telemetryOutcome = '${{ steps.telemetry_health.outcome }}';
+            const routeReport = fs.existsSync('artifacts/route-size-report.md')
+              ? fs.readFileSync('artifacts/route-size-report.md', 'utf8').trim()
+              : 'Route-size report missing.';
+            const telemetryReport = fs.existsSync('artifacts/telemetry-ingest-health-report.md')
+              ? fs.readFileSync('artifacts/telemetry-ingest-health-report.md', 'utf8').trim()
+              : 'Telemetry ingest health report missing.';
+
+            const body = [
+              marker,
+              '# Scheduled Ops Alert',
+              '',
+              `- Route trend check: ${routeOutcome}`,
+              `- Telemetry ingest health check: ${telemetryOutcome}`,
+              `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              '## Route-size report',
+              '',
+              routeReport,
+              '',
+              '## Telemetry ingest report',
+              '',
+              telemetryReport,
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const existingIssue = openIssues.find((issue) => (
+              !issue.pull_request
+              && issue.title === title
+              && typeof issue.body === 'string'
+              && issue.body.includes(marker)
+            ));
+
+            if (existingIssue) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: existingIssue.number,
+                title,
+                body,
+              });
+              core.info(`Updated ops alert issue #${existingIssue.number}.`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: ['ops-alert'],
+              }).catch(async (error) => {
+                if (error.status === 422) {
+                  return github.rest.issues.create({
+                    owner,
+                    repo,
+                    title,
+                    body,
+                  });
+                }
+                throw error;
+              });
+              core.info(`Created ops alert issue #${created.data.number}.`);
+            }
