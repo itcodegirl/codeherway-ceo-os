@@ -49,6 +49,11 @@ function OpportunityTable({ items, onSelect }) {
       return;
     }
 
+    const target = event.target;
+    if (target instanceof Element && target.closest('button, a, input, textarea, select, [role="button"]')) {
+      return;
+    }
+
     if (event.key !== 'Enter' && event.key !== ' ') {
       return;
     }

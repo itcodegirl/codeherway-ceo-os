@@ -81,6 +81,33 @@ describe('OpportunityTable', () => {
     expect(onSelect).toHaveBeenNthCalledWith(2, item);
   });
 
+  it('ignores row keyboard handler when keydown originates from open button', () => {
+    const onSelect = vi.fn();
+    const item = {
+      id: 'o-4',
+      name: 'Retention plan',
+      company: 'Acme',
+      priority: 'Medium',
+      stage: 'Awaiting Reply',
+      nextStep: 'Draft proposal',
+    };
+
+    const { getAllByRole } = render(
+      <OpportunityTable items={[item]} onSelect={onSelect} />,
+    );
+
+    const openButton = getAllByRole('button', { name: /Open/i })[0];
+
+    fireEvent.keyDown(openButton, { key: 'Enter' });
+
+    expect(onSelect).toHaveBeenCalledTimes(0);
+
+    fireEvent.click(openButton);
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith(item);
+  });
+
   it('keeps interaction behavior stable with larger datasets', () => {
     const onSelect = vi.fn();
     const items = Array.from({ length: 200 }, (_, index) => ({

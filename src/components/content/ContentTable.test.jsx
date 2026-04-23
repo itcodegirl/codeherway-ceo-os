@@ -66,6 +66,31 @@ describe('ContentTable', () => {
     expect(onOpenItem).toHaveBeenNthCalledWith(2, item);
   });
 
+  it('ignores row keyboard handler when keydown originates from open button', () => {
+    const onOpenItem = vi.fn();
+    const item = {
+      id: 'c-4',
+      title: 'Q2 reflection',
+      platform: 'LinkedIn',
+      status: 'Drafting',
+    };
+
+    const { getAllByRole } = render(
+      <ContentTable items={[item]} onOpenItem={onOpenItem} />,
+    );
+
+    const openButton = getAllByRole('button', { name: /Open/i })[0];
+
+    fireEvent.keyDown(openButton, { key: 'Enter' });
+
+    expect(onOpenItem).toHaveBeenCalledTimes(0);
+
+    fireEvent.click(openButton);
+
+    expect(onOpenItem).toHaveBeenCalledTimes(1);
+    expect(onOpenItem).toHaveBeenCalledWith(item);
+  });
+
   it('keeps interaction behavior stable with larger datasets', () => {
     const onOpenItem = vi.fn();
     const items = Array.from({ length: 200 }, (_, index) => ({
