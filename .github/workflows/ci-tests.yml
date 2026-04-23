@@ -39,6 +39,9 @@ jobs:
       - name: Check Route Performance Trend Baseline
         run: npm run check:route-budgets:trend
 
+      - name: Generate Route Size Diff Report
+        run: npm run report:route-budgets
+
       - name: Check Crud Template Legacy Props Deadline
         run: npm run check:crud-template-legacy
 
@@ -66,5 +69,14 @@ jobs:
         with:
           name: playwright-test-results
           path: test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Route Size Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-size-report
+          path: artifacts/route-size-report.md
           if-no-files-found: ignore
           retention-days: 14
