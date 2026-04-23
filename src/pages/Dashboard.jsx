@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
@@ -7,6 +7,20 @@ import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboar
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
+import { CAPTURE_NOTES_UPDATED_EVENT, listCaptureNotes } from '../lib/captureRepository';
+import {
+  getJournalEntryByDate,
+  getTodayJournalDateKey,
+  JOURNAL_ENTRIES_UPDATED_EVENT,
+} from '../lib/journalRepository';
+import {
+  createReminder,
+  deleteReminder,
+  listReminders,
+  REMINDERS_UPDATED_EVENT,
+  toggleReminder,
+} from '../lib/remindersRepository';
+import { buildDeterministicSuggestions } from '../lib/suggestions';
 import { buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
@@ -100,34 +114,6 @@ function buildNextMoveQueue({ priorities, blockers, opportunities, contentRows }
   return Array.from(new Set(moves));
 }
 
-function buildReminderItems({ blockers, opportunities, contentRows, priorities }) {
-  const reminders = [];
-  if (blockers.length > 0) {
-    reminders.push(`${blockers.length} blocker${blockers.length > 1 ? 's need' : ' needs'} attention.`);
-  }
-
-  const awaitingReplies = opportunities.filter((item) => item?.stage === 'Awaiting Reply').length;
-  if (awaitingReplies > 0) {
-    reminders.push(`${awaitingReplies} opportunity follow-up${awaitingReplies > 1 ? 's are' : ' is'} waiting.`);
-  }
-
-  const draftingCount = contentRows.filter((item) => item?.status === 'Drafting').length;
-  if (draftingCount > 0) {
-    reminders.push(`${draftingCount} content draft${draftingCount > 1 ? 's are' : ' is'} open.`);
-  }
-
-  const plannedCount = priorities.filter((item) => item?.status === 'Planned').length;
-  if (plannedCount > 0) {
-    reminders.push(`${plannedCount} planned priority${plannedCount > 1 ? ' items need' : ' needs'} a next step.`);
-  }
-
-  if (!reminders.length) {
-    reminders.push('You have breathing room. Keep your next move small and intentional.');
-  }
-
-  return reminders.slice(0, 4);
-}
-
 function buildQuickWin(wins, opportunities, contentRows) {
   const firstWin = wins.find((item) => item?.text);
   if (firstWin) {
@@ -167,6 +153,10 @@ function Dashboard() {
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
+  const [captureNotes, setCaptureNotes] = useState(() => listCaptureNotes());
+  const [journalEntry, setJournalEntry] = useState(() => getJournalEntryByDate(getTodayJournalDateKey()));
+  const [reminders, setReminders] = useState(() => listReminders());
+  const [reminderDraft, setReminderDraft] = useState('');
   const nextMoveCursorRef = useRef(0);
 
   const handleDashboardLoadError = useCallback((error) => {
@@ -194,6 +184,28 @@ function Dashboard() {
     refreshWeeklyBrief,
   } = useWeeklyBrief();
 
+  useEffect(() => {
+    const syncCaptureNotes = () => {
+      setCaptureNotes(listCaptureNotes());
+    };
+    const syncJournalEntry = () => {
+      setJournalEntry(getJournalEntryByDate(getTodayJournalDateKey()));
+    };
+    const syncReminders = () => {
+      setReminders(listReminders());
+    };
+
+    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, syncCaptureNotes);
+    window.addEventListener(JOURNAL_ENTRIES_UPDATED_EVENT, syncJournalEntry);
+    window.addEventListener(REMINDERS_UPDATED_EVENT, syncReminders);
+
+    return () => {
+      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, syncCaptureNotes);
+      window.removeEventListener(JOURNAL_ENTRIES_UPDATED_EVENT, syncJournalEntry);
+      window.removeEventListener(REMINDERS_UPDATED_EVENT, syncReminders);
+    };
+  }, []);
+
   const supportCopy = useMemo(() => {
     const activeMode = FOCUS_MODES.find((mode) => mode.id === focusMode);
     return activeMode?.support || FOCUS_MODES[1].support;
@@ -216,14 +228,25 @@ function Dashboard() {
     [contentRows, opportunityItems, weeklyPriorities],
   );
 
-  const reminderItems = useMemo(() => buildReminderItems({
+  const pendingReminders = useMemo(
+    () => reminders.filter((item) => !item?.isDone),
+    [reminders],
+  );
+
+  const suggestions = useMemo(() => buildDeterministicSuggestions({
+    priorities: weeklyPriorities,
     blockers: weeklyBlockers,
     opportunities: opportunityItems,
     contentRows,
-    priorities: weeklyPriorities,
+    notes: captureNotes,
+    reminders,
+    journalEntry,
   }), [
+    captureNotes,
     contentRows,
+    journalEntry,
     opportunityItems,
+    reminders,
     weeklyBlockers,
     weeklyPriorities,
   ]);
@@ -261,6 +284,38 @@ function Dashboard() {
     setIsResetOpen(true);
     setNextMove(nextMoveQueue[0] || 'Do one two-minute task, then reassess.');
     showToast('Reset mode enabled. Start small and skip perfection today.');
+  };
+
+  const handleAddReminder = (event) => {
+    event.preventDefault();
+    const nextText = reminderDraft.trim();
+    if (!nextText) {
+      showToast('Add reminder text before saving.');
+      return;
+    }
+
+    try {
+      createReminder({ text: nextText });
+      setReminderDraft('');
+    } catch {
+      showToast('Unable to save reminder right now.');
+    }
+  };
+
+  const handleToggleReminder = (id, isDone) => {
+    try {
+      toggleReminder(id, isDone);
+    } catch {
+      showToast('Unable to update reminder right now.');
+    }
+  };
+
+  const handleDeleteReminder = (id) => {
+    try {
+      deleteReminder(id);
+    } catch {
+      showToast('Unable to delete reminder right now.');
+    }
   };
 
   const dashboardDemoNote = isLocalDashboardDemoMode
@@ -355,9 +410,56 @@ function Dashboard() {
             <h2>Reminders</h2>
             <span className="signal-node">Reset</span>
           </div>
+          <form className="focus-reminder-form" onSubmit={handleAddReminder}>
+            <label className="sr-only" htmlFor="focus-reminder-input">
+              Add reminder
+            </label>
+            <input
+              id="focus-reminder-input"
+              type="text"
+              value={reminderDraft}
+              onChange={(event) => setReminderDraft(event.target.value)}
+              placeholder="Add a quick reminder"
+            />
+            <Button type="submit" size="small" icon={{ name: 'add' }}>
+              Add
+            </Button>
+          </form>
+
+          <ul className="focus-reminder-list">
+            {pendingReminders.length ? pendingReminders.map((item) => (
+              <li key={item.id} className="focus-reminder-list__item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={item.isDone}
+                    onChange={(event) => handleToggleReminder(item.id, event.target.checked)}
+                  />
+                  <span>{item.text}</span>
+                </label>
+                <button
+                  type="button"
+                  className="focus-reminder-list__delete"
+                  aria-label={`Delete reminder ${item.text}`}
+                  onClick={() => handleDeleteReminder(item.id)}
+                >
+                  Remove
+                </button>
+              </li>
+            )) : (
+              <li className="focus-reminder-list__item focus-reminder-list__item--empty">
+                <span>No reminders yet. Add one small commitment.</span>
+              </li>
+            )}
+          </ul>
+
+          <p className="focus-home__subheading">Suggestions</p>
           <ul className="focus-list">
-            {reminderItems.map((item, index) => (
-              <li key={`reminder-${index + 1}`}>{item}</li>
+            {suggestions.map((item) => (
+              <li key={item.id}>
+                <p>{item.text}</p>
+                {item.context ? <p className="helper-text">{item.context}</p> : null}
+              </li>
             ))}
           </ul>
         </article>

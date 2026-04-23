@@ -71,6 +71,7 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Quick Win' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: "I'm Overwhelmed Reset" })).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
+    expect(screen.getByText('This blocker may need attention.')).toBeInTheDocument();
     expect(screen.getByText(/You are in execution mode|Clarify one outcome|Look at what worked|You are not behind/i)).toBeInTheDocument();
   });
 
@@ -101,6 +102,24 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText(/Pause for 60 seconds/i)).toBeInTheDocument();
   });
 
+  it('adds reminders and allows marking them complete', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a quick reminder'), {
+      target: { value: 'Send recap email' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(screen.getByText('Send recap email')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
+  });
+
   it('shows calm fallback states when no linked records exist', () => {
     useDashboardData.mockReturnValue({
       opportunityItems: [],
@@ -126,6 +145,7 @@ describe('src/pages/Dashboard', () => {
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
     expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
-    expect(screen.getByText('You have breathing room. Keep your next move small and intentional.')).toBeInTheDocument();
+    expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
+    expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
   });
 });

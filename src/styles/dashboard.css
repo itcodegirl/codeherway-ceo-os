@@ -99,6 +99,10 @@
 	line-height: 1.35;
 }
 
+.focus-list li p {
+	margin: 0;
+}
+
 .focus-list--ordered {
 	list-style: decimal;
 	padding-left: 1.1rem;
@@ -130,6 +134,62 @@
 	border-color: color-mix(in srgb, var(--border-warning-soft) 55%, var(--border) 45%);
 }
 
+.focus-reminder-form {
+	display: flex;
+	gap: 0.45rem;
+}
+
+.focus-reminder-form input {
+	flex: 1;
+	min-width: 0;
+}
+
+.focus-reminder-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 0.55rem;
+}
+
+.focus-reminder-list__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	padding: 0.52rem 0.6rem;
+	border-radius: 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
+	background: color-mix(in srgb, var(--surface-card) 83%, rgba(47, 133, 214, 0.16) 17%);
+}
+
+.focus-reminder-list__item label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	min-width: 0;
+}
+
+.focus-reminder-list__item label span {
+	line-height: 1.35;
+}
+
+.focus-reminder-list__item--empty {
+	justify-content: flex-start;
+}
+
+.focus-reminder-list__delete {
+	border: 0;
+	background: transparent;
+	color: var(--text-muted);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.focus-reminder-list__delete:hover {
+	color: var(--text);
+}
+
 .focus-home-page--overwhelmed .focus-panel--main {
 	border-color: color-mix(in srgb, var(--border-warning-soft) 70%, var(--border) 30%);
 }
@@ -152,5 +212,18 @@
 
 	.focus-home__actions .action-button {
 		width: 100%;
+	}
+
+	.focus-reminder-form {
+		flex-direction: column;
+	}
+
+	.focus-reminder-form .action-button {
+		width: 100%;
+	}
+
+	.focus-reminder-list__item {
+		flex-direction: column;
+		align-items: flex-start;
 	}
 }
