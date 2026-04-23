@@ -64,7 +64,7 @@ function OpportunityTable({ items, onSelect }) {
   return (
     <div className="crm-table">
       {hasHandler ? (
-        <p className="helper-text crm-table__hint">Click any row to view details.</p>
+        <p className="helper-text crm-table__hint">Click any row or press Enter/Space to view details.</p>
       ) : null}
       <table className="crm-table__native" aria-label="Opportunity pipeline">
         <thead>

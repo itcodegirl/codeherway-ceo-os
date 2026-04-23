@@ -25,13 +25,15 @@ describe('ContentTable', () => {
       { id: 'c-2', title: 'Weekly update', platform: 'Blog', status: 'Scheduled' },
     ];
 
-    const { getAllByRole } = render(
+    const { getAllByRole, getByText } = render(
       <ContentTable items={items} onOpenItem={onOpenItem} />,
     );
 
     const rows = getAllByRole('row');
     const contentRow = rows[1];
     const openButton = getAllByRole('button', { name: /Open/i })[0];
+
+    expect(getByText('Click any row or press Enter/Space to view details.')).toBeInTheDocument();
 
     fireEvent.click(contentRow);
     expect(onOpenItem).toHaveBeenCalledWith(items[0]);

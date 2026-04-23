@@ -38,13 +38,15 @@ describe('OpportunityTable', () => {
       nextStep: 'Coordinate interviewer',
     };
 
-    const { getAllByRole } = render(
+    const { getAllByRole, getByText } = render(
       <OpportunityTable items={[item]} onSelect={onSelect} />,
     );
 
     const rows = getAllByRole('row');
     const opportunityRow = rows[1];
     const openButton = getAllByRole('button', { name: /Open/i })[0];
+
+    expect(getByText('Click any row or press Enter/Space to view details.')).toBeInTheDocument();
 
     fireEvent.click(opportunityRow);
     expect(onSelect).toHaveBeenCalledWith(item);
