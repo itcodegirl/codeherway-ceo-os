@@ -1,8 +1,8 @@
 export function buildPageMetaByRoute(appName) {
   return {
     '/': {
-      title: `Dashboard | ${appName}`,
-      description: 'Executive overview of key priorities, momentum, opportunities, and content pipeline.',
+      title: `Focus Home | ${appName}`,
+      description: 'ADHD-supportive focus command center for momentum, blockers, reminders, and next moves.',
     },
     '/opportunities': {
       title: `Opportunities | ${appName}`,
@@ -33,9 +33,9 @@ export function buildPageMetaByRoute(appName) {
 
 export function buildDefaultPageMeta(appName) {
   return {
-    title: `Dashboard | ${appName}`,
+    title: `Focus Home | ${appName}`,
     description:
-      `${appName} is an executive dashboard to manage opportunities, content operations, weekly priorities, and leadership workflows.`,
+      `${appName} is a connected command center for focus, momentum, blockers, ideas, and weekly execution.`,
   };
 }
 

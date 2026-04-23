@@ -18,7 +18,7 @@ function AppLayout() {
   const currentPageTitle = useMemo(() => {
     const pageMeta = resolvePageMeta(appName, location.pathname);
     const topbarTitle = String(pageMeta?.title || '').split('|')[0].trim();
-    return topbarTitle || 'Dashboard';
+    return topbarTitle || 'Focus Home';
   }, [appName, location.pathname]);
 
   usePageMeta(appName);

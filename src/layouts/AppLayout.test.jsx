@@ -15,7 +15,7 @@ describe('src/layouts/AppLayout', () => {
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route path="content" element={<div>Content page</div>} />
-            <Route index element={<div>Dashboard page</div>} />
+            <Route index element={<div>Focus Home page</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -36,23 +36,23 @@ describe('src/layouts/AppLayout', () => {
     expect(canonical?.getAttribute('href')).toBe(`${window.location.origin}/content`);
   });
 
-  it('falls back to dashboard metadata for unknown routes', () => {
+  it('falls back to focus-home metadata for unknown routes', () => {
     render(
       <MemoryRouter initialEntries={['/unmatched']}>
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route path="*" element={<div>Fallback page</div>} />
-            <Route index element={<div>Dashboard page</div>} />
+            <Route index element={<div>Focus Home page</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(document.title).toBe('Dashboard | CodeHerWay CEO OS');
+    expect(document.title).toBe('Focus Home | CodeHerWay CEO OS');
 
     const description = document.head.querySelector('meta[name="description"]');
     expect(description?.getAttribute('content')).toBe(
-      'CodeHerWay CEO OS is an executive dashboard to manage opportunities, content operations, weekly priorities, and leadership workflows.',
+      'CodeHerWay CEO OS is a connected command center for focus, momentum, blockers, ideas, and weekly execution.',
     );
   });
 
@@ -62,7 +62,7 @@ describe('src/layouts/AppLayout', () => {
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route path="content" element={<div>Content page</div>} />
-            <Route index element={<div>Dashboard page</div>} />
+            <Route index element={<div>Focus Home page</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -70,7 +70,7 @@ describe('src/layouts/AppLayout', () => {
 
     const skipLink = screen.getByRole('link', { name: 'Skip to content' });
     const main = document.getElementById('main-content');
-    const dashboardNavLink = screen.getByRole('link', { name: 'Dashboard' });
+    const dashboardNavLink = screen.getByRole('link', { name: 'Focus Home' });
 
     expect(skipLink).toHaveAttribute('href', '#main-content');
     expect(main).toHaveAttribute('tabindex', '-1');
@@ -86,6 +86,6 @@ describe('src/layouts/AppLayout', () => {
     await waitFor(() => {
       expect(main).toHaveFocus();
     });
-    expect(document.title).toBe('Dashboard | CodeHerWay CEO OS');
+    expect(document.title).toBe('Focus Home | CodeHerWay CEO OS');
   });
 });

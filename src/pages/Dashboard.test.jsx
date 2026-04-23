@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -30,86 +30,78 @@ describe('src/pages/Dashboard', () => {
     useWeeklyBrief.mockReturnValue({
       priorities: [
         { id: 'p-1', title: 'Finalize pricing page', status: 'In Progress' },
-        { id: 'p-2', title: 'Ship onboarding updates', status: 'In Progress' },
+        { id: 'p-2', title: 'Ship onboarding updates', status: 'Planned' },
         { id: 'p-3', title: 'Review partner terms', status: 'Blocked' },
       ],
       blockers: [
         { id: 'b-1', text: 'Waiting on legal review.' },
-        { id: 'b-2', text: 'Missing benchmark update.' },
+      ],
+      wins: [
+        { id: 'w-1', text: 'Closed speaker slot for founder panel.' },
       ],
       isLoading: false,
       source: 'local',
       loadError: '',
+      refreshWeeklyBrief: vi.fn(),
     });
 
     useDashboardData.mockReturnValue({
       opportunityItems: [
         { id: 'o-1', name: 'Acme Expansion', company: 'Acme', priority: 'High', stage: 'Awaiting Reply' },
-        { id: 'o-2', name: 'Northwind Pilot', company: 'Northwind', priority: 'Medium', stage: 'In Progress' },
-        { id: 'o-3', name: 'Globex Retainer', company: 'Globex', priority: 'Low', stage: 'Discovery' },
       ],
       contentRows: [
-        { id: 'c-1', title: 'Founder Letter', platform: 'LinkedIn', status: 'Scheduled' },
-        { id: 'c-2', title: 'Roadmap Post', platform: 'Blog', status: 'Editing' },
-        { id: 'c-3', title: 'Launch Notes', platform: 'Email', status: 'Drafting' },
+        { id: 'c-1', title: 'Founder Letter', platform: 'LinkedIn', status: 'Drafting' },
       ],
       isDataLoading: false,
     });
   });
 
-  it('renders expected KPI cards and derived focus score details', () => {
+  it('renders focus command center core sections with supportive copy', () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
 
-    const activeOpportunitiesCard = screen.getByText('Active Opportunities').closest('.stat-card');
-    expect(within(activeOpportunitiesCard).getByText('3')).toBeInTheDocument();
-    expect(within(activeOpportunitiesCard).getByText('1 in progress')).toBeInTheDocument();
-
-    const contentPipelineCard = screen.getByText('Content in Pipeline').closest('.stat-card');
-    expect(within(contentPipelineCard).getByText('3')).toBeInTheDocument();
-    expect(within(contentPipelineCard).getByText('1 drafting')).toBeInTheDocument();
-
-    const followUpsCard = screen.getByText('Follow-Ups Due').closest('.stat-card');
-    expect(within(followUpsCard).getByText('1')).toBeInTheDocument();
-    expect(within(followUpsCard).getByText('1 high priority')).toBeInTheDocument();
-    expect(followUpsCard).toHaveClass('stat-card--tone-warning');
-
-    const focusScoreCard = screen.getByText('Weekly Focus Score').closest('.stat-card');
-    expect(within(focusScoreCard).getByText('58%')).toBeInTheDocument();
-    expect(within(focusScoreCard).getByText('3 active risks')).toBeInTheDocument();
-    expect(focusScoreCard).toHaveClass('stat-card--tone-warning');
-
-    const snapshotList = screen.getByRole('list', { name: 'Executive snapshot highlights' });
-    expect(within(snapshotList).getByText('Strategic Focus')).toBeInTheDocument();
-
-    expect(screen.getAllByText('Finalize pricing page').length).toBeGreaterThan(0);
-    expect(screen.getByText('Waiting on legal review.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Focus Home' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: "Today's Main Focus" })).toBeInTheDocument();
+    expect(screen.getByText('Next Smallest Action')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Blockers' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Quick Win' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: "I'm Overwhelmed Reset" })).toBeInTheDocument();
+    expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
+    expect(screen.getByText(/You are in execution mode|Clarify one outcome|Look at what worked|You are not behind/i)).toBeInTheDocument();
   });
 
-  it('shows weekly load error and retry action when weekly source fails', () => {
-    useWeeklyBrief.mockReturnValue({
-      priorities: [],
-      blockers: [],
-      isLoading: false,
-      source: 'local',
-      loadError: 'Unable to load weekly brief right now.',
-      refreshWeeklyBrief: vi.fn(),
-    });
-
+  it('cycles next move suggestions when asked what to do next', () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load weekly brief right now.');
-    expect(screen.getByRole('button', { name: 'Retry loading weekly dashboard data' })).toBeInTheDocument();
+    const cta = screen.getByRole('button', { name: 'Tell me what to do next' });
+    fireEvent.click(cta);
+
+    const nextMovePanel = screen.getByText('Next Smallest Action').closest('.focus-home__next-move');
+    expect(nextMovePanel).toHaveTextContent(/Spend 20 focused minutes|Send one unblock message|Draft a concise follow-up/i);
   });
 
-  it('renders empty-state helper text when no opportunities or content exist', () => {
+  it('switches to overwhelmed mode and opens reset guidance', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: "I'm overwhelmed" }));
+
+    expect(screen.getByText('Reset mode is open. You only need one completed step right now.')).toBeInTheDocument();
+    expect(screen.getByText(/Pause for 60 seconds/i)).toBeInTheDocument();
+  });
+
+  it('shows calm fallback states when no linked records exist', () => {
     useDashboardData.mockReturnValue({
       opportunityItems: [],
       contentRows: [],
@@ -119,6 +111,7 @@ describe('src/pages/Dashboard', () => {
     useWeeklyBrief.mockReturnValue({
       priorities: [],
       blockers: [],
+      wins: [],
       isLoading: false,
       source: 'local',
       loadError: '',
@@ -131,7 +124,8 @@ describe('src/pages/Dashboard', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('No opportunities to display yet.')).toBeInTheDocument();
-    expect(screen.getByText('No content items to display yet.')).toBeInTheDocument();
+    expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
+    expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
+    expect(screen.getByText('You have breathing room. Keep your next move small and intentional.')).toBeInTheDocument();
   });
 });

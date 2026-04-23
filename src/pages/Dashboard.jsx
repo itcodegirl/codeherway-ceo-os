@@ -1,19 +1,162 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import StatCard from '../components/ui/StatCard';
-import SectionCard from '../components/ui/SectionCard';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import Button from '../components/ui/Button';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
-import Badge from '../components/ui/Badge';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
-import MomentumChart from '../components/dashboard/MomentumChart';
-import ActivityFeed from '../components/dashboard/ActivityFeed';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
-import { useDashboardInsights } from '../hooks/useDashboardInsights';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
-import { contentStatusTone } from '../lib/statusMaps';
 import { buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
+
+const FOCUS_MODES = [
+  {
+    id: 'focused',
+    label: 'Focused',
+    support: 'You are in execution mode. Keep scope tiny and finish one concrete move.',
+  },
+  {
+    id: 'planning',
+    label: 'Planning',
+    support: 'Clarify one outcome, choose one next action, then start before perfect.',
+  },
+  {
+    id: 'reflection',
+    label: 'Reflection',
+    support: 'Look at what worked, what felt heavy, and adjust gently for tomorrow.',
+  },
+  {
+    id: 'overwhelmed',
+    label: 'Overwhelmed',
+    support: 'You are not behind. Shrink the task, breathe, and complete one two-minute step.',
+  },
+];
+
+function findMainFocus(priorities, opportunities, contentRows) {
+  const inProgressPriority = priorities.find((item) => item?.status === 'In Progress' && item?.title);
+  if (inProgressPriority) {
+    return {
+      title: inProgressPriority.title,
+      context: 'This is already in motion. Protect your attention until one visible step is done.',
+    };
+  }
+
+  const plannedPriority = priorities.find((item) => item?.title);
+  if (plannedPriority) {
+    return {
+      title: plannedPriority.title,
+      context: 'This is your highest leverage item right now. Start with the smallest visible action.',
+    };
+  }
+
+  const highPriorityOpportunity = opportunities.find((item) => item?.priority === 'High' && item?.name);
+  if (highPriorityOpportunity) {
+    return {
+      title: `${highPriorityOpportunity.name} (${highPriorityOpportunity.company || 'Opportunity'})`,
+      context: 'This opportunity can move quickly with one clear follow-up.',
+    };
+  }
+
+  const draftContent = contentRows.find((item) => item?.title);
+  if (draftContent) {
+    return {
+      title: draftContent.title,
+      context: 'Shipping this content keeps your founder signal active.',
+    };
+  }
+
+  return {
+    title: 'Create one calming priority for today',
+    context: 'Start with a 10-minute planning pass and commit to one realistic next move.',
+  };
+}
+
+function buildNextMoveQueue({ priorities, blockers, opportunities, contentRows }) {
+  const moves = [];
+  const blockedPriority = priorities.find((item) => item?.status === 'Blocked' && item?.title);
+  const activeBlocker = blockers.find((item) => item?.text);
+  const activePriority = priorities.find((item) => item?.status === 'In Progress' && item?.title);
+  const waitingOpportunity = opportunities.find((item) => item?.stage === 'Awaiting Reply' && item?.name);
+  const draftingContent = contentRows.find((item) => item?.status === 'Drafting' && item?.title);
+
+  if (blockedPriority) {
+    moves.push(`Send one unblock message for "${blockedPriority.title}".`);
+  }
+  if (activeBlocker) {
+    moves.push(`Define one owner and one deadline for: "${activeBlocker.text}".`);
+  }
+  if (activePriority) {
+    moves.push(`Spend 20 focused minutes on "${activePriority.title}".`);
+  }
+  if (waitingOpportunity) {
+    moves.push(`Draft a concise follow-up for "${waitingOpportunity.name}".`);
+  }
+  if (draftingContent) {
+    moves.push(`Write the opening paragraph for "${draftingContent.title}".`);
+  }
+  moves.push('Set a 15-minute timer and complete one tiny action without switching tabs.');
+
+  return Array.from(new Set(moves));
+}
+
+function buildReminderItems({ blockers, opportunities, contentRows, priorities }) {
+  const reminders = [];
+  if (blockers.length > 0) {
+    reminders.push(`${blockers.length} blocker${blockers.length > 1 ? 's need' : ' needs'} attention.`);
+  }
+
+  const awaitingReplies = opportunities.filter((item) => item?.stage === 'Awaiting Reply').length;
+  if (awaitingReplies > 0) {
+    reminders.push(`${awaitingReplies} opportunity follow-up${awaitingReplies > 1 ? 's are' : ' is'} waiting.`);
+  }
+
+  const draftingCount = contentRows.filter((item) => item?.status === 'Drafting').length;
+  if (draftingCount > 0) {
+    reminders.push(`${draftingCount} content draft${draftingCount > 1 ? 's are' : ' is'} open.`);
+  }
+
+  const plannedCount = priorities.filter((item) => item?.status === 'Planned').length;
+  if (plannedCount > 0) {
+    reminders.push(`${plannedCount} planned priority${plannedCount > 1 ? ' items need' : ' needs'} a next step.`);
+  }
+
+  if (!reminders.length) {
+    reminders.push('You have breathing room. Keep your next move small and intentional.');
+  }
+
+  return reminders.slice(0, 4);
+}
+
+function buildQuickWin(wins, opportunities, contentRows) {
+  const firstWin = wins.find((item) => item?.text);
+  if (firstWin) {
+    return `Celebrate and build on this: ${firstWin.text}`;
+  }
+
+  const inProgressOpportunity = opportunities.find((item) => item?.stage === 'In Progress' && item?.name);
+  if (inProgressOpportunity) {
+    return `Quick win waiting: send an update for "${inProgressOpportunity.name}".`;
+  }
+
+  const scheduledContent = contentRows.find((item) => item?.status === 'Scheduled' && item?.title);
+  if (scheduledContent) {
+    return `Quick win waiting: repurpose "${scheduledContent.title}" for a second channel.`;
+  }
+
+  return 'Quick win waiting: close one tiny loop before opening a new one.';
+}
+
+function buildMomentumMessage({ inProgressCount, blockerCount, winsCount }) {
+  const score = Math.max(0, Math.min(100, 45 + (inProgressCount * 14) + (winsCount * 10) - (blockerCount * 12)));
+  if (score >= 75) {
+    return { score, text: 'Momentum is strong. Protect this lane and finish one more step.' };
+  }
+  if (score >= 55) {
+    return { score, text: 'Momentum is building. Keep actions tiny and visibly complete.' };
+  }
+  return { score, text: 'Momentum is fragile. Use reset mode and complete one two-minute action.' };
+}
 
 function Dashboard() {
   const {
@@ -21,17 +164,13 @@ function Dashboard() {
     isToastVisible,
     showToast,
   } = useToast();
-  const [isSnapshotCopied, setIsSnapshotCopied] = useState(false);
-  const snapshotResetTimeoutRef = useRef(null);
-
-  useEffect(() => () => {
-    if (snapshotResetTimeoutRef.current) {
-      window.clearTimeout(snapshotResetTimeoutRef.current);
-    }
-  }, []);
+  const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
+  const [nextMove, setNextMove] = useState('');
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const nextMoveCursorRef = useRef(0);
 
   const handleDashboardLoadError = useCallback((error) => {
-    showToast('Unable to refresh dashboard data right now.');
+    showToast('Unable to refresh your focus data right now.');
     if (import.meta.env.DEV) {
       console.error('Dashboard data load failed', error);
     }
@@ -48,204 +187,209 @@ function Dashboard() {
   const {
     priorities: weeklyPriorities,
     blockers: weeklyBlockers,
+    wins: weeklyWins,
     isLoading: isWeeklyLoading,
     source: weeklySource,
     loadError: weeklyLoadError,
     refreshWeeklyBrief,
   } = useWeeklyBrief();
 
-  const {
-    priorityItems,
-    dashboardInsights,
-    statCards,
-    opportunityRows,
-    contentRows: dashboardContentRows,
-    snapshotRows,
-    snapshotText,
-    dashboardDemoNote,
-  } = useDashboardInsights({
-    weeklyPriorities,
-    weeklyBlockers,
+  const supportCopy = useMemo(() => {
+    const activeMode = FOCUS_MODES.find((mode) => mode.id === focusMode);
+    return activeMode?.support || FOCUS_MODES[1].support;
+  }, [focusMode]);
+
+  const nextMoveQueue = useMemo(() => buildNextMoveQueue({
+    priorities: weeklyPriorities,
+    blockers: weeklyBlockers,
+    opportunities: opportunityItems,
+    contentRows,
+  }), [
+    contentRows,
     opportunityItems,
-    contentRows: contentRows,
-    isDataLoading: isDataLoading || isWeeklyLoading,
-    isLocalDashboardDemoMode,
-  });
+    weeklyBlockers,
+    weeklyPriorities,
+  ]);
 
-  const handleCopySnapshot = async () => {
-    if (isSnapshotCopied) {
-      return;
-    }
+  const mainFocus = useMemo(
+    () => findMainFocus(weeklyPriorities, opportunityItems, contentRows),
+    [contentRows, opportunityItems, weeklyPriorities],
+  );
 
-    if (!navigator?.clipboard?.writeText) {
-      showToast('Clipboard access is not available in this environment.');
-      return;
-    }
+  const reminderItems = useMemo(() => buildReminderItems({
+    blockers: weeklyBlockers,
+    opportunities: opportunityItems,
+    contentRows,
+    priorities: weeklyPriorities,
+  }), [
+    contentRows,
+    opportunityItems,
+    weeklyBlockers,
+    weeklyPriorities,
+  ]);
 
-    try {
-      await navigator.clipboard.writeText(snapshotText);
-      showToast('Executive snapshot copied to clipboard.');
-      setIsSnapshotCopied(true);
-      if (snapshotResetTimeoutRef.current) {
-        window.clearTimeout(snapshotResetTimeoutRef.current);
-      }
-      snapshotResetTimeoutRef.current = window.setTimeout(() => {
-        setIsSnapshotCopied(false);
-      }, 1500);
-    } catch (error) {
-      showToast('Unable to copy snapshot right now.');
-      if (import.meta.env.DEV) {
-        console.error('Clipboard copy failed', error);
-      }
+  const quickWin = useMemo(
+    () => buildQuickWin(weeklyWins, opportunityItems, contentRows),
+    [contentRows, opportunityItems, weeklyWins],
+  );
+
+  const momentum = useMemo(() => buildMomentumMessage({
+    inProgressCount: weeklyPriorities.filter((item) => item?.status === 'In Progress').length,
+    blockerCount: weeklyBlockers.length,
+    winsCount: weeklyWins.length,
+  }), [weeklyBlockers.length, weeklyPriorities, weeklyWins.length]);
+
+  const blockerItems = useMemo(() => {
+    if (weeklyBlockers.length === 0) {
+      return ['No blockers logged. Keep protecting this focus window.'];
     }
+    return weeklyBlockers.slice(0, 3).map((item) => item?.text || 'Unspecified blocker');
+  }, [weeklyBlockers]);
+
+  const displayedNextMove = nextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
+
+  const handleTellMeWhatToDoNext = () => {
+    const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
+      || 'Take one deep breath, choose one action, and complete it before context-switching.';
+    nextMoveCursorRef.current += 1;
+    setNextMove(move);
+    showToast('Next move ready. Keep it tiny and time-boxed.');
   };
 
+  const handleOverwhelmedReset = () => {
+    setFocusMode('overwhelmed');
+    setIsResetOpen(true);
+    setNextMove(nextMoveQueue[0] || 'Do one two-minute task, then reassess.');
+    showToast('Reset mode enabled. Start small and skip perfection today.');
+  };
+
+  const dashboardDemoNote = isLocalDashboardDemoMode
+    ? 'Demo mode is active. Connect live data when you are ready.'
+    : '';
+
+  const isFocusDataLoading = isDataLoading || isWeeklyLoading;
+
+  const resetSteps = useMemo(() => [
+    'Pause for 60 seconds. Release jaw and shoulders.',
+    `Do this next: ${displayedNextMove}`,
+    'Set a 15-minute timer. Ignore everything else until it ends.',
+  ], [displayedNextMove]);
+
+  const modeClassName = FOCUS_MODES.some((mode) => mode.id === focusMode)
+    ? focusMode
+    : 'planning';
+
   return (
-    <section className="dashboard-page">
-      <PageHeader title="Dashboard" description="Track opportunities, content, and priorities from one executive view." />
+    <section className={`dashboard-page focus-home-page focus-home-page--${modeClassName}`}>
+      <PageHeader
+        title="Focus Home"
+        description="Today / Focus Command Center for clear execution, supportive resets, and daily momentum."
+      />
       <SourceStatusNotice
         source={weeklySource}
         supabaseText={buildSourceNotice('supabase', { supabasePrefix: 'Weekly data source: ' })}
         localText={buildSourceNotice('local', { localPrefix: 'Weekly data source: ' })}
         loadError={weeklyLoadError}
         onRetry={refreshWeeklyBrief}
-        retryAriaLabel="Retry loading weekly dashboard data"
+        retryAriaLabel="Retry loading focus command center data"
       />
 
-      <div className="dashboard-grid dashboard-grid--stats">
-        {statCards.map((stat) => (
-          <StatCard
-            key={stat.id}
-            label={stat.label}
-            value={stat.value}
-            change={stat.change}
-            tone={stat.tone}
-          />
-        ))}
-      </div>
+      <section className="focus-mode" aria-label="ADHD support layer">
+        <div className="focus-mode__chips" role="radiogroup" aria-label="Choose your support mode">
+          {FOCUS_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              role="radio"
+              aria-checked={focusMode === mode.id}
+              className={focusMode === mode.id ? 'focus-chip focus-chip--active' : 'focus-chip'}
+              onClick={() => setFocusMode(mode.id)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+        <p className="supportive-copy">{supportCopy}</p>
+      </section>
 
-      <div className="dashboard-grid dashboard-grid--main">
-        <SectionCard
-          title="Top Priorities"
-          iconName="weekly"
-          actionText="View Plan"
-          actionIconName="weekly"
-          actionTo="/weekly-brief"
-          actionLabel="Open weekly plan and priority focus"
-        >
-          <ul className="priority-list">
-            {priorityItems.length ? priorityItems.map((item) => (
-              <li key={item.id} className="priority-list__item">
-                <span className="priority-list__dot" />
-                <span>{item.title}</span>
-              </li>
-            )) : (
-              <li className="priority-list__item">
-                <span className="priority-list__dot" />
-                <span className="helper-text">No weekly priorities yet. Add them from Weekly Brief.</span>
-              </li>
-            )}
-          </ul>
-        </SectionCard>
+      <div className="focus-home__grid">
+        <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
+          <div className="focus-panel__header">
+            <h2>Today's Main Focus</h2>
+            <span className="signal-node">Focus</span>
+          </div>
+          <p className="focus-home__main-focus">{mainFocus.title}</p>
+          <p className="calm-copy">{mainFocus.context}</p>
+          <div className="focus-home__actions">
+            <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
+              Tell me what to do next
+            </Button>
+            <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
+              I'm overwhelmed
+            </Button>
+          </div>
 
-        <SectionCard
-          title="Executive Snapshot"
-          iconName="spark"
-          actionText={isSnapshotCopied ? 'Copied!' : 'Copy Snapshot'}
-          actionIconName="copy"
-          actionDisabled={isSnapshotCopied}
-          onAction={handleCopySnapshot}
-          actionLabel="Copy executive snapshot"
-        >
-          <ul className="snapshot-stack" aria-label="Executive snapshot highlights">
-            {snapshotRows.map((item) => (
-              <li key={item.id} className="snapshot-row">
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </li>
+          <div className="focus-home__next-move">
+            <p className="focus-home__subheading">Next Smallest Action</p>
+            <p>{displayedNextMove}</p>
+          </div>
+
+          {isFocusDataLoading ? <p className="helper-text">Loading your focus context...</p> : null}
+          {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
+        </article>
+
+        <article className="focus-panel" aria-label="Blockers panel">
+          <div className="focus-panel__header">
+            <h2>Blockers</h2>
+            <span className="signal-node">Blockers</span>
+          </div>
+          <ul className="focus-list">
+            {blockerItems.map((item, index) => (
+              <li key={`blocker-${index + 1}`}>{item}</li>
             ))}
           </ul>
-          {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
-        </SectionCard>
+        </article>
 
-        <SectionCard
-          title="Opportunities Pipeline"
-          iconName="opportunities"
-          actionText="Open CRM"
-          actionIconName="opportunities"
-          actionTo="/opportunities"
-          actionLabel="Open opportunities pipeline dashboard"
-        >
-          <ul className="mini-table" aria-label="Opportunity pipeline snapshot">
-            {opportunityRows.length ? (
-              opportunityRows.map((item) => (
-                <li
-                  key={item.id}
-                  className="mini-table__row"
-                  aria-label={`${item.name} at ${item.company}`}
-                >
-                  <div>
-                    <p className="mini-table__title">{item.name}</p>
-                    <p className="mini-table__subtitle">{item.company}</p>
-                  </div>
-                  <div className="mini-table__meta">
-                    <Badge label={item.priority} tone={item.priorityTone} />
-                    <span className="mini-table__stage">{item.stage}</span>
-                  </div>
-                </li>
-              ))
-            ) : (
-              <li className="mini-table__empty">
-                <p className="helper-text">No opportunities to display yet.</p>
-              </li>
-            )}
+        <article className="focus-panel" aria-label="Reminders panel">
+          <div className="focus-panel__header">
+            <h2>Reminders</h2>
+            <span className="signal-node">Reset</span>
+          </div>
+          <ul className="focus-list">
+            {reminderItems.map((item, index) => (
+              <li key={`reminder-${index + 1}`}>{item}</li>
+            ))}
           </ul>
-        </SectionCard>
+        </article>
 
-        <SectionCard
-          title="Content Pipeline"
-          iconName="content"
-          actionText="Open Content OS"
-          actionIconName="content"
-          actionTo="/content"
-          actionLabel="Open content operating system dashboard"
-        >
-          <ul className="mini-table" aria-label="Content pipeline snapshot">
-            {dashboardContentRows.length ? (
-              dashboardContentRows.map((item) => (
-                <li
-                  key={item.id}
-                  className="mini-table__row"
-                  aria-label={`${item.title} on ${item.platform}`}
-                >
-                  <div>
-                    <p className="mini-table__title">{item.title}</p>
-                    <p className="mini-table__subtitle">{item.platform}</p>
-                  </div>
-                  <div className="mini-table__meta">
-                    <Badge
-                      label={item.status}
-                      tone={contentStatusTone[item.status] || item.statusTone || 'default'}
-                    />
-                  </div>
-                </li>
-              ))
-            ) : (
-              <li className="mini-table__empty">
-                <p className="helper-text">No content items to display yet.</p>
-              </li>
-            )}
-          </ul>
-        </SectionCard>
+        <article className="focus-panel" aria-label="Momentum panel">
+          <div className="focus-panel__header">
+            <h2>Quick Win</h2>
+            <span className="signal-node">Momentum</span>
+          </div>
+          <p className="focus-home__quick-win">{quickWin}</p>
+          <p className="focus-home__momentum-score">
+            Momentum: <strong>{momentum.score}%</strong>
+          </p>
+          <p className="calm-copy">{momentum.text}</p>
+        </article>
 
-        <SectionCard title="Momentum Trend" iconName="trend">
-          <MomentumChart values={dashboardInsights.momentumValues} />
-        </SectionCard>
-
-        <SectionCard title="Recent Activity" iconName="activity">
-          {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
-          <ActivityFeed items={dashboardInsights.recentActivity} />
-        </SectionCard>
+        <article className="focus-panel focus-panel--reset" aria-live="polite">
+          <div className="focus-panel__header">
+            <h2>I'm Overwhelmed Reset</h2>
+            <span className="signal-node">Next Move</span>
+          </div>
+          <p className="supportive-copy">
+            {isResetOpen
+              ? 'Reset mode is open. You only need one completed step right now.'
+              : 'Use this reset anytime pressure spikes. No guilt, just the next tiny move.'}
+          </p>
+          <ol className="focus-list focus-list--ordered">
+            {resetSteps.map((step, index) => (
+              <li key={`reset-${index + 1}`}>{step}</li>
+            ))}
+          </ol>
+        </article>
       </div>
 
       <Toast className="toast--dashboard" isVisible={isToastVisible} message={toastMessage} />

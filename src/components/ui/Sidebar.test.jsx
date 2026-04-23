@@ -71,7 +71,7 @@ describe('src/components/ui/Sidebar', () => {
     fireEvent.click(toggleButton);
 
     const closeButton = screen.getByRole('button', { name: 'Close navigation menu' });
-    const dashboardLink = screen.getByRole('link', { name: 'Dashboard' });
+    const dashboardLink = screen.getByRole('link', { name: 'Focus Home' });
 
     dashboardLink.focus();
     expect(document.activeElement).toBe(dashboardLink);

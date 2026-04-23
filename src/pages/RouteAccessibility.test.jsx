@@ -13,7 +13,7 @@ import Settings from './Settings';
 const ROUTE_CASES = [
   {
     path: '/',
-    heading: 'Dashboard',
+    heading: 'Focus Home',
   },
   {
     path: '/opportunities',

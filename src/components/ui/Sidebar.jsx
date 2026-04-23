@@ -5,7 +5,7 @@ import { usePersistentState } from '../../hooks/usePersistentState';
 import { DEFAULT_SETTINGS, resolveTeamName } from '../../lib/settings';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/', icon: 'dashboard' },
+  { label: 'Focus Home', path: '/', icon: 'dashboard' },
   { label: 'Opportunities', path: '/opportunities', icon: 'opportunities' },
   { label: 'Content OS', path: '/content', icon: 'content' },
   { label: 'Weekly Brief', path: '/weekly-brief', icon: 'weekly' },

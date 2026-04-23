@@ -10,7 +10,7 @@ function getMsUntilNextMinute(nowMs = Date.now()) {
   return elapsedMsInMinute === 0 ? ONE_MINUTE_MS : ONE_MINUTE_MS - elapsedMsInMinute;
 }
 
-function Topbar({ pageTitle = 'Dashboard' }) {
+function Topbar({ pageTitle = 'Focus Home' }) {
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
   const [now, setNow] = useState(() => new Date());
 

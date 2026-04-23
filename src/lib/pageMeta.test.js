@@ -12,7 +12,7 @@ describe('src/lib/pageMeta', () => {
     const meta = buildPageMetaByRoute('Acme CEO OS');
 
     expect(meta['/']).toMatchObject({
-      title: 'Dashboard | Acme CEO OS',
+      title: 'Focus Home | Acme CEO OS',
       description: expect.any(String),
     });
     expect(meta['/opportunities']).toMatchObject({

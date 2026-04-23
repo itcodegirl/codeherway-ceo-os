@@ -4,195 +4,153 @@
 	gap: var(--space-page-section-gap);
 }
 
-.dashboard-grid {
+.focus-home-page {
+	position: relative;
+}
+
+.focus-mode {
 	display: grid;
-	gap: var(--space-page-section-gap);
+	gap: 0.7rem;
 }
 
-.dashboard-grid--stats {
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	align-items: stretch;
-}
-
-.dashboard-grid--main {
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.stat-card {
-	background: var(--surface-card);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
-	padding: var(--space-card-padding);
-	box-shadow: var(--shadow-soft);
+.focus-mode__chips {
 	display: flex;
-	flex-direction: column;
-	justify-content: center;
-}
-
-.stat-card__label {
-	color: var(--text-muted);
-	font-size: var(--fs-helper);
-	margin: 0 0 0.65rem;
-}
-
-.stat-card__value {
-	margin: 0;
-	font-size: 2rem;
-	margin-bottom: 0.45rem;
-}
-
-.stat-card__change {
-	color: var(--text-soft-strong);
-	font-size: 0.95rem;
-}
-
-.priority-list {
-	list-style: none;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-list-gap);
-	margin: 0;
-	padding: 0;
-}
-
-.stat-card--tone-positive .stat-card__change {
-	color: var(--success);
-}
-
-.stat-card--tone-warning .stat-card__change {
-	color: var(--warning-soft);
-}
-
-.priority-list__item {
-	display: flex;
-	align-items: baseline;
-	gap: 0.75rem;
-	color: var(--text-strong);
-}
-
-.priority-list__dot {
-	width: 10px;
-	height: 10px;
-	border-radius: 999px;
-	background: var(--accent);
-	flex-shrink: 0;
-	align-self: flex-start;
-	margin-top: 0.2rem;
-}
-
-.snapshot-stack {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-list-gap);
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.snapshot-row {
-	display: flex;
-	justify-content: space-between;
-	gap: var(--space-card-inner-gap);
-	padding-bottom: 0.85rem;
-	border-bottom: 1px solid var(--border);
-	align-items: baseline;
-}
-
-.snapshot-row span {
-	color: var(--text-muted);
-	line-height: 1.35;
-}
-
-.snapshot-row strong {
-	color: var(--text);
-	text-align: right;
-	margin: 0;
-	line-height: 1.35;
-}
-
-.mini-table {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-list-gap);
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.mini-table__row {
-	display: flex;
-	justify-content: space-between;
-	align-items: stretch;
-	gap: var(--space-card-inner-gap);
-	padding: 0.85rem 0;
-	border-bottom: 1px solid var(--border);
-	background: transparent;
-	box-shadow: none;
-	border-radius: 0;
-}
-
-.mini-table__row:first-child {
-	padding-top: 0;
-}
-
-.mini-table__row:last-child {
-	padding-bottom: 0;
-	border-bottom: 0;
-}
-
-.mini-table__empty {
-	padding: 0;
-}
-
-.mini-table__title {
-	font-size: var(--fs-helper);
-	color: var(--text);
-	font-weight: 600;
-	margin: 0 0 0.25rem;
-}
-
-.mini-table__subtitle {
-	color: var(--text-muted);
-	font-size: var(--fs-helper);
-	margin: 0;
-}
-
-.mini-table__meta {
-	display: flex;
-	align-items: baseline;
-	gap: var(--space-list-gap);
 	flex-wrap: wrap;
-	justify-content: flex-end;
+	gap: 0.55rem;
 }
 
-.mini-table__stage {
+.focus-home__grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: clamp(0.9rem, 2vw, 1.35rem);
+	position: relative;
+}
+
+.focus-home__grid::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		linear-gradient(115deg, transparent 4%, rgba(79, 173, 255, 0.17) 36%, transparent 68%);
+	opacity: 0.55;
+	z-index: -1;
+}
+
+.focus-panel h2 {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+.focus-panel--main {
+	grid-column: 1 / -1;
+}
+
+.focus-home__main-focus {
+	margin: 0;
+	font-size: clamp(1.25rem, 2.3vw, 1.65rem);
+	line-height: 1.28;
+	font-weight: 600;
+}
+
+.focus-home__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+}
+
+.focus-home__next-move {
+	border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
+	background: color-mix(in srgb, var(--surface-card) 72%, rgba(29, 106, 171, 0.24) 28%);
+	border-radius: calc(var(--radius-lg) - 4px);
+	padding: 0.8rem 0.9rem;
+	display: grid;
+	gap: 0.35rem;
+}
+
+.focus-home__subheading {
+	margin: 0;
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
 	color: var(--text-soft-strong);
-	font-size: var(--fs-helper);
 }
 
-@media (max-width: 1100px) {
-	.dashboard-grid--stats {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
+.focus-home__next-move p {
+	margin: 0;
+}
 
-	.dashboard-grid--main {
+.focus-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 0.55rem;
+}
+
+.focus-list li {
+	padding: 0.55rem 0.65rem;
+	border-radius: 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
+	background: color-mix(in srgb, var(--surface-card) 80%, rgba(48, 152, 250, 0.18) 20%);
+	line-height: 1.35;
+}
+
+.focus-list--ordered {
+	list-style: decimal;
+	padding-left: 1.1rem;
+}
+
+.focus-list--ordered li {
+	padding: 0.45rem 0 0.45rem 0.15rem;
+	border: 0;
+	background: transparent;
+}
+
+.focus-home__quick-win {
+	margin: 0;
+	line-height: 1.45;
+	font-weight: 500;
+}
+
+.focus-home__momentum-score {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--text-soft-strong);
+}
+
+.focus-home__momentum-score strong {
+	font-size: 1.05rem;
+}
+
+.focus-panel--reset {
+	border-color: color-mix(in srgb, var(--border-warning-soft) 55%, var(--border) 45%);
+}
+
+.focus-home-page--overwhelmed .focus-panel--main {
+	border-color: color-mix(in srgb, var(--border-warning-soft) 70%, var(--border) 30%);
+}
+
+.focus-home-page--focused .focus-panel--main {
+	border-color: color-mix(in srgb, var(--border-info-soft) 66%, var(--border) 34%);
+}
+
+@media (max-width: 980px) {
+	.focus-home__grid {
 		grid-template-columns: 1fr;
 	}
 }
 
 @media (max-width: 640px) {
-	.dashboard-grid--stats {
-		grid-template-columns: 1fr;
-	}
-
-	.mini-table__row,
-	.snapshot-row {
+	.focus-home__actions {
 		flex-direction: column;
-		align-items: flex-start;
+		align-items: stretch;
 	}
 
-	.mini-table__meta {
-		justify-content: flex-start;
+	.focus-home__actions .action-button {
+		width: 100%;
 	}
 }
-
