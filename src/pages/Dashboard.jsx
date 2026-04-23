@@ -119,6 +119,7 @@ function Dashboard() {
             label={stat.label}
             value={stat.value}
             change={stat.change}
+            tone={stat.tone}
           />
         ))}
       </div>
@@ -156,14 +157,14 @@ function Dashboard() {
           onAction={handleCopySnapshot}
           actionLabel="Copy executive snapshot"
         >
-          <div className="snapshot-stack" role="list" aria-label="Executive snapshot highlights">
+          <ul className="snapshot-stack" aria-label="Executive snapshot highlights">
             {snapshotRows.map((item) => (
-              <div key={item.id} className="snapshot-row" role="listitem">
+              <li key={item.id} className="snapshot-row">
                 <span>{item.label}</span>
                 <strong>{item.value}</strong>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
           {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
         </SectionCard>
 
@@ -175,13 +176,12 @@ function Dashboard() {
           actionTo="/opportunities"
           actionLabel="Open opportunities pipeline dashboard"
         >
-          <div className="mini-table" role="list" aria-label="Opportunity pipeline snapshot">
+          <ul className="mini-table" aria-label="Opportunity pipeline snapshot">
             {opportunityRows.length ? (
               opportunityRows.map((item) => (
-                <div
+                <li
                   key={item.id}
                   className="mini-table__row"
-                  role="listitem"
                   aria-label={`${item.name} at ${item.company}`}
                 >
                   <div>
@@ -192,12 +192,14 @@ function Dashboard() {
                     <Badge label={item.priority} tone={item.priorityTone} />
                     <span className="mini-table__stage">{item.stage}</span>
                   </div>
-                </div>
+                </li>
               ))
             ) : (
-              <p className="helper-text">No opportunities to display yet.</p>
+              <li className="mini-table__empty">
+                <p className="helper-text">No opportunities to display yet.</p>
+              </li>
             )}
-          </div>
+          </ul>
         </SectionCard>
 
         <SectionCard
@@ -208,13 +210,12 @@ function Dashboard() {
           actionTo="/content"
           actionLabel="Open content operating system dashboard"
         >
-          <div className="mini-table" role="list" aria-label="Content pipeline snapshot">
+          <ul className="mini-table" aria-label="Content pipeline snapshot">
             {dashboardContentRows.length ? (
               dashboardContentRows.map((item) => (
-                <div
+                <li
                   key={item.id}
                   className="mini-table__row"
-                  role="listitem"
                   aria-label={`${item.title} on ${item.platform}`}
                 >
                   <div>
@@ -227,12 +228,14 @@ function Dashboard() {
                       tone={contentStatusTone[item.status] || item.statusTone || 'default'}
                     />
                   </div>
-                </div>
+                </li>
               ))
             ) : (
-              <p className="helper-text">No content items to display yet.</p>
+              <li className="mini-table__empty">
+                <p className="helper-text">No content items to display yet.</p>
+              </li>
             )}
-          </div>
+          </ul>
         </SectionCard>
 
         <SectionCard title="Momentum Trend" iconName="trend">

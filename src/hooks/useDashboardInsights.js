@@ -43,6 +43,16 @@ function normalizeDisplayText(value, fallback) {
   return normalized || fallback;
 }
 
+function normalizePriorityLabel(value) {
+  const normalized = normalizeDisplayText(value, 'Low');
+  const lowercased = normalized.toLowerCase();
+  if (lowercased === 'high' || lowercased === 'medium' || lowercased === 'low') {
+    return `${lowercased.slice(0, 1).toUpperCase()}${lowercased.slice(1)}`;
+  }
+
+  return normalized;
+}
+
 export function useDashboardInsights({
   weeklyPriorities,
   weeklyBlockers,
@@ -231,10 +241,16 @@ export function useDashboardInsights({
     const focusChange = isLocalDashboardDemoMode
       ? `${focusChangeBase} - ${dashboardDemoData.focusScore.demoSuffix}`
       : focusChangeBase;
+    const focusTone = scoreContext > 0
+      ? 'warning'
+      : focusScore >= 70
+        ? 'positive'
+        : 'neutral';
 
     return {
       focusScore,
       focusChange,
+      focusTone,
       strategicFocus,
       topRisk,
       momentumLabel,
@@ -266,43 +282,48 @@ export function useDashboardInsights({
         label: 'Active Opportunities',
         value: isDataLoading ? '--' : opportunityCount,
         change: `${inProgressOpportunityCount} in progress`,
+        tone: inProgressOpportunityCount > 0 ? 'positive' : 'neutral',
       },
       {
         id: 2,
         label: 'Content in Pipeline',
         value: isDataLoading ? '--' : contentCount,
         change: `${draftingContentCount} drafting`,
+        tone: draftingContentCount > 0 ? 'positive' : 'neutral',
       },
       {
         id: 3,
         label: 'Follow-Ups Due',
         value: isDataLoading ? '--' : awaitingReplyCount,
         change: `${highPriorityCount} high priority`,
+        tone: awaitingReplyCount > 0 || highPriorityCount > 0 ? 'warning' : 'neutral',
       },
       {
         id: 4,
         label: 'Weekly Focus Score',
         value: isDataLoading ? '--' : `${dashboardInsightValues.focusScore}%`,
         change: dashboardInsightValues.focusChange,
+        tone: dashboardInsightValues.focusTone,
       },
     ];
   }, [
     dashboardCounts,
     dashboardInsightValues.focusChange,
     dashboardInsightValues.focusScore,
+    dashboardInsightValues.focusTone,
     isDataLoading,
   ]);
 
   const dashboardOpportunityRows = useMemo(
     () => safeOpportunityItems.map((item, index) => {
       const itemId = item?.id ?? `opportunity-${index}`;
-      const priority = normalizeDisplayText(item?.priority, 'Low');
+      const priority = normalizePriorityLabel(item?.priority);
       return {
         id: normalizeDisplayText(itemId, `opportunity-${index}`),
         name: normalizeDisplayText(item?.name, 'Untitled opportunity'),
         company: normalizeDisplayText(item?.company, 'Unknown company'),
         priorityTone: normalizeTone(priority),
-        priority: normalizeStatusTone(priority),
+        priority,
         stage: normalizeDisplayText(item?.stage, 'Unknown stage'),
       };
     }),

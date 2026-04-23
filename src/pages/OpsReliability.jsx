@@ -67,6 +67,27 @@ function buildStatusTone(value) {
   return 'status-chip';
 }
 
+function resolveOutcomeTone(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized === 'failure') {
+    return 'warning';
+  }
+
+  if (normalized === 'success') {
+    return 'positive';
+  }
+
+  return 'neutral';
+}
+
+function resolveBudgetTone(actualValue, budgetValue) {
+  if (!Number.isFinite(actualValue) || !Number.isFinite(budgetValue)) {
+    return 'neutral';
+  }
+
+  return actualValue > budgetValue ? 'warning' : 'positive';
+}
+
 export default function OpsReliability() {
   const {
     snapshots,
@@ -85,6 +106,7 @@ export default function OpsReliability() {
       label: 'Snapshots Tracked',
       value: isLoading ? '--' : snapshots.length,
       change: latestSnapshot ? `Last capture ${formatDateTime(latestSnapshot.capturedAt)}` : 'No snapshots yet',
+      tone: 'neutral',
     },
     {
       id: 'route-trend',
@@ -93,6 +115,7 @@ export default function OpsReliability() {
       change: latestSnapshot
         ? `Ingest ${formatOutcomeLabel(latestSnapshot.telemetryHealthOutcome)}`
         : 'Awaiting first run',
+      tone: resolveOutcomeTone(latestSnapshot?.routeTrendOutcome),
     },
     {
       id: 'endpoint-latency',
@@ -101,6 +124,10 @@ export default function OpsReliability() {
       change: latestSnapshot
         ? `Budget ${formatMilliseconds(latestSnapshot.telemetryEndpointSloMaxP95Ms)}`
         : 'No latency sample yet',
+      tone: resolveBudgetTone(
+        latestSnapshot?.telemetryEndpointSloP95Ms,
+        latestSnapshot?.telemetryEndpointSloMaxP95Ms,
+      ),
     },
     {
       id: 'endpoint-errors',
@@ -109,6 +136,10 @@ export default function OpsReliability() {
       change: latestSnapshot
         ? `Budget ${formatPercent(latestSnapshot.telemetryEndpointSloMaxNon2xxRatePct)}`
         : 'No error-rate sample yet',
+      tone: resolveBudgetTone(
+        latestSnapshot?.telemetryEndpointSloNon2xxRatePct,
+        latestSnapshot?.telemetryEndpointSloMaxNon2xxRatePct,
+      ),
     },
   ]), [isLoading, latestSnapshot, snapshots.length]);
 
@@ -135,6 +166,7 @@ export default function OpsReliability() {
             label={item.label}
             value={item.value}
             change={item.change}
+            tone={item.tone}
           />
         ))}
       </div>

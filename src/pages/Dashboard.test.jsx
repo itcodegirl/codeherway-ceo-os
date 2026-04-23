@@ -75,10 +75,15 @@ describe('src/pages/Dashboard', () => {
     const followUpsCard = screen.getByText('Follow-Ups Due').closest('.stat-card');
     expect(within(followUpsCard).getByText('1')).toBeInTheDocument();
     expect(within(followUpsCard).getByText('1 high priority')).toBeInTheDocument();
+    expect(followUpsCard).toHaveClass('stat-card--tone-warning');
 
     const focusScoreCard = screen.getByText('Weekly Focus Score').closest('.stat-card');
     expect(within(focusScoreCard).getByText('58%')).toBeInTheDocument();
     expect(within(focusScoreCard).getByText('3 active risks')).toBeInTheDocument();
+    expect(focusScoreCard).toHaveClass('stat-card--tone-warning');
+
+    const snapshotList = screen.getByRole('list', { name: 'Executive snapshot highlights' });
+    expect(within(snapshotList).getByText('Strategic Focus')).toBeInTheDocument();
 
     expect(screen.getAllByText('Finalize pricing page').length).toBeGreaterThan(0);
     expect(screen.getByText('Waiting on legal review.')).toBeInTheDocument();

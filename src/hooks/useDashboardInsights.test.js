@@ -138,7 +138,7 @@ describe('useDashboardInsights', () => {
         name: 'Untitled opportunity',
         company: 'Unknown company',
         priorityTone: 'low',
-        priority: 'low',
+        priority: 'Low',
         stage: 'Unknown stage',
       },
       {
@@ -146,7 +146,7 @@ describe('useDashboardInsights', () => {
         name: 'Untitled opportunity',
         company: 'Unknown company',
         priorityTone: 'low',
-        priority: 'low',
+        priority: 'Low',
         stage: 'Unknown stage',
       },
     ]);
