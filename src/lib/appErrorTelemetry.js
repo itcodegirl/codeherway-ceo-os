@@ -86,6 +86,10 @@ function getRemoteTelemetryEndpoint() {
   return normalizeText(import.meta.env.VITE_APP_ERROR_TELEMETRY_URL);
 }
 
+function getRemoteTelemetryToken() {
+  return normalizeText(import.meta.env.VITE_APP_ERROR_TELEMETRY_TOKEN);
+}
+
 export function isAppErrorTelemetryRemoteEnabled() {
   return Boolean(
     getRemoteTelemetryEndpoint()
@@ -132,10 +136,13 @@ async function postRemoteBatch(events) {
     return false;
   }
 
+  const ingestToken = getRemoteTelemetryToken();
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(ingestToken ? { 'x-app-telemetry-token': ingestToken } : {}),
     },
     body: JSON.stringify({
       source: 'codeherway-ceo-os',

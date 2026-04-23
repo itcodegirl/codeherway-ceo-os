@@ -66,6 +66,7 @@ describe('src/lib/appErrorTelemetry', () => {
 
   it('flushes queued app errors to an env-gated remote endpoint in batches', async () => {
     vi.stubEnv('VITE_APP_ERROR_TELEMETRY_URL', 'https://telemetry.example.com/errors');
+    vi.stubEnv('VITE_APP_ERROR_TELEMETRY_TOKEN', 'ingest-token');
     const fetchMock = vi.fn(async () => ({ ok: true }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -77,6 +78,10 @@ describe('src/lib/appErrorTelemetry', () => {
     expect(fetchMock).toHaveBeenCalled();
     expect(listPendingAppErrorTelemetryRemoteEvents()).toHaveLength(0);
     const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      'Content-Type': 'application/json',
+      'x-app-telemetry-token': 'ingest-token',
+    });
     expect(payload.events).toHaveLength(2);
     expect(payload.events[0].message).toBe('remote-1');
     expect(payload.events[1].message).toBe('remote-2');
