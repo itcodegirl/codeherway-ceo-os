@@ -6,6 +6,8 @@ import { useChiefTelemetryHealth } from "../hooks/useChiefTelemetryHealth";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import "../styles/chief-of-staff.css";
 
+const MAX_NOTES_LENGTH = 12000;
+
 function parseStructuredText(value) {
   if (typeof value !== "string") {
     return null;
@@ -70,6 +72,8 @@ export default function ChiefOfStaff() {
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
   const result = toPanelResult(latestResponse);
+  const notesLength = typeof notes === "string" ? notes.length : 0;
+  const notesLimitReached = notesLength >= MAX_NOTES_LENGTH;
 
   const feedbackMessage = loadError || feedback;
 
@@ -103,10 +107,21 @@ export default function ChiefOfStaff() {
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             placeholder="Paste founder notes, meeting takeaways, risks, priorities, or rough ideas here..."
+            maxLength={MAX_NOTES_LENGTH}
             disabled={isGenerating}
             aria-disabled={isGenerating}
             aria-label="Founder notes for chief of staff workspace"
+            aria-describedby="chief-notes-meta"
           />
+          <p
+            id="chief-notes-meta"
+            className={`chief-notes-meta ${notesLimitReached ? "chief-notes-meta--limit" : ""}`.trim()}
+            role="status"
+            aria-live="polite"
+          >
+            {notesLength.toLocaleString()} / {MAX_NOTES_LENGTH.toLocaleString()} characters
+            {notesLimitReached ? " (limit reached)" : ""}
+          </p>
 
           <div
             className={`chief-action-grid ${isGenerating ? "chief-action-grid--disabled" : ""}`.trim()}
@@ -115,7 +130,7 @@ export default function ChiefOfStaff() {
             <Button
               type="button"
               onClick={() => handleAction("plan")}
-              disabled={!notes.trim() || isGenerating}
+              disabled={!notes.trim() || isGenerating || notesLimitReached}
               icon={{ name: "weekly", size: 14 }}
             >
               {isGenerating ? "Building Action Plan..." : "Build Action Plan"}

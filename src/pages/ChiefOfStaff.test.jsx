@@ -189,4 +189,21 @@ describe("src/pages/ChiefOfStaff", () => {
 
     expect(hookState.clearWorkspace).toHaveBeenCalledTimes(1);
   });
+
+  it("shows notes character counter and max length on textarea", () => {
+    const notes = "A".repeat(12000);
+    useChiefOfStaff.mockReturnValue(createHookState({ notes }));
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    const input = screen.getByLabelText("Founder notes for chief of staff workspace");
+
+    expect(input).toHaveAttribute("maxLength", "12000");
+    expect(screen.getByText("12,000 / 12,000 characters (limit reached)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Build Action Plan" })).toBeDisabled();
+  });
 });
