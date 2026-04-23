@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:integration:telemetry": "vitest run server/appErrorTelemetryIngest.integration.test.js",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "check:route-budgets": "node scripts/check-route-performance-budgets.mjs",

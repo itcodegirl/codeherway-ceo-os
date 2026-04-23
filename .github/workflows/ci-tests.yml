@@ -52,6 +52,13 @@ jobs:
       - name: Run Unit Tests
         run: npm run test:run
 
+      - name: Run Telemetry Integration Tests (Supabase)
+        if: ${{ secrets.SUPABASE_TEST_URL != '' && secrets.SUPABASE_TEST_SERVICE_ROLE_KEY != '' }}
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: npm run test:integration:telemetry
+
       - name: Run Typecheck
         run: npm run typecheck
 
