@@ -257,4 +257,3 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 ## Author
 
 Jenna Zawaski - frontend product engineering with workflow-first architecture focus.
-
