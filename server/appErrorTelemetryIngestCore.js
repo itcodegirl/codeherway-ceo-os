@@ -1,19 +1,23 @@
+import crypto from 'node:crypto';
+import { persistAppErrorTelemetryBatch } from './appErrorTelemetryIngestRepository.js';
+
 const MAX_EVENTS_PER_BATCH = 25;
 const MAX_TEXT_LENGTH = 2000;
+const MAX_IDEMPOTENCY_KEY_LENGTH = 120;
 
 function createRequestId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
 
   return `telemetry-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function buildResponse(status, body = {}) {
+function buildResponse(status, body = {}, requestId = createRequestId()) {
   return {
     status,
     body: {
-      request_id: createRequestId(),
+      request_id: requestId,
       ...(body && typeof body === 'object' ? body : {}),
     },
   };
@@ -47,17 +51,32 @@ function normalizeText(value) {
   return value.trim().slice(0, MAX_TEXT_LENGTH);
 }
 
-function extractRequestToken(headers) {
+function getHeaderValue(headers, key) {
   if (!headers || typeof headers !== 'object') {
     return '';
   }
 
-  const headerToken = headers['x-app-telemetry-token']
-    || headers['X-App-Telemetry-Token']
-    || headers['X-APP-TELEMETRY-TOKEN']
-    || headers.authorization;
+  const normalizedKey = key.toLowerCase();
+  const match = Object.entries(headers).find(([headerKey]) => (
+    typeof headerKey === 'string' && headerKey.toLowerCase() === normalizedKey
+  ));
+  if (!match) {
+    return '';
+  }
 
-  if (typeof headerToken !== 'string') {
+  const value = match[1];
+  if (Array.isArray(value)) {
+    return normalizeText(value.join(','));
+  }
+
+  return normalizeText(value);
+}
+
+function extractRequestToken(headers) {
+  const headerToken = getHeaderValue(headers, 'x-app-telemetry-token')
+    || getHeaderValue(headers, 'authorization');
+
+  if (!headerToken) {
     return '';
   }
 
@@ -75,6 +94,96 @@ function hasValidIngestToken(headers) {
   }
 
   return extractRequestToken(headers) === configuredToken;
+}
+
+function getConfiguredHmacSecret() {
+  return normalizeText(process.env.APP_ERROR_TELEMETRY_HMAC_SECRET);
+}
+
+function normalizeSignatureHeader(headers) {
+  const signatureHeader = getHeaderValue(headers, 'x-app-telemetry-signature');
+  if (!signatureHeader) {
+    return '';
+  }
+
+  if (signatureHeader.includes('=')) {
+    const [prefix, value] = signatureHeader.split('=');
+    if (prefix?.trim().toLowerCase() !== 'sha256') {
+      return '';
+    }
+    return normalizeText(value).toLowerCase();
+  }
+
+  return signatureHeader.toLowerCase();
+}
+
+function normalizeRawBody(rawBody, parsedBody) {
+  if (typeof rawBody === 'string') {
+    return rawBody;
+  }
+
+  if (rawBody && typeof rawBody === 'object' && !Array.isArray(rawBody)) {
+    try {
+      return JSON.stringify(rawBody);
+    } catch {
+      return '';
+    }
+  }
+
+  if (parsedBody && typeof parsedBody === 'object' && !Array.isArray(parsedBody)) {
+    try {
+      return JSON.stringify(parsedBody);
+    } catch {
+      return '';
+    }
+  }
+
+  return '';
+}
+
+function verifyHmacSignature(headers, rawBody) {
+  const hmacSecret = getConfiguredHmacSecret();
+  if (!hmacSecret) {
+    return {
+      required: false,
+      verified: false,
+      error: '',
+    };
+  }
+
+  const providedSignature = normalizeSignatureHeader(headers);
+  if (!providedSignature) {
+    return {
+      required: true,
+      verified: false,
+      error: 'Missing or invalid telemetry signature header',
+    };
+  }
+
+  const expectedSignature = crypto
+    .createHmac('sha256', hmacSecret)
+    .update(rawBody)
+    .digest('hex');
+
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+  const providedBuffer = Buffer.from(providedSignature, 'hex');
+
+  if (
+    expectedBuffer.length !== providedBuffer.length
+    || !crypto.timingSafeEqual(expectedBuffer, providedBuffer)
+  ) {
+    return {
+      required: true,
+      verified: false,
+      error: 'Missing or invalid telemetry signature header',
+    };
+  }
+
+  return {
+    required: true,
+    verified: true,
+    error: '',
+  };
 }
 
 function isValidTimestamp(value) {
@@ -148,7 +257,47 @@ function validatePayload(payload) {
   return '';
 }
 
-export async function handleAppErrorTelemetryIngest({ method, body, headers = {} }) {
+function computePayloadIdempotencyHash(payload) {
+  const events = Array.isArray(payload?.events)
+    ? payload.events.map((event) => ({
+      event: normalizeText(event?.event),
+      timestamp: normalizeText(event?.timestamp),
+      name: normalizeText(event?.name),
+      message: normalizeText(event?.message),
+      route: normalizeText(event?.route),
+      componentStack: normalizeText(event?.componentStack),
+    }))
+    : [];
+
+  const stablePayload = JSON.stringify({
+    source: normalizeText(payload?.source),
+    eventType: normalizeText(payload?.eventType),
+    events,
+  });
+
+  return crypto
+    .createHash('sha256')
+    .update(stablePayload)
+    .digest('hex');
+}
+
+function resolveIdempotencyKey(payload, headers) {
+  const explicitIdempotencyKey = normalizeText(payload?.idempotencyKey)
+    || normalizeText(getHeaderValue(headers, 'x-app-telemetry-idempotency-key'));
+  if (explicitIdempotencyKey) {
+    return explicitIdempotencyKey.slice(0, MAX_IDEMPOTENCY_KEY_LENGTH);
+  }
+
+  const hash = computePayloadIdempotencyHash(payload).slice(0, 48);
+  return `app-error:${hash}`;
+}
+
+export async function handleAppErrorTelemetryIngest({
+  method,
+  body,
+  headers = {},
+  rawBody,
+}) {
   if (method !== 'POST') {
     return buildResponse(405, {
       error: 'Method not allowed',
@@ -179,9 +328,47 @@ export async function handleAppErrorTelemetryIngest({ method, body, headers = {}
     });
   }
 
-  // The ingestion endpoint validates schema contract and acknowledges accepted events.
-  return buildResponse(202, {
-    ok: true,
-    accepted_count: parsedBody.events.length,
-  });
+  const resolvedRawBody = normalizeRawBody(rawBody, parsedBody);
+  const signatureStatus = verifyHmacSignature(headers, resolvedRawBody);
+  if (signatureStatus.error) {
+    return buildResponse(401, {
+      error: signatureStatus.error,
+      error_code: 'INGEST_SIGNATURE_INVALID',
+    });
+  }
+
+  const requestId = createRequestId();
+  const idempotencyKey = resolveIdempotencyKey(parsedBody, headers);
+
+  try {
+    const persistenceResult = await persistAppErrorTelemetryBatch({
+      idempotencyKey,
+      source: parsedBody.source,
+      eventType: parsedBody.eventType,
+      sentAt: parsedBody.sentAt,
+      events: parsedBody.events,
+      requestId,
+      signatureVerified: signatureStatus.verified,
+    });
+
+    return buildResponse(202, {
+      ok: true,
+      accepted_count: parsedBody.events.length,
+      persisted: Boolean(persistenceResult.persisted),
+      duplicate: Boolean(persistenceResult.duplicate),
+      storage: persistenceResult.storage || 'transient',
+      idempotency_key: idempotencyKey,
+      signature_verified: Boolean(signatureStatus.verified),
+      signature_required: Boolean(signatureStatus.required),
+    }, requestId);
+  } catch (error) {
+    return buildResponse(503, {
+      error: 'Telemetry ingest persistence is temporarily unavailable',
+      error_code: 'PERSISTENCE_UNAVAILABLE',
+      retryable: true,
+      details: process.env.NODE_ENV === 'development'
+        ? normalizeText(error?.message || '')
+        : '',
+    }, requestId);
+  }
 }

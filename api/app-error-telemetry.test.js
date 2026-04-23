@@ -41,6 +41,7 @@ describe('api app-error-telemetry handler', () => {
       method: 'POST',
       body: { events: [] },
       headers: { 'x-app-telemetry-token': 'token' },
+      rawBody: JSON.stringify({ events: [] }),
     });
     expect(statusCode).toBe(202);
     expect(body).toEqual({ ok: true, accepted_count: 1 });

@@ -85,6 +85,7 @@ describe('src/lib/appErrorTelemetry', () => {
     expect(payload.events).toHaveLength(2);
     expect(payload.events[0].message).toBe('remote-1');
     expect(payload.events[1].message).toBe('remote-2');
+    expect(payload.idempotencyKey).toMatch(/^app-error:/);
   });
 
   it('keeps queued app errors when remote upload fails', async () => {
@@ -97,5 +98,20 @@ describe('src/lib/appErrorTelemetry', () => {
 
     expect(fetchMock).toHaveBeenCalled();
     expect(listPendingAppErrorTelemetryRemoteEvents()).toHaveLength(1);
+  });
+
+  it('adds an HMAC signature header when telemetry signing secret is configured', async () => {
+    vi.stubEnv('VITE_APP_ERROR_TELEMETRY_URL', 'https://telemetry.example.com/errors');
+    vi.stubEnv('VITE_APP_ERROR_TELEMETRY_HMAC_SECRET', 'hmac-secret');
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    emitAppErrorTelemetry(new Error('remote-signed'), null, { source: 'test' });
+    await flushAppErrorTelemetryRemote();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      'x-app-telemetry-signature': expect.stringMatching(/^sha256=/),
+    });
   });
 });

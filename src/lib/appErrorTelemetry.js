@@ -90,6 +90,87 @@ function getRemoteTelemetryToken() {
   return normalizeText(import.meta.env.VITE_APP_ERROR_TELEMETRY_TOKEN);
 }
 
+function getRemoteTelemetryHmacSecret() {
+  return normalizeText(import.meta.env.VITE_APP_ERROR_TELEMETRY_HMAC_SECRET);
+}
+
+function stableSerialize(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableSerialize(item)).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableSerialize(value[key])}`)
+      .join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+async function sha256Hex(input) {
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined') {
+    const bytes = new TextEncoder().encode(input);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+
+  const normalizedHash = (hash >>> 0).toString(16).padStart(8, '0');
+  return `${normalizedHash}${normalizedHash}${normalizedHash}${normalizedHash}`;
+}
+
+async function computeBatchIdempotencyKey(events) {
+  const hashInput = stableSerialize(
+    Array.isArray(events)
+      ? events.map((event) => ({
+        event: normalizeText(event?.event),
+        timestamp: normalizeText(event?.timestamp),
+        name: normalizeText(event?.name),
+        message: normalizeText(event?.message),
+        route: normalizeText(event?.route),
+        componentStack: normalizeText(event?.componentStack),
+      }))
+      : [],
+  );
+  const hash = await sha256Hex(hashInput);
+  return `app-error:${hash.slice(0, 48)}`;
+}
+
+async function computeHmacSignature(bodyText) {
+  const hmacSecret = getRemoteTelemetryHmacSecret();
+  if (!hmacSecret || typeof crypto === 'undefined' || !crypto.subtle || typeof TextEncoder === 'undefined') {
+    return '';
+  }
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(hmacSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signatureBuffer = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(bodyText),
+  );
+
+  const signatureHex = Array.from(new Uint8Array(signatureBuffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+  return `sha256=${signatureHex}`;
+}
+
 export function isAppErrorTelemetryRemoteEnabled() {
   return Boolean(
     getRemoteTelemetryEndpoint()
@@ -137,23 +218,29 @@ async function postRemoteBatch(events) {
   }
 
   const ingestToken = getRemoteTelemetryToken();
+  const idempotencyKey = await computeBatchIdempotencyKey(events);
+  const requestPayload = {
+    source: 'codeherway-ceo-os',
+    eventType: 'app_error',
+    sentAt: new Date().toISOString(),
+    idempotencyKey,
+    events,
+  };
+  const requestBody = JSON.stringify(requestPayload);
+  const hmacSignature = await computeHmacSignature(requestBody);
 
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(ingestToken ? { 'x-app-telemetry-token': ingestToken } : {}),
+      ...(hmacSignature ? { 'x-app-telemetry-signature': hmacSignature } : {}),
     },
-    body: JSON.stringify({
-      source: 'codeherway-ceo-os',
-      eventType: 'app_error',
-      sentAt: new Date().toISOString(),
-      events,
-    }),
+    body: requestBody,
     keepalive: true,
   });
 
-  return Boolean(response?.ok);
+  return Boolean(response?.ok || response?.status === 409);
 }
 
 export async function flushAppErrorTelemetryRemote() {

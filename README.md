@@ -126,6 +126,9 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `VITE_OPENAI_PROXY_URL` (optional, defaults to `/api/chief-of-staff`)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_APP_ERROR_TELEMETRY_URL` (optional remote ingest endpoint for app error telemetry)
+- `VITE_APP_ERROR_TELEMETRY_TOKEN` (optional shared ingest token header)
+- `VITE_APP_ERROR_TELEMETRY_HMAC_SECRET` (optional HMAC signing secret for trusted/internal deployments only)
 
 ### Server runtime environment
 
@@ -134,6 +137,10 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `CHIEF_STAFF_PROXY_TOKEN` (optional)
 - `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
 - `APP_ERROR_TELEMETRY_INGEST_TOKEN` (optional, validates telemetry ingest requests when set)
+- `APP_ERROR_TELEMETRY_HMAC_SECRET` (optional, validates `x-app-telemetry-signature` when set)
+- `SUPABASE_SERVICE_ROLE_KEY` (required for durable telemetry ingest persistence)
+- `APP_ERROR_TELEMETRY_RETENTION_DAYS` (optional, defaults to `45`)
+- `APP_ERROR_TELEMETRY_MAX_ROWS` (optional, defaults to `50000`)
 
 ## Data model references
 
@@ -147,6 +154,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
   - `chief_sessions`
   - `chief_outputs`
   - `chief_telemetry_events`
+  - `app_error_telemetry_events`
 
 ## Roadmap
 

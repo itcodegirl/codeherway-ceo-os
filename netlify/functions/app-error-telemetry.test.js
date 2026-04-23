@@ -27,6 +27,7 @@ describe('netlify app-error-telemetry function', () => {
       method: 'POST',
       body: JSON.stringify({ source: 'x' }),
       headers: { 'x-app-telemetry-token': 'token' },
+      rawBody: JSON.stringify({ source: 'x' }),
     });
     expect(result).toEqual({
       statusCode: 400,

@@ -1,10 +1,15 @@
 import { handleAppErrorTelemetryIngest } from '../../server/appErrorTelemetryIngestCore.js';
 
 export async function handler(event) {
+  const normalizedRawBody = typeof event.body === 'string'
+    ? event.body
+    : JSON.stringify(event.body || {});
+
   const result = await handleAppErrorTelemetryIngest({
     method: event.httpMethod,
     body: event.body,
     headers: event.headers,
+    rawBody: normalizedRawBody,
   });
 
   return {
