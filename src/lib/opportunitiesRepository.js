@@ -29,7 +29,13 @@ function readLocalOpportunities() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const seeded = getSeededLocalItems();
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      } catch (error) {
+        if (import.meta.env?.DEV) {
+          console.warn('Failed to seed opportunities in localStorage', error);
+        }
+      }
       return seeded;
     }
 
@@ -49,7 +55,13 @@ function writeLocalOpportunities(items) {
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('Failed to persist opportunities to localStorage', error);
+    }
+  }
 }
 
 function notifyOpportunitiesUpdated(detail = {}) {

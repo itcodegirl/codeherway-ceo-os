@@ -27,7 +27,13 @@ function readLocalContentItems() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const seeded = getSeededLocalItems();
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      } catch (error) {
+        if (import.meta.env?.DEV) {
+          console.warn('Failed to seed content items in localStorage', error);
+        }
+      }
       return seeded;
     }
 
@@ -47,7 +53,13 @@ function writeLocalContentItems(items) {
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('Failed to persist content items to localStorage', error);
+    }
+  }
 }
 
 function notifyContentItemsUpdated(detail = {}) {

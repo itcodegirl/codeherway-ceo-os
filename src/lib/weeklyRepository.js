@@ -205,7 +205,13 @@ function writeLocalWeekStore(store) {
     return;
   }
 
-  window.localStorage.setItem(LOCAL_WEEKLY_BRIEFS_KEY, JSON.stringify(store));
+  try {
+    window.localStorage.setItem(LOCAL_WEEKLY_BRIEFS_KEY, JSON.stringify(store));
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('Failed to persist weekly brief data to localStorage', error);
+    }
+  }
 }
 
 function resolveLocalWeekPayload(weekStart) {

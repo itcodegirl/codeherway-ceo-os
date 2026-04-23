@@ -36,7 +36,13 @@ function writeLocalChiefNotes(notes) {
     return;
   }
 
-  window.localStorage.setItem(CHIEF_NOTES_STORAGE_KEY, notes);
+  try {
+    window.localStorage.setItem(CHIEF_NOTES_STORAGE_KEY, notes);
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('Failed to persist chief notes to localStorage', error);
+    }
+  }
 }
 
 function readLocalChiefResponses() {
@@ -61,7 +67,13 @@ function writeLocalChiefResponses(responses) {
     return;
   }
 
-  window.localStorage.setItem(CHIEF_RESPONSES_STORAGE_KEY, JSON.stringify(responses));
+  try {
+    window.localStorage.setItem(CHIEF_RESPONSES_STORAGE_KEY, JSON.stringify(responses));
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('Failed to persist chief responses to localStorage', error);
+    }
+  }
 }
 
 function isSupabaseAuthError(error) {

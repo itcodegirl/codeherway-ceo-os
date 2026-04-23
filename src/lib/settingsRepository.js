@@ -65,8 +65,14 @@ function writeLocalSettings(settings, savedAt = Date.now()) {
     return;
   }
 
-  window.localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
-  window.localStorage.setItem(LOCAL_SETTINGS_SAVED_AT_KEY, String(savedAt));
+  try {
+    window.localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
+    window.localStorage.setItem(LOCAL_SETTINGS_SAVED_AT_KEY, String(savedAt));
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('Failed to persist settings to localStorage', error);
+    }
+  }
 }
 
 function mapSettingsToProfileFields(settings) {
