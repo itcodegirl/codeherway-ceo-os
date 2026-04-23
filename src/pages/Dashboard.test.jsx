@@ -83,4 +83,50 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getAllByText('Finalize pricing page').length).toBeGreaterThan(0);
     expect(screen.getByText('Waiting on legal review.')).toBeInTheDocument();
   });
+
+  it('shows weekly load error and retry action when weekly source fails', () => {
+    useWeeklyBrief.mockReturnValue({
+      priorities: [],
+      blockers: [],
+      isLoading: false,
+      source: 'local',
+      loadError: 'Unable to load weekly brief right now.',
+      refreshWeeklyBrief: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load weekly brief right now.');
+    expect(screen.getByRole('button', { name: 'Retry loading weekly dashboard data' })).toBeInTheDocument();
+  });
+
+  it('renders empty-state helper text when no opportunities or content exist', () => {
+    useDashboardData.mockReturnValue({
+      opportunityItems: [],
+      contentRows: [],
+      isDataLoading: false,
+    });
+
+    useWeeklyBrief.mockReturnValue({
+      priorities: [],
+      blockers: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('No opportunities to display yet.')).toBeInTheDocument();
+    expect(screen.getByText('No content items to display yet.')).toBeInTheDocument();
+  });
 });
