@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleAppErrorTelemetryIngest } from './appErrorTelemetryIngestCore.js';
 import * as telemetryRepository from './appErrorTelemetryIngestRepository.js';
+import * as keyAuditRepository from './appErrorTelemetryKeyAuditRepository.js';
+import { resetTelemetryKeyProviderCacheForTests } from './appErrorTelemetryKeyProvider.js';
 
 describe('server/appErrorTelemetryIngestCore', () => {
   const originalEnv = { ...process.env };
@@ -27,6 +29,7 @@ describe('server/appErrorTelemetryIngestCore', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     process.env = { ...originalEnv };
     delete process.env.APP_ERROR_TELEMETRY_INGEST_TOKEN;
     delete process.env.APP_ERROR_TELEMETRY_HMAC_SECRET;
@@ -35,14 +38,23 @@ describe('server/appErrorTelemetryIngestCore', () => {
     delete process.env.APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM;
     delete process.env.APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL;
     delete process.env.APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON;
+    delete process.env.APP_ERROR_TELEMETRY_KMS_KEYS_URL;
+    delete process.env.APP_ERROR_TELEMETRY_KMS_AUTH_TOKEN;
+    delete process.env.APP_ERROR_TELEMETRY_KMS_CACHE_MS;
+    resetTelemetryKeyProviderCacheForTests();
     vi.spyOn(telemetryRepository, 'persistAppErrorTelemetryBatch').mockResolvedValue({
       persisted: false,
       duplicate: false,
       storage: 'transient',
     });
+    vi.spyOn(keyAuditRepository, 'recordTelemetryKeyVerificationAudit').mockResolvedValue({
+      recorded: false,
+      storage: 'transient',
+    });
   });
 
   afterEach(() => {
+    resetTelemetryKeyProviderCacheForTests();
     process.env = { ...originalEnv };
   });
 
@@ -233,6 +245,7 @@ describe('server/appErrorTelemetryIngestCore', () => {
     expect(result.body.signature_required).toBe(true);
     expect(result.body.signature_key_id).toBe('telemetry-key-2026-04');
     expect(result.body.signature_algorithm).toBe('ed25519');
+    expect(result.body.signature_key_source).toBe('env');
   });
 
   it('rejects unknown asymmetric key ids safely', async () => {
@@ -257,6 +270,83 @@ describe('server/appErrorTelemetryIngestCore', () => {
 
     expect(result.status).toBe(401);
     expect(result.body.error_code).toBe('INGEST_SIGNATURE_INVALID');
+  });
+
+  it('supports KMS-backed asymmetric key retrieval and verification', async () => {
+    const keyPair = crypto.generateKeyPairSync('ed25519');
+    const publicKeyPem = keyPair.publicKey.export({ type: 'spki', format: 'pem' }).toString();
+    process.env.APP_ERROR_TELEMETRY_KMS_KEYS_URL = 'https://kms.example.com/telemetry-keys';
+    const fetchMock = vi.fn(async (url) => {
+      if (String(url).includes('kms.example.com')) {
+        return {
+          ok: true,
+          json: async () => ({
+            keys: [
+              {
+                keyId: 'kms-key-2026',
+                publicKeyPem,
+                algorithm: 'ed25519',
+                version: 'v3',
+                kmsKeyId: 'projects/demo/keys/telemetry/versions/3',
+              },
+            ],
+          }),
+        };
+      }
+
+      return {
+        ok: true,
+        json: async () => ({}),
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const payload = createValidPayload();
+    const rawBody = JSON.stringify(payload);
+    const signature = crypto.sign(null, Buffer.from(rawBody), keyPair.privateKey).toString('base64');
+
+    const result = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature-key-id': 'kms-key-2026',
+        'x-app-telemetry-signature': `ed25519=${signature}`,
+      },
+    });
+
+    expect(result.status).toBe(202);
+    expect(result.body.signature_verified).toBe(true);
+    expect(result.body.signature_key_source).toBe('kms');
+    expect(result.body.signature_key_version).toBe('v3');
+  });
+
+  it('records signature audit metadata for verification attempts', async () => {
+    process.env.APP_ERROR_TELEMETRY_HMAC_SECRET = 'hmac-secret';
+    const payload = createValidPayload();
+    const rawBody = JSON.stringify(payload);
+    const signature = crypto
+      .createHmac('sha256', process.env.APP_ERROR_TELEMETRY_HMAC_SECRET)
+      .update(rawBody)
+      .digest('hex');
+    const auditSpy = vi.spyOn(keyAuditRepository, 'recordTelemetryKeyVerificationAudit');
+
+    const result = await handleAppErrorTelemetryIngest({
+      method: 'POST',
+      body: payload,
+      rawBody,
+      headers: {
+        'x-app-telemetry-signature': `hmac-sha256=${signature}`,
+      },
+    });
+
+    expect(result.status).toBe(202);
+    expect(auditSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        verificationMode: 'hmac-sha256',
+        signatureAlgorithm: 'hmac-sha256',
+        verificationResult: true,
+      }),
+    );
   });
 
   it('persists valid payloads and forwards explicit idempotency keys', async () => {
