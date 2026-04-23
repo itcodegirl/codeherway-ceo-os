@@ -53,29 +53,9 @@ function OpportunityTable({ items, onSelect }) {
       return;
     }
 
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const row = target.closest('tr[data-item-id]');
-    if (!row) {
-      return;
-    }
-
-    const itemId = row.getAttribute('data-item-id');
-    if (!itemId) {
-      return;
-    }
-
-    const item = itemsById.get(itemId);
-    if (!item) {
-      return;
-    }
-
     event.preventDefault();
-    onSelect(item);
-  }, [hasHandler, itemsById, onSelect]);
+    handleRowClick(event);
+  }, [handleRowClick, hasHandler]);
 
   if (!isValidItemsArray) {
     return null;
@@ -107,7 +87,6 @@ function OpportunityTable({ items, onSelect }) {
               className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
               title={hasHandler ? `Open ${item.name} details` : undefined}
               tabIndex={hasHandler ? 0 : undefined}
-              aria-label={hasHandler ? `Open ${item.name} details` : undefined}
             >
               <td className="crm-table__cell" data-label="Opportunity">
                 <p className="crm-table__title crm-table__title--row">{item.name}</p>
@@ -125,9 +104,10 @@ function OpportunityTable({ items, onSelect }) {
               </td>
               <td className="crm-table__cell crm-table__cell--action" data-label="Details">
                 {hasHandler ? (
-                  <span className="crm-table__open-button" aria-hidden="true">
+                  <button type="button" className="crm-table__open-button">
                     Open
-                  </span>
+                    <span className="sr-only"> {item.name} opportunity from {item.company}</span>
+                  </button>
                 ) : null}
               </td>
             </tr>
