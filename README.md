@@ -112,8 +112,7 @@ npm run check:telemetry-ingest:slo
   - workflow executes `npm run update:route-budgets:baseline:release` with release approval env
 - PR CI enforces static budgets + trend regression checks, and publishes `route-size-report` artifact.
 - When `SUPABASE_TEST_URL` and `SUPABASE_TEST_SERVICE_ROLE_KEY` secrets are available, CI also runs durable telemetry ingest integration tests against the real Supabase test project.
-- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate health, publishes artifacts, and upserts a tracked GitHub issue when thresholds are breached.
-- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), publishes artifacts, and upserts a tracked GitHub issue when thresholds are breached.
+- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), publishes artifacts, upserts a tracked GitHub issue when thresholds are breached, and fans out to Slack/PagerDuty when configured.
 
 ### Branch protection automation
 
@@ -157,6 +156,8 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `TELEMETRY_INGEST_MONITOR_TOKEN` (optional ingest token for SLO probe requests)
 - `TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE` (optional: `hmac-sha256` or `ed25519`)
 - `TELEMETRY_INGEST_MONITOR_SIGNATURE_KEY_ID` (optional key-id header for SLO probe signatures)
+- `SLACK_OPS_WEBHOOK_URL` (optional webhook used by scheduled ops fanout alerts)
+- `PAGERDUTY_EVENTS_ROUTING_KEY` (optional PagerDuty Events v2 routing key for on-call fanout)
 
 ## Data model references
 
