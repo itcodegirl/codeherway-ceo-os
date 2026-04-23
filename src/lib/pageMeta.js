@@ -12,6 +12,10 @@ export function buildPageMetaByRoute(appName) {
       title: `Capture | ${appName}`,
       description: 'Capture ideas, tasks, opportunities, and journal fragments fast with sticky-note simplicity.',
     },
+    '/journal': {
+      title: `Journal | ${appName}`,
+      description: 'Reflect with calm prompts, name what feels heavy, and choose one supportive next move.',
+    },
     '/content': {
       title: `Content OS | ${appName}`,
       description: 'Plan, monitor, and ship founder content across channels with a clear publishing workflow.',

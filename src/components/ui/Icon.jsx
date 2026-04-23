@@ -29,6 +29,12 @@ function Icon({ name = 'spark', size = 16, className = '' }) {
         <path d="M8 9h8M8 13h5M8 17h6" {...commonProps} />
       </>
     ),
+    journal: (
+      <>
+        <path d="M6 4h10a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4Z" {...commonProps} />
+        <path d="M8 8h7M8 12h7M8 16h5" {...commonProps} />
+      </>
+    ),
     weekly: (
       <>
         <rect x="3" y="5" width="18" height="16" rx="2" {...commonProps} />

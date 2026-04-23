@@ -4,6 +4,7 @@ import AppLayout from './layouts/AppLayout';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Capture = lazy(() => import('./pages/Capture'));
+const Journal = lazy(() => import('./pages/Journal'));
 const Opportunities = lazy(() => import('./pages/Opportunities'));
 const ContentOS = lazy(() => import('./pages/ContentOS'));
 const WeeklyBrief = lazy(() => import('./pages/WeeklyBrief'));
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="capture" element={<Capture />} />
+          <Route path="journal" element={<Journal />} />
           <Route path="opportunities" element={<Opportunities />} />
           <Route path="content" element={<ContentOS />} />
           <Route path="weekly-brief" element={<WeeklyBrief />} />
