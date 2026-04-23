@@ -101,3 +101,10 @@ npm run typecheck
 - Additional telemetry around AI fallback reasons and acceptance rates
 - More cross-domain event synchronization tests under concurrent multi-screen updates
 - Continued refresh of screenshot/demo artifacts as UI polish evolves
+
+## 7) Latest hardening updates (April 23, 2026)
+
+- Dashboard KPI semantics now distinguish warning vs positive context so risk-heavy summaries are not visually framed as success.
+- Dashboard snapshot, pipeline, and activity surfaces now use semantic list markup with explicit accessible labels.
+- Supabase runtime access was centralized into `src/lib/supabaseRuntime.js`, removing repeated adapter/config boilerplate across repositories.
+- Added focused unit coverage for shared runtime behavior and dashboard/activity rendering semantics.

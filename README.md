@@ -10,6 +10,33 @@ CodeHerWay CEO OS is a React + Vite executive operations workspace for founder-f
 
 The project is intentionally local-first by default with a first-class Supabase path for authenticated, account-scoped persistence.
 
+## Quickstart for reviewers
+
+Use this path if you are opening the repo for the first time and want proof quickly:
+
+```bash
+npm install
+npm run dev
+```
+
+Then open `http://127.0.0.1:5173/` and run:
+
+```bash
+npm run lint
+npm run test:run
+npm run build
+```
+
+## 5-minute product walkthrough
+
+Use this exact flow for portfolio demos or recruiter screenshares:
+
+1. Dashboard: show source-status messaging, KPI cards, and executive snapshot copy action.
+2. Opportunities: add one item, edit stage/next step, and verify the pipeline updates immediately.
+3. Content OS: add one content item and move it from `Drafting` to `Scheduled`.
+4. Weekly Brief: add one priority and one blocker, then return to Dashboard to show cross-page impact.
+5. Chief of Staff: paste notes, generate output, and accept at least one structured recommendation.
+
 ## What this repository demonstrates
 
 ### 1) Architecture consistency
@@ -311,6 +338,10 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `188dcc7` - test: harden dashboard insight edge-case resilience
   - `24d811d` - fix: normalize route paths for page metadata resolution
   - `f18c16a` - docs: add release-candidate checklist and portfolio polish
+- Post-verification hardening cycle (April 23, 2026):
+  - `f5ae62c` - test: stabilize source status copy assertion
+  - `07f3213` - feat: improve dashboard credibility and accessibility semantics
+  - `3da3eae` - refactor: centralize supabase runtime access
 
 ## Author
 

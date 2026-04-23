@@ -1,6 +1,6 @@
 # Release Candidate Checklist
 
-Last updated: April 21, 2026
+Last updated: April 23, 2026
 
 Use this checklist before sharing the project as portfolio evidence or treating a branch as production-ready.
 
@@ -25,6 +25,7 @@ Validate core flows without changing source code:
 - Confirm loading, empty, and populated states render correctly.
 - Confirm skip-link and route focus restoration still work from keyboard-only navigation.
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.
+- Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
 - Confirm no visible console errors in normal user flows.
 
 ## 3) AI workflow confidence checks
