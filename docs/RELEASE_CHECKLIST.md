@@ -15,6 +15,8 @@ npm run test:run
 npm run typecheck
 ```
 
+Confirm GitHub Actions CI is green for the branch before merge.
+
 ## 2) Manual UX smoke pass
 
 Validate core flows without changing source code:
@@ -31,6 +33,9 @@ Validate core flows without changing source code:
 - Verify fallback behavior appears when proxy response is unavailable or malformed.
 - Confirm structured acceptance only saves valid items and ignores malformed entries safely.
 - Confirm rapid repeated acceptance does not create duplicate records for the same item.
+- Confirm proxy auth mode is correct for the deployment target:
+	- development: `CHIEF_STAFF_REQUIRE_TOKEN=false`
+	- production: `CHIEF_STAFF_REQUIRE_TOKEN=true` with `CHIEF_STAFF_PROXY_TOKEN` set
 
 ## 4) Metadata and sharing checks
 
