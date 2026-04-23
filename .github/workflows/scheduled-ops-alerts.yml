@@ -99,6 +99,14 @@ jobs:
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: npm run build:slo-trend-snapshot
 
+      - name: Persist Daily SLO Trend Snapshot
+        if: always()
+        continue-on-error: true
+        env:
+          SLO_TREND_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SLO_TREND_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: npm run persist:slo-trend-snapshot
+
       - name: Upload Daily SLO Trend Snapshot
         if: always()
         uses: actions/upload-artifact@v4

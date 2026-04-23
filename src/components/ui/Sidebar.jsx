@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: 'Content OS', path: '/content', icon: 'content' },
   { label: 'Weekly Brief', path: '/weekly-brief', icon: 'weekly' },
   { label: 'Chief of Staff', path: '/chief-of-staff', icon: 'chief' },
+  { label: 'Ops Reliability', path: '/ops-reliability', icon: 'trend' },
   { label: 'Settings', path: '/settings', icon: 'settings' },
 ];
 

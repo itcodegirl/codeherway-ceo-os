@@ -7,6 +7,7 @@ const Opportunities = lazy(() => import('./pages/Opportunities'));
 const ContentOS = lazy(() => import('./pages/ContentOS'));
 const WeeklyBrief = lazy(() => import('./pages/WeeklyBrief'));
 const ChiefOfStaff = lazy(() => import('./pages/ChiefOfStaff'));
+const OpsReliability = lazy(() => import('./pages/OpsReliability'));
 const Settings = lazy(() => import('./pages/Settings'));
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="content" element={<ContentOS />} />
           <Route path="weekly-brief" element={<WeeklyBrief />} />
           <Route path="chief-of-staff" element={<ChiefOfStaff />} />
+          <Route path="ops-reliability" element={<OpsReliability />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

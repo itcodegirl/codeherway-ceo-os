@@ -103,6 +103,7 @@ npm run report:route-budgets
 npm run check:telemetry-ingest:health
 npm run check:telemetry-ingest:slo
 npm run build:slo-trend-snapshot
+npm run persist:slo-trend-snapshot
 ```
 
 ### Route baseline governance
@@ -113,7 +114,7 @@ npm run build:slo-trend-snapshot
   - workflow executes `npm run update:route-budgets:baseline:release` with release approval env
 - PR CI enforces static budgets + trend regression checks, and publishes `route-size-report` artifact.
 - When `SUPABASE_TEST_URL` and `SUPABASE_TEST_SERVICE_ROLE_KEY` secrets are available, CI also runs durable telemetry ingest integration tests against the real Supabase test project.
-- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), publishes artifacts, upserts a tracked GitHub issue when thresholds are breached, fans out to Slack/PagerDuty when configured, and emits daily JSON snapshot artifacts plus an artifact index for trend analysis.
+- `Scheduled Ops Alerts` workflow runs daily, checks route-size trend regressions plus telemetry ingest failure-rate and endpoint SLO health (p95 + non-2xx rate), persists snapshot rows into `ops_slo_snapshots` when Supabase service-role secrets are available, publishes artifacts, upserts a tracked GitHub issue when thresholds are breached, fans out to Slack/PagerDuty when configured, and emits daily JSON snapshot artifacts plus an artifact index for trend analysis.
 
 ### Branch protection automation
 
@@ -186,6 +187,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
   - `chief_telemetry_events`
   - `app_error_telemetry_events`
   - `app_error_telemetry_key_audit_events`
+  - `ops_slo_snapshots`
 
 ## Roadmap
 

@@ -7,6 +7,7 @@ import Opportunities from './Opportunities';
 import ContentOS from './ContentOS';
 import WeeklyBrief from './WeeklyBrief';
 import ChiefOfStaff from './ChiefOfStaff';
+import OpsReliability from './OpsReliability';
 import Settings from './Settings';
 
 const ROUTE_CASES = [
@@ -31,6 +32,10 @@ const ROUTE_CASES = [
     heading: 'Chief of Staff',
   },
   {
+    path: '/ops-reliability',
+    heading: 'Ops Reliability',
+  },
+  {
     path: '/settings',
     heading: 'Settings',
   },
@@ -52,6 +57,7 @@ describe('src/pages route accessibility', () => {
               <Route path="content" element={<ContentOS />} />
               <Route path="weekly-brief" element={<WeeklyBrief />} />
               <Route path="chief-of-staff" element={<ChiefOfStaff />} />
+              <Route path="ops-reliability" element={<OpsReliability />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>

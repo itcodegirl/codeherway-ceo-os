@@ -23,6 +23,10 @@ describe('src/lib/pageMeta', () => {
       title: 'Content OS | Acme CEO OS',
       description: expect.any(String),
     });
+    expect(meta['/ops-reliability']).toMatchObject({
+      title: 'Ops Reliability | Acme CEO OS',
+      description: expect.any(String),
+    });
   });
 
   it('creates and updates head metadata tags deterministically', () => {

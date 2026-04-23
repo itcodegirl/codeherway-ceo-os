@@ -1,0 +1,59 @@
+.ops-reliability-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-page-section-gap);
+}
+
+.ops-table-wrapper {
+  overflow-x: auto;
+}
+
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.ops-table th,
+.ops-table td {
+  text-align: left;
+  padding: 0.75rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: var(--fs-helper);
+}
+
+.ops-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  color: var(--text-soft-strong);
+  background: var(--surface-muted);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.status-chip--success {
+  border-color: color-mix(in oklab, var(--success) 38%, transparent);
+  background: color-mix(in oklab, var(--success) 14%, transparent);
+  color: color-mix(in oklab, var(--success) 72%, white);
+}
+
+.status-chip--danger {
+  border-color: color-mix(in oklab, var(--danger) 40%, transparent);
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
+  color: color-mix(in oklab, var(--danger) 70%, white);
+}
+
+@media (max-width: 640px) {
+  .ops-table {
+    min-width: 560px;
+  }
+}

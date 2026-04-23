@@ -20,6 +20,10 @@ export function buildPageMetaByRoute(appName) {
       title: `Chief of Staff | ${appName}`,
       description: 'Transform notes into executive summaries, action items, and communication-ready drafts.',
     },
+    '/ops-reliability': {
+      title: `Ops Reliability | ${appName}`,
+      description: 'Review route-size and telemetry ingest SLO trends with run-over-run reliability context.',
+    },
     '/settings': {
       title: `Settings | ${appName}`,
       description: 'Manage workspace profile, timezone, and experience preferences for CEO OS.',
