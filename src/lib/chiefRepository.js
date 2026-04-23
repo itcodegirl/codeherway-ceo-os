@@ -1,9 +1,22 @@
 import { buildCreateId } from './utils';
-import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 
 const CHIEF_NOTES_STORAGE_KEY = 'ceo-os-chief-notes';
 const CHIEF_RESPONSES_STORAGE_KEY = 'ceo-os-chief-responses';
 const MAX_CHIEF_RESPONSES = 30;
+
+const hasSupabaseConfig = Boolean(
+  import.meta.env.VITE_SUPABASE_URL
+  && import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
+async function getSupabaseRuntime() {
+  if (!hasSupabaseConfig) {
+    return null;
+  }
+
+  const { getSupabaseAdapter } = await import('./supabaseAdapter');
+  return getSupabaseAdapter();
+}
 
 function normalizeChiefResponse(item) {
   return {
@@ -80,12 +93,12 @@ function normalizeSupabaseId(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : '';
 }
 
-async function writeLatestSupabaseChiefNotes(notes) {
-  if (!supabaseClient) {
-    return false;
-  }
-
-  const userId = await requireSupabaseUserId();
+async function writeLatestSupabaseChiefNotes({
+  supabase,
+  supabaseClient,
+  notes,
+}) {
+  const userId = await supabase.requireSupabaseUserId();
   const { data: latestSession, error: lookupError } = await supabaseClient
     .from('chief_sessions')
     .select('id')
@@ -117,12 +130,21 @@ async function writeLatestSupabaseChiefNotes(notes) {
 }
 
 async function withSupabaseAuthFallback(operation, localFallback) {
-  if (!isSupabaseConfigured || !supabaseClient) {
+  if (!hasSupabaseConfig) {
+    return localFallback();
+  }
+
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (!supabaseClient) {
     return localFallback();
   }
 
   try {
-    return await operation();
+    return await operation({
+      supabase,
+      supabaseClient,
+    });
   } catch (error) {
     if (isSupabaseAuthError(error)) {
       return localFallback();
@@ -140,13 +162,13 @@ function getLocalChiefWorkspace() {
 }
 
 export function getChiefSource() {
-  return isSupabaseConfigured ? 'supabase' : 'local';
+  return hasSupabaseConfig ? 'supabase' : 'local';
 }
 
 export async function loadChiefWorkspace() {
   return withSupabaseAuthFallback(
-    async () => {
-      const userId = await requireSupabaseUserId();
+    async ({ supabase, supabaseClient }) => {
+      const userId = await supabase.requireSupabaseUserId();
       const { data: latestSession, error: sessionError } = await supabaseClient
         .from('chief_sessions')
         .select('id, notes')
@@ -191,17 +213,17 @@ export async function saveChiefNotes(notes) {
   const normalizedNotes = typeof notes === 'string' ? notes : '';
   writeLocalChiefNotes(normalizedNotes);
 
-  if (isSupabaseConfigured && supabaseClient) {
-    return withSupabaseAuthFallback(
-      async () => {
-        await writeLatestSupabaseChiefNotes(normalizedNotes);
-        return normalizedNotes;
-      },
-      () => normalizedNotes,
-    );
-  }
-
-  return normalizedNotes;
+  return withSupabaseAuthFallback(
+    async ({ supabase, supabaseClient }) => {
+      await writeLatestSupabaseChiefNotes({
+        supabase,
+        supabaseClient,
+        notes: normalizedNotes,
+      });
+      return normalizedNotes;
+    },
+    () => normalizedNotes,
+  );
 }
 
 export async function createChiefSession({ actionKey, notes }) {
@@ -209,8 +231,8 @@ export async function createChiefSession({ actionKey, notes }) {
   const normalizedNotes = typeof notes === 'string' ? notes : '';
 
   return withSupabaseAuthFallback(
-    async () => {
-      const userId = await requireSupabaseUserId();
+    async ({ supabase, supabaseClient }) => {
+      const userId = await supabase.requireSupabaseUserId();
       const { data, error } = await supabaseClient
         .from('chief_sessions')
         .insert({
@@ -260,8 +282,8 @@ export async function saveChiefOutput({
   });
 
   return withSupabaseAuthFallback(
-    async () => {
-      const userId = await requireSupabaseUserId();
+    async ({ supabase, supabaseClient }) => {
+      const userId = await supabase.requireSupabaseUserId();
       const { data, error } = await supabaseClient
         .from('chief_outputs')
         .insert({
@@ -299,8 +321,8 @@ export async function saveChiefOutput({
 
 export async function resetChiefWorkspace() {
   return withSupabaseAuthFallback(
-    async () => {
-      const userId = await requireSupabaseUserId();
+    async ({ supabase, supabaseClient }) => {
+      const userId = await supabase.requireSupabaseUserId();
       const { error: outputDeleteError } = await supabaseClient
         .from('chief_outputs')
         .delete()

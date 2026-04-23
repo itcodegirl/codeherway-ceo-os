@@ -1,9 +1,22 @@
 import { contentItems as mockContentItems } from '../data/mockData';
-import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 import { buildCreateId } from './utils';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
+
+const hasSupabaseConfig = Boolean(
+  import.meta.env.VITE_SUPABASE_URL
+  && import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
+async function getSupabaseRuntime() {
+  if (!hasSupabaseConfig) {
+    return null;
+  }
+
+  const { getSupabaseAdapter } = await import('./supabaseAdapter');
+  return getSupabaseAdapter();
+}
 
 function normalizeContentItem(item) {
   return {
@@ -59,12 +72,14 @@ function notifyContentItemsUpdated(detail = {}) {
 }
 
 export function getContentSource() {
-  return isSupabaseConfigured ? 'supabase' : 'local';
+  return hasSupabaseConfig ? 'supabase' : 'local';
 }
 
 export async function listContentItems() {
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
       .select('id, title, platform, status')
@@ -83,8 +98,10 @@ export async function listContentItems() {
 export async function createContentItem(payload) {
   const normalizedPayload = normalizeContentItem({ id: buildCreateId(), ...payload });
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
       .insert({
@@ -114,8 +131,10 @@ export async function createContentItem(payload) {
 export async function updateContentItem(id, payload) {
   const normalizedPayload = normalizeContentItem({ id, ...payload });
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
       .update({
@@ -144,8 +163,10 @@ export async function updateContentItem(id, payload) {
 }
 
 export async function deleteContentItem(id) {
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const { error } = await supabaseClient
       .from('content_items')
       .delete()

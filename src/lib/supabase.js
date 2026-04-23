@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 const supabaseEnv = {
   url: import.meta.env.VITE_SUPABASE_URL,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -20,15 +18,44 @@ export const getSupabaseConfig = () => ({
   anonKey: supabaseEnv.anonKey || '',
 });
 
-export const supabaseClient = isSupabaseConfigured
-  ? createClient(supabaseEnv.url, supabaseEnv.anonKey, {
-      auth: {
-        persistSession: false,
-      },
-    })
-  : null;
+let cachedSupabaseClient = null;
+let cachedSupabaseClientPromise = null;
+
+async function createSupabaseClient() {
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(supabaseEnv.url, supabaseEnv.anonKey, {
+    auth: {
+      persistSession: false,
+    },
+  });
+}
+
+export async function getSupabaseClient() {
+  if (!isSupabaseConfigured) {
+    return null;
+  }
+
+  if (cachedSupabaseClient) {
+    return cachedSupabaseClient;
+  }
+
+  if (!cachedSupabaseClientPromise) {
+    cachedSupabaseClientPromise = createSupabaseClient()
+      .then((client) => {
+        cachedSupabaseClient = client;
+        return client;
+      })
+      .catch((error) => {
+        cachedSupabaseClientPromise = null;
+        throw error;
+      });
+  }
+
+  return cachedSupabaseClientPromise;
+}
 
 export async function requireSupabaseUserId() {
+  const supabaseClient = await getSupabaseClient();
   if (!supabaseClient) {
     return '';
   }

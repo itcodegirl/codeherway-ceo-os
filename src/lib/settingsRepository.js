@@ -1,9 +1,22 @@
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from './settings';
-import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 
 const LOCAL_SETTINGS_KEY = 'ceo-os-settings';
 const LOCAL_SETTINGS_SAVED_AT_KEY = 'ceo-os-settings-saved-at';
 export const SETTINGS_UPDATED_EVENT = 'ceo-os:settings-updated';
+
+const hasSupabaseConfig = Boolean(
+  import.meta.env.VITE_SUPABASE_URL
+  && import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
+async function getSupabaseRuntime() {
+  if (!hasSupabaseConfig) {
+    return null;
+  }
+
+  const { getSupabaseAdapter } = await import('./supabaseAdapter');
+  return getSupabaseAdapter();
+}
 
 function normalizeSettings(input) {
   const next = input && typeof input === 'object' ? input : {};
@@ -102,13 +115,15 @@ function isSupabaseAuthError(error) {
 }
 
 export function getSettingsSource() {
-  return isSupabaseConfigured ? 'supabase' : 'local';
+  return hasSupabaseConfig ? 'supabase' : 'local';
 }
 
 export async function loadSettings() {
-  if (isSupabaseConfigured && supabaseClient) {
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
     try {
-      const userId = await requireSupabaseUserId();
+      const userId = await supabase.requireSupabaseUserId();
       const { data, error } = await supabaseClient
         .from('profiles')
         .select('team_name, timezone, email_digest, keyboard_shortcuts, auto_save, updated_at')
@@ -150,9 +165,11 @@ export async function loadSettings() {
 export async function saveSettings(nextSettings) {
   const normalizedSettings = normalizeSettings(nextSettings);
 
-  if (isSupabaseConfigured && supabaseClient) {
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
     try {
-      const userId = await requireSupabaseUserId();
+      const userId = await supabase.requireSupabaseUserId();
       const { data, error } = await supabaseClient
         .from('profiles')
         .upsert(

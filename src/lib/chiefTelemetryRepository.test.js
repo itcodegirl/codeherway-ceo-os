@@ -2,7 +2,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 async function loadChiefTelemetryRepositoryWithSupabaseMock(mockDefinition) {
   vi.resetModules();
-  vi.doMock('./supabase', () => mockDefinition);
+  if (mockDefinition?.isSupabaseConfigured) {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+  } else {
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+  }
+  vi.doMock('./supabaseAdapter', () => ({
+    isSupabaseAdapterEnabled: Boolean(mockDefinition?.isSupabaseConfigured),
+    getSupabaseAdapter: vi.fn(async () => (
+      mockDefinition?.isSupabaseConfigured
+        ? {
+            getSupabaseClient: mockDefinition.getSupabaseClient || vi.fn(async () => mockDefinition.supabaseClient || null),
+            requireSupabaseUserId: mockDefinition.requireSupabaseUserId || vi.fn(async () => ''),
+          }
+        : null
+    )),
+  }));
   return import('./chiefTelemetryRepository');
 }
 
@@ -10,6 +27,7 @@ describe('src/lib/chiefTelemetryRepository', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('records and lists telemetry events from local storage when Supabase is not configured', async () => {

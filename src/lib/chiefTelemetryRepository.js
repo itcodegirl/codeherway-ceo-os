@@ -1,4 +1,16 @@
-import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
+const hasSupabaseConfig = Boolean(
+  import.meta.env.VITE_SUPABASE_URL
+  && import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
+async function getSupabaseRuntime() {
+  if (!hasSupabaseConfig) {
+    return null;
+  }
+
+  const { getSupabaseAdapter } = await import('./supabaseAdapter');
+  return getSupabaseAdapter();
+}
 
 const TELEMETRY_STORAGE_KEY = 'ceo-os-chief-telemetry-events';
 const MAX_LOCAL_EVENTS = 400;
@@ -140,13 +152,15 @@ function mapSupabaseRowToTelemetryEvent(row) {
 }
 
 export function getChiefTelemetrySource() {
-  return isSupabaseConfigured ? 'supabase' : 'local';
+  return hasSupabaseConfig ? 'supabase' : 'local';
 }
 
 export async function listChiefTelemetryEvents({ limit = DEFAULT_LIMIT } = {}) {
-  if (isSupabaseConfigured && supabaseClient) {
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
     try {
-      const userId = await requireSupabaseUserId();
+      const userId = await supabase.requireSupabaseUserId();
       const { data, error } = await supabaseClient
         .from('chief_telemetry_events')
         .select('id,event_name,payload,created_at')
@@ -197,9 +211,11 @@ export async function recordChiefTelemetryEvent(eventInput) {
     event: normalizedEvent,
   });
 
-  if (isSupabaseConfigured && supabaseClient) {
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
     try {
-      const userId = await requireSupabaseUserId();
+      const userId = await supabase.requireSupabaseUserId();
       const payload = { ...normalizedEvent };
       delete payload.id;
       delete payload.event;

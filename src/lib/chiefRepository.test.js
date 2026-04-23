@@ -2,7 +2,24 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 async function loadChiefRepositoryWithSupabaseMock(mockDefinition) {
   vi.resetModules();
-  vi.doMock('./supabase', () => mockDefinition);
+  if (mockDefinition?.isSupabaseConfigured) {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+  } else {
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+  }
+  vi.doMock('./supabaseAdapter', () => ({
+    isSupabaseAdapterEnabled: Boolean(mockDefinition?.isSupabaseConfigured),
+    getSupabaseAdapter: vi.fn(async () => (
+      mockDefinition?.isSupabaseConfigured
+        ? {
+            getSupabaseClient: mockDefinition.getSupabaseClient || vi.fn(async () => mockDefinition.supabaseClient || null),
+            requireSupabaseUserId: mockDefinition.requireSupabaseUserId || vi.fn(async () => ''),
+          }
+        : null
+    )),
+  }));
   return import('./chiefRepository');
 }
 
@@ -10,6 +27,7 @@ describe('chiefRepository', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('falls back to local storage when Supabase auth is required while loading workspace', async () => {

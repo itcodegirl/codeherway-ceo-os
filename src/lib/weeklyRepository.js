@@ -5,13 +5,26 @@ import {
   defaultWins,
 } from './weeklyData';
 import { buildCreateId } from './utils';
-import { isSupabaseConfigured, requireSupabaseUserId, supabaseClient } from './supabase';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
 const LEGACY_WINS_KEY = 'ceo-os-weekly-wins';
 const LEGACY_BLOCKERS_KEY = 'ceo-os-weekly-blockers';
 const LEGACY_REVIEW_NOTES_KEY = 'ceo-os-weekly-review-notes';
+
+const hasSupabaseConfig = Boolean(
+  import.meta.env.VITE_SUPABASE_URL
+  && import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
+async function getSupabaseRuntime() {
+  if (!hasSupabaseConfig) {
+    return null;
+  }
+
+  const { getSupabaseAdapter } = await import('./supabaseAdapter');
+  return getSupabaseAdapter();
+}
 
 export const WEEKLY_BRIEF_UPDATED_EVENT = 'ceo-os:weekly-brief-updated';
 
@@ -112,7 +125,7 @@ function createDefaultWeekPayload() {
 }
 
 function getWeeklySource() {
-  return isSupabaseConfigured ? 'supabase' : 'local';
+  return hasSupabaseConfig ? 'supabase' : 'local';
 }
 
 export function resolveWeeklySource() {
@@ -312,8 +325,13 @@ function mapItemToSupabaseFields(type, item) {
   };
 }
 
-async function getSupabaseBriefRow({ weekStart, createIfMissing = false }) {
-  const userId = await requireSupabaseUserId();
+async function getSupabaseBriefRow({
+  supabase,
+  supabaseClient,
+  weekStart,
+  createIfMissing = false,
+}) {
+  const userId = await supabase.requireSupabaseUserId();
   const { data, error } = await supabaseClient
     .from('weekly_briefs')
     .select('id, week_start, review_notes')
@@ -349,7 +367,11 @@ async function getSupabaseBriefRow({ weekStart, createIfMissing = false }) {
   };
 }
 
-async function listSupabaseWeeklyItems({ briefId, userId }) {
+async function listSupabaseWeeklyItems({
+  supabaseClient,
+  briefId,
+  userId,
+}) {
   const { data, error } = await supabaseClient
     .from('weekly_brief_items')
     .select('id, item_type, title, description, owner, status, category, severity, sort_order')
@@ -394,8 +416,12 @@ export async function getWeeklyBriefByWeek(weekStart = getCurrentWeekStart()) {
     ? weekStart
     : getCurrentWeekStart();
 
-  if (isSupabaseConfigured && supabaseClient) {
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
     const { userId, brief } = await getSupabaseBriefRow({
+      supabase,
+      supabaseClient,
       weekStart: normalizedWeekStart,
       createIfMissing: false,
     });
@@ -412,6 +438,7 @@ export async function getWeeklyBriefByWeek(weekStart = getCurrentWeekStart()) {
     }
 
     const collections = await listSupabaseWeeklyItems({
+      supabaseClient,
       briefId: brief.id,
       userId,
     });
@@ -447,8 +474,10 @@ export async function saveWeeklyBriefReviewNotes({
     ? reviewNotes
     : DEFAULT_REVIEW_NOTES;
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const { error } = await supabaseClient
       .from('weekly_briefs')
       .upsert(
@@ -505,8 +534,12 @@ export async function createWeeklyItem({
       ? WEEKLY_ITEM_TYPES.blocker
       : WEEKLY_ITEM_TYPES.priority;
 
-  if (isSupabaseConfigured && supabaseClient) {
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
     const { userId, brief } = await getSupabaseBriefRow({
+      supabase,
+      supabaseClient,
       weekStart: normalizedWeekStart,
       createIfMissing: true,
     });
@@ -596,8 +629,10 @@ export async function updateWeeklyItem({
       : WEEKLY_ITEM_TYPES.priority;
   const normalizedItemId = String(itemId || '');
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const normalizedItem = normalizedType === WEEKLY_ITEM_TYPES.priority
       ? normalizePriorityItem({ ...item, id: normalizedItemId })
       : normalizedType === WEEKLY_ITEM_TYPES.win
@@ -693,8 +728,10 @@ export async function deleteWeeklyItem({
       : WEEKLY_ITEM_TYPES.priority;
   const normalizedItemId = String(itemId || '');
 
-  if (isSupabaseConfigured && supabaseClient) {
-    const userId = await requireSupabaseUserId();
+  const supabase = await getSupabaseRuntime();
+  const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
+  if (supabaseClient) {
+    const userId = await supabase.requireSupabaseUserId();
     const { error } = await supabaseClient
       .from('weekly_brief_items')
       .delete()
