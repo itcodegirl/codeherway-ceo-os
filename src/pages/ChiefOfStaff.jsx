@@ -94,13 +94,18 @@ export default function ChiefOfStaff() {
             ideas.
           </p>
 
+          <label htmlFor="chief-notes-input" className="sr-only">
+            Founder notes
+          </label>
           <textarea
+            id="chief-notes-input"
             className="chief-notes-input"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             placeholder="Paste founder notes, meeting takeaways, risks, priorities, or rough ideas here..."
             disabled={isGenerating}
             aria-disabled={isGenerating}
+            aria-label="Founder notes for chief of staff workspace"
           />
 
           <div
