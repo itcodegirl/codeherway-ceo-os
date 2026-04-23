@@ -72,6 +72,8 @@ The following assets are referenced for portfolio review and should be kept curr
 - Explicit user feedback for generation/acceptance outcomes and errors
 - Deterministic metadata and shell behavior for route transitions
 - Event-driven refresh strategy to keep screens synchronized after mutations
+- CI enforcement for lint, build, test, and typecheck on every pull request
+- Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
 
 ## 4) Accessibility and UX posture
 

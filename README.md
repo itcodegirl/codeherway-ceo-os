@@ -98,6 +98,15 @@ npm run test:run
 npm run typecheck
 ```
 
+### Continuous integration
+
+GitHub Actions runs the quality gate on every push to `main` and every pull request:
+
+- `npm run lint`
+- `npm run build`
+- `npm run test:run`
+- `npm run typecheck`
+
 ### Branch protection automation
 
 - Dry run locally:
@@ -121,6 +130,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - `OPENAI_API_KEY` (required for proxy responses)
 - `OPENAI_MODEL` (optional)
 - `CHIEF_STAFF_PROXY_TOKEN` (optional)
+- `CHIEF_STAFF_REQUIRE_TOKEN` (optional, set to `true` to reject requests when no proxy token is configured)
 - `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
 
 ## Data model references
@@ -220,9 +230,11 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 ### Production readiness checklist
 
 - Secrets and API endpoints are resolved from environment configuration.
+- Pull requests and pushes to `main` are validated by GitHub Actions before merge.
 - Local-first behavior remains default, with authenticated Supabase opt-in path available.
 - Metadata and accessibility defaults are handled in shell-level orchestration.
 - AI responses preserve fallback behavior when proxy output is missing or invalid.
+- Chief-of-staff proxy authentication can be made fail-secure with `CHIEF_STAFF_REQUIRE_TOKEN=true`.
 - Repository includes architecture decision records and tradeoffs via:
   - `README.md`
   - `CASE_STUDY.md`
