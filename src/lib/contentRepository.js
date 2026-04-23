@@ -1,22 +1,9 @@
 import { contentItems as mockContentItems } from '../data/mockData';
 import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
-
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
 
 function normalizeContentItem(item) {
   return {
@@ -76,7 +63,7 @@ function notifyContentItemsUpdated(detail = {}) {
 }
 
 export function getContentSource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export async function listContentItems() {

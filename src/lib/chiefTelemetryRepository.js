@@ -1,16 +1,4 @@
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const TELEMETRY_STORAGE_KEY = 'ceo-os-chief-telemetry-events';
 const MAX_LOCAL_EVENTS = 400;
@@ -152,7 +140,7 @@ function mapSupabaseRowToTelemetryEvent(row) {
 }
 
 export function getChiefTelemetrySource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export async function listChiefTelemetryEvents({ limit = DEFAULT_LIMIT } = {}) {

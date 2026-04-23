@@ -1,22 +1,9 @@
 import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const CHIEF_NOTES_STORAGE_KEY = 'ceo-os-chief-notes';
 const CHIEF_RESPONSES_STORAGE_KEY = 'ceo-os-chief-responses';
 const MAX_CHIEF_RESPONSES = 30;
-
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
 
 function normalizeChiefResponse(item) {
   return {
@@ -130,7 +117,7 @@ async function writeLatestSupabaseChiefNotes({
 }
 
 async function withSupabaseAuthFallback(operation, localFallback) {
-  if (!hasSupabaseConfig) {
+  if (!isSupabaseRuntimeEnabled) {
     return localFallback();
   }
 
@@ -162,7 +149,7 @@ function getLocalChiefWorkspace() {
 }
 
 export function getChiefSource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export async function loadChiefWorkspace() {

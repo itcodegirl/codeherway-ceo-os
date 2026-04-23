@@ -5,26 +5,13 @@ import {
   defaultWins,
 } from './weeklyData';
 import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
 const LEGACY_WINS_KEY = 'ceo-os-weekly-wins';
 const LEGACY_BLOCKERS_KEY = 'ceo-os-weekly-blockers';
 const LEGACY_REVIEW_NOTES_KEY = 'ceo-os-weekly-review-notes';
-
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
 
 export const WEEKLY_BRIEF_UPDATED_EVENT = 'ceo-os:weekly-brief-updated';
 
@@ -125,7 +112,7 @@ function createDefaultWeekPayload() {
 }
 
 function getWeeklySource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export function resolveWeeklySource() {

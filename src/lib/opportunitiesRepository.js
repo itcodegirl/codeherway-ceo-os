@@ -1,22 +1,9 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
 import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
-
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
 
 function normalizeOpportunity(item) {
   return {
@@ -93,7 +80,7 @@ function mapSupabaseRows(rows) {
 }
 
 export function getOpportunitiesSource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export async function listOpportunities() {

@@ -1,18 +1,5 @@
 import { opsSloSnapshotMock } from '../data/opsSloSnapshotMock';
-
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -58,7 +45,7 @@ function getFallbackSnapshots(limit = 30) {
 }
 
 export function getOpsSloSnapshotsSource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export async function listOpsSloSnapshots({ limit = 30 } = {}) {

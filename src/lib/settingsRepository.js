@@ -1,23 +1,10 @@
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from './settings';
 import { safeLocalStorageSetItem } from './utils';
+import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const LOCAL_SETTINGS_KEY = 'ceo-os-settings';
 const LOCAL_SETTINGS_SAVED_AT_KEY = 'ceo-os-settings-saved-at';
 export const SETTINGS_UPDATED_EVENT = 'ceo-os:settings-updated';
-
-const hasSupabaseConfig = Boolean(
-  import.meta.env.VITE_SUPABASE_URL
-  && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function getSupabaseRuntime() {
-  if (!hasSupabaseConfig) {
-    return null;
-  }
-
-  const { getSupabaseAdapter } = await import('./supabaseAdapter');
-  return getSupabaseAdapter();
-}
 
 function normalizeSettings(input) {
   const next = input && typeof input === 'object' ? input : {};
@@ -120,7 +107,7 @@ function isSupabaseAuthError(error) {
 }
 
 export function getSettingsSource() {
-  return hasSupabaseConfig ? 'supabase' : 'local';
+  return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
 
 export async function loadSettings() {
