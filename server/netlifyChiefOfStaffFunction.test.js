@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest';
-import { handler } from './chief-of-staff.js';
-import * as core from '../../server/chiefOfStaffProxyCore.js';
+import { handler } from '../netlify/functions/chief-of-staff.js';
+import * as core from './chiefOfStaffProxyCore.js';
 
 describe('netlify chief-of-staff function', () => {
   const originalApiKey = process.env.OPENAI_API_KEY;
