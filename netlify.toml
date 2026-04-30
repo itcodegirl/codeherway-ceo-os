@@ -5,3 +5,8 @@
   from = "/api/chief-of-staff"
   to = "/.netlify/functions/chief-of-staff"
   status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
