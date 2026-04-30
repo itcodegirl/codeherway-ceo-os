@@ -129,8 +129,10 @@ describe('src/pages/Dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(screen.getByText('Send recap email')).toBeInTheDocument();
+    expect(screen.getByText('0 of 1 reminders complete (0%)')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByText('1 of 1 reminders complete (100%)')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
   });
 
@@ -159,6 +161,7 @@ describe('src/pages/Dashboard', () => {
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
     expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
+    expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
     expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
   });

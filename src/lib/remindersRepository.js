@@ -4,10 +4,15 @@ const STORAGE_KEY = 'ceo-os-reminders';
 export const REMINDERS_UPDATED_EVENT = 'ceo-os:reminders-updated';
 
 function normalizeReminder(reminder) {
+  const completedAt = typeof reminder?.completedAt === 'string'
+    ? reminder.completedAt
+    : '';
+
   return {
     id: String(reminder?.id || buildCreateId()),
     text: typeof reminder?.text === 'string' ? reminder.text.trim() : '',
     isDone: Boolean(reminder?.isDone),
+    completedAt: reminder?.isDone ? completedAt : '',
     createdAt: typeof reminder?.createdAt === 'string'
       ? reminder.createdAt
       : new Date().toISOString(),
@@ -60,6 +65,20 @@ export function listReminders() {
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 }
 
+export function getReminderProgress(reminders = readStorage()) {
+  const safeReminders = Array.isArray(reminders) ? reminders.map(normalizeReminder) : [];
+  const total = safeReminders.length;
+  const completed = safeReminders.filter((reminder) => reminder.isDone).length;
+  const pending = Math.max(0, total - completed);
+
+  return {
+    total,
+    completed,
+    pending,
+    completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+  };
+}
+
 export function createReminder(payload) {
   const text = typeof payload?.text === 'string' ? payload.text.trim() : '';
   if (!text) {
@@ -84,13 +103,22 @@ export function toggleReminder(id, isDone) {
   const normalizedId = String(id || '');
   const nextState = Boolean(isDone);
   const current = readStorage();
+  let updatedReminder = null;
   const next = current.map((reminder) => (
     reminder.id === normalizedId
-      ? { ...reminder, isDone: nextState }
+      ? (() => {
+        updatedReminder = {
+          ...reminder,
+          isDone: nextState,
+          completedAt: nextState ? new Date().toISOString() : '',
+        };
+        return updatedReminder;
+      })()
       : reminder
   ));
   writeStorage(next);
-  emitReminderUpdated({ type: 'toggle', id: normalizedId });
+  emitReminderUpdated({ type: 'toggle', id: normalizedId, isDone: nextState });
+  return updatedReminder;
 }
 
 export function deleteReminder(id) {

@@ -16,6 +16,7 @@ import {
 import {
   createReminder,
   deleteReminder,
+  getReminderProgress,
   listReminders,
   REMINDERS_UPDATED_EVENT,
   toggleReminder,
@@ -133,8 +134,25 @@ function buildQuickWin(wins, opportunities, contentRows) {
   return 'Quick win waiting: close one tiny loop before opening a new one.';
 }
 
-function buildMomentumMessage({ inProgressCount, blockerCount, winsCount }) {
-  const score = Math.max(0, Math.min(100, 45 + (inProgressCount * 14) + (winsCount * 10) - (blockerCount * 12)));
+function buildMomentumMessage({
+  inProgressCount,
+  blockerCount,
+  winsCount,
+  completedReminderCount,
+  pendingReminderCount,
+}) {
+  const score = Math.max(0, Math.min(
+    100,
+    45
+      + (inProgressCount * 14)
+      + (winsCount * 10)
+      + (completedReminderCount * 6)
+      - (pendingReminderCount * 4)
+      - (blockerCount * 12),
+  ));
+  if (completedReminderCount > 0 && score >= 60) {
+    return { score, text: 'Momentum is visible. Completed reminders are turning intent into proof.' };
+  }
   if (score >= 75) {
     return { score, text: 'Momentum is strong. Protect this lane and finish one more step.' };
   }
@@ -232,6 +250,10 @@ function Dashboard() {
     () => reminders.filter((item) => !item?.isDone),
     [reminders],
   );
+  const reminderProgress = useMemo(
+    () => getReminderProgress(reminders),
+    [reminders],
+  );
 
   const suggestions = useMemo(() => buildDeterministicSuggestions({
     priorities: weeklyPriorities,
@@ -260,7 +282,15 @@ function Dashboard() {
     inProgressCount: weeklyPriorities.filter((item) => item?.status === 'In Progress').length,
     blockerCount: weeklyBlockers.length,
     winsCount: weeklyWins.length,
-  }), [weeklyBlockers.length, weeklyPriorities, weeklyWins.length]);
+    completedReminderCount: reminderProgress.completed,
+    pendingReminderCount: reminderProgress.pending,
+  }), [
+    reminderProgress.completed,
+    reminderProgress.pending,
+    weeklyBlockers.length,
+    weeklyPriorities,
+    weeklyWins.length,
+  ]);
 
   const blockerItems = useMemo(() => {
     if (weeklyBlockers.length === 0) {
@@ -452,6 +482,12 @@ function Dashboard() {
               Add
             </Button>
           </form>
+
+          <p className="focus-reminder-progress" aria-live="polite">
+            {reminderProgress.total > 0
+              ? `${reminderProgress.completed} of ${reminderProgress.total} reminders complete (${reminderProgress.completionRate}%)`
+              : 'No reminder progress yet.'}
+          </p>
 
           <ul className="focus-reminder-list">
             {pendingReminders.length ? pendingReminders.map((item) => (
