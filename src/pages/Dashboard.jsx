@@ -398,7 +398,7 @@ function Dashboard() {
         <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
           <div className="focus-panel__header">
             <h2>Today's Main Focus</h2>
-            <span className="signal-node">Focus</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <p className="focus-home__main-focus">{mainFocus.title}</p>
           <p className="calm-copy">{mainFocus.context}</p>
@@ -423,7 +423,7 @@ function Dashboard() {
         <article className="focus-panel" aria-label="Blockers panel">
           <div className="focus-panel__header">
             <h2>Blockers</h2>
-            <span className="signal-node">Blockers</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <ul className="focus-list">
             {blockerItems.map((item, index) => (
@@ -435,7 +435,7 @@ function Dashboard() {
         <article className="focus-panel" aria-label="Reminders panel">
           <div className="focus-panel__header">
             <h2>Reminders</h2>
-            <span className="signal-node">Reset</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <form className="focus-reminder-form" onSubmit={handleAddReminder}>
             <label className="sr-only" htmlFor="focus-reminder-input">
@@ -494,7 +494,7 @@ function Dashboard() {
         <article className="focus-panel" aria-label="Momentum panel">
           <div className="focus-panel__header">
             <h2>Quick Win</h2>
-            <span className="signal-node">Momentum</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <p className="focus-home__quick-win">{quickWin}</p>
           <p className="focus-home__momentum-score">
@@ -506,7 +506,7 @@ function Dashboard() {
         <article className="focus-panel focus-panel--reset" aria-live="polite">
           <div className="focus-panel__header">
             <h2>I'm Overwhelmed Reset</h2>
-            <span className="signal-node">Next Move</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <p className="supportive-copy">
             {isResetOpen

@@ -181,6 +181,8 @@ body::after {
 }
 
 .signal-node {
+  display: inline-block;
+  flex: 0 0 auto;
   width: 0.58rem;
   height: 0.58rem;
   border-radius: 999px;
