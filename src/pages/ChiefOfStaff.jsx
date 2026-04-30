@@ -1,14 +1,16 @@
+import { lazy, Suspense } from "react";
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
-import ChiefTelemetryDiagnostics from "../components/chief/ChiefTelemetryDiagnostics";
 import Button from "../components/ui/Button";
 import SourceStatusNotice from "../components/ui/SourceStatusNotice";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
-import { useChiefTelemetryHealth } from "../hooks/useChiefTelemetryHealth";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import { buildSourceNotice } from "../lib/uiCopy";
 import "../styles/chief-of-staff.css";
 
 const MAX_NOTES_LENGTH = 12000;
+const ChiefTelemetryDiagnosticsPanel = lazy(() =>
+  import("../components/chief/ChiefTelemetryDiagnosticsPanel")
+);
 
 function parseStructuredText(value) {
   if (typeof value !== "string") {
@@ -65,18 +67,6 @@ export default function ChiefOfStaff() {
     clearWorkspace,
     refreshWorkspace
   } = useChiefOfStaff();
-
-  const {
-    source: telemetrySource,
-    recentCount: telemetryRecentCount,
-    lastEventTimestamp: telemetryLastEventTimestamp,
-    lastRequestId: telemetryLastRequestId,
-    lastCorrelationId: telemetryLastCorrelationId,
-    recentEvents: telemetryRecentEvents,
-    outcomeCounters: telemetryOutcomeCounters,
-    isLoading: isTelemetryLoading,
-    error: telemetryError
-  } = useChiefTelemetryHealth();
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
   const result = toPanelResult(latestResponse);
@@ -161,7 +151,7 @@ export default function ChiefOfStaff() {
               {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
             </Button>
           </div>
-          <p id="chief-action-hint" className="chief-action-hint" role="status" aria-live="polite">
+          <p id="chief-action-hint" className="chief-helper-text" role="status" aria-live="polite">
             {actionHint}
           </p>
 
@@ -169,17 +159,19 @@ export default function ChiefOfStaff() {
             {isGenerating ? "Generating recommendations from your notes..." : feedbackMessage}
           </p>
 
-          <ChiefTelemetryDiagnostics
-            source={telemetrySource}
-            recentCount={telemetryRecentCount}
-            lastEventTimestamp={telemetryLastEventTimestamp}
-            lastRequestId={telemetryLastRequestId}
-            lastCorrelationId={telemetryLastCorrelationId}
-            recentEvents={telemetryRecentEvents}
-            outcomeCounters={telemetryOutcomeCounters}
-            isLoading={isTelemetryLoading}
-            error={telemetryError}
-          />
+          <Suspense
+            fallback={(
+              <div className="chief-card" aria-live="polite">
+                <div className="chief-section-header">
+                  <h4>Decision Engine Health</h4>
+                  <span className="chief-count-badge">--</span>
+                </div>
+                <p className="chief-helper-text">Loading telemetry diagnostics...</p>
+              </div>
+            )}
+          >
+            <ChiefTelemetryDiagnosticsPanel />
+          </Suspense>
         </div>
       </div>
 
