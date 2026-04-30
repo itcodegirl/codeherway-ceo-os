@@ -414,6 +414,7 @@ function Dashboard() {
               type="button"
               role="radio"
               aria-checked={focusMode === mode.id}
+              tabIndex={focusMode === mode.id ? 0 : -1}
               className={focusMode === mode.id ? 'focus-chip focus-chip--active' : 'focus-chip'}
               onClick={() => setFocusMode(mode.id)}
               onKeyDown={(event) => handleFocusModeKeyDown(event, index)}

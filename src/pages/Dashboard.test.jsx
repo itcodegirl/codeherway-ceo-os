@@ -161,9 +161,14 @@ describe('src/pages/Dashboard', () => {
 
     const planningChip = screen.getByRole('radio', { name: 'Planning' });
     expect(planningChip).toHaveAttribute('aria-checked', 'true');
+    expect(planningChip).toHaveAttribute('tabIndex', '0');
 
     fireEvent.keyDown(planningChip, { key: 'ArrowRight' });
-    expect(screen.getByRole('radio', { name: 'Reflection' })).toHaveAttribute('aria-checked', 'true');
+    const reflectionChip = screen.getByRole('radio', { name: 'Reflection' });
+    expect(reflectionChip).toHaveAttribute('aria-checked', 'true');
+    expect(reflectionChip).toHaveAttribute('tabIndex', '0');
+    expect(planningChip).toHaveAttribute('tabIndex', '-1');
+    expect(reflectionChip).toHaveFocus();
   });
 
   it('adds reminders and allows marking them complete', () => {
