@@ -48,7 +48,7 @@ function AppLayout() {
         <Topbar pageTitle={currentPageTitle} />
         <SystemPulse />
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
-          <ErrorBoundary>
+          <ErrorBoundary key={location.pathname} name={currentPageTitle}>
             <Outlet />
           </ErrorBoundary>
         </main>
