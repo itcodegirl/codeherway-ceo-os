@@ -21,7 +21,7 @@ import {
   toggleReminder,
 } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
-import { buildSourceNotice } from '../lib/uiCopy';
+import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
 const FOCUS_MODES = [
@@ -319,7 +319,7 @@ function Dashboard() {
   };
 
   const dashboardDemoNote = isLocalDashboardDemoMode
-    ? 'Demo mode is active. Connect live data when you are ready.'
+    ? SOURCE_NOTICE_SAMPLE_DATA
     : '';
 
   const isFocusDataLoading = isDataLoading || isWeeklyLoading;

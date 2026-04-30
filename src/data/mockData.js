@@ -88,12 +88,12 @@ export const weeklyWins = [
 export const weeklyBlockers = [
   {
     id: 1,
-    text: 'Opportunities and weekly brief workflows still need full CRUD interactions.',
+    text: 'Partnership proposal follow-up needs a clear owner before Friday.',
     severity: 'warning',
   },
   {
     id: 2,
-    text: 'AI workspace is presenting static copy and lacks action wiring.',
+    text: 'Founder content queue has strong ideas but no protected publishing window.',
     severity: 'warning',
   },
 ];
@@ -103,7 +103,7 @@ export const dashboardDemoData = {
     {
       id: 'demo-activity-priority',
       title: 'Priority in motion: Align weekly founder operating rhythm',
-      time: 'Demo timeline',
+      time: 'Today',
       type: 'Planning',
     },
     {
@@ -125,8 +125,8 @@ export const dashboardDemoData = {
     momentum: 'Needs attention',
   },
   focusScore: {
-    demoSuffix: 'Demo heuristic',
+    demoSuffix: 'Local sample',
   },
-  demoNote: 'Sample data - configure Supabase to use real data.',
+  demoNote: 'Local sample data is active. Connect workspace data to replace sample records.',
 };
 

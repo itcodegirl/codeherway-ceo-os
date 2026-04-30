@@ -70,7 +70,7 @@ describe('ContentCrudPage', () => {
     expect(screen.getByRole('heading', { name: 'Content OS' })).toBeInTheDocument();
     expect(screen.getByText('Loading content board data.')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Publishing workflow cards' })).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Sample data - configure Supabase to use real data.')).toBeInTheDocument();
+    expect(screen.getByText('Local sample data is active. Connect workspace data to replace sample records.')).toBeInTheDocument();
   });
 
   it('renders empty and error state content when there are no items', () => {
@@ -84,7 +84,7 @@ describe('ContentCrudPage', () => {
 
     renderWithRouter(<ContentCrudPage />);
 
-    expect(screen.getByText('Data source: Supabase (live persistence).')).toBeInTheDocument();
+    expect(screen.getByText('Data source: Live workspace sync is enabled.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load content items right now.');
     expect(screen.getByText('No content items yet')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /add content/i }).length).toBeGreaterThan(0);
