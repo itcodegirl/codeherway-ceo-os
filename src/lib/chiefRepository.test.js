@@ -71,6 +71,9 @@ describe('chiefRepository', () => {
         title: 'Legacy output',
         content: 'Legacy content',
         source: 'proxy',
+        fallbackReason: '',
+        errorCode: '',
+        errorMessage: '',
         structuredPayload: {
           priorities: [],
           opportunities: [],
