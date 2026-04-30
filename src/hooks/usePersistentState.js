@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { resolveNextValue } from '../lib/stateUtils';
 
 const PERSISTENT_STATE_EVENT = 'ceo-os:persistent-state';
 
@@ -21,10 +22,6 @@ function loadValue(key, initialValue) {
   } catch {
     return resolveInitialValue(initialValue);
   }
-}
-
-function resolveNextValue(nextValue, currentValue) {
-  return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
 }
 
 function valuesEqual(left, right) {

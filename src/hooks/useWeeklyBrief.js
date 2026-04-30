@@ -16,10 +16,7 @@ import {
   defaultPriorities,
   defaultWins,
 } from '../lib/weeklyData';
-
-function resolveNextValue(nextValue, currentValue) {
-  return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
-}
+import { resolveNextValue, shallowEqualRecords } from '../lib/stateUtils';
 
 function normalizeCollectionPayload(payload, key) {
   const values = Array.isArray(payload?.[key]) ? payload[key] : [];
@@ -28,35 +25,6 @@ function normalizeCollectionPayload(payload, key) {
 
 function normalizeArrayValue(nextValue, fallbackValue) {
   return Array.isArray(nextValue) ? nextValue : fallbackValue;
-}
-
-function shallowEqualRecords(left, right) {
-  if (Object.is(left, right)) {
-    return true;
-  }
-
-  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') {
-    return false;
-  }
-
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  if (leftKeys.length !== rightKeys.length) {
-    return false;
-  }
-
-  for (let index = 0; index < leftKeys.length; index += 1) {
-    const key = leftKeys[index];
-    if (!Object.prototype.hasOwnProperty.call(right, key)) {
-      return false;
-    }
-
-    if (!Object.is(left[key], right[key])) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 export function useWeeklyBrief() {

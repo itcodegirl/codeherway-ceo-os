@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../lib/settings';
 import { getSettingsSource, loadSettings, saveSettings as persistSettings } from '../lib/settingsRepository';
-
-function resolveNextValue(nextValue, currentValue) {
-  return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
-}
+import { resolveNextValue } from '../lib/stateUtils';
 
 function resolveSettingValue(key, nextValue) {
   if (key === 'teamName') {
