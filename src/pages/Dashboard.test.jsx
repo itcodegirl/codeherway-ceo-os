@@ -89,6 +89,56 @@ describe('src/pages/Dashboard', () => {
     expect(nextMovePanel).toHaveTextContent(/Spend 20 focused minutes|Send one unblock message|Draft a concise follow-up/i);
   });
 
+  it('replaces a selected next move when the underlying focus data changes', () => {
+    useDashboardData.mockReturnValue({
+      opportunityItems: [],
+      contentRows: [],
+      isDataLoading: false,
+    });
+    useWeeklyBrief.mockReturnValue({
+      priorities: [
+        { id: 'p-old', title: 'Blocked Launch', status: 'Blocked' },
+      ],
+      blockers: [],
+      wins: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief: vi.fn(),
+    });
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tell me what to do next' }));
+    const nextMovePanel = screen.getByText('Next Smallest Action').closest('.focus-home__next-move');
+    expect(nextMovePanel).toHaveTextContent('Send one unblock message for "Blocked Launch".');
+
+    useWeeklyBrief.mockReturnValue({
+      priorities: [
+        { id: 'p-new', title: 'Current Focus', status: 'In Progress' },
+      ],
+      blockers: [],
+      wins: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief: vi.fn(),
+    });
+
+    rerender(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(nextMovePanel).toHaveTextContent('Spend 20 focused minutes on "Current Focus".');
+    expect(nextMovePanel).not.toHaveTextContent('Blocked Launch');
+  });
+
   it('switches to overwhelmed mode and opens reset guidance', () => {
     render(
       <MemoryRouter>

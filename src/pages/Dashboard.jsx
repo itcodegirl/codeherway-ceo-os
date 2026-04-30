@@ -299,7 +299,8 @@ function Dashboard() {
     return weeklyBlockers.slice(0, 3).map((item) => item?.text || 'Unspecified blocker');
   }, [weeklyBlockers]);
 
-  const displayedNextMove = nextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
+  const activeNextMove = nextMove && nextMoveQueue.includes(nextMove) ? nextMove : '';
+  const displayedNextMove = activeNextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
 
   const handleTellMeWhatToDoNext = () => {
     const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
