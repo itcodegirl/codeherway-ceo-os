@@ -30,8 +30,12 @@ export function useSettings() {
   const requestIdRef = useRef(0);
   const timezoneIsValid = Boolean(resolveTimeZone(settings.timezone || ''));
 
-  useEffect(() => () => {
-    isMountedRef.current = false;
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const loadCurrentSettings = useCallback(async () => {

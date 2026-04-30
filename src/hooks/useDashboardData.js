@@ -68,8 +68,12 @@ export function useDashboardData({ onLoadError }) {
     [],
   );
 
-  useEffect(() => () => {
-    isMountedRef.current = false;
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {

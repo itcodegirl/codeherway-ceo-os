@@ -44,8 +44,12 @@ export function useWeeklyBrief() {
     weekStartRef.current = weekStart;
   }, [weekStart]);
 
-  useEffect(() => () => {
-    isMountedRef.current = false;
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
