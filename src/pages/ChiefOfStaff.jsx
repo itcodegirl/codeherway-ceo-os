@@ -37,6 +37,9 @@ function toPanelResult(entry) {
     title: parsedContent?.title || entry.title || "Executive Action Plan",
     summary: parsedContent?.summary || entry.content || "",
     source: entry.source || "proxy",
+    fallbackReason: entry.fallbackReason || "",
+    errorCode: entry.errorCode || "",
+    errorMessage: entry.errorMessage || "",
     structured: entry.structuredPayload || parsedContent?.structured || {}
   });
 }

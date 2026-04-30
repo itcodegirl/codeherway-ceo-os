@@ -72,6 +72,9 @@ export function useChiefGeneration({
         content: nextResponse.content,
         structuredPayload: nextResponse.structuredPayload || {},
         source: nextResponse.source || 'proxy',
+        fallbackReason: nextResponse.fallbackReason || '',
+        errorCode: nextResponse.errorCode || '',
+        errorMessage: nextResponse.errorMessage || '',
       });
 
       if (!isMountedRef.current) {
@@ -82,7 +85,7 @@ export function useChiefGeneration({
       if (nextResponse.source === 'proxy') {
         setFeedback(`Created: ${savedOutput.title}. Review and edit before sending.`);
       } else {
-        setFeedback(`Created: ${savedOutput.title}. Using local fallback output.`);
+        setFeedback(`AI unavailable. Saved local fallback: ${savedOutput.title}. Review before using.`);
       }
 
       trackTelemetry('generate_completed', {

@@ -37,14 +37,23 @@ export default function ChiefOutputPanel({
   const opportunities = structured.opportunities || [];
   const contentItems = structured.contentItems || [];
   const tasks = structured.tasks || [];
+  const hasStructuredItems = priorities.length
+    + opportunities.length
+    + contentItems.length
+    + tasks.length > 0;
 
   return (
     <section className="chief-output-panel">
       <ChiefSummaryCard
         title={result.title}
         summary={result.summary}
+        source={result.source}
+        fallbackReason={result.fallbackReason}
+        errorCode={result.errorCode}
+        errorMessage={result.errorMessage}
         onAcceptAll={onAcceptAll}
         isAcceptingAll={isAcceptingAll}
+        canAcceptAll={hasStructuredItems}
       />
 
       <ChiefPriorityList

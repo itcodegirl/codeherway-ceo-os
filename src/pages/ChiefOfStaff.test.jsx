@@ -98,6 +98,39 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(screen.getByText("Tasks")).toBeInTheDocument();
   });
 
+  it("labels fallback output and disables add all when no structured actions exist", () => {
+    useChiefOfStaff.mockReturnValue(
+      createHookState({
+        responses: [
+          {
+            title: "Executive Action Plan",
+            content: "Local fallback plan",
+            source: "fallback",
+            fallbackReason: "AI generation is unavailable; this is a local template fallback.",
+            errorCode: "OPENAI_API_KEY_MISSING",
+            errorMessage: "OPENAI_API_KEY is not configured on the server",
+            structuredPayload: {
+              priorities: [],
+              opportunities: [],
+              contentItems: [],
+              tasks: []
+            }
+          }
+        ]
+      })
+    );
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Local fallback")).toBeInTheDocument();
+    expect(screen.getByText("AI generation is unavailable; this is a local template fallback.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add All to System" })).toBeDisabled();
+  });
+
   it("build button triggers plan action", () => {
     const hookState = createHookState({ notes: "Founder notes" });
     useChiefOfStaff.mockReturnValue(hookState);

@@ -47,6 +47,46 @@ function parseRequestId(value) {
   return value.trim();
 }
 
+function normalizeErrorCode(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim().slice(0, 80);
+}
+
+function normalizeErrorMessage(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim().slice(0, 220);
+}
+
+function createChiefProxyError(message, metadata = {}) {
+  const error = new Error(message);
+  error.code = normalizeErrorCode(metadata.code);
+  error.status = Number(metadata.status) || 0;
+  error.requestId = parseRequestId(metadata.requestId);
+  error.correlationId = normalizeCorrelationId(metadata.correlationId);
+  error.userMessage = normalizeErrorMessage(metadata.userMessage);
+  return error;
+}
+
+async function readProxyError(response) {
+  const rawBody = await response.text().catch(() => '');
+  if (!rawBody) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(rawBody);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return { error: rawBody };
+  }
+}
+
 function createFallback(actionKey, notes, metadata = {}) {
   const config = getChiefActionConfig(actionKey);
   return {
@@ -56,6 +96,9 @@ function createFallback(actionKey, notes, metadata = {}) {
     source: 'fallback',
     requestId: parseRequestId(metadata.requestId),
     correlationId: normalizeCorrelationId(metadata.correlationId),
+    fallbackReason: normalizeErrorMessage(metadata.fallbackReason || 'AI output was unavailable.'),
+    errorCode: normalizeErrorCode(metadata.errorCode),
+    errorMessage: normalizeErrorMessage(metadata.errorMessage),
   };
 }
 
@@ -78,9 +121,11 @@ async function fetchChiefProxy(payload, options = {}) {
     });
   } catch (error) {
     if (error?.name === 'AbortError') {
-      const timeoutError = new Error('Chief of staff proxy request timed out');
-      timeoutError.code = 'CHIEF_PROXY_TIMEOUT';
-      throw timeoutError;
+      throw createChiefProxyError('Chief of staff proxy request timed out', {
+        code: 'CHIEF_PROXY_TIMEOUT',
+        userMessage: 'The AI request timed out before a response came back.',
+        correlationId,
+      });
     }
     throw error;
   } finally {
@@ -108,6 +153,9 @@ export async function generateChiefOfStaffResponse({ actionKey, notes, correlati
   if (!aiConfig.endpoint) {
     return createFallback(actionKey, normalizedNotes, {
       correlationId: normalizedCorrelationId,
+      fallbackReason: 'The AI proxy endpoint is not configured.',
+      errorCode: 'CHIEF_PROXY_NOT_CONFIGURED',
+      errorMessage: 'AI proxy endpoint is missing.',
     });
   }
 
@@ -122,7 +170,14 @@ export async function generateChiefOfStaffResponse({ actionKey, notes, correlati
     });
 
     if (!response.ok) {
-      throw new Error(`AI proxy request failed with status ${response.status}`);
+      const errorPayload = await readProxyError(response);
+      throw createChiefProxyError(`AI proxy request failed with status ${response.status}`, {
+        status: response.status,
+        code: errorPayload?.error_code || `CHIEF_PROXY_HTTP_${response.status}`,
+        requestId: errorPayload?.request_id,
+        correlationId: errorPayload?.correlation_id || normalizedCorrelationId,
+        userMessage: errorPayload?.error || 'The AI service returned an error.',
+      });
     }
 
     const payload = await response.json();
@@ -140,6 +195,9 @@ export async function generateChiefOfStaffResponse({ actionKey, notes, correlati
           : fallback.structuredPayload,
         requestId,
         correlationId: responseCorrelationId,
+        fallbackReason: 'The AI service returned no readable output.',
+        errorCode: 'CHIEF_EMPTY_OUTPUT',
+        errorMessage: 'AI response did not include output text.',
       };
     }
 
@@ -151,9 +209,13 @@ export async function generateChiefOfStaffResponse({ actionKey, notes, correlati
       requestId,
       correlationId: responseCorrelationId,
     };
-  } catch {
+  } catch (error) {
     return createFallback(actionKey, normalizedNotes, {
-      correlationId: normalizedCorrelationId,
+      requestId: error?.requestId,
+      correlationId: error?.correlationId || normalizedCorrelationId,
+      fallbackReason: 'AI generation is unavailable; this is a local template fallback.',
+      errorCode: error?.code || 'CHIEF_PROXY_UNAVAILABLE',
+      errorMessage: error?.userMessage || error?.message || 'AI generation failed.',
     });
   }
 }
