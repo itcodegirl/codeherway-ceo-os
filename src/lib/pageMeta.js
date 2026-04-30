@@ -1,42 +1,13 @@
+import { APP_ROUTES } from './routes';
+
 export function buildPageMetaByRoute(appName) {
-  return {
-    '/': {
-      title: `Focus Home | ${appName}`,
-      description: 'ADHD-supportive focus command center for momentum, blockers, reminders, and next moves.',
+  return APP_ROUTES.reduce((routeMap, route) => ({
+    ...routeMap,
+    [route.path]: {
+      title: `${route.label} | ${appName}`,
+      description: route.description,
     },
-    '/opportunities': {
-      title: `Opportunities | ${appName}`,
-      description: 'Track partnerships, role pipelines, and strategic outreach in one opportunity workspace.',
-    },
-    '/capture': {
-      title: `Capture | ${appName}`,
-      description: 'Capture ideas, tasks, opportunities, and journal fragments fast with sticky-note simplicity.',
-    },
-    '/journal': {
-      title: `Journal | ${appName}`,
-      description: 'Reflect with calm prompts, name what feels heavy, and choose one supportive next move.',
-    },
-    '/content': {
-      title: `Content OS | ${appName}`,
-      description: 'Plan, monitor, and ship founder content across channels with a clear publishing workflow.',
-    },
-    '/weekly-brief': {
-      title: `Weekly Brief | ${appName}`,
-      description: 'Review weekly priorities, wins, blockers, and next executive moves with clarity.',
-    },
-    '/chief-of-staff': {
-      title: `Chief of Staff | ${appName}`,
-      description: 'Transform notes into executive summaries, action items, and communication-ready drafts.',
-    },
-    '/ops-reliability': {
-      title: `Ops Reliability | ${appName}`,
-      description: 'Review route-size and telemetry ingest SLO trends with run-over-run reliability context.',
-    },
-    '/settings': {
-      title: `Settings | ${appName}`,
-      description: 'Manage workspace profile, timezone, and experience preferences for CEO OS.',
-    },
-  };
+  }), {});
 }
 
 export function buildDefaultPageMeta(appName) {

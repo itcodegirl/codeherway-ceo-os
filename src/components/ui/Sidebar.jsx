@@ -2,19 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
 import { usePersistentState } from '../../hooks/usePersistentState';
+import { NAV_ITEMS } from '../../lib/routes';
 import { DEFAULT_SETTINGS, resolveTeamName } from '../../lib/settings';
-
-const NAV_ITEMS = [
-  { label: 'Focus Home', path: '/', icon: 'dashboard' },
-  { label: 'Capture', path: '/capture', icon: 'capture' },
-  { label: 'Journal', path: '/journal', icon: 'journal' },
-  { label: 'Opportunities', path: '/opportunities', icon: 'opportunities' },
-  { label: 'Content OS', path: '/content', icon: 'content' },
-  { label: 'Weekly Brief', path: '/weekly-brief', icon: 'weekly' },
-  { label: 'Chief of Staff', path: '/chief-of-staff', icon: 'chief' },
-  { label: 'Ops Reliability', path: '/ops-reliability', icon: 'trend' },
-  { label: 'Settings', path: '/settings', icon: 'settings' },
-];
 
 function subscribeToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery?.addEventListener === 'function') {
