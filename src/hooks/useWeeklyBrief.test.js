@@ -5,6 +5,18 @@ import { useWeeklyBrief } from './useWeeklyBrief';
 
 const currentWeekStart = '2026-04-20';
 
+function createDeferred() {
+  let resolve;
+  const promise = new Promise((nextResolve) => {
+    resolve = nextResolve;
+  });
+
+  return {
+    promise,
+    resolve,
+  };
+}
+
 vi.mock('../lib/weeklyRepository', () => ({
   WEEKLY_BRIEF_UPDATED_EVENT: 'ceo-os:weekly-brief-updated',
   createWeeklyItem: vi.fn(),
@@ -103,5 +115,60 @@ describe('useWeeklyBrief', () => {
     });
 
     expect(result.current.priorities).toEqual([]);
+  });
+
+  it('ignores stale weekly brief responses when a newer refresh finishes later', async () => {
+    const firstLoad = createDeferred();
+    const secondLoad = createDeferred();
+
+    getWeeklyBriefByWeek
+      .mockImplementationOnce(() => firstLoad.promise)
+      .mockImplementationOnce(() => secondLoad.promise);
+
+    const { result } = renderHook(() => useWeeklyBrief());
+
+    await waitFor(() => {
+      expect(getWeeklyBriefByWeek).toHaveBeenCalledTimes(1);
+    });
+
+    act(() => {
+      void result.current.refreshWeeklyBrief();
+    });
+
+    await waitFor(() => {
+      expect(getWeeklyBriefByWeek).toHaveBeenCalledTimes(2);
+    });
+
+    await act(async () => {
+      secondLoad.resolve({
+        reviewNotes: 'Newest weekly brief',
+        priorities: [{ id: 'priority-2', text: 'Ship roadmap', status: 'Planned' }],
+        wins: [],
+        blockers: [],
+        source: 'supabase',
+      });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.reviewNotes).toBe('Newest weekly brief');
+      expect(result.current.source).toBe('supabase');
+    });
+
+    await act(async () => {
+      firstLoad.resolve({
+        reviewNotes: 'Outdated weekly brief',
+        priorities: [{ id: 'priority-1', text: 'Old plan', status: 'In Progress' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+      await Promise.resolve();
+    });
+
+    expect(result.current.reviewNotes).toBe('Newest weekly brief');
+    expect(result.current.priorities).toEqual([{ id: 'priority-2', text: 'Ship roadmap', status: 'Planned' }]);
+    expect(result.current.source).toBe('supabase');
   });
 });

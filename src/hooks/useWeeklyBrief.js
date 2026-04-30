@@ -62,6 +62,8 @@ function shallowEqualRecords(left, right) {
 export function useWeeklyBrief() {
   const [weekStart, setWeekStart] = useState(() => getCurrentWeekStart());
   const weekStartRef = useRef(weekStart);
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
   const [source, setSource] = useState(resolveWeeklySource());
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -73,6 +75,10 @@ export function useWeeklyBrief() {
   useEffect(() => {
     weekStartRef.current = weekStart;
   }, [weekStart]);
+
+  useEffect(() => () => {
+    isMountedRef.current = false;
+  }, []);
 
   useEffect(() => {
     const msUntilNextMinute = 60 * 1000 - (Date.now() % (60 * 1000));
@@ -99,23 +105,36 @@ export function useWeeklyBrief() {
   }, []);
 
   const loadWeeklyBrief = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setIsLoading(true);
     setLoadError('');
 
     try {
       const payload = await getWeeklyBriefByWeek(weekStart);
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setSource(payload.source || resolveWeeklySource());
       setReviewNotesState(typeof payload.reviewNotes === 'string' ? payload.reviewNotes : DEFAULT_REVIEW_NOTES);
       setPrioritiesState(normalizeCollectionPayload(payload, 'priorities'));
       setWinsState(normalizeCollectionPayload(payload, 'wins'));
       setBlockersState(normalizeCollectionPayload(payload, 'blockers'));
     } catch (error) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setLoadError('Unable to load weekly brief right now.');
       if (import.meta.env.DEV) {
         console.error('Failed to load weekly brief', error);
       }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [weekStart]);
 
