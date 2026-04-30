@@ -33,6 +33,12 @@
   align-items: center;
 }
 
+.chief-input-header > div,
+.chief-summary-header > div,
+.chief-item-copy {
+  min-width: 0;
+}
+
 .chief-eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.75rem;
@@ -232,6 +238,20 @@
 @media (max-width: 980px) {
   .chief-page-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .chief-input-header,
+  .chief-summary-header,
+  .chief-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chief-accept-all-btn,
+  .chief-item button {
+    width: 100%;
   }
 }
 

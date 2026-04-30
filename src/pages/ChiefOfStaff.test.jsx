@@ -128,6 +128,7 @@ describe("src/pages/ChiefOfStaff", () => {
 
     expect(screen.getByText("Local fallback")).toBeInTheDocument();
     expect(screen.getByText("AI generation is unavailable; this is a local template fallback.")).toBeInTheDocument();
+    expect(screen.getByText("No structured actions were detected. Review the summary, or regenerate with more specific notes.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add All to System" })).toBeDisabled();
   });
 

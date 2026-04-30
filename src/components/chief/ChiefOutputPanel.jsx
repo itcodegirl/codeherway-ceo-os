@@ -56,6 +56,12 @@ export default function ChiefOutputPanel({
         canAcceptAll={hasStructuredItems}
       />
 
+      {!hasStructuredItems ? (
+        <p className="helper-text" role="status">
+          No structured actions were detected. Review the summary, or regenerate with more specific notes.
+        </p>
+      ) : null}
+
       <ChiefPriorityList
         items={priorities}
         onAccept={onAcceptPriority}
