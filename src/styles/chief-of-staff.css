@@ -110,6 +110,12 @@
   margin-top: 1rem;
 }
 
+.chief-action-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  opacity: 0.84;
+}
+
 .chief-notes-meta {
   margin: 0.55rem 0 0;
   font-size: 0.8rem;

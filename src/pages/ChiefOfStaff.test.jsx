@@ -15,6 +15,8 @@ function createHookState(overrides = {}) {
     setNotes: vi.fn(),
     responses: [],
     feedback: "Ready",
+    source: "local",
+    isLoading: false,
     loadError: "",
     isGenerating: false,
     isAcceptingAll: false,
@@ -24,6 +26,7 @@ function createHookState(overrides = {}) {
     isStructuredItemAccepted: vi.fn(() => false),
     isStructuredItemAccepting: vi.fn(() => false),
     clearWorkspace: vi.fn(),
+    refreshWorkspace: vi.fn(),
     ...overrides
   };
 }
@@ -46,6 +49,8 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(
       screen.getByText("Paste your notes in the workspace, then choose an action above to generate output."),
     ).toBeInTheDocument();
+    expect(screen.getByText("Chief workspace is stored locally on this device right now.")).toBeInTheDocument();
+    expect(screen.getByText("Add a few founder notes to generate an action plan.")).toBeInTheDocument();
   });
 
   it("renders loading output state when generating", () => {
@@ -64,6 +69,24 @@ describe("src/pages/ChiefOfStaff", () => {
 
     expect(screen.getByText("Building your action plan…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Building Action Plan..." })).toBeDisabled();
+  });
+
+  it("shows retryable workspace status and trust cue when loading fails", () => {
+    const hookState = createHookState({
+      loadError: "Unable to load chief of staff workspace right now.",
+    });
+    useChiefOfStaff.mockReturnValue(hookState);
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Unable to load chief of staff workspace right now.");
+    fireEvent.click(screen.getByRole("button", { name: "Retry loading chief workspace" }));
+    expect(hookState.refreshWorkspace).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Review the workspace status above, then retry when ready.")).toBeInTheDocument();
   });
 
   it("renders structured output sections from latest response", () => {
@@ -237,7 +260,9 @@ describe("src/pages/ChiefOfStaff", () => {
     const input = screen.getByLabelText("Founder notes for chief of staff workspace");
 
     expect(input).toHaveAttribute("maxLength", "12000");
+    expect(input).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByText("12,000 / 12,000 characters (limit reached)")).toBeInTheDocument();
+    expect(screen.getByText("Notes reached the current limit. Trim them before generating a new action plan.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Build Action Plan" })).toBeDisabled();
   });
 });
