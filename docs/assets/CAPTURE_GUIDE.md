@@ -27,6 +27,7 @@ Use this guide when updating screenshot or demo assets for portfolio packaging.
    - Focus Home overview
    - Capture or Journal low-friction input
    - Weekly Brief priorities/blockers
+   - Chief of Staff local workspace persistence (type notes, refresh once, confirm they return)
    - Chief of Staff generation
    - Fallback/trust state if AI is unavailable
    - Structured acceptance action

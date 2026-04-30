@@ -75,6 +75,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Explicit user feedback for generation/acceptance outcomes and errors
 - Deterministic metadata and shell behavior for route transitions
 - Event-driven refresh strategy to keep screens synchronized after mutations
+- Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
 
@@ -118,5 +119,7 @@ npm run test:e2e
 - Route labels, navigation items, and page metadata now come from centralized route definitions to reduce drift.
 - Route-level error boundaries reset on navigation so one failed view does not trap the rest of the app shell.
 - Chief of Staff fallback output is explicitly labeled, preserves proxy error metadata, and explains when no structured actions can be saved.
+- Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright to prove the workflow behaves like a saved workspace.
+- Async mount guards were normalized for Strict Mode so dev/test reload behavior matches production expectations more closely.
 - Reminder completion now records completion timestamps and feeds a visible Focus Home progress summary.
 - Sample-data/source messaging has been rewritten as product-facing local workspace language rather than developer setup copy.

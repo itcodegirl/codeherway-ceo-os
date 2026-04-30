@@ -47,7 +47,7 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 2. Capture: add one sticky note as `idea`, then edit text/category inline.
 3. Journal: answer one prompt and show immediate autosave status.
 4. Weekly Brief + Opportunities: add one blocker or in-progress item and return to Focus Home.
-5. Chief of Staff: paste notes, generate output, and accept at least one structured recommendation.
+5. Chief of Staff: paste notes, reload once to show local persistence, then generate output and accept at least one structured recommendation.
 
 ## Portfolio review snapshot
 
@@ -56,7 +56,9 @@ This project is strongest when presented as a local-first productivity system wi
 - Direct Netlify routes are protected with an SPA fallback and E2E direct-route refresh tests.
 - Route labels, navigation, and metadata come from one route definition source to reduce product drift.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
+- Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
 - Reminder completion is timestamped and summarized so Focus Home shows real execution progress instead of only open tasks.
+- Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
 - CI covers lint, build, typecheck, unit tests, route performance budgets, and Playwright smoke flows.
 
 ### Honest current boundaries
@@ -130,6 +132,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Hook tests cover orchestration and synchronization.
 - Library tests cover parsing, settings normalization, and metadata helper behavior.
 - Route tests cover key visibility and accessibility flows.
+- Playwright covers direct-route refreshes, CRUD smoke paths, and Chief workspace persistence/reset behavior.
 
 ## Project layout
 
@@ -366,12 +369,15 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 
 ## Release evidence
 
-- Verification snapshot date: April 21, 2026
+- Verification snapshot date: April 30, 2026
 - Quality gates executed successfully:
   - `npm run lint`
   - `npm run build`
   - `npm run test:run`
   - `npm run typecheck`
+  - `npm run check:route-budgets`
+  - `npm run check:route-budgets:trend`
+  - `npm run test:e2e`
 - Final hardening and readiness commits:
   - `d95e8d3` - test: harden chief-of-staff edge-case coverage
   - `188dcc7` - test: harden dashboard insight edge-case resilience
@@ -388,6 +394,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `a13bd86` - feat: add journal page with local daily prompt autosave
   - `eec8c74` - feat: add deterministic reminders and suggestion layer
   - `0c15d13` - feat: add shared system pulse across the app shell
+- Product hardening cycle (April 30, 2026):
+  - `3708271` - fix: guard stale settings and weekly brief loads
+  - `66a4c0d` - refactor: centralize shared state utilities
+  - `c1f43a5` - feat: preserve chief workspace edits during refresh
+  - `fe94f2b` - fix: improve chief workspace trust cues
+  - `9a5098d` - fix: restore chief workspace hydration in strict mode
 
 ## Author
 

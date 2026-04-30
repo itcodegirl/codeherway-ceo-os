@@ -33,6 +33,7 @@ Validate core flows without changing source code:
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.
 - Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
 - Confirm reminder completion progress updates after checking and unchecking reminders.
+- On `Chief of Staff`, type notes, refresh, confirm the notes return, then reset the workspace and confirm the cleared state survives another refresh.
 - Confirm no visible console errors in normal user flows.
 
 ## 3) AI workflow confidence checks
