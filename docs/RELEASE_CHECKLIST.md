@@ -1,6 +1,6 @@
 # Release Candidate Checklist
 
-Last updated: April 23, 2026
+Last updated: April 30, 2026
 
 Use this checklist before sharing the project as portfolio evidence or treating a branch as production-ready.
 
@@ -13,6 +13,10 @@ npm run lint
 npm run build
 npm run test:run
 npm run typecheck
+npm run check:route-budgets
+npm run check:route-budgets:trend
+npm run test:e2e
+npx markdownlint-cli2 "**/*.md" "!node_modules/**"
 ```
 
 Confirm GitHub Actions CI is green for the branch before merge.
@@ -21,18 +25,23 @@ Confirm GitHub Actions CI is green for the branch before merge.
 
 Validate core flows without changing source code:
 
-- Navigate all primary routes: `Dashboard`, `Opportunities`, `Content OS`, `Weekly Brief`, `Chief of Staff`, and `Settings`.
+- Navigate all primary routes: `Focus Home`, `Capture`, `Journal`, `Opportunities`, `Content OS`, `Weekly Brief`, `Chief of Staff`, `Ops Reliability`, and `Settings`.
+- Refresh each direct route and confirm the app shell renders instead of a platform 404.
 - Confirm loading, empty, and populated states render correctly.
 - Confirm skip-link and route focus restoration still work from keyboard-only navigation.
+- Confirm route-level error recovery does not trap navigation after one view fails.
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.
 - Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
+- Confirm reminder completion progress updates after checking and unchecking reminders.
 - Confirm no visible console errors in normal user flows.
 
 ## 3) AI workflow confidence checks
 
 - Generate each chief action at least once with valid notes.
 - Verify fallback behavior appears when proxy response is unavailable or malformed.
+- Confirm fallback output is clearly labeled and does not imply AI succeeded.
 - Confirm structured acceptance only saves valid items and ignores malformed entries safely.
+- Confirm empty structured output explains why `Add All to System` is unavailable.
 - Confirm rapid repeated acceptance does not create duplicate records for the same item.
 - Confirm proxy auth mode is correct for the deployment target:
   - development: `CHIEF_STAFF_REQUIRE_TOKEN=false`

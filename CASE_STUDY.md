@@ -94,6 +94,9 @@ npm run lint
 npm run build
 npm run test:run
 npm run typecheck
+npm run check:route-budgets
+npm run check:route-budgets:trend
+npm run test:e2e
 ```
 
 ## 6) Current boundaries and next-step roadmap
@@ -108,3 +111,12 @@ npm run typecheck
 - Dashboard snapshot, pipeline, and activity surfaces now use semantic list markup with explicit accessible labels.
 - Supabase runtime access was centralized into `src/lib/supabaseRuntime.js`, removing repeated adapter/config boilerplate across repositories.
 - Added focused unit coverage for shared runtime behavior and dashboard/activity rendering semantics.
+
+## 8) Latest hardening updates (April 30, 2026)
+
+- Netlify direct-route reloads are protected by an SPA fallback and covered with Playwright direct-route refresh tests.
+- Route labels, navigation items, and page metadata now come from centralized route definitions to reduce drift.
+- Route-level error boundaries reset on navigation so one failed view does not trap the rest of the app shell.
+- Chief of Staff fallback output is explicitly labeled, preserves proxy error metadata, and explains when no structured actions can be saved.
+- Reminder completion now records completion timestamps and feeds a visible Focus Home progress summary.
+- Sample-data/source messaging has been rewritten as product-facing local workspace language rather than developer setup copy.

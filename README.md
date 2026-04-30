@@ -49,6 +49,23 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 4. Weekly Brief + Opportunities: add one blocker or in-progress item and return to Focus Home.
 5. Chief of Staff: paste notes, generate output, and accept at least one structured recommendation.
 
+## Portfolio review snapshot
+
+This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. The current implementation now covers the core reviewer risks:
+
+- Direct Netlify routes are protected with an SPA fallback and E2E direct-route refresh tests.
+- Route labels, navigation, and metadata come from one route definition source to reduce product drift.
+- Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
+- Reminder completion is timestamped and summarized so Focus Home shows real execution progress instead of only open tasks.
+- CI covers lint, build, typecheck, unit tests, route performance budgets, and Playwright smoke flows.
+
+### Honest current boundaries
+
+- Authentication and multi-user account UX are not yet a complete product experience.
+- Supabase persistence exists as an upgrade path, but several local-first workflows still need end-to-end authenticated UX review.
+- Chief of Staff is useful as a structured assistant workflow, but production AI readiness still depends on deployed secrets, proxy auth, observability, and usage controls.
+- Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
+
 ## What this repository demonstrates
 
 ### 1) Architecture consistency
@@ -141,9 +158,11 @@ npm run build
 npm run test:run
 npm run test:integration:telemetry
 npm run typecheck
+npm run test:e2e
 npm run check:route-budgets
 npm run check:route-budgets:trend
 npm run report:route-budgets
+npx markdownlint-cli2 "**/*.md" "!node_modules/**"
 npm run check:telemetry-ingest:health
 npm run check:telemetry-ingest:slo
 npm run build:slo-trend-snapshot
@@ -165,10 +184,13 @@ npm run transition:ops-incident-state
 
 GitHub Actions runs the quality gate on every push to `main` and every pull request:
 
+- Markdown lint
 - `npm run lint`
 - `npm run build`
 - `npm run test:run`
 - `npm run typecheck`
+
+The PR test suite also runs route performance budget checks and Playwright smoke tests, including direct route refresh coverage for every primary route.
 
 ### Branch protection automation
 
