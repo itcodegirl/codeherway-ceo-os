@@ -3,6 +3,7 @@ import {
   buildCreateId,
   formatIsoDate,
   normalizePath,
+  requireLocalStorageSetItem,
   safeLocalStorageSetItem,
 } from './utils';
 
@@ -37,5 +38,22 @@ describe('src/lib/utils', () => {
 
     expect(result).toBe(true);
     expect(window.localStorage.getItem('ceo-os-test-key')).toBe('value');
+  });
+
+  it('throws when a required localStorage write fails', () => {
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(() => {
+      throw new Error('storage full');
+    });
+
+    try {
+      expect(() => requireLocalStorageSetItem(
+        'ceo-os-test-key',
+        'value',
+        'Required write failed',
+      )).toThrow('Required write failed');
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
   });
 });

@@ -1,5 +1,5 @@
 import { contentItems as mockContentItems } from '../data/mockData';
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const STORAGE_KEY = 'ceo-os-content-items';
@@ -47,14 +47,11 @@ function readLocalContentItems() {
 }
 
 function writeLocalContentItems(items) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(items),
     'Failed to persist content items to localStorage',
   );
-  if (!didPersist) {
-    throw new Error('Failed to persist content items to localStorage');
-  }
 }
 
 function notifyContentItemsUpdated(detail = {}) {

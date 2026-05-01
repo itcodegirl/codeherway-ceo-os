@@ -1,4 +1,4 @@
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const CHIEF_NOTES_STORAGE_KEY = 'ceo-os-chief-notes';
@@ -35,15 +35,11 @@ function readLocalChiefNotes() {
 }
 
 function writeLocalChiefNotes(notes) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     CHIEF_NOTES_STORAGE_KEY,
     notes,
     'Failed to persist chief notes to localStorage',
   );
-
-  if (!didPersist) {
-    throw new Error('Failed to persist chief notes to localStorage');
-  }
 }
 
 function readLocalChiefResponses() {
@@ -64,15 +60,11 @@ function readLocalChiefResponses() {
 }
 
 function writeLocalChiefResponses(responses) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     CHIEF_RESPONSES_STORAGE_KEY,
     JSON.stringify(responses),
     'Failed to persist chief responses to localStorage',
   );
-
-  if (!didPersist) {
-    throw new Error('Failed to persist chief responses to localStorage');
-  }
 }
 
 function isSupabaseAuthError(error) {

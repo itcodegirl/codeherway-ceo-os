@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from './settings';
-import { safeLocalStorageSetItem } from './utils';
+import { requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const LOCAL_SETTINGS_KEY = 'ceo-os-settings';
@@ -62,19 +62,16 @@ function readLocalSavedAt() {
 }
 
 function writeLocalSettings(settings, savedAt = Date.now()) {
-  const didPersistSettings = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     LOCAL_SETTINGS_KEY,
     JSON.stringify(settings),
     'Failed to persist settings to localStorage',
   );
-  const didPersistSavedAt = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     LOCAL_SETTINGS_SAVED_AT_KEY,
     String(savedAt),
     'Failed to persist settings to localStorage',
   );
-  if (!didPersistSettings || !didPersistSavedAt) {
-    throw new Error('Failed to persist settings to localStorage');
-  }
 }
 
 function mapSettingsToProfileFields(settings) {

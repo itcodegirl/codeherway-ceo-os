@@ -1,4 +1,4 @@
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 
 const STORAGE_KEY = 'ceo-os-capture-notes';
 export const CAPTURE_NOTES_UPDATED_EVENT = 'ceo-os:capture-notes-updated';
@@ -75,15 +75,11 @@ function readStorage() {
 }
 
 function writeStorage(notes) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(notes),
     'Failed to persist capture notes to localStorage',
   );
-
-  if (!didPersist) {
-    throw new Error('Failed to persist capture notes to localStorage');
-  }
 }
 
 function emitCaptureNotesUpdated(detail = {}) {

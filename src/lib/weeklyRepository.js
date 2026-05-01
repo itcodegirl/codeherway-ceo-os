@@ -4,7 +4,7 @@ import {
   defaultPriorities,
   defaultWins,
 } from './weeklyData';
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
@@ -201,7 +201,7 @@ function readLocalWeekStore() {
 }
 
 function writeLocalWeekStore(store) {
-  safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     LOCAL_WEEKLY_BRIEFS_KEY,
     JSON.stringify(store),
     'Failed to persist weekly brief data to localStorage',

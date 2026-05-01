@@ -1,4 +1,4 @@
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem } from './utils';
 
 const STORAGE_KEY = 'ceo-os-reminders';
 export const REMINDERS_UPDATED_EVENT = 'ceo-os:reminders-updated';
@@ -42,14 +42,11 @@ function readStorage() {
 }
 
 function writeStorage(reminders) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(reminders),
     'Failed to persist reminders to localStorage',
   );
-  if (!didPersist) {
-    throw new Error('Failed to persist reminders to localStorage');
-  }
 }
 
 function emitReminderUpdated(detail = {}) {
