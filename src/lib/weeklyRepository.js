@@ -685,6 +685,10 @@ export async function updateWeeklyItem({
       });
     }
 
+    if (!nextItem) {
+      throw new Error('Weekly item not found');
+    }
+
     return next;
   });
 
@@ -740,17 +744,25 @@ export async function deleteWeeklyItem({
     return;
   }
 
+  let didDelete = false;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
     const next = {
       ...current,
     };
 
     if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
+      didDelete = current.priorities.some((item) => String(item.id) === normalizedItemId);
       next.priorities = current.priorities.filter((item) => String(item.id) !== normalizedItemId);
     } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
+      didDelete = current.wins.some((item) => String(item.id) === normalizedItemId);
       next.wins = current.wins.filter((item) => String(item.id) !== normalizedItemId);
     } else {
+      didDelete = current.blockers.some((item) => String(item.id) === normalizedItemId);
       next.blockers = current.blockers.filter((item) => String(item.id) !== normalizedItemId);
+    }
+
+    if (!didDelete) {
+      throw new Error('Weekly item not found');
     }
 
     return next;
