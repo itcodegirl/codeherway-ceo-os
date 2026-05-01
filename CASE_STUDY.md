@@ -81,6 +81,8 @@ The following assets are referenced for portfolio review and should be kept curr
 - Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
 - Stale async refresh guards for shared pulse and telemetry hooks so route changes do not overwrite current state with older request results
 - Settings persistence rejects failed writes explicitly and prevents duplicate save submissions while a save is already in flight
+- Chief workspace and Weekly Brief persistence use required local-write semantics so failed browser storage cannot look like a successful save
+- Weekly Brief rejects stale local item mutations before writing or emitting update events
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
@@ -92,6 +94,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Local status indicators for data source and loading/error state
 - Keyboard-friendly editing and workflow actions
 - Settings form states expose busy, disabled, and invalid-timezone feedback through accessible control names without duplicate alerts
+- Weekly Brief autosave copy changes when persistence is paused so the page does not reassure users incorrectly during failures
 
 ## 5) Verification set
 
@@ -149,3 +152,8 @@ npm run test:e2e
 - Settings persistence failures now reject explicitly, avoiding false cross-tab update events when local storage fails.
 - Settings validation now disables saving with an explanatory accessible name and announces invalid timezone feedback once.
 - Settings page tests cover saving state, invalid timezone feedback, changed workspace fields, and save submission.
+- Chief workspace local note/output writes now reject when browser storage fails.
+- Required localStorage write handling is centralized in `src/lib/utils.js` and reused by local-first repositories.
+- Weekly Brief update/delete mutations now reject stale item ids without emitting fake update events.
+- Weekly Brief communicates paused autosave state when persistence errors are active.
+- Tests cover Chief note-save errors, Weekly stale mutations, failed weekly persistence, and Weekly Brief autosave copy.

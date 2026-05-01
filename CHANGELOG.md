@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-04-30 - Chief and weekly persistence truth hardening
+
+- `bccafd8` - Made Chief workspace local note/output persistence fail explicitly when browser storage rejects writes.
+- `6541eb8` - Centralized required localStorage writes behind one throwing helper to reduce missed-failure drift across repositories.
+- `48749ac` - Rejected stale Weekly Brief update/delete attempts without emitting fake update events.
+- `48ea73f` - Clarified Weekly Brief autosave copy when persistence is paused by an error.
+- `890fbae` - Added Chief workspace and Weekly Brief tests for persistence failure states.
+
 ## 2026-04-30 - Settings persistence and accessibility hardening
 
 - `41b8764` - Guarded Settings saves against duplicate in-flight submits.
