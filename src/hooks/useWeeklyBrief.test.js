@@ -171,4 +171,123 @@ describe('useWeeklyBrief', () => {
     expect(result.current.priorities).toEqual([{ id: 'priority-2', text: 'Ship roadmap', status: 'Planned' }]);
     expect(result.current.source).toBe('supabase');
   });
+
+  it('silently refreshes the current week on focus, visibility, storage, and weekly update events', async () => {
+    getWeeklyBriefByWeek.mockResolvedValue({
+      reviewNotes: 'Initial weekly brief',
+      priorities: [{ id: 'priority-1', text: 'Initial plan', status: 'Planned' }],
+      wins: [],
+      blockers: [],
+      source: 'local',
+    });
+
+    const addWindowListener = vi.spyOn(window, 'addEventListener');
+    const addDocumentListener = vi.spyOn(document, 'addEventListener');
+    const dateNowSpy = vi.spyOn(Date, 'now');
+    const capturedWindowHandlers = {};
+    const capturedDocumentHandlers = {};
+    let nowMs = 1_000;
+
+    dateNowSpy.mockImplementation(() => nowMs);
+
+    addWindowListener.mockImplementation((type, listener) => {
+      capturedWindowHandlers[type] = listener;
+      return undefined;
+    });
+    addDocumentListener.mockImplementation((type, listener) => {
+      capturedDocumentHandlers[type] = listener;
+      return undefined;
+    });
+
+    try {
+      const { result } = renderHook(() => useWeeklyBrief());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(typeof capturedWindowHandlers.focus).toBe('function');
+      expect(typeof capturedWindowHandlers.storage).toBe('function');
+      expect(typeof capturedWindowHandlers['ceo-os:weekly-brief-updated']).toBe('function');
+      expect(typeof capturedDocumentHandlers.visibilitychange).toBe('function');
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Refreshed weekly brief',
+        priorities: [{ id: 'priority-2', text: 'Refreshed plan', status: 'In Progress' }],
+        wins: [],
+        blockers: [],
+        source: 'supabase',
+      });
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers.focus();
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Refreshed weekly brief');
+      });
+      expect(result.current.source).toBe('supabase');
+      expect(result.current.isLoading).toBe(false);
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Storage refresh',
+        priorities: [{ id: 'priority-3', text: 'Storage plan', status: 'Blocked' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers.storage({ key: 'ceo-os-weekly-briefs' });
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Storage refresh');
+      });
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Visibility refresh',
+        priorities: [{ id: 'priority-4', text: 'Visibility plan', status: 'Planned' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+
+      act(() => {
+        nowMs += 500;
+        Object.defineProperty(document, 'visibilityState', {
+          configurable: true,
+          value: 'visible',
+        });
+        capturedDocumentHandlers.visibilitychange();
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Visibility refresh');
+      });
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Event refresh',
+        priorities: [{ id: 'priority-5', text: 'Event plan', status: 'Planned' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers['ceo-os:weekly-brief-updated']({ detail: { weekStart: currentWeekStart } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Event refresh');
+      });
+    } finally {
+      dateNowSpy.mockRestore();
+      addWindowListener.mockRestore();
+      addDocumentListener.mockRestore();
+    }
+  });
 });

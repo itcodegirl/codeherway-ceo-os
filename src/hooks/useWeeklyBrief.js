@@ -16,7 +16,16 @@ import {
   defaultPriorities,
   defaultWins,
 } from '../lib/weeklyData';
-import { resolveNextValue, shallowEqualRecords } from '../lib/stateUtils';
+import { resolveNextValue, shallowEqualRecordArrays, shallowEqualRecords } from '../lib/stateUtils';
+
+const SILENT_REFRESH_COALESCE_MS = 400;
+const WEEKLY_STORAGE_KEYS = new Set([
+  'ceo-os-weekly-briefs',
+  'ceo-os-weekly-priorities',
+  'ceo-os-weekly-wins',
+  'ceo-os-weekly-blockers',
+  'ceo-os-weekly-review-notes',
+]);
 
 function normalizeCollectionPayload(payload, key) {
   const values = Array.isArray(payload?.[key]) ? payload[key] : [];
@@ -32,6 +41,7 @@ export function useWeeklyBrief() {
   const weekStartRef = useRef(weekStart);
   const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  const lastSilentRefreshAtRef = useRef(0);
   const [source, setSource] = useState(resolveWeeklySource());
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -76,12 +86,14 @@ export function useWeeklyBrief() {
     };
   }, []);
 
-  const loadWeeklyBrief = useCallback(async () => {
+  const loadWeeklyBrief = useCallback(async ({ silent = false } = {}) => {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
 
-    setIsLoading(true);
-    setLoadError('');
+    if (!silent) {
+      setIsLoading(true);
+      setLoadError('');
+    }
 
     try {
       const payload = await getWeeklyBriefByWeek(weekStart);
@@ -89,11 +101,25 @@ export function useWeeklyBrief() {
         return;
       }
 
-      setSource(payload.source || resolveWeeklySource());
-      setReviewNotesState(typeof payload.reviewNotes === 'string' ? payload.reviewNotes : DEFAULT_REVIEW_NOTES);
-      setPrioritiesState(normalizeCollectionPayload(payload, 'priorities'));
-      setWinsState(normalizeCollectionPayload(payload, 'wins'));
-      setBlockersState(normalizeCollectionPayload(payload, 'blockers'));
+      const nextSource = payload.source || resolveWeeklySource();
+      const nextReviewNotes = typeof payload.reviewNotes === 'string'
+        ? payload.reviewNotes
+        : DEFAULT_REVIEW_NOTES;
+      const nextPriorities = normalizeCollectionPayload(payload, 'priorities');
+      const nextWins = normalizeCollectionPayload(payload, 'wins');
+      const nextBlockers = normalizeCollectionPayload(payload, 'blockers');
+
+      setSource((current) => (current === nextSource ? current : nextSource));
+      setReviewNotesState((current) => (current === nextReviewNotes ? current : nextReviewNotes));
+      setPrioritiesState((current) => (
+        shallowEqualRecordArrays(current, nextPriorities) ? current : nextPriorities
+      ));
+      setWinsState((current) => (
+        shallowEqualRecordArrays(current, nextWins) ? current : nextWins
+      ));
+      setBlockersState((current) => (
+        shallowEqualRecordArrays(current, nextBlockers) ? current : nextBlockers
+      ));
     } catch (error) {
       if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return;
@@ -104,7 +130,7 @@ export function useWeeklyBrief() {
         console.error('Failed to load weekly brief', error);
       }
     } finally {
-      if (isMountedRef.current && requestId === requestIdRef.current) {
+      if (!silent && isMountedRef.current && requestId === requestIdRef.current) {
         setIsLoading(false);
       }
     }
@@ -121,18 +147,46 @@ export function useWeeklyBrief() {
   }, [loadWeeklyBrief]);
 
   useEffect(() => {
+    const requestSilentRefresh = () => {
+      const now = Date.now();
+      if (now - lastSilentRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
+        return;
+      }
+
+      lastSilentRefreshAtRef.current = now;
+      void loadWeeklyBrief({ silent: true });
+    };
+
     const handleWeeklyUpdate = (event) => {
       const updatedWeekStart = event?.detail?.weekStart;
       if (updatedWeekStart && updatedWeekStart !== weekStartRef.current) {
         return;
       }
 
-      loadWeeklyBrief();
+      requestSilentRefresh();
+    };
+
+    const handleStorageChange = (event) => {
+      if (event?.key === null || WEEKLY_STORAGE_KEYS.has(event?.key)) {
+        requestSilentRefresh();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        requestSilentRefresh();
+      }
     };
 
     window.addEventListener(WEEKLY_BRIEF_UPDATED_EVENT, handleWeeklyUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', requestSilentRefresh);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       window.removeEventListener(WEEKLY_BRIEF_UPDATED_EVENT, handleWeeklyUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', requestSilentRefresh);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [loadWeeklyBrief]);
 
