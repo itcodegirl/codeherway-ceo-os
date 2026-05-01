@@ -57,6 +57,7 @@ This project is strongest when presented as a local-first productivity system wi
 - Route labels, navigation, and metadata come from one route definition source to reduce product drift.
 - App routing now derives route paths from the same route metadata used by navigation and page descriptions.
 - Route error recovery returns users directly to Focus Home instead of relying on fragile browser history.
+- CRUD mutation flows guard in-flight saves, deletes, and pending confirmations so rapid clicks or route changes do not create duplicate writes or late state updates.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
 - Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
@@ -418,6 +419,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `4ba77bc` - fix: keep completed reminders recoverable
   - `f3a7a60` - fix: polish recovery and focus accessibility
   - `7a8865e` - test: cover reversible reminder completion
+- CRUD lifecycle hardening cycle (April 30, 2026):
+  - `0b8db1d` - fix: guard crud mutation lifecycle
+  - `fbfa22e` - refactor: centralize mounted ref lifecycle
+  - `22ccc3a` - fix: reject stale reminder mutations
+  - `4942074` - fix: preserve reminder control contrast
+  - `f2fcd90` - test: cover confirm unmount safety
 
 ## Author
 

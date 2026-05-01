@@ -8,7 +8,7 @@ Use this template when opening a PR that summarizes the current product-hardenin
 
 ## Why this matters
 
-This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, reducing Chief of Staff bundle weight, and expanding E2E proof around the daily execution workflow.
+This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, guarding CRUD mutation lifecycles, reducing Chief of Staff bundle weight, and expanding proof around the daily execution workflow.
 
 ## Commits covered
 
@@ -24,6 +24,11 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 | `4ba77bc` | Kept completed reminders visible and recoverable |
 | `f3a7a60` | Polished shared recovery styling, modal mobile behavior, and focus keyboard support |
 | `7a8865e` | Added E2E coverage for reversible reminder completion |
+| `0b8db1d` | Guarded CRUD saves/deletes against duplicate submits and late state updates |
+| `fbfa22e` | Centralized mounted-ref lifecycle handling |
+| `22ccc3a` | Rejected stale reminder mutations without fake update events |
+| `4942074` | Preserved completed reminder control contrast |
+| `f2fcd90` | Added confirm-delete unmount safety coverage |
 
 ## What changed
 
@@ -31,6 +36,8 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 
 - Added stale-result protection to shared async hooks used by the system pulse and Chief telemetry surfaces.
 - Derived router paths from shared route metadata so routes, nav labels, and page metadata stay aligned.
+- Guarded shared CRUD mutation flows against duplicate in-flight saves and stale async state updates after unmount.
+- Centralized mounted-ref lifecycle handling for hooks that need async safety.
 - Removed dead legacy Chief AI components that no longer represented the active product workflow.
 - Split Chief telemetry diagnostics into a lazy-loaded panel so observability detail does not bloat the first Chief of Staff route load.
 
@@ -39,17 +46,20 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Dashboard next-move state now clears when an old recommendation no longer belongs to the current queue.
 - Focus Home support modes use roving keyboard focus and visible focus retention.
 - Reminder completion is visible, reversible, and covered in browser tests as part of the daily execution path.
+- Stale reminder mutations now fail clearly instead of emitting fake progress events.
 
 ### Accessibility
 
 - Added keyboard-mode switching coverage for the support-mode group.
 - Route-level crash recovery now has a deterministic Focus Home escape hatch.
+- Completed reminders preserve checkbox/control contrast while still showing text-level completion state.
 - Preserved skip-link, route focus, CRUD keyboard activation, and retry/error behaviors covered by the existing suite.
 
 ### Maintainability
 
 - Reduced duplicate Chief AI surface area.
 - Reduced route declaration drift by keeping app paths tied to the route metadata source.
+- Reduced lifecycle boilerplate with a shared mounted-ref hook.
 - Kept telemetry detail available behind a focused component boundary instead of loading it with the primary workflow.
 - Strengthened tests around the parts most likely to regress during portfolio demos.
 
@@ -78,7 +88,8 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 
 1. Review route metadata-driven app routing.
 2. Review error-boundary Focus Home recovery.
-3. Review Dashboard next-move queue validation and reversible reminder state.
-4. Review Focus Home keyboard behavior and Playwright coverage.
-5. Review Chief telemetry lazy split and route-budget results.
-6. Confirm docs and release evidence match the branch.
+3. Review CRUD mutation lifecycle guards and confirm-delete unmount coverage.
+4. Review Dashboard next-move queue validation and reversible reminder state.
+5. Review Focus Home keyboard behavior and Playwright coverage.
+6. Review Chief telemetry lazy split and route-budget results.
+7. Confirm docs and release evidence match the branch.

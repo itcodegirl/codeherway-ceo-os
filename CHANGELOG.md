@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-04-30 - CRUD lifecycle and reminder integrity hardening
+
+- `0b8db1d` - Guarded CRUD mutation lifecycles against duplicate in-flight saves and late state updates after unmount.
+- `fbfa22e` - Centralized mounted-ref lifecycle handling in a shared hook for mutation-heavy workflows.
+- `22ccc3a` - Rejected stale reminder toggle/delete attempts without emitting fake progress events.
+- `4942074` - Preserved completed reminder checkbox/control contrast by moving the done cue to reminder text.
+- `f2fcd90` - Added confirm-delete unmount safety coverage and reran the full QA gate.
+
 ## 2026-04-30 - Recovery, routing, and reversible execution hardening
 
 - `dd8d31d` - Made route error recovery return directly to Focus Home instead of depending on browser history.

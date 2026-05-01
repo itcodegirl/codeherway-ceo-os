@@ -77,6 +77,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Route rendering derived from shared route metadata so navigation, page metadata, and router paths stay aligned
 - Event-driven refresh strategy to keep screens synchronized after mutations
 - Deterministic route-crash recovery back to Focus Home rather than browser-history-dependent recovery
+- Mounted-ref lifecycle guards for CRUD saves/deletes and confirmation flows so async mutations do not update unmounted screens
 - Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
 - Stale async refresh guards for shared pulse and telemetry hooks so route changes do not overwrite current state with older request results
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
@@ -137,3 +138,8 @@ npm run test:e2e
 - Completed reminders remain visible and can be toggled back to pending, so progress tracking is reversible.
 - Focus Home support-mode radios now support vertical arrow keys as well as horizontal arrows.
 - Playwright now verifies reversible reminder completion and route budgets remain within trend limits.
+- CRUD save/delete flows now guard duplicate in-flight submits and avoid late state updates after route changes.
+- Mounted-ref lifecycle handling is centralized in a shared hook for mutation-heavy hooks.
+- Stale reminder toggle/delete attempts are rejected without emitting fake progress events.
+- Completed reminder styling now preserves checkbox/control contrast while keeping text-level completion cues.
+- Confirmation unmount safety is covered with targeted hook tests, and the full QA gate remains green.

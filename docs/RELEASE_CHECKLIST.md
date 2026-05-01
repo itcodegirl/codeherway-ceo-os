@@ -34,6 +34,8 @@ Validate core flows without changing source code:
 - Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
 - Confirm Focus Home support modes can be reached from keyboard, switched with arrow keys, and retain visible focus.
 - Confirm reminder completion progress updates after checking and unchecking reminders, and completed reminders stay recoverable.
+- Confirm rapid create/save clicks do not duplicate records in Opportunities or Content OS.
+- Confirm navigating away during modal or confirmation work does not leave stale pending UI behind.
 - On `Chief of Staff`, type notes, refresh, confirm the notes return, then reset the workspace and confirm the cleared state survives another refresh.
 - On `Chief of Staff`, confirm telemetry diagnostics can load without blocking the primary note-to-action workflow.
 - Confirm no visible console errors in normal user flows.
