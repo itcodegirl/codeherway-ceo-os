@@ -53,7 +53,12 @@ function AppLayout() {
         <Topbar pageTitle={currentPageTitle} />
         <SystemPulse />
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
-          <ErrorBoundary key={location.pathname} name={currentPageTitle} onReturnHome={handleReturnHome}>
+          <ErrorBoundary
+            key={location.pathname}
+            resetKey={location.key}
+            name={currentPageTitle}
+            onReturnHome={handleReturnHome}
+          >
             <Outlet />
           </ErrorBoundary>
         </main>
