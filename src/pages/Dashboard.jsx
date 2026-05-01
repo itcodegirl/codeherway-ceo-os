@@ -246,8 +246,14 @@ function Dashboard() {
     [contentRows, opportunityItems, weeklyPriorities],
   );
 
-  const pendingReminders = useMemo(
-    () => reminders.filter((item) => !item?.isDone),
+  const visibleReminders = useMemo(
+    () => [...reminders].sort((left, right) => {
+      if (Boolean(left?.isDone) === Boolean(right?.isDone)) {
+        return 0;
+      }
+
+      return left?.isDone ? 1 : -1;
+    }),
     [reminders],
   );
   const reminderProgress = useMemo(
@@ -492,8 +498,13 @@ function Dashboard() {
           </p>
 
           <ul className="focus-reminder-list">
-            {pendingReminders.length ? pendingReminders.map((item) => (
-              <li key={item.id} className="focus-reminder-list__item">
+            {visibleReminders.length ? visibleReminders.map((item) => (
+              <li
+                key={item.id}
+                className={item.isDone
+                  ? 'focus-reminder-list__item focus-reminder-list__item--done'
+                  : 'focus-reminder-list__item'}
+              >
                 <label>
                   <input
                     type="checkbox"

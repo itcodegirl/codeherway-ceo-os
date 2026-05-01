@@ -171,7 +171,7 @@ describe('src/pages/Dashboard', () => {
     expect(reflectionChip).toHaveFocus();
   });
 
-  it('adds reminders and allows marking them complete', () => {
+  it('adds reminders and allows marking them complete or pending again', () => {
     render(
       <MemoryRouter>
         <Dashboard />
@@ -188,7 +188,11 @@ describe('src/pages/Dashboard', () => {
 
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByText('1 of 1 reminders complete (100%)')).toBeInTheDocument();
-    expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
+    expect(screen.getByText('Send recap email')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Send recap email' }));
+    expect(screen.getByText('0 of 1 reminders complete (0%)')).toBeInTheDocument();
+    expect(screen.queryByText('No reminders yet. Add one small commitment.')).not.toBeInTheDocument();
   });
 
   it('shows calm fallback states when no linked records exist', () => {
