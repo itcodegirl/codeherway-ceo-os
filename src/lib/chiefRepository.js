@@ -35,11 +35,15 @@ function readLocalChiefNotes() {
 }
 
 function writeLocalChiefNotes(notes) {
-  safeLocalStorageSetItem(
+  const didPersist = safeLocalStorageSetItem(
     CHIEF_NOTES_STORAGE_KEY,
     notes,
     'Failed to persist chief notes to localStorage',
   );
+
+  if (!didPersist) {
+    throw new Error('Failed to persist chief notes to localStorage');
+  }
 }
 
 function readLocalChiefResponses() {
@@ -60,11 +64,15 @@ function readLocalChiefResponses() {
 }
 
 function writeLocalChiefResponses(responses) {
-  safeLocalStorageSetItem(
+  const didPersist = safeLocalStorageSetItem(
     CHIEF_RESPONSES_STORAGE_KEY,
     JSON.stringify(responses),
     'Failed to persist chief responses to localStorage',
   );
+
+  if (!didPersist) {
+    throw new Error('Failed to persist chief responses to localStorage');
+  }
 }
 
 function isSupabaseAuthError(error) {
