@@ -105,11 +105,11 @@ function Settings() {
               onBlur={normalizeTimezone}
               onChange={(e) => handleChange('timezone', e.target.value)}
             />
-            <span className="helper-text helper-text--offset" role={!timezoneIsValid ? 'alert' : undefined}>
-              {timezoneIsValid
-                ? 'Use IANA format such as America/Chicago.'
-                : 'Timezone is invalid. Example: America/Chicago.'}
-            </span>
+            {timezoneIsValid ? (
+              <span className="helper-text helper-text--offset">
+                Use IANA format such as America/Chicago.
+              </span>
+            ) : null}
           </div>
         </SectionCard>
 
