@@ -72,6 +72,10 @@ This project is strongest when presented as a local-first productivity system wi
 - Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
 - Focus Home decision rules now live in tested product logic, including blocked-work context, pending reminders, and journal heaviness without a next action.
 - Focus Home support modes now use keyboard-friendly roving focus, with E2E coverage for mode switching and reminder completion.
+- Compact mobile navigation now closes cleanly after clicks, programmatic route changes, and browser-history returns, with unit and Playwright coverage.
+- Focus Home capture, journal, and reminder signal loading is centralized in a dedicated hook so the command center stays composition-first.
+- Next-move guidance now prioritizes the oldest unfinished reminder, reducing the risk that quiet commitments get buried.
+- Focus Home loading and reminder-helper states now expose busy/status/description semantics without making the interface visually louder.
 - App-shell crash recovery is covered globally, so sidebar/topbar/shell failures are caught instead of blanking the whole app.
 - Source and System Pulse cues now expose accessible status/labels while staying visually quiet on mobile screens.
 - Chief telemetry diagnostics are split from the initial route bundle so observability detail stays available without bloating the first Chief of Staff load.
@@ -117,6 +121,7 @@ Each repository follows the same contract:
 
 The deterministic recommendation layer is handled by `src/lib/suggestions.js`, and shared cross-route pulse orchestration is handled by `src/hooks/useSystemPulse.js`.
 Focus Home next-action ranking is handled by `src/lib/focusHomeLogic.js` so decision-support behavior can evolve without bloating the route page.
+Focus Home supporting signals are handled by `src/hooks/useFocusHomeSignals.js`, keeping capture, journal, and reminder subscriptions out of route composition.
 
 ### 3) Reliable local-first + optional cloud workflows
 
@@ -144,6 +149,8 @@ Focus Home next-action ranking is handled by `src/lib/focusHomeLogic.js` so deci
 - Source/status messaging for persistence mode
 - Accessible source-status and System Pulse labels for trust cues that assistive technology can read
 - Controlled keyboard interactions and form behavior in core workflows
+- Compact mobile navigation closes predictably across route clicks and history navigation.
+- Focus Home loading and reminder-helper states include status and described-by semantics for assistive technology.
 - Interactive data rows in opportunities/content tables support keyboard activation (`Enter` / `Space`) in addition to pointer interaction.
 - Settings validation announces invalid timezone feedback once, keeps the save action disabled with a descriptive name, and exposes save progress through form busy state.
 - Weekly Brief pauses its autosave confidence copy when a save/load error is active instead of over-promising persistence.
@@ -156,6 +163,7 @@ Focus Home next-action ranking is handled by `src/lib/focusHomeLogic.js` so deci
 - Library tests cover parsing, settings normalization, and metadata helper behavior.
 - Route tests cover key visibility and accessibility flows.
 - Playwright covers direct-route refreshes, CRUD smoke paths, Focus Home execution, and Chief workspace persistence/reset behavior.
+- Playwright also covers compact mobile navigation behavior so portfolio demos do not depend on untested responsive shell assumptions.
 
 ## Project layout
 
@@ -376,6 +384,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/hooks/useChiefOfStaff.test.js`
   - `src/hooks/useDashboardInsights.test.js`
   - `src/hooks/useWeeklyBrief.test.js`
+  - `src/hooks/useFocusHomeSignals.test.js`
   - `src/lib/pageMeta.test.js`
   - `src/pages/Settings.test.jsx`
   - `src/hooks/useSettings.test.js`
@@ -391,6 +400,8 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/pages/Journal.test.jsx`
   - `src/lib/focusHomeLogic.test.js`
   - `src/App.test.jsx`
+  - `src/components/ui/Sidebar.test.jsx`
+  - `e2e/mobile-navigation.spec.js`
 
 ### Production readiness checklist
 
@@ -493,6 +504,19 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `npm run build`
   - `npm run check:route-budgets`
   - `npm run test:e2e` (18 passed)
+- Compact navigation and Focus Home signal cycle (May 1, 2026):
+  - `4484b5b` - fix: stabilize compact sidebar route changes
+  - `99944c3` - refactor: centralize focus home signals
+  - `4736a4d` - fix: prioritize oldest pending reminder
+  - `2f7f94f` - style: polish focus home loading and reminders
+  - `e14d497` - test: cover compact navigation e2e
+- May 1, 2026 second local verification:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test:run` (81 files passed, 306 tests passed, 1 skipped)
+  - `npm run build`
+  - `npm run check:route-budgets`
+  - `npm run test:e2e` (19 passed)
 
 ## Author
 

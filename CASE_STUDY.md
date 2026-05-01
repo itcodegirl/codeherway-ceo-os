@@ -77,6 +77,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Route rendering derived from shared route metadata so navigation, page metadata, and router paths stay aligned
 - App-shell error recovery catches layout/sidebar/topbar crashes, not only route-view crashes
 - Event-driven refresh strategy to keep screens synchronized after mutations
+- Focus Home capture, journal, and reminder subscriptions are centralized in a dedicated hook instead of living inside the route page
 - Deterministic route-crash recovery back to Focus Home rather than browser-history-dependent recovery
 - Mounted-ref lifecycle guards for CRUD saves/deletes and confirmation flows so async mutations do not update unmounted screens
 - Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
@@ -97,6 +98,8 @@ The following assets are referenced for portfolio review and should be kept curr
 - Local status indicators for data source and loading/error state
 - Source-status and System Pulse cues expose accessible status/labels while staying visually lightweight
 - Keyboard-friendly editing and workflow actions
+- Compact mobile navigation closes predictably after route clicks, programmatic navigation, and history returns
+- Focus Home loading and reminder-helper states expose busy/status/description semantics for assistive technology
 - Settings form states expose busy, disabled, and invalid-timezone feedback through accessible control names without duplicate alerts
 - Weekly Brief autosave copy changes when persistence is paused so the page does not reassure users incorrectly during failures
 - Capture and Journal share autosave health copy so local save failures are visible without adding extra decision load
@@ -179,3 +182,8 @@ npm run test:e2e
 - Source-status cues and System Pulse nodes now have accessible status/label semantics and stronger small-screen wrapping behavior.
 - Added tests for global app recovery, source-status trust cues, System Pulse labels, and Focus Home decision rules.
 - Full local verification passed on May 1, 2026: lint, typecheck, full Vitest, build, route budgets, and Playwright E2E.
+- Compact mobile navigation now closes across clicks, programmatic route changes, and browser-history returns.
+- Focus Home signal subscriptions now live in `src/hooks/useFocusHomeSignals.js`, keeping the route focused on composition.
+- Next-move guidance now prioritizes the oldest pending reminder and avoids awkward punctuation in quoted actions.
+- Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
+- Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.

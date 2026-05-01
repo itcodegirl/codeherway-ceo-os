@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-01 - Compact navigation and Focus Home signal hardening
+
+- `4484b5b` - Stabilized compact sidebar state across programmatic route changes and history returns.
+- `99944c3` - Centralized Focus Home capture, journal, and reminder signals in a dedicated hook.
+- `4736a4d` - Prioritized the oldest pending reminder in next-move guidance and cleaned action-copy punctuation.
+- `2f7f94f` - Added accessible loading and reminder helper semantics to Focus Home with responsive chip/list polish.
+- `e14d497` - Added Playwright coverage for compact mobile navigation route/history behavior.
+
 ## 2026-05-01 - Calm recovery and decision-support hardening
 
 - `19ebcb2` - Added app-shell crash recovery around the full router/Suspense shell.
