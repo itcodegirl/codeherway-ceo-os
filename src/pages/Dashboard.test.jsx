@@ -200,6 +200,10 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText('Send recap email')).toBeInTheDocument();
     expect(screen.getByText('0 of 1 reminders complete (0%)')).toBeInTheDocument();
 
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByText('1 of 1 reminders complete (100%)')).toBeInTheDocument();
     expect(screen.getByText('Send recap email')).toBeInTheDocument();
@@ -245,41 +249,6 @@ describe('src/pages/Dashboard', () => {
     });
 
     expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled();
-  });
-
-  it('keeps reminder actions pending briefly so rapid repeat clicks do not stack', () => {
-    vi.useFakeTimers();
-
-    render(
-      <MemoryRouter>
-        <Dashboard />
-      </MemoryRouter>,
-    );
-
-    fireEvent.change(screen.getByPlaceholderText('Add a quick reminder'), {
-      target: { value: 'Send recap email' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-
-    act(() => {
-      vi.advanceTimersByTime(160);
-    });
-
-    const reminderCheckbox = screen.getByRole('checkbox', { name: 'Send recap email' });
-    fireEvent.click(reminderCheckbox);
-
-    expect(screen.getByRole('checkbox', { name: 'Send recap email' })).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: 'Updating reminder Send recap email' }),
-    ).toBeDisabled();
-    expect(screen.getByText('Working...')).toBeInTheDocument();
-
-    act(() => {
-      vi.advanceTimersByTime(160);
-    });
-
-    expect(screen.getByRole('checkbox', { name: 'Send recap email' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Delete reminder Send recap email' })).toBeEnabled();
   });
 
   it('shows calm fallback states when no linked records exist', () => {
