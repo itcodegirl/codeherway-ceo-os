@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
@@ -26,6 +26,12 @@ import {
 import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
+const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
+
+function isReminderNotFoundError(error) {
+  return error instanceof Error && error.message === 'Reminder not found';
+}
+
 function Dashboard() {
   const {
     toastMessage,
@@ -37,7 +43,10 @@ function Dashboard() {
   const [isResetOpen, setIsResetOpen] = useState(false);
   const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
   const [reminderDraft, setReminderDraft] = useState('');
+  const [isAddingReminder, setIsAddingReminder] = useState(false);
   const nextMoveCursorRef = useRef(0);
+  const isAddingReminderRef = useRef(false);
+  const addReminderReleaseTimerRef = useRef(null);
 
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh your focus data right now.');
@@ -152,6 +161,24 @@ function Dashboard() {
   const activeNextMove = nextMove && nextMoveQueue.includes(nextMove) ? nextMove : '';
   const displayedNextMove = activeNextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
 
+  useEffect(() => () => {
+    if (addReminderReleaseTimerRef.current !== null) {
+      window.clearTimeout(addReminderReleaseTimerRef.current);
+    }
+  }, []);
+
+  const scheduleReminderFormRelease = useCallback(() => {
+    if (addReminderReleaseTimerRef.current !== null) {
+      window.clearTimeout(addReminderReleaseTimerRef.current);
+    }
+
+    addReminderReleaseTimerRef.current = window.setTimeout(() => {
+      isAddingReminderRef.current = false;
+      setIsAddingReminder(false);
+      addReminderReleaseTimerRef.current = null;
+    }, REMINDER_ACTION_SETTLE_DELAY_MS);
+  }, []);
+
   const handleTellMeWhatToDoNext = () => {
     const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
       || 'Take one deep breath, choose one action, and complete it before context-switching.';
@@ -169,33 +196,54 @@ function Dashboard() {
 
   const handleAddReminder = (event) => {
     event.preventDefault();
+    if (isAddingReminderRef.current) {
+      return;
+    }
+
     const nextText = reminderDraft.trim();
     if (!nextText) {
       showToast('Add reminder text before saving.');
       return;
     }
 
+    isAddingReminderRef.current = true;
+    setIsAddingReminder(true);
+
     try {
       createReminder({ text: nextText });
       setReminderDraft('');
     } catch {
       showToast('Unable to save reminder right now.');
+    } finally {
+      scheduleReminderFormRelease();
     }
   };
 
   const handleToggleReminder = (id, isDone) => {
+    if (!reminders.some((item) => item.id === id)) {
+      return;
+    }
+
     try {
       toggleReminder(id, isDone);
-    } catch {
-      showToast('Unable to update reminder right now.');
+    } catch (error) {
+      if (!isReminderNotFoundError(error)) {
+        showToast('Unable to update reminder right now.');
+      }
     }
   };
 
   const handleDeleteReminder = (id) => {
+    if (!reminders.some((item) => item.id === id)) {
+      return;
+    }
+
     try {
       deleteReminder(id);
-    } catch {
-      showToast('Unable to delete reminder right now.');
+    } catch (error) {
+      if (!isReminderNotFoundError(error)) {
+        showToast('Unable to delete reminder right now.');
+      }
     }
   };
 
@@ -319,7 +367,11 @@ function Dashboard() {
           </ul>
         </article>
 
-        <article className="focus-panel" aria-label="Reminders panel">
+        <article
+          className="focus-panel"
+          aria-label="Reminders panel"
+          aria-busy={isAddingReminder ? 'true' : undefined}
+        >
           <div className="focus-panel__header">
             <h2>Reminders</h2>
             <span className="signal-node" aria-hidden="true" />
@@ -335,9 +387,16 @@ function Dashboard() {
               onChange={(event) => setReminderDraft(event.target.value)}
               placeholder="Add a quick reminder"
               aria-describedby="focus-reminder-helper focus-reminder-progress"
+              disabled={isAddingReminder}
             />
-            <Button type="submit" size="small" icon={{ name: 'add' }}>
-              Add
+            <Button
+              type="submit"
+              size="small"
+              icon={{ name: 'add' }}
+              disabled={isAddingReminder}
+              ariaLabel={isAddingReminder ? 'Adding reminder' : undefined}
+            >
+              {isAddingReminder ? 'Adding...' : 'Add'}
             </Button>
           </form>
           <p id="focus-reminder-helper" className="helper-text focus-reminder-helper">

@@ -1,12 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+
+const showToastSpy = vi.fn();
 
 vi.mock('../hooks/useToast', () => ({
   useToast: () => ({
     toastMessage: '',
     isToastVisible: false,
-    showToast: vi.fn(),
+    showToast: showToastSpy,
   }),
 }));
 
@@ -22,10 +24,13 @@ vi.mock('../hooks/useWeeklyBrief', () => ({
 import Dashboard from './Dashboard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
+import { listReminders } from '../lib/remindersRepository';
 
 describe('src/pages/Dashboard', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    showToastSpy.mockReset();
+    vi.useRealTimers();
 
     useWeeklyBrief.mockReturnValue({
       priorities: [
@@ -179,6 +184,8 @@ describe('src/pages/Dashboard', () => {
   });
 
   it('adds reminders and allows marking them complete or pending again', () => {
+    vi.useFakeTimers();
+
     render(
       <MemoryRouter>
         <Dashboard />
@@ -197,9 +204,82 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText('1 of 1 reminders complete (100%)')).toBeInTheDocument();
     expect(screen.getByText('Send recap email')).toBeInTheDocument();
 
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
     fireEvent.click(screen.getByRole('checkbox', { name: 'Send recap email' }));
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
     expect(screen.getByText('0 of 1 reminders complete (0%)')).toBeInTheDocument();
     expect(screen.queryByText('No reminders yet. Add one small commitment.')).not.toBeInTheDocument();
+  });
+
+  it('prevents duplicate reminder submits while the first save is settling', () => {
+    vi.useFakeTimers();
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a quick reminder'), {
+      target: { value: 'Confirm founder testimonial quote' },
+    });
+
+    const reminderForm = screen.getByRole('button', { name: 'Add' }).closest('form');
+    fireEvent.submit(reminderForm);
+    fireEvent.submit(reminderForm);
+
+    expect(listReminders()).toHaveLength(1);
+    expect(screen.getAllByText('Confirm founder testimonial quote')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Adding reminder' })).toBeDisabled();
+    expect(showToastSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled();
+  });
+
+  it('keeps reminder actions pending briefly so rapid repeat clicks do not stack', () => {
+    vi.useFakeTimers();
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a quick reminder'), {
+      target: { value: 'Send recap email' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    const reminderCheckbox = screen.getByRole('checkbox', { name: 'Send recap email' });
+    fireEvent.click(reminderCheckbox);
+
+    expect(screen.getByRole('checkbox', { name: 'Send recap email' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Updating reminder Send recap email' }),
+    ).toBeDisabled();
+    expect(screen.getByText('Working...')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(screen.getByRole('checkbox', { name: 'Send recap email' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Delete reminder Send recap email' })).toBeEnabled();
   });
 
   it('shows calm fallback states when no linked records exist', () => {
