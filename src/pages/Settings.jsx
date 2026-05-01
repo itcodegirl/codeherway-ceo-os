@@ -28,6 +28,11 @@ function Settings() {
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
   const canSave = timezoneIsValid && !isSaving;
+  const saveButtonLabel = isSaving
+    ? 'Saving settings'
+    : timezoneIsValid
+      ? 'Save settings'
+      : 'Save settings unavailable until timezone is valid';
 
   const handleChange = (key, value) => {
     updateSetting(key, value);
@@ -61,7 +66,7 @@ function Settings() {
       />
       {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading settings.</p> : null}
 
-      <form className="settings-grid" onSubmit={handleSubmit}>
+      <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving}>
         <SectionCard
           title="Workspace"
           iconName="settings"
@@ -150,7 +155,7 @@ function Settings() {
           <Button
             type="submit"
             disabled={!canSave}
-            ariaLabel="Save settings"
+            ariaLabel={saveButtonLabel}
             icon={{ name: 'check', size: 14 }}
           >
             {isSaving ? 'Saving...' : 'Save Settings'}
