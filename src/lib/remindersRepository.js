@@ -101,6 +101,10 @@ export function createReminder(payload) {
 
 export function toggleReminder(id, isDone) {
   const normalizedId = String(id || '');
+  if (!normalizedId) {
+    throw new Error('Reminder id is required');
+  }
+
   const nextState = Boolean(isDone);
   const current = readStorage();
   let updatedReminder = null;
@@ -116,6 +120,10 @@ export function toggleReminder(id, isDone) {
       })()
       : reminder
   ));
+  if (!updatedReminder) {
+    throw new Error('Reminder not found');
+  }
+
   writeStorage(next);
   emitReminderUpdated({ type: 'toggle', id: normalizedId, isDone: nextState });
   return updatedReminder;
@@ -123,7 +131,15 @@ export function toggleReminder(id, isDone) {
 
 export function deleteReminder(id) {
   const normalizedId = String(id || '');
+  if (!normalizedId) {
+    throw new Error('Reminder id is required');
+  }
+
   const current = readStorage();
+  if (!current.some((reminder) => reminder.id === normalizedId)) {
+    throw new Error('Reminder not found');
+  }
+
   const next = current.filter((reminder) => reminder.id !== normalizedId);
   writeStorage(next);
   emitReminderUpdated({ type: 'delete', id: normalizedId });

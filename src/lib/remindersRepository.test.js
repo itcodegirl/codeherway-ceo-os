@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createReminder,
   deleteReminder,
@@ -48,6 +48,17 @@ describe('src/lib/remindersRepository', () => {
     deleteReminder(created.id);
 
     expect(listReminders()).toHaveLength(0);
+  });
+
+  it('rejects stale reminder updates without emitting fake progress events', () => {
+    const listener = vi.fn();
+    window.addEventListener('ceo-os:reminders-updated', listener);
+
+    expect(() => toggleReminder('missing-reminder', true)).toThrow('Reminder not found');
+    expect(() => deleteReminder('missing-reminder')).toThrow('Reminder not found');
+
+    expect(listener).not.toHaveBeenCalled();
+    window.removeEventListener('ceo-os:reminders-updated', listener);
   });
 
   it('summarizes reminder progress for execution feedback', () => {
