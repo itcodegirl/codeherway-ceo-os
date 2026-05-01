@@ -292,6 +292,16 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent 82%);
 }
 
+.source-status__recovery-group {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.source-status__recovery {
+  margin: 0;
+  color: var(--text-soft-strong);
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
