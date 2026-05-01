@@ -22,145 +22,16 @@ import {
   toggleReminder,
 } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
+import {
+  FOCUS_MODES,
+  buildMainFocus,
+  buildMomentumMessage,
+  buildNextMoveQueue,
+  buildQuickWin,
+  resolveFocusMode,
+} from '../lib/focusHomeLogic';
 import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
-
-const FOCUS_MODES = [
-  {
-    id: 'focused',
-    label: 'Focused',
-    support: 'You are in execution mode. Keep scope tiny and finish one concrete move.',
-  },
-  {
-    id: 'planning',
-    label: 'Planning',
-    support: 'Clarify one outcome, choose one next action, then start before perfect.',
-  },
-  {
-    id: 'reflection',
-    label: 'Reflection',
-    support: 'Look at what worked, what felt heavy, and adjust gently for tomorrow.',
-  },
-  {
-    id: 'overwhelmed',
-    label: 'Overwhelmed',
-    support: 'You are not behind. Shrink the task, breathe, and complete one two-minute step.',
-  },
-];
-
-function findMainFocus(priorities, opportunities, contentRows) {
-  const inProgressPriority = priorities.find((item) => item?.status === 'In Progress' && item?.title);
-  if (inProgressPriority) {
-    return {
-      title: inProgressPriority.title,
-      context: 'This is already in motion. Protect your attention until one visible step is done.',
-    };
-  }
-
-  const plannedPriority = priorities.find((item) => item?.title);
-  if (plannedPriority) {
-    return {
-      title: plannedPriority.title,
-      context: 'This is your highest leverage item right now. Start with the smallest visible action.',
-    };
-  }
-
-  const highPriorityOpportunity = opportunities.find((item) => item?.priority === 'High' && item?.name);
-  if (highPriorityOpportunity) {
-    return {
-      title: `${highPriorityOpportunity.name} (${highPriorityOpportunity.company || 'Opportunity'})`,
-      context: 'This opportunity can move quickly with one clear follow-up.',
-    };
-  }
-
-  const draftContent = contentRows.find((item) => item?.title);
-  if (draftContent) {
-    return {
-      title: draftContent.title,
-      context: 'Shipping this content keeps your founder signal active.',
-    };
-  }
-
-  return {
-    title: 'Create one calming priority for today',
-    context: 'Start with a 10-minute planning pass and commit to one realistic next move.',
-  };
-}
-
-function buildNextMoveQueue({ priorities, blockers, opportunities, contentRows }) {
-  const moves = [];
-  const blockedPriority = priorities.find((item) => item?.status === 'Blocked' && item?.title);
-  const activeBlocker = blockers.find((item) => item?.text);
-  const activePriority = priorities.find((item) => item?.status === 'In Progress' && item?.title);
-  const waitingOpportunity = opportunities.find((item) => item?.stage === 'Awaiting Reply' && item?.name);
-  const draftingContent = contentRows.find((item) => item?.status === 'Drafting' && item?.title);
-
-  if (blockedPriority) {
-    moves.push(`Send one unblock message for "${blockedPriority.title}".`);
-  }
-  if (activeBlocker) {
-    moves.push(`Define one owner and one deadline for: "${activeBlocker.text}".`);
-  }
-  if (activePriority) {
-    moves.push(`Spend 20 focused minutes on "${activePriority.title}".`);
-  }
-  if (waitingOpportunity) {
-    moves.push(`Draft a concise follow-up for "${waitingOpportunity.name}".`);
-  }
-  if (draftingContent) {
-    moves.push(`Write the opening paragraph for "${draftingContent.title}".`);
-  }
-  moves.push('Set a 15-minute timer and complete one tiny action without switching tabs.');
-
-  return Array.from(new Set(moves));
-}
-
-function buildQuickWin(wins, opportunities, contentRows) {
-  const firstWin = wins.find((item) => item?.text);
-  if (firstWin) {
-    return `Celebrate and build on this: ${firstWin.text}`;
-  }
-
-  const inProgressOpportunity = opportunities.find((item) => item?.stage === 'In Progress' && item?.name);
-  if (inProgressOpportunity) {
-    return `Quick win waiting: send an update for "${inProgressOpportunity.name}".`;
-  }
-
-  const scheduledContent = contentRows.find((item) => item?.status === 'Scheduled' && item?.title);
-  if (scheduledContent) {
-    return `Quick win waiting: repurpose "${scheduledContent.title}" for a second channel.`;
-  }
-
-  return 'Quick win waiting: close one tiny loop before opening a new one.';
-}
-
-function buildMomentumMessage({
-  inProgressCount,
-  blockerCount,
-  winsCount,
-  completedReminderCount,
-  pendingReminderCount,
-}) {
-  const score = Math.max(0, Math.min(
-    100,
-    45
-      + (inProgressCount * 14)
-      + (winsCount * 10)
-      + (completedReminderCount * 6)
-      - (pendingReminderCount * 4)
-      - (blockerCount * 12),
-  ));
-  if (completedReminderCount > 0 && score >= 60) {
-    return { score, text: 'Momentum is visible. Completed reminders are turning intent into proof.' };
-  }
-  if (score >= 75) {
-    return { score, text: 'Momentum is strong. Protect this lane and finish one more step.' };
-  }
-  if (score >= 55) {
-    return { score, text: 'Momentum is building. Keep actions tiny and visibly complete.' };
-  }
-  return { score, text: 'Momentum is fragile. Use reset mode and complete one two-minute action.' };
-}
 
 function Dashboard() {
   const {
@@ -225,8 +96,8 @@ function Dashboard() {
   }, []);
 
   const supportCopy = useMemo(() => {
-    const activeMode = FOCUS_MODES.find((mode) => mode.id === focusMode);
-    return activeMode?.support || FOCUS_MODES[1].support;
+    const activeMode = resolveFocusMode(focusMode);
+    return activeMode.support;
   }, [focusMode]);
 
   const nextMoveQueue = useMemo(() => buildNextMoveQueue({
@@ -242,7 +113,7 @@ function Dashboard() {
   ]);
 
   const mainFocus = useMemo(
-    () => findMainFocus(weeklyPriorities, opportunityItems, contentRows),
+    () => buildMainFocus(weeklyPriorities, opportunityItems, contentRows),
     [contentRows, opportunityItems, weeklyPriorities],
   );
 
@@ -392,9 +263,7 @@ function Dashboard() {
     nextButton?.focus?.();
   };
 
-  const modeClassName = FOCUS_MODES.some((mode) => mode.id === focusMode)
-    ? focusMode
-    : 'planning';
+  const modeClassName = resolveFocusMode(focusMode).id;
 
   return (
     <section className={`dashboard-page focus-home-page focus-home-page--${modeClassName}`}>
