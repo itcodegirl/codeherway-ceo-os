@@ -83,8 +83,8 @@ function ContentCrudPage() {
     getDeleteLabel: (item) => item.title,
     messages: {
       load: 'Unable to load content items right now.',
-      save: 'Unable to save content item right now.',
-      delete: 'Unable to delete content item right now.',
+      save: 'Unable to save content item right now. Refresh and try again if this record changed elsewhere.',
+      delete: 'Unable to delete content item right now. Refresh and try again if this record changed elsewhere.',
     },
     logPrefix: 'content items',
   });
