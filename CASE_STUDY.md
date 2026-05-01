@@ -84,6 +84,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Chief workspace and Weekly Brief persistence use required local-write semantics so failed browser storage cannot look like a successful save
 - Weekly Brief rejects stale local item mutations before writing or emitting update events
 - Capture rejects stale sticky-note update/delete attempts before writing or emitting update events
+- Opportunities and Content OS reject stale local update/delete attempts through shared record-mutation guards
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
@@ -97,6 +98,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Settings form states expose busy, disabled, and invalid-timezone feedback through accessible control names without duplicate alerts
 - Weekly Brief autosave copy changes when persistence is paused so the page does not reassure users incorrectly during failures
 - Capture and Journal share autosave health copy so local save failures are visible without adding extra decision load
+- Opportunity and Content stale-record errors tell users when refresh/retry is the right recovery path
 
 ## 5) Verification set
 
@@ -162,3 +164,6 @@ npm run test:e2e
 - Capture stale edits/deletes now reject without emitting fake sticky-note update events.
 - Capture and Journal autosave status now moves to paused copy when local persistence fails.
 - Tests cover Capture stale mutations and Capture/Journal local save failure UI.
+- Opportunities and Content OS stale edits/deletes now reject without emitting fake update events.
+- Shared record-mutation guards in `src/lib/stateUtils.js` reduce duplicated local CRUD failure handling.
+- Integration tests cover stale-record recovery guidance in Opportunity and Content workflows.

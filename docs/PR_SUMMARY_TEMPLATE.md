@@ -4,11 +4,11 @@ Use this template when opening a PR that summarizes the current product-hardenin
 
 ## Title
 
-`Product hardening: recovery, execution flow, autosave trust, and portfolio docs`
+`Product hardening: recovery, execution flow, CRUD integrity, and portfolio docs`
 
 ## Why this matters
 
-This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, guarding CRUD/Settings/Weekly/Capture mutation lifecycles, making Chief/Weekly/Capture/Journal persistence failure states honest, reducing Chief of Staff bundle weight, and expanding proof around the daily execution workflow.
+This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, guarding CRUD/Settings/Weekly/Capture mutation lifecycles, making Chief/Weekly/Capture/Journal persistence failure states honest, rejecting stale Opportunity and Content mutations, reducing Chief of Staff bundle weight, and expanding proof around the daily execution workflow.
 
 ## Commits covered
 
@@ -44,6 +44,11 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 | `0780d8a` | Rejected stale Capture updates |
 | `f715acb` | Clarified Capture and Journal autosave failure states |
 | `fdf01c4` | Added Capture and Journal save-failure coverage |
+| `0a6a97c` | Rejected stale Opportunity local mutations |
+| `d040d08` | Shared local record mutation guards |
+| `8477064` | Rejected stale Content OS local mutations |
+| `204ae9b` | Clarified stale-record CRUD recovery copy |
+| `88c46d3` | Added stale-record CRUD guidance coverage |
 
 ## What changed
 
@@ -56,9 +61,11 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Guarded Chief workspace local writes and Weekly Brief local writes with explicit failure behavior.
 - Rejected stale Weekly Brief update/delete attempts before writing unchanged data or emitting fake update events.
 - Rejected stale Capture update/delete attempts before writing unchanged sticky-note data or emitting fake update events.
+- Rejected stale Opportunity and Content OS update/delete attempts through shared local record guards.
 - Centralized mounted-ref lifecycle handling for hooks that need async safety.
 - Centralized required localStorage writes through one shared helper.
 - Centralized autosave status copy for healthy versus paused local save states.
+- Centralized local record replace/delete guard behavior for CRUD repositories.
 - Removed dead legacy Chief AI components that no longer represented the active product workflow.
 - Split Chief telemetry diagnostics into a lazy-loaded panel so observability detail does not bloat the first Chief of Staff route load.
 
@@ -71,6 +78,7 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Settings validation now keeps the save action disabled with a descriptive accessible name and a single invalid-timezone alert.
 - Weekly Brief now treats stale item mutations as failed work instead of silent no-op success.
 - Capture now treats stale sticky-note mutations as failed work instead of silent no-op success.
+- Opportunities and Content OS now treat stale record mutations as failed work instead of silent no-op success.
 
 ### Accessibility
 
@@ -80,6 +88,7 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Settings exposes save progress through form busy state and avoids duplicate validation announcements.
 - Weekly Brief pauses autosave reassurance when a persistence error is active.
 - Capture and Journal pause autosave reassurance when local persistence errors are active.
+- Opportunity and Content stale-record errors guide users to refresh and retry when data changed elsewhere.
 - Preserved skip-link, route focus, CRUD keyboard activation, and retry/error behaviors covered by the existing suite.
 
 ### Maintainability
@@ -90,6 +99,7 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Added explicit Settings repository failure behavior so persistence errors do not emit false cross-tab update events.
 - Reduced persistence-drift risk by using a shared required localStorage helper across local-first repositories.
 - Reduced autosave-copy drift by using a shared helper for healthy and paused save states.
+- Reduced stale-record drift by reusing shared record mutation guards in local-first repositories.
 - Kept telemetry detail available behind a focused component boundary instead of loading it with the primary workflow.
 - Strengthened tests around the parts most likely to regress during portfolio demos.
 
@@ -125,4 +135,5 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 7. Review Settings save-state accessibility and persistence-failure coverage.
 8. Review Chief and Weekly persistence failure coverage.
 9. Review Capture and Journal autosave failure coverage.
-10. Confirm docs and release evidence match the branch.
+10. Review Opportunity and Content stale-record mutation coverage.
+11. Confirm docs and release evidence match the branch.

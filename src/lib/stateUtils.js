@@ -48,3 +48,41 @@ export function shallowEqualRecordArrays(left, right) {
 
   return true;
 }
+
+export function replaceRecordById(items, id, nextItem, options = {}) {
+  const {
+    notFoundMessage = 'Record not found',
+  } = options;
+  const normalizedId = String(id || '');
+  let didReplace = false;
+  const sourceItems = Array.isArray(items) ? items : [];
+  const nextItems = sourceItems.map((item) => {
+    if (String(item?.id || '') !== normalizedId) {
+      return item;
+    }
+
+    didReplace = true;
+    return nextItem;
+  });
+
+  if (!didReplace) {
+    throw new Error(notFoundMessage);
+  }
+
+  return nextItems;
+}
+
+export function deleteRecordById(items, id, options = {}) {
+  const {
+    notFoundMessage = 'Record not found',
+  } = options;
+  const normalizedId = String(id || '');
+  const sourceItems = Array.isArray(items) ? items : [];
+  const nextItems = sourceItems.filter((item) => String(item?.id || '') !== normalizedId);
+
+  if (nextItems.length === sourceItems.length) {
+    throw new Error(notFoundMessage);
+  }
+
+  return nextItems;
+}

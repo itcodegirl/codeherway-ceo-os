@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-01 - CRUD stale-record integrity hardening
+
+- `0a6a97c` - Rejected stale Opportunity update/delete attempts without emitting fake update events.
+- `d040d08` - Centralized local record replace/delete guards in shared state utilities.
+- `8477064` - Rejected stale Content OS update/delete attempts without emitting fake update events.
+- `204ae9b` - Clarified Opportunity and Content stale-record error guidance for users.
+- `88c46d3` - Added CRUD integration coverage for stale-record recovery copy.
+
 ## 2026-04-30 - Capture and journal autosave trust hardening
 
 - `c444cd2` - Rejected stale Capture deletes without emitting fake update events.

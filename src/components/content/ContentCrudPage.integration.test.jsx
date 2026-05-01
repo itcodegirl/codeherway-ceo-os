@@ -114,7 +114,9 @@ describe('ContentCrudPage integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Unable to save content item right now.');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Unable to save content item right now. Refresh and try again if this record changed elsewhere.',
+      );
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
@@ -143,7 +145,9 @@ describe('ContentCrudPage integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Unable to delete content item right now.');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Unable to delete content item right now. Refresh and try again if this record changed elsewhere.',
+      );
       expect(within(table).getByText('Founder Weekly Brief')).toBeInTheDocument();
     });
 
@@ -152,7 +156,9 @@ describe('ContentCrudPage integration', () => {
     await waitFor(() => {
       expect(within(table).queryByText('Founder Weekly Brief')).not.toBeInTheDocument();
     });
-    expect(screen.queryByText('Unable to delete content item right now.')).not.toBeInTheDocument();
+    expect(screen.queryByText(
+      'Unable to delete content item right now. Refresh and try again if this record changed elsewhere.',
+    )).not.toBeInTheDocument();
     expect(deleteContentItem.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });

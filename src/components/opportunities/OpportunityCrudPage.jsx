@@ -89,8 +89,8 @@ function OpportunityCrudPage() {
     getDeleteLabel: (item) => item.name,
     messages: {
       load: 'Unable to load opportunities right now.',
-      save: 'Unable to save opportunity right now.',
-      delete: 'Unable to delete opportunity right now.',
+      save: 'Unable to save opportunity right now. Refresh and try again if this record changed elsewhere.',
+      delete: 'Unable to delete opportunity right now. Refresh and try again if this record changed elsewhere.',
     },
     logPrefix: 'opportunities',
   });
