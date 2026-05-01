@@ -27,6 +27,10 @@ function normalizeCollection(values) {
   return Array.isArray(values) ? values : [];
 }
 
+function hasText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
 }
@@ -45,6 +49,14 @@ export function buildMainFocus(priorities, opportunities, contentRows) {
     return {
       title: inProgressPriority.title,
       context: 'This is already in motion. Protect your attention until one visible step is done.',
+    };
+  }
+
+  const blockedPriority = safePriorities.find((item) => item?.status === 'Blocked' && item?.title);
+  if (blockedPriority) {
+    return {
+      title: blockedPriority.title,
+      context: 'This is blocked. Your CEO move is to unblock, delegate, or deliberately park it.',
     };
   }
 
@@ -83,11 +95,14 @@ export function buildNextMoveQueue({
   blockers,
   opportunities,
   contentRows,
+  reminders,
+  journalEntry,
 }) {
   const safePriorities = normalizeCollection(priorities);
   const safeBlockers = normalizeCollection(blockers);
   const safeOpportunities = normalizeCollection(opportunities);
   const safeContentRows = normalizeCollection(contentRows);
+  const safeReminders = normalizeCollection(reminders);
   const moves = [];
 
   const blockedPriority = safePriorities.find((item) => item?.status === 'Blocked' && item?.title);
@@ -95,6 +110,8 @@ export function buildNextMoveQueue({
   const activePriority = safePriorities.find((item) => item?.status === 'In Progress' && item?.title);
   const waitingOpportunity = safeOpportunities.find((item) => item?.stage === 'Awaiting Reply' && item?.name);
   const draftingContent = safeContentRows.find((item) => item?.status === 'Drafting' && item?.title);
+  const pendingReminder = safeReminders.find((item) => !item?.isDone && item?.text);
+  const journalNeedsNextStep = hasText(journalEntry?.feelsHeavy) && !hasText(journalEntry?.oneNextThing);
 
   if (blockedPriority) {
     moves.push(`Send one unblock message for "${blockedPriority.title}".`);
@@ -110,6 +127,12 @@ export function buildNextMoveQueue({
   }
   if (draftingContent) {
     moves.push(`Write the opening paragraph for "${draftingContent.title}".`);
+  }
+  if (pendingReminder) {
+    moves.push(`Complete or reschedule reminder: "${pendingReminder.text}".`);
+  }
+  if (journalNeedsNextStep) {
+    moves.push('Turn today\'s heavy journal note into one tiny next action.');
   }
   moves.push(DEFAULT_NEXT_MOVE);
 

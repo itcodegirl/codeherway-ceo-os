@@ -105,9 +105,13 @@ function Dashboard() {
     blockers: weeklyBlockers,
     opportunities: opportunityItems,
     contentRows,
+    reminders,
+    journalEntry,
   }), [
     contentRows,
+    journalEntry,
     opportunityItems,
+    reminders,
     weeklyBlockers,
     weeklyPriorities,
   ]);

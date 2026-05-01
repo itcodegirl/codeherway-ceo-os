@@ -39,6 +39,27 @@ describe('focusHomeLogic', () => {
       title: 'Investor intro (Acme)',
     });
 
+    expect(
+      buildMainFocus(
+        [],
+        [],
+        [{ title: 'Founder note' }],
+      ),
+    ).toMatchObject({
+      title: 'Founder note',
+    });
+
+    expect(
+      buildMainFocus(
+        [{ title: 'Stuck launch decision', status: 'Blocked' }],
+        [{ name: 'Investor intro', company: 'Acme', priority: 'High' }],
+        [{ title: 'Founder note' }],
+      ),
+    ).toMatchObject({
+      title: 'Stuck launch decision',
+      context: 'This is blocked. Your CEO move is to unblock, delegate, or deliberately park it.',
+    });
+
     expect(buildMainFocus(null, undefined, false)).toMatchObject({
       title: 'Create one calming priority for today',
     });
@@ -53,6 +74,8 @@ describe('focusHomeLogic', () => {
       blockers: [{ text: 'Legal review is waiting.' }],
       opportunities: [{ name: 'Acme renewal', stage: 'Awaiting Reply' }],
       contentRows: [{ title: 'Weekly memo', status: 'Drafting' }],
+      reminders: [{ text: 'Send sponsor recap', isDone: false }],
+      journalEntry: { feelsHeavy: 'Launch ambiguity', oneNextThing: '' },
     });
 
     expect(queue).toEqual([
@@ -61,6 +84,8 @@ describe('focusHomeLogic', () => {
       'Spend 20 focused minutes on "Customer update".',
       'Draft a concise follow-up for "Acme renewal".',
       'Write the opening paragraph for "Weekly memo".',
+      'Complete or reschedule reminder: "Send sponsor recap".',
+      'Turn today\'s heavy journal note into one tiny next action.',
       'Set a 15-minute timer and complete one tiny action without switching tabs.',
     ]);
   });
