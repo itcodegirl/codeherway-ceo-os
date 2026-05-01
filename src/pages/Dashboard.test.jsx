@@ -72,6 +72,9 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByRole('heading', { level: 2, name: "I'm Overwhelmed Reset" })).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
     expect(screen.getByText('This blocker may need attention.')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Add a quick reminder')).toHaveAccessibleDescription(
+      'Keep it small enough to finish today. No reminder progress yet.',
+    );
     expect(screen.getByText(/You are in execution mode|Clarify one outcome|Look at what worked|You are not behind/i)).toBeInTheDocument();
   });
 
@@ -227,5 +230,22 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
     expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
+  });
+
+  it('announces loading focus context without hiding the command center', () => {
+    useDashboardData.mockReturnValue({
+      opportunityItems: [],
+      contentRows: [],
+      isDataLoading: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Loading your focus context...')).toHaveAttribute('role', 'status');
+    expect(document.querySelector('.focus-home-page')).toHaveAttribute('aria-busy', 'true');
   });
 });

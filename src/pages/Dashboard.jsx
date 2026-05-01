@@ -239,7 +239,10 @@ function Dashboard() {
   const modeClassName = resolveFocusMode(focusMode).id;
 
   return (
-    <section className={`dashboard-page focus-home-page focus-home-page--${modeClassName}`}>
+    <section
+      className={`dashboard-page focus-home-page focus-home-page--${modeClassName}`}
+      aria-busy={isFocusDataLoading}
+    >
       <PageHeader
         title="Focus Home"
         description="Today / Focus Command Center for clear execution, supportive resets, and daily momentum."
@@ -296,7 +299,11 @@ function Dashboard() {
             <p>{displayedNextMove}</p>
           </div>
 
-          {isFocusDataLoading ? <p className="helper-text">Loading your focus context...</p> : null}
+          {isFocusDataLoading ? (
+            <p className="helper-text" role="status" aria-live="polite">
+              Loading your focus context...
+            </p>
+          ) : null}
           {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
         </article>
 
@@ -327,13 +334,17 @@ function Dashboard() {
               value={reminderDraft}
               onChange={(event) => setReminderDraft(event.target.value)}
               placeholder="Add a quick reminder"
+              aria-describedby="focus-reminder-helper focus-reminder-progress"
             />
             <Button type="submit" size="small" icon={{ name: 'add' }}>
               Add
             </Button>
           </form>
+          <p id="focus-reminder-helper" className="helper-text focus-reminder-helper">
+            Keep it small enough to finish today.
+          </p>
 
-          <p className="focus-reminder-progress" aria-live="polite">
+          <p id="focus-reminder-progress" className="focus-reminder-progress" aria-live="polite">
             {reminderProgress.total > 0
               ? `${reminderProgress.completed} of ${reminderProgress.total} reminders complete (${reminderProgress.completionRate}%)`
               : 'No reminder progress yet.'}
