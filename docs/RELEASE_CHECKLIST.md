@@ -28,6 +28,9 @@ Validate core flows without changing source code:
 - Navigate all primary routes: `Focus Home`, `Capture`, `Journal`, `Opportunities`, `Content OS`, `Weekly Brief`, `Chief of Staff`, `Ops Reliability`, and `Settings`.
 - Refresh each direct route and confirm the app shell renders instead of a platform 404.
 - Confirm loading, empty, and populated states render correctly.
+- On `Capture`, confirm stale edit/delete recovery does not emit fake sticky-note updates.
+- On `Capture`, confirm the sticky-note helper switches away from autosave reassurance when a save error is active.
+- On `Journal`, confirm the save status switches to paused copy when autosave fails.
 - Confirm skip-link and route focus restoration still work from keyboard-only navigation.
 - Confirm route-level error recovery returns to Focus Home and does not trap navigation after one view fails.
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.

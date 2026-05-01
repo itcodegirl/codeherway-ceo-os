@@ -61,6 +61,8 @@ This project is strongest when presented as a local-first productivity system wi
 - Settings saves now guard duplicate submits, reject failed local persistence explicitly, and expose busy/invalid states through accessible button names.
 - Chief workspace and Weekly Brief local persistence now fail explicitly when browser storage rejects writes, so the UI does not imply unsaved work was safely stored.
 - Weekly Brief rejects stale item update/delete attempts without emitting fake progress events.
+- Capture rejects stale sticky-note edits/deletes without fake update events.
+- Capture and Journal autosave copy now changes to a paused state when local saves fail.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
 - Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
@@ -138,6 +140,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Interactive data rows in opportunities/content tables support keyboard activation (`Enter` / `Space`) in addition to pointer interaction.
 - Settings validation announces invalid timezone feedback once, keeps the save action disabled with a descriptive name, and exposes save progress through form busy state.
 - Weekly Brief pauses its autosave confidence copy when a save/load error is active instead of over-promising persistence.
+- Capture and Journal use the same autosave health copy pattern, so failure states do not keep reassuring users incorrectly.
 
 ### 6) Test and quality culture
 
@@ -371,6 +374,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/lib/weeklyRepository.test.js`
   - `src/pages/WeeklyBrief.test.jsx`
   - `src/hooks/useChiefWorkspace.test.js`
+  - `src/lib/captureRepository.test.js`
+  - `src/pages/Capture.test.jsx`
+  - `src/pages/Journal.test.jsx`
 
 ### Production readiness checklist
 
@@ -448,6 +454,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `48749ac` - fix: reject stale weekly mutations
   - `48ea73f` - fix: clarify weekly autosave failure state
   - `890fbae` - test: cover weekly and chief persistence states
+- Capture and journal autosave trust hardening cycle (April 30, 2026):
+  - `c444cd2` - fix: reject stale capture deletes
+  - `1b4089d` - refactor: centralize autosave helper copy
+  - `0780d8a` - fix: reject stale capture updates
+  - `f715acb` - fix: clarify capture and journal autosave failures
+  - `fdf01c4` - test: cover capture and journal save failures
 
 ## Author
 
