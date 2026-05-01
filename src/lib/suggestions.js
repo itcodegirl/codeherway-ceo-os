@@ -1,12 +1,5 @@
+import { hasText, normalizeCollection } from './focusSignalUtils';
 import { formatIsoDate } from './utils';
-
-function normalizeCollection(values) {
-  return Array.isArray(values) ? values : [];
-}
-
-function hasText(value) {
-  return typeof value === 'string' && value.trim().length > 0;
-}
 
 function isFromYesterdayOrEarlier(isoValue, todayKey) {
   if (!hasText(isoValue)) {

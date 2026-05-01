@@ -1,3 +1,5 @@
+import { hasText, normalizeCollection, normalizeText } from './focusSignalUtils';
+
 export const FOCUS_MODES = [
   {
     id: 'focused',
@@ -22,18 +24,6 @@ export const FOCUS_MODES = [
 ];
 
 const DEFAULT_NEXT_MOVE = 'Set a 15-minute timer and complete one tiny action without switching tabs.';
-
-function normalizeCollection(values) {
-  return Array.isArray(values) ? values : [];
-}
-
-function hasText(value) {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function normalizeText(value) {
-  return typeof value === 'string' ? value.trim() : '';
-}
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
