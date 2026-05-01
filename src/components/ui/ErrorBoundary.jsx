@@ -28,7 +28,7 @@ class ErrorBoundary extends Component {
         <div className="error-boundary" role="alert" aria-live="assertive">
           <h2>Something went wrong in this view.</h2>
           <p>Try refreshing or return to Focus Home.</p>
-          <div className="chief-actions">
+          <div className="error-boundary__actions">
             <Button
               type="button"
               onClick={() => window.location.reload()}

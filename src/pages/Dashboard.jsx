@@ -369,15 +369,15 @@ function Dashboard() {
 
   const handleFocusModeKeyDown = (event, currentIndex) => {
     const key = event.key;
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(key)) {
+    if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(key)) {
       return;
     }
 
     event.preventDefault();
     let nextIndex = currentIndex;
-    if (key === 'ArrowRight') {
+    if (key === 'ArrowRight' || key === 'ArrowDown') {
       nextIndex = (currentIndex + 1) % FOCUS_MODES.length;
-    } else if (key === 'ArrowLeft') {
+    } else if (key === 'ArrowLeft' || key === 'ArrowUp') {
       nextIndex = (currentIndex - 1 + FOCUS_MODES.length) % FOCUS_MODES.length;
     } else if (key === 'Home') {
       nextIndex = 0;
