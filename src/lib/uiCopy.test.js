@@ -3,6 +3,8 @@ import {
   SOURCE_LABEL_SUPABASE,
   SOURCE_NOTICE_SAMPLE_DATA,
   SOURCE_NOTICE_SUPABASE,
+  AUTOSAVE_PAUSED_COPY,
+  buildAutosaveHelperText,
   buildSourceNotice,
 } from './uiCopy';
 
@@ -12,6 +14,7 @@ describe('src/lib/uiCopy', () => {
     expect(SOURCE_NOTICE_SUPABASE).toBe('Data source: Live workspace sync is enabled.');
     expect(SOURCE_NOTICE_SAMPLE_DATA)
       .toBe('Local sample data is active. Connect workspace data to replace sample records.');
+    expect(AUTOSAVE_PAUSED_COPY).toBe('Autosave is paused until this workspace saves successfully again.');
   });
 
   it('builds source notice for supabase with default prefix', () => {
@@ -23,5 +26,21 @@ describe('src/lib/uiCopy', () => {
       .toBe('Weekly data source: Live workspace sync is enabled.');
     expect(buildSourceNotice('local', { localPrefix: 'Weekly data source: ' }))
       .toBe('Weekly data source: Local sample data is active. Connect workspace data to replace sample records.');
+  });
+
+  it('builds autosave helper text from save health', () => {
+    expect(buildAutosaveHelperText({
+      healthyText: 'Notes are saved automatically for this workspace.',
+    })).toBe('Notes are saved automatically for this workspace.');
+
+    expect(buildAutosaveHelperText({
+      hasError: true,
+      healthyText: 'Notes are saved automatically for this workspace.',
+    })).toBe(AUTOSAVE_PAUSED_COPY);
+
+    expect(buildAutosaveHelperText({
+      hasError: true,
+      pausedText: 'Autosave needs attention.',
+    })).toBe('Autosave needs attention.');
   });
 });
