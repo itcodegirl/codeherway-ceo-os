@@ -8,19 +8,20 @@ import {
 
 describe('src/lib/uiCopy', () => {
   it('returns canonical source labels', () => {
-    expect(SOURCE_LABEL_SUPABASE).toBe('Supabase (live persistence).');
-    expect(SOURCE_NOTICE_SUPABASE).toBe('Data source: Supabase (live persistence).');
-    expect(SOURCE_NOTICE_SAMPLE_DATA).toBe('Sample data - configure Supabase to use real data.');
+    expect(SOURCE_LABEL_SUPABASE).toBe('Live workspace sync is enabled.');
+    expect(SOURCE_NOTICE_SUPABASE).toBe('Data source: Live workspace sync is enabled.');
+    expect(SOURCE_NOTICE_SAMPLE_DATA)
+      .toBe('Local sample data is active. Connect workspace data to replace sample records.');
   });
 
   it('builds source notice for supabase with default prefix', () => {
-    expect(buildSourceNotice('supabase')).toBe('Data source: Supabase (live persistence).');
+    expect(buildSourceNotice('supabase')).toBe('Data source: Live workspace sync is enabled.');
   });
 
   it('builds source notice with custom prefixes', () => {
     expect(buildSourceNotice('supabase', { supabasePrefix: 'Weekly data source: ' }))
-      .toBe('Weekly data source: Supabase (live persistence).');
+      .toBe('Weekly data source: Live workspace sync is enabled.');
     expect(buildSourceNotice('local', { localPrefix: 'Weekly data source: ' }))
-      .toBe('Weekly data source: Sample data - configure Supabase to use real data.');
+      .toBe('Weekly data source: Local sample data is active. Connect workspace data to replace sample records.');
   });
 });

@@ -248,6 +248,13 @@
   color: var(--text-muted);
 }
 
+.error-boundary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+}
+
 .settings-saved-indicator {
   display: inline;
   color: var(--success);
@@ -422,6 +429,8 @@ textarea:focus-visible,
 
 .modal-panel {
   width: min(560px, 100%);
+  max-height: min(720px, calc(100vh - 2.4rem));
+  overflow: auto;
   background: var(--surface-modal);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -532,6 +541,21 @@ textarea:focus-visible,
 @media (max-width: 900px) {
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .error-boundary__actions .action-button,
+  .modal-actions .action-button {
+    width: 100%;
+  }
+
+  .modal-overlay {
+    align-items: flex-start;
+  }
+
+  .modal-panel {
+    max-height: calc(100vh - 2rem);
   }
 }
 

@@ -9,6 +9,14 @@ function createProxyResponse(payload) {
   };
 }
 
+function createProxyErrorResponse(status, payload) {
+  return {
+    ok: false,
+    status,
+    text: async () => JSON.stringify(payload),
+  };
+}
+
 describe('src/lib/openai', () => {
   beforeEach(() => {
     globalThis.fetch = vi.fn();
@@ -120,6 +128,8 @@ describe('src/lib/openai', () => {
     });
 
     expect(result.source).toBe('fallback');
+    expect(result.errorCode).toBe('CHIEF_PROXY_TIMEOUT');
+    expect(result.errorMessage).toBe('The AI request timed out before a response came back.');
     expect(result.content.length).toBeGreaterThan(0);
     expect(result.structuredPayload).toEqual({
       priorities: [],
@@ -127,6 +137,30 @@ describe('src/lib/openai', () => {
       contentItems: [],
       tasks: [],
     });
+  });
+
+  it('preserves proxy failure details when returning local fallback content', async () => {
+    globalThis.fetch.mockResolvedValue(
+      createProxyErrorResponse(500, {
+        error: 'OPENAI_API_KEY is not configured on the server',
+        error_code: 'OPENAI_API_KEY_MISSING',
+        request_id: 'req-missing-key',
+        correlation_id: 'corr-missing-key',
+      }),
+    );
+
+    const result = await generateChiefOfStaffResponse({
+      actionKey: 'plan',
+      notes: 'Need a reliable plan even when AI is unavailable',
+      correlationId: 'corr-client',
+    });
+
+    expect(result.source).toBe('fallback');
+    expect(result.errorCode).toBe('OPENAI_API_KEY_MISSING');
+    expect(result.errorMessage).toBe('OPENAI_API_KEY is not configured on the server');
+    expect(result.requestId).toBe('req-missing-key');
+    expect(result.correlationId).toBe('corr-missing-key');
+    expect(result.fallbackReason).toBe('AI generation is unavailable; this is a local template fallback.');
   });
 
   it('extracts output from structured tool content when output_text is not present', async () => {

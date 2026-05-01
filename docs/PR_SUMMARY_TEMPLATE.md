@@ -1,67 +1,95 @@
 # Recruiter-Ready PR Summary Template
 
-Use this template when opening a PR that summarizes the four hardening commits below.
+Use this template when opening a PR that summarizes the current product-hardening branch.
 
 ## Title
 
-`Hardening pass: quality, UX credibility, maintainability, and portfolio docs`
+`Product hardening: recovery, routing, execution flow, and portfolio docs`
 
 ## Why this matters
 
-This PR improves portfolio readiness by tightening product reliability, making KPI presentation more credible, improving accessibility semantics, and reducing maintenance overhead in shared repository infrastructure.
+This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, guarding CRUD mutation lifecycles, reducing Chief of Staff bundle weight, and expanding proof around the daily execution workflow.
 
 ## Commits covered
 
 | Commit | Scope |
 | --- | --- |
-| `f5ae62c` | Stabilized brittle source-status copy test assertions |
-| `07f3213` | Improved dashboard and ops KPI credibility + accessibility semantics |
-| `3da3eae` | Centralized Supabase runtime access across repositories |
-| `2d032ab` | Sharpened reviewer quickstart and release/readme narrative |
+| `da56ca5` | Guarded System Pulse and Chief telemetry refreshes against stale async updates |
+| `00eb961` | Removed obsolete legacy Chief AI components and narrowed the maintained workflow path |
+| `bbbf75b` | Kept Dashboard next-move recommendations tied to the current execution queue |
+| `d504d74` | Improved Focus Home support-mode keyboard navigation |
+| `e340d4b` | Added Focus Home E2E coverage and split Chief telemetry diagnostics from the initial route bundle |
+| `dd8d31d` | Made route error recovery return directly to Focus Home |
+| `0128dba` | Derived app route declarations from shared route metadata |
+| `4ba77bc` | Kept completed reminders visible and recoverable |
+| `f3a7a60` | Polished shared recovery styling, modal mobile behavior, and focus keyboard support |
+| `7a8865e` | Added E2E coverage for reversible reminder completion |
+| `0b8db1d` | Guarded CRUD saves/deletes against duplicate submits and late state updates |
+| `fbfa22e` | Centralized mounted-ref lifecycle handling |
+| `22ccc3a` | Rejected stale reminder mutations without fake update events |
+| `4942074` | Preserved completed reminder control contrast |
+| `f2fcd90` | Added confirm-delete unmount safety coverage |
 
 ## What changed
 
 ### Engineering quality
 
-- Replaced brittle string-literal assertions with shared copy constants in unit tests.
-- Added targeted test coverage around dashboard semantics and activity feed rendering.
+- Added stale-result protection to shared async hooks used by the system pulse and Chief telemetry surfaces.
+- Derived router paths from shared route metadata so routes, nav labels, and page metadata stay aligned.
+- Guarded shared CRUD mutation flows against duplicate in-flight saves and stale async state updates after unmount.
+- Centralized mounted-ref lifecycle handling for hooks that need async safety.
+- Removed dead legacy Chief AI components that no longer represented the active product workflow.
+- Split Chief telemetry diagnostics into a lazy-loaded panel so observability detail does not bloat the first Chief of Staff route load.
 
-### UX polish and executive credibility
+### UX polish and execution credibility
 
-- KPI cards now use tone semantics aligned to state (warning vs positive), reducing misleading “all-green” risk framing.
-- Dashboard snapshot/pipeline/activity sections now use semantic list markup with clearer accessibility labels.
+- Dashboard next-move state now clears when an old recommendation no longer belongs to the current queue.
+- Focus Home support modes use roving keyboard focus and visible focus retention.
+- Reminder completion is visible, reversible, and covered in browser tests as part of the daily execution path.
+- Stale reminder mutations now fail clearly instead of emitting fake progress events.
 
 ### Accessibility
 
-- Improved semantic structure for activity and snapshot surfaces.
-- Preserved keyboard-first CRUD and retry/error feedback behaviors with E2E validation.
+- Added keyboard-mode switching coverage for the support-mode group.
+- Route-level crash recovery now has a deterministic Focus Home escape hatch.
+- Completed reminders preserve checkbox/control contrast while still showing text-level completion state.
+- Preserved skip-link, route focus, CRUD keyboard activation, and retry/error behaviors covered by the existing suite.
 
 ### Maintainability
 
-- Introduced shared `supabaseRuntime` helper to remove repeated runtime bootstrap code across repositories.
-- Reduced boilerplate and improved consistency for source resolution (`local` vs `supabase`).
+- Reduced duplicate Chief AI surface area.
+- Reduced route declaration drift by keeping app paths tied to the route metadata source.
+- Reduced lifecycle boilerplate with a shared mounted-ref hook.
+- Kept telemetry detail available behind a focused component boundary instead of loading it with the primary workflow.
+- Strengthened tests around the parts most likely to regress during portfolio demos.
 
 ### Recruiter-facing presentation
 
-- Added a clearer reviewer quickstart path and a 5-minute walkthrough sequence.
-- Updated case study/release checklist to reflect the latest hardening cycle and verification expectations.
+- Updated README, case study, changelog, release checklist, and capture guidance so the project narrative matches the latest branch state.
+- Clarified the exact proof points a reviewer should see in Focus Home and Chief of Staff.
 
 ## Validation evidence
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm run test:run`
-- [ ] `npm run build`
-- [ ] `npm run check:route-budgets`
-- [ ] `npm run test:e2e`
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm run test:run`
+- [x] `npm run build`
+- [x] `npm run check:route-budgets`
+- [x] `npm run check:route-budgets:trend`
+- [x] `npm run test:e2e`
+- [x] `npx markdownlint-cli2 "**/*.md" "!node_modules/**"`
 
 ## Risk / rollback
 
-- Low risk: changes are mostly additive, semantic, or refactor-only with full automated verification.
-- Rollback strategy: revert commits in reverse order if needed (`2d032ab`, `3da3eae`, `07f3213`, `f5ae62c`).
+- Low-to-medium risk: changes touch shared async hooks and the Chief of Staff route, but the full automated gate passes.
+- Rollback strategy: revert commits in reverse order if needed after confirming route-budget and E2E behavior.
 
 ## Reviewer guide (fast path)
 
-1. Review KPI tone + list semantics updates in dashboard/ops pages.
-2. Review `supabaseRuntime` extraction and repository call-site updates.
-3. Confirm docs quickstart and release evidence narrative updates.
+1. Review route metadata-driven app routing.
+2. Review error-boundary Focus Home recovery.
+3. Review CRUD mutation lifecycle guards and confirm-delete unmount coverage.
+4. Review Dashboard next-move queue validation and reversible reminder state.
+5. Review Focus Home keyboard behavior and Playwright coverage.
+6. Review Chief telemetry lazy split and route-budget results.
+7. Confirm docs and release evidence match the branch.

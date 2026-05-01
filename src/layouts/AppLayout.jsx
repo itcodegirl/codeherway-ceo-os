@@ -1,5 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useMemo, useRef } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
 import SystemPulse from '../components/ui/SystemPulse';
@@ -11,6 +11,7 @@ import { resolveTeamName } from '../lib/settings';
 
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const mainRef = useRef(null);
   const { settings } = useSettings();
 
@@ -23,6 +24,10 @@ function AppLayout() {
   }, [appName, location.pathname]);
 
   usePageMeta(appName);
+
+  const handleReturnHome = useCallback(() => {
+    navigate('/', { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     const mainElement = mainRef.current;
@@ -48,7 +53,7 @@ function AppLayout() {
         <Topbar pageTitle={currentPageTitle} />
         <SystemPulse />
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
-          <ErrorBoundary>
+          <ErrorBoundary key={location.pathname} name={currentPageTitle} onReturnHome={handleReturnHome}>
             <Outlet />
           </ErrorBoundary>
         </main>

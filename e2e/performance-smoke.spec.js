@@ -33,7 +33,7 @@ test.describe('Performance smoke profile', () => {
 
     timings.dashboardInitialLoadMs = await measureDuration(async () => {
       await page.goto('/');
-      await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Focus Home', exact: true })).toBeVisible();
     });
 
     timings.opportunitiesTransitionMs = await navigateAndMeasure({
@@ -62,8 +62,8 @@ test.describe('Performance smoke profile', () => {
     });
     timings.dashboardReturnTransitionMs = await navigateAndMeasure({
       page,
-      linkLabel: 'Dashboard',
-      headingLabel: 'Dashboard',
+      linkLabel: 'Focus Home',
+      headingLabel: 'Focus Home',
     });
 
     const transitionDurations = Object.entries(timings)

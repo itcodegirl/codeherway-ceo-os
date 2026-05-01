@@ -89,6 +89,56 @@ describe('src/pages/Dashboard', () => {
     expect(nextMovePanel).toHaveTextContent(/Spend 20 focused minutes|Send one unblock message|Draft a concise follow-up/i);
   });
 
+  it('replaces a selected next move when the underlying focus data changes', () => {
+    useDashboardData.mockReturnValue({
+      opportunityItems: [],
+      contentRows: [],
+      isDataLoading: false,
+    });
+    useWeeklyBrief.mockReturnValue({
+      priorities: [
+        { id: 'p-old', title: 'Blocked Launch', status: 'Blocked' },
+      ],
+      blockers: [],
+      wins: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief: vi.fn(),
+    });
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tell me what to do next' }));
+    const nextMovePanel = screen.getByText('Next Smallest Action').closest('.focus-home__next-move');
+    expect(nextMovePanel).toHaveTextContent('Send one unblock message for "Blocked Launch".');
+
+    useWeeklyBrief.mockReturnValue({
+      priorities: [
+        { id: 'p-new', title: 'Current Focus', status: 'In Progress' },
+      ],
+      blockers: [],
+      wins: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief: vi.fn(),
+    });
+
+    rerender(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(nextMovePanel).toHaveTextContent('Spend 20 focused minutes on "Current Focus".');
+    expect(nextMovePanel).not.toHaveTextContent('Blocked Launch');
+  });
+
   it('switches to overwhelmed mode and opens reset guidance', () => {
     render(
       <MemoryRouter>
@@ -111,12 +161,21 @@ describe('src/pages/Dashboard', () => {
 
     const planningChip = screen.getByRole('radio', { name: 'Planning' });
     expect(planningChip).toHaveAttribute('aria-checked', 'true');
+    expect(planningChip).toHaveAttribute('tabIndex', '0');
 
-    fireEvent.keyDown(planningChip, { key: 'ArrowRight' });
-    expect(screen.getByRole('radio', { name: 'Reflection' })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.keyDown(planningChip, { key: 'ArrowDown' });
+    const reflectionChip = screen.getByRole('radio', { name: 'Reflection' });
+    expect(reflectionChip).toHaveAttribute('aria-checked', 'true');
+    expect(reflectionChip).toHaveAttribute('tabIndex', '0');
+    expect(planningChip).toHaveAttribute('tabIndex', '-1');
+    expect(reflectionChip).toHaveFocus();
+
+    fireEvent.keyDown(reflectionChip, { key: 'ArrowUp' });
+    expect(planningChip).toHaveAttribute('aria-checked', 'true');
+    expect(planningChip).toHaveFocus();
   });
 
-  it('adds reminders and allows marking them complete', () => {
+  it('adds reminders and allows marking them complete or pending again', () => {
     render(
       <MemoryRouter>
         <Dashboard />
@@ -129,9 +188,15 @@ describe('src/pages/Dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(screen.getByText('Send recap email')).toBeInTheDocument();
+    expect(screen.getByText('0 of 1 reminders complete (0%)')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('checkbox'));
-    expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
+    expect(screen.getByText('1 of 1 reminders complete (100%)')).toBeInTheDocument();
+    expect(screen.getByText('Send recap email')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Send recap email' }));
+    expect(screen.getByText('0 of 1 reminders complete (0%)')).toBeInTheDocument();
+    expect(screen.queryByText('No reminders yet. Add one small commitment.')).not.toBeInTheDocument();
   });
 
   it('shows calm fallback states when no linked records exist', () => {
@@ -159,6 +224,7 @@ describe('src/pages/Dashboard', () => {
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
     expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
+    expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
     expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
   });

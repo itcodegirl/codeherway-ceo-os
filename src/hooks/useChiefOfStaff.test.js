@@ -273,6 +273,9 @@ describe('useChiefOfStaff', () => {
       title: 'summarize title',
       content: 'Fallback executive summary',
       source: 'fallback',
+      fallbackReason: 'AI generation is unavailable; this is a local template fallback.',
+      errorCode: 'OPENAI_API_KEY_MISSING',
+      errorMessage: 'OPENAI_API_KEY is not configured on the server',
       structuredPayload: {
         priorities: [],
         opportunities: [],
@@ -284,6 +287,9 @@ describe('useChiefOfStaff', () => {
       title: 'summarize title',
       content: 'Fallback executive summary',
       source: 'fallback',
+      fallbackReason: 'AI generation is unavailable; this is a local template fallback.',
+      errorCode: 'OPENAI_API_KEY_MISSING',
+      errorMessage: 'OPENAI_API_KEY is not configured on the server',
       structuredPayload: {
         priorities: [],
         opportunities: [],
@@ -327,8 +333,11 @@ describe('useChiefOfStaff', () => {
       title: 'summarize title',
       content: 'Fallback executive summary',
       source: 'fallback',
+      fallbackReason: 'AI generation is unavailable; this is a local template fallback.',
+      errorCode: 'OPENAI_API_KEY_MISSING',
+      errorMessage: 'OPENAI_API_KEY is not configured on the server',
     }));
-    expect(result.current.feedback).toBe('Created: summarize title. Using local fallback output.');
+    expect(result.current.feedback).toBe('AI unavailable. Saved local fallback: summarize title. Review before using.');
     expect(result.current.hasHistory).toBe(true);
   });
 

@@ -27,8 +27,8 @@ class ErrorBoundary extends Component {
       return (
         <div className="error-boundary" role="alert" aria-live="assertive">
           <h2>Something went wrong in this view.</h2>
-          <p>Try refreshing or go back to the Dashboard.</p>
-          <div className="chief-actions">
+          <p>Try refreshing or return to Focus Home.</p>
+          <div className="error-boundary__actions">
             <Button
               type="button"
               onClick={() => window.location.reload()}
@@ -40,11 +40,11 @@ class ErrorBoundary extends Component {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => window.history.back()}
-              ariaLabel="Go back to previous page"
+              onClick={() => this.props.onReturnHome?.()}
+              ariaLabel="Return to Focus Home"
               icon={{ name: 'back', size: 14 }}
             >
-              Go Back
+              Return Home
             </Button>
           </div>
         </div>

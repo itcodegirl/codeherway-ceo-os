@@ -74,7 +74,13 @@ The following assets are referenced for portfolio review and should be kept curr
   - structured AI outputs
 - Explicit user feedback for generation/acceptance outcomes and errors
 - Deterministic metadata and shell behavior for route transitions
+- Route rendering derived from shared route metadata so navigation, page metadata, and router paths stay aligned
 - Event-driven refresh strategy to keep screens synchronized after mutations
+- Deterministic route-crash recovery back to Focus Home rather than browser-history-dependent recovery
+- Mounted-ref lifecycle guards for CRUD saves/deletes and confirmation flows so async mutations do not update unmounted screens
+- Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
+- Stale async refresh guards for shared pulse and telemetry hooks so route changes do not overwrite current state with older request results
+- Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
 
@@ -94,6 +100,9 @@ npm run lint
 npm run build
 npm run test:run
 npm run typecheck
+npm run check:route-budgets
+npm run check:route-budgets:trend
+npm run test:e2e
 ```
 
 ## 6) Current boundaries and next-step roadmap
@@ -108,3 +117,29 @@ npm run typecheck
 - Dashboard snapshot, pipeline, and activity surfaces now use semantic list markup with explicit accessible labels.
 - Supabase runtime access was centralized into `src/lib/supabaseRuntime.js`, removing repeated adapter/config boilerplate across repositories.
 - Added focused unit coverage for shared runtime behavior and dashboard/activity rendering semantics.
+
+## 8) Latest hardening updates (April 30, 2026)
+
+- Netlify direct-route reloads are protected by an SPA fallback and covered with Playwright direct-route refresh tests.
+- Route labels, navigation items, and page metadata now come from centralized route definitions to reduce drift.
+- Route-level error boundaries reset on navigation so one failed view does not trap the rest of the app shell.
+- Chief of Staff fallback output is explicitly labeled, preserves proxy error metadata, and explains when no structured actions can be saved.
+- Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright to prove the workflow behaves like a saved workspace.
+- Async mount guards were normalized for Strict Mode so dev/test reload behavior matches production expectations more closely.
+- Reminder completion now records completion timestamps and feeds a visible Focus Home progress summary.
+- Sample-data/source messaging has been rewritten as product-facing local workspace language rather than developer setup copy.
+- System Pulse and Chief telemetry refreshes now ignore stale async responses during fast navigation and Strict Mode remounts.
+- Dashboard next-move recommendations now clear when they no longer belong to the current execution queue.
+- Focus Home support-mode controls now use roving keyboard focus and have Playwright coverage for keyboard switching plus reminder completion.
+- Obsolete legacy Chief AI prompt/output components were removed so the product has one maintained Chief of Staff workflow path.
+- Chief telemetry diagnostics are lazy-loaded separately from the main Chief of Staff route to keep route budgets green while preserving observability.
+- Error-boundary recovery now routes directly to Focus Home, giving users a reliable escape hatch from a failed view.
+- App route declarations now derive paths from shared route metadata, reducing future route/navigation drift.
+- Completed reminders remain visible and can be toggled back to pending, so progress tracking is reversible.
+- Focus Home support-mode radios now support vertical arrow keys as well as horizontal arrows.
+- Playwright now verifies reversible reminder completion and route budgets remain within trend limits.
+- CRUD save/delete flows now guard duplicate in-flight submits and avoid late state updates after route changes.
+- Mounted-ref lifecycle handling is centralized in a shared hook for mutation-heavy hooks.
+- Stale reminder toggle/delete attempts are rejected without emitting fake progress events.
+- Completed reminder styling now preserves checkbox/control contrast while keeping text-level completion cues.
+- Confirmation unmount safety is covered with targeted hook tests, and the full QA gate remains green.

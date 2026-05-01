@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CHIEF_TELEMETRY_UPDATED_EVENT,
   getChiefTelemetrySource,
@@ -61,14 +61,23 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
   const [lastCorrelationId, setLastCorrelationId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setIsLoading(true);
     setError('');
 
     try {
       const { source: nextSource, events } = await listChiefTelemetryEvents({ limit });
       const normalizedEvents = Array.isArray(events) ? events : [];
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setSource(nextSource || getChiefTelemetrySource());
       setRecentCount(normalizedEvents.length);
       setLastEventTimestamp(normalizedEvents[0]?.timestamp || '');
@@ -81,28 +90,28 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
         normalizedEvents.find((event) => typeof event?.correlationId === 'string' && event.correlationId.trim())?.correlationId || '',
       );
     } catch {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setError('Unable to load telemetry health right now.');
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [limit]);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
 
-    const runRefresh = async () => {
-      if (!isMounted) {
-        return;
-      }
-
-      await refresh();
-    };
-
-    runRefresh();
+    const frameId = window.requestAnimationFrame(() => {
+      void refresh();
+    });
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       const listener = () => {
-        if (isMounted) {
+        if (isMountedRef.current) {
           void refresh();
         }
       };
@@ -110,13 +119,17 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
       window.addEventListener(CHIEF_TELEMETRY_UPDATED_EVENT, listener);
 
       return () => {
-        isMounted = false;
+        isMountedRef.current = false;
+        requestIdRef.current += 1;
+        window.cancelAnimationFrame(frameId);
         window.removeEventListener(CHIEF_TELEMETRY_UPDATED_EVENT, listener);
       };
     }
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      requestIdRef.current += 1;
+      window.cancelAnimationFrame(frameId);
     };
   }, [refresh]);
 

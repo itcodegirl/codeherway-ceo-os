@@ -11,6 +11,9 @@ function normalizeChiefResponse(item) {
     title: item?.title || 'Executive Output',
     content: item?.content || '',
     source: item?.source || 'proxy',
+    fallbackReason: item?.fallbackReason || '',
+    errorCode: item?.errorCode || '',
+    errorMessage: item?.errorMessage || '',
     structuredPayload:
       item?.structuredPayload && typeof item.structuredPayload === 'object'
         ? item.structuredPayload
@@ -256,12 +259,18 @@ export async function saveChiefOutput({
   content,
   structuredPayload,
   source = 'proxy',
+  fallbackReason = '',
+  errorCode = '',
+  errorMessage = '',
 }) {
   const normalizedOutput = normalizeChiefResponse({
     id: buildCreateId(),
     title,
     content,
     source,
+    fallbackReason,
+    errorCode,
+    errorMessage,
     structuredPayload:
       structuredPayload && typeof structuredPayload === 'object'
         ? structuredPayload
@@ -294,6 +303,9 @@ export async function saveChiefOutput({
         title: data.title,
         content: data.content,
         source: data.source,
+        fallbackReason: normalizedOutput.fallbackReason,
+        errorCode: normalizedOutput.errorCode,
+        errorMessage: normalizedOutput.errorMessage,
         structuredPayload: data.structured_payload,
       });
     },

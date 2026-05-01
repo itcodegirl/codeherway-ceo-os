@@ -86,18 +86,16 @@ export function useChiefOfStaff() {
   }, [hydrateAcceptedStructuredItems, loadWorkspace, resetAcceptanceCaches, resetAcceptanceState]);
 
   useEffect(() => {
-    const frameId = window.requestAnimationFrame(() => {
-      void refreshWorkspace();
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
+    void refreshWorkspace();
   }, [refreshWorkspace]);
 
   useEffect(
-    () => () => {
-      isMountedRef.current = false;
+    () => {
+      isMountedRef.current = true;
+
+      return () => {
+        isMountedRef.current = false;
+      };
     },
     [],
   );

@@ -1,39 +1,62 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   getChiefSource,
   loadChiefWorkspace,
   resetChiefWorkspace,
   saveChiefNotes,
 } from '../lib/chiefRepository';
+import { resolveNextValue } from '../lib/stateUtils';
 
 function resolveNotes(nextNotes) {
   return typeof nextNotes === 'string' ? nextNotes : '';
 }
 
+function normalizeWorkspaceResponses(nextResponses) {
+  if (!Array.isArray(nextResponses)) {
+    return [];
+  }
+
+  return nextResponses.filter((item) => item && typeof item === 'object');
+}
+
 export function useChiefWorkspace({ isMountedRef }) {
   const [notes, setNotesState] = useState('');
-  const [responses, setResponses] = useState([]);
+  const [responses, setResponsesState] = useState([]);
   const [source, setSource] = useState(getChiefSource());
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const requestIdRef = useRef(0);
+
+  const beginWorkspaceRequest = useCallback(() => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    return requestId;
+  }, []);
+
+  const invalidatePendingWorkspaceLoad = useCallback(() => {
+    const requestId = beginWorkspaceRequest();
+    setIsLoading(false);
+    return requestId;
+  }, [beginWorkspaceRequest]);
 
   const loadWorkspace = useCallback(async () => {
+    const requestId = beginWorkspaceRequest();
     setIsLoading(true);
     setLoadError('');
 
     try {
       const workspace = await loadChiefWorkspace();
-      if (!isMountedRef.current) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return [];
       }
 
-      const workspaceResponses = Array.isArray(workspace.responses) ? workspace.responses : [];
-      setNotesState(workspace.notes || '');
-      setResponses(workspaceResponses);
+      const workspaceResponses = normalizeWorkspaceResponses(workspace.responses);
+      setNotesState(resolveNotes(workspace.notes));
+      setResponsesState(workspaceResponses);
       setSource(workspace.source || getChiefSource());
       return workspaceResponses;
     } catch (error) {
-      if (!isMountedRef.current) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return [];
       }
 
@@ -43,13 +66,22 @@ export function useChiefWorkspace({ isMountedRef }) {
       }
       return [];
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && requestId === requestIdRef.current) {
         setIsLoading(false);
       }
     }
-  }, [isMountedRef]);
+  }, [beginWorkspaceRequest, isMountedRef]);
+
+  const setResponses = useCallback((nextValue) => {
+    invalidatePendingWorkspaceLoad();
+    setResponsesState((currentValue) => {
+      const resolvedValue = resolveNextValue(nextValue, currentValue);
+      return normalizeWorkspaceResponses(resolvedValue);
+    });
+  }, [invalidatePendingWorkspaceLoad]);
 
   const setNotes = useCallback((nextNotes) => {
+    invalidatePendingWorkspaceLoad();
     const normalizedNotes = resolveNotes(nextNotes);
     setNotesState(normalizedNotes);
     void saveChiefNotes(normalizedNotes).catch((error) => {
@@ -58,7 +90,7 @@ export function useChiefWorkspace({ isMountedRef }) {
         console.error('Failed to persist chief notes', error);
       }
     });
-  }, []);
+  }, [invalidatePendingWorkspaceLoad]);
 
   const appendPrompt = useCallback((value) => {
     const normalizedPrompt = resolveNotes(value).trim();
@@ -66,6 +98,7 @@ export function useChiefWorkspace({ isMountedRef }) {
       return;
     }
 
+    invalidatePendingWorkspaceLoad();
     setNotesState((existing) => {
       const normalizedExisting = resolveNotes(existing).trimEnd();
       const next = normalizedExisting ? `${normalizedExisting}\n\n${normalizedPrompt}` : normalizedPrompt;
@@ -77,21 +110,23 @@ export function useChiefWorkspace({ isMountedRef }) {
       });
       return next;
     });
-  }, []);
+  }, [invalidatePendingWorkspaceLoad]);
 
   const clearWorkspace = useCallback(async () => {
+    const requestId = invalidatePendingWorkspaceLoad();
+
     try {
       await resetChiefWorkspace();
-      if (!isMountedRef.current) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return false;
       }
 
       setNotesState('');
-      setResponses([]);
+      setResponsesState([]);
       setLoadError('');
       return true;
     } catch (error) {
-      if (!isMountedRef.current) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return false;
       }
 
@@ -101,7 +136,7 @@ export function useChiefWorkspace({ isMountedRef }) {
       }
       return false;
     }
-  }, [isMountedRef]);
+  }, [invalidatePendingWorkspaceLoad, isMountedRef]);
 
   return {
     notes,

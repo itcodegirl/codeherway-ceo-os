@@ -16,12 +16,13 @@ import {
 import {
   createReminder,
   deleteReminder,
+  getReminderProgress,
   listReminders,
   REMINDERS_UPDATED_EVENT,
   toggleReminder,
 } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
-import { buildSourceNotice } from '../lib/uiCopy';
+import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
 const FOCUS_MODES = [
@@ -133,8 +134,25 @@ function buildQuickWin(wins, opportunities, contentRows) {
   return 'Quick win waiting: close one tiny loop before opening a new one.';
 }
 
-function buildMomentumMessage({ inProgressCount, blockerCount, winsCount }) {
-  const score = Math.max(0, Math.min(100, 45 + (inProgressCount * 14) + (winsCount * 10) - (blockerCount * 12)));
+function buildMomentumMessage({
+  inProgressCount,
+  blockerCount,
+  winsCount,
+  completedReminderCount,
+  pendingReminderCount,
+}) {
+  const score = Math.max(0, Math.min(
+    100,
+    45
+      + (inProgressCount * 14)
+      + (winsCount * 10)
+      + (completedReminderCount * 6)
+      - (pendingReminderCount * 4)
+      - (blockerCount * 12),
+  ));
+  if (completedReminderCount > 0 && score >= 60) {
+    return { score, text: 'Momentum is visible. Completed reminders are turning intent into proof.' };
+  }
   if (score >= 75) {
     return { score, text: 'Momentum is strong. Protect this lane and finish one more step.' };
   }
@@ -228,8 +246,18 @@ function Dashboard() {
     [contentRows, opportunityItems, weeklyPriorities],
   );
 
-  const pendingReminders = useMemo(
-    () => reminders.filter((item) => !item?.isDone),
+  const visibleReminders = useMemo(
+    () => [...reminders].sort((left, right) => {
+      if (Boolean(left?.isDone) === Boolean(right?.isDone)) {
+        return 0;
+      }
+
+      return left?.isDone ? 1 : -1;
+    }),
+    [reminders],
+  );
+  const reminderProgress = useMemo(
+    () => getReminderProgress(reminders),
     [reminders],
   );
 
@@ -260,7 +288,15 @@ function Dashboard() {
     inProgressCount: weeklyPriorities.filter((item) => item?.status === 'In Progress').length,
     blockerCount: weeklyBlockers.length,
     winsCount: weeklyWins.length,
-  }), [weeklyBlockers.length, weeklyPriorities, weeklyWins.length]);
+    completedReminderCount: reminderProgress.completed,
+    pendingReminderCount: reminderProgress.pending,
+  }), [
+    reminderProgress.completed,
+    reminderProgress.pending,
+    weeklyBlockers.length,
+    weeklyPriorities,
+    weeklyWins.length,
+  ]);
 
   const blockerItems = useMemo(() => {
     if (weeklyBlockers.length === 0) {
@@ -269,7 +305,8 @@ function Dashboard() {
     return weeklyBlockers.slice(0, 3).map((item) => item?.text || 'Unspecified blocker');
   }, [weeklyBlockers]);
 
-  const displayedNextMove = nextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
+  const activeNextMove = nextMove && nextMoveQueue.includes(nextMove) ? nextMove : '';
+  const displayedNextMove = activeNextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
 
   const handleTellMeWhatToDoNext = () => {
     const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
@@ -319,7 +356,7 @@ function Dashboard() {
   };
 
   const dashboardDemoNote = isLocalDashboardDemoMode
-    ? 'Demo mode is active. Connect live data when you are ready.'
+    ? SOURCE_NOTICE_SAMPLE_DATA
     : '';
 
   const isFocusDataLoading = isDataLoading || isWeeklyLoading;
@@ -332,15 +369,15 @@ function Dashboard() {
 
   const handleFocusModeKeyDown = (event, currentIndex) => {
     const key = event.key;
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(key)) {
+    if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(key)) {
       return;
     }
 
     event.preventDefault();
     let nextIndex = currentIndex;
-    if (key === 'ArrowRight') {
+    if (key === 'ArrowRight' || key === 'ArrowDown') {
       nextIndex = (currentIndex + 1) % FOCUS_MODES.length;
-    } else if (key === 'ArrowLeft') {
+    } else if (key === 'ArrowLeft' || key === 'ArrowUp') {
       nextIndex = (currentIndex - 1 + FOCUS_MODES.length) % FOCUS_MODES.length;
     } else if (key === 'Home') {
       nextIndex = 0;
@@ -383,6 +420,7 @@ function Dashboard() {
               type="button"
               role="radio"
               aria-checked={focusMode === mode.id}
+              tabIndex={focusMode === mode.id ? 0 : -1}
               className={focusMode === mode.id ? 'focus-chip focus-chip--active' : 'focus-chip'}
               onClick={() => setFocusMode(mode.id)}
               onKeyDown={(event) => handleFocusModeKeyDown(event, index)}
@@ -398,7 +436,7 @@ function Dashboard() {
         <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
           <div className="focus-panel__header">
             <h2>Today's Main Focus</h2>
-            <span className="signal-node">Focus</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <p className="focus-home__main-focus">{mainFocus.title}</p>
           <p className="calm-copy">{mainFocus.context}</p>
@@ -423,7 +461,7 @@ function Dashboard() {
         <article className="focus-panel" aria-label="Blockers panel">
           <div className="focus-panel__header">
             <h2>Blockers</h2>
-            <span className="signal-node">Blockers</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <ul className="focus-list">
             {blockerItems.map((item, index) => (
@@ -435,7 +473,7 @@ function Dashboard() {
         <article className="focus-panel" aria-label="Reminders panel">
           <div className="focus-panel__header">
             <h2>Reminders</h2>
-            <span className="signal-node">Reset</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <form className="focus-reminder-form" onSubmit={handleAddReminder}>
             <label className="sr-only" htmlFor="focus-reminder-input">
@@ -453,9 +491,20 @@ function Dashboard() {
             </Button>
           </form>
 
+          <p className="focus-reminder-progress" aria-live="polite">
+            {reminderProgress.total > 0
+              ? `${reminderProgress.completed} of ${reminderProgress.total} reminders complete (${reminderProgress.completionRate}%)`
+              : 'No reminder progress yet.'}
+          </p>
+
           <ul className="focus-reminder-list">
-            {pendingReminders.length ? pendingReminders.map((item) => (
-              <li key={item.id} className="focus-reminder-list__item">
+            {visibleReminders.length ? visibleReminders.map((item) => (
+              <li
+                key={item.id}
+                className={item.isDone
+                  ? 'focus-reminder-list__item focus-reminder-list__item--done'
+                  : 'focus-reminder-list__item'}
+              >
                 <label>
                   <input
                     type="checkbox"
@@ -494,7 +543,7 @@ function Dashboard() {
         <article className="focus-panel" aria-label="Momentum panel">
           <div className="focus-panel__header">
             <h2>Quick Win</h2>
-            <span className="signal-node">Momentum</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <p className="focus-home__quick-win">{quickWin}</p>
           <p className="focus-home__momentum-score">
@@ -506,7 +555,7 @@ function Dashboard() {
         <article className="focus-panel focus-panel--reset" aria-live="polite">
           <div className="focus-panel__header">
             <h2>I'm Overwhelmed Reset</h2>
-            <span className="signal-node">Next Move</span>
+            <span className="signal-node" aria-hidden="true" />
           </div>
           <p className="supportive-copy">
             {isResetOpen

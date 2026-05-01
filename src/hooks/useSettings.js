@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../lib/settings';
 import { getSettingsSource, loadSettings, saveSettings as persistSettings } from '../lib/settingsRepository';
-
-function resolveNextValue(nextValue, currentValue) {
-  return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
-}
+import { resolveNextValue } from '../lib/stateUtils';
 
 function resolveSettingValue(key, nextValue) {
   if (key === 'teamName') {
@@ -29,24 +26,47 @@ export function useSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
   const timezoneIsValid = Boolean(resolveTimeZone(settings.timezone || ''));
 
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const loadCurrentSettings = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setIsLoading(true);
     setLoadError('');
 
     try {
       const result = await loadSettings();
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setSettingsState(result.settings || DEFAULT_SETTINGS);
       setSavedAt(result.savedAt || 0);
       setSource(result.source || getSettingsSource());
     } catch (error) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setLoadError('Unable to load settings right now.');
       if (import.meta.env.DEV) {
         console.error('Failed to load settings', error);
       }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -72,6 +92,9 @@ export function useSettings() {
   }, []);
 
   const saveSettings = useCallback(async (nextSettings) => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setIsSaving(true);
     setLoadError('');
     const resolvedNextSettings = nextSettings || settings;
@@ -101,17 +124,27 @@ export function useSettings() {
 
     try {
       const result = await persistSettings(normalizedSettings);
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return undefined;
+      }
+
       setSettingsState(result.settings || DEFAULT_SETTINGS);
       setSavedAt(result.savedAt || Date.now());
       setSource(result.source || getSettingsSource());
       return result;
     } catch (error) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return undefined;
+      }
+
       setLoadError('Unable to save settings right now.');
       if (import.meta.env.DEV) {
         console.error('Failed to save settings', error);
       }
     } finally {
-      setIsSaving(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsSaving(false);
+      }
     }
   }, [settings]);
 

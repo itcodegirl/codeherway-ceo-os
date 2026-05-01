@@ -1,12 +1,19 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AppLayout from './AppLayout';
 
 describe('src/layouts/AppLayout', () => {
+  let consoleErrorSpy;
+
   beforeEach(() => {
     document.head.innerHTML = '';
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore();
+    consoleErrorSpy = undefined;
   });
 
   it('updates document title and route-level metadata for content pages', () => {
@@ -87,5 +94,33 @@ describe('src/layouts/AppLayout', () => {
       expect(main).toHaveFocus();
     });
     expect(document.title).toBe('Focus Home | CodeHerWay CEO OS');
+  });
+
+  it('resets route error state after navigating away from a failed view', async () => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    function BrokenView() {
+      throw new Error('Broken route for reset test');
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/broken']}>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route path="broken" element={<BrokenView />} />
+            <Route index element={<div>Focus Home page</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong in this view.');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Focus Home' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Focus Home page')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

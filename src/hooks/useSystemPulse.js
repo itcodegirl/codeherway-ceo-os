@@ -77,6 +77,7 @@ export function useSystemPulse() {
     items: DEFAULT_PULSE_ITEMS,
     nextMove: 'Syncing command signal...',
   });
+  const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
 
   const loadPulse = useCallback(async () => {
@@ -93,7 +94,7 @@ export function useSystemPulse() {
       const reminders = listReminders();
       const journalEntry = getJournalEntryByDate(getTodayJournalDateKey());
 
-      if (requestId !== requestIdRef.current) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return;
       }
 
@@ -124,7 +125,7 @@ export function useSystemPulse() {
         nextMove: suggestions[0]?.text || 'You are clear for now. Keep one tiny action in motion.',
       });
     } catch {
-      if (requestId !== requestIdRef.current) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         return;
       }
 
@@ -136,6 +137,15 @@ export function useSystemPulse() {
         nextMove: 'Unable to refresh command signal right now.',
       });
     }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      requestIdRef.current += 1;
+    };
   }, []);
 
   useEffect(() => {

@@ -33,6 +33,12 @@
   align-items: center;
 }
 
+.chief-input-header > div,
+.chief-summary-header > div,
+.chief-item-copy {
+  min-width: 0;
+}
+
 .chief-eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.75rem;
@@ -46,6 +52,44 @@
 .chief-item-copy p,
 .chief-item-copy small {
   opacity: 0.88;
+}
+
+.chief-source-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 1.6rem;
+  margin-top: 0.45rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  background: var(--bg-chief-badge);
+  border: 1px solid var(--border-chief-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.chief-source-badge--fallback {
+  background: rgba(248, 162, 180, 0.14);
+  border-color: rgba(248, 162, 180, 0.45);
+}
+
+.chief-output-warning {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.95rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(248, 162, 180, 0.42);
+  background: rgba(248, 162, 180, 0.1);
+}
+
+.chief-output-warning strong,
+.chief-output-warning small {
+  font-size: 0.82rem;
+}
+
+.chief-output-warning small {
+  opacity: 0.82;
 }
 
 .chief-notes-input {
@@ -88,54 +132,6 @@
   min-height: 1.2rem;
   opacity: 0.84;
   font-size: 0.88rem;
-}
-
-.chief-telemetry-card {
-  margin-top: 0.75rem;
-}
-
-.chief-telemetry-copy {
-  margin: 0.65rem 0 0;
-  opacity: 0.8;
-  font-size: 0.82rem;
-}
-
-.chief-telemetry-metrics {
-  margin-top: 0.75rem;
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.chief-telemetry-metrics span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.8rem;
-  padding: 0 0.6rem;
-  border-radius: 999px;
-  background: var(--bg-chief-badge);
-  font-size: 0.76rem;
-}
-
-.chief-telemetry-events {
-  margin: 0.75rem 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.45rem;
-}
-
-.chief-telemetry-events li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.75rem;
-  font-size: 0.8rem;
-}
-
-.chief-telemetry-events small {
-  opacity: 0.72;
-  white-space: nowrap;
 }
 
 .chief-output-panel {
@@ -194,6 +190,20 @@
 @media (max-width: 980px) {
   .chief-page-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .chief-input-header,
+  .chief-summary-header,
+  .chief-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chief-accept-all-btn,
+  .chief-item button {
+    width: 100%;
   }
 }
 

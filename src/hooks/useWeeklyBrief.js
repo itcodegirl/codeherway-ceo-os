@@ -16,10 +16,7 @@ import {
   defaultPriorities,
   defaultWins,
 } from '../lib/weeklyData';
-
-function resolveNextValue(nextValue, currentValue) {
-  return typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
-}
+import { resolveNextValue, shallowEqualRecords } from '../lib/stateUtils';
 
 function normalizeCollectionPayload(payload, key) {
   const values = Array.isArray(payload?.[key]) ? payload[key] : [];
@@ -30,38 +27,11 @@ function normalizeArrayValue(nextValue, fallbackValue) {
   return Array.isArray(nextValue) ? nextValue : fallbackValue;
 }
 
-function shallowEqualRecords(left, right) {
-  if (Object.is(left, right)) {
-    return true;
-  }
-
-  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') {
-    return false;
-  }
-
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  if (leftKeys.length !== rightKeys.length) {
-    return false;
-  }
-
-  for (let index = 0; index < leftKeys.length; index += 1) {
-    const key = leftKeys[index];
-    if (!Object.prototype.hasOwnProperty.call(right, key)) {
-      return false;
-    }
-
-    if (!Object.is(left[key], right[key])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 export function useWeeklyBrief() {
   const [weekStart, setWeekStart] = useState(() => getCurrentWeekStart());
   const weekStartRef = useRef(weekStart);
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
   const [source, setSource] = useState(resolveWeeklySource());
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -73,6 +43,14 @@ export function useWeeklyBrief() {
   useEffect(() => {
     weekStartRef.current = weekStart;
   }, [weekStart]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const msUntilNextMinute = 60 * 1000 - (Date.now() % (60 * 1000));
@@ -99,23 +77,36 @@ export function useWeeklyBrief() {
   }, []);
 
   const loadWeeklyBrief = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setIsLoading(true);
     setLoadError('');
 
     try {
       const payload = await getWeeklyBriefByWeek(weekStart);
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setSource(payload.source || resolveWeeklySource());
       setReviewNotesState(typeof payload.reviewNotes === 'string' ? payload.reviewNotes : DEFAULT_REVIEW_NOTES);
       setPrioritiesState(normalizeCollectionPayload(payload, 'priorities'));
       setWinsState(normalizeCollectionPayload(payload, 'wins'));
       setBlockersState(normalizeCollectionPayload(payload, 'blockers'));
     } catch (error) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+        return;
+      }
+
       setLoadError('Unable to load weekly brief right now.');
       if (import.meta.env.DEV) {
         console.error('Failed to load weekly brief', error);
       }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [weekStart]);
 

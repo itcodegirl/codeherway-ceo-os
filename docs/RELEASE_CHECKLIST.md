@@ -1,6 +1,6 @@
 # Release Candidate Checklist
 
-Last updated: April 23, 2026
+Last updated: April 30, 2026
 
 Use this checklist before sharing the project as portfolio evidence or treating a branch as production-ready.
 
@@ -13,6 +13,10 @@ npm run lint
 npm run build
 npm run test:run
 npm run typecheck
+npm run check:route-budgets
+npm run check:route-budgets:trend
+npm run test:e2e
+npx markdownlint-cli2 "**/*.md" "!node_modules/**"
 ```
 
 Confirm GitHub Actions CI is green for the branch before merge.
@@ -21,18 +25,28 @@ Confirm GitHub Actions CI is green for the branch before merge.
 
 Validate core flows without changing source code:
 
-- Navigate all primary routes: `Dashboard`, `Opportunities`, `Content OS`, `Weekly Brief`, `Chief of Staff`, and `Settings`.
+- Navigate all primary routes: `Focus Home`, `Capture`, `Journal`, `Opportunities`, `Content OS`, `Weekly Brief`, `Chief of Staff`, `Ops Reliability`, and `Settings`.
+- Refresh each direct route and confirm the app shell renders instead of a platform 404.
 - Confirm loading, empty, and populated states render correctly.
 - Confirm skip-link and route focus restoration still work from keyboard-only navigation.
+- Confirm route-level error recovery returns to Focus Home and does not trap navigation after one view fails.
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.
 - Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
+- Confirm Focus Home support modes can be reached from keyboard, switched with arrow keys, and retain visible focus.
+- Confirm reminder completion progress updates after checking and unchecking reminders, and completed reminders stay recoverable.
+- Confirm rapid create/save clicks do not duplicate records in Opportunities or Content OS.
+- Confirm navigating away during modal or confirmation work does not leave stale pending UI behind.
+- On `Chief of Staff`, type notes, refresh, confirm the notes return, then reset the workspace and confirm the cleared state survives another refresh.
+- On `Chief of Staff`, confirm telemetry diagnostics can load without blocking the primary note-to-action workflow.
 - Confirm no visible console errors in normal user flows.
 
 ## 3) AI workflow confidence checks
 
 - Generate each chief action at least once with valid notes.
 - Verify fallback behavior appears when proxy response is unavailable or malformed.
+- Confirm fallback output is clearly labeled and does not imply AI succeeded.
 - Confirm structured acceptance only saves valid items and ignores malformed entries safely.
+- Confirm empty structured output explains why `Add All to System` is unavailable.
 - Confirm rapid repeated acceptance does not create duplicate records for the same item.
 - Confirm proxy auth mode is correct for the deployment target:
   - development: `CHIEF_STAFF_REQUIRE_TOKEN=false`
@@ -47,6 +61,7 @@ Validate core flows without changing source code:
 ## 5) Portfolio packaging checks
 
 - Keep `README.md` and `CASE_STUDY.md` aligned with current architecture and test scope.
+- Update `docs/PR_SUMMARY_TEMPLATE.md` so the PR narrative matches the actual hardening commits under review.
 - Add screenshots or short demo media when available, and keep labels consistent with route names.
 - Ensure roadmap items are honest and separated from completed work.
 

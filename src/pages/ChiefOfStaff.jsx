@@ -1,12 +1,16 @@
+import { lazy, Suspense } from "react";
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
-import ChiefTelemetryDiagnostics from "../components/chief/ChiefTelemetryDiagnostics";
 import Button from "../components/ui/Button";
+import SourceStatusNotice from "../components/ui/SourceStatusNotice";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
-import { useChiefTelemetryHealth } from "../hooks/useChiefTelemetryHealth";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
+import { buildSourceNotice } from "../lib/uiCopy";
 import "../styles/chief-of-staff.css";
 
 const MAX_NOTES_LENGTH = 12000;
+const ChiefTelemetryDiagnosticsPanel = lazy(() =>
+  import("../components/chief/ChiefTelemetryDiagnosticsPanel")
+);
 
 function parseStructuredText(value) {
   if (typeof value !== "string") {
@@ -37,6 +41,9 @@ function toPanelResult(entry) {
     title: parsedContent?.title || entry.title || "Executive Action Plan",
     summary: parsedContent?.summary || entry.content || "",
     source: entry.source || "proxy",
+    fallbackReason: entry.fallbackReason || "",
+    errorCode: entry.errorCode || "",
+    errorMessage: entry.errorMessage || "",
     structured: entry.structuredPayload || parsedContent?.structured || {}
   });
 }
@@ -47,6 +54,8 @@ export default function ChiefOfStaff() {
     setNotes,
     responses,
     feedback,
+    source,
+    isLoading,
     loadError,
     isGenerating,
     isAcceptingAll,
@@ -55,27 +64,23 @@ export default function ChiefOfStaff() {
     acceptAllStructured,
     isStructuredItemAccepted,
     isStructuredItemAccepting,
-    clearWorkspace
+    clearWorkspace,
+    refreshWorkspace
   } = useChiefOfStaff();
-
-  const {
-    source: telemetrySource,
-    recentCount: telemetryRecentCount,
-    lastEventTimestamp: telemetryLastEventTimestamp,
-    lastRequestId: telemetryLastRequestId,
-    lastCorrelationId: telemetryLastCorrelationId,
-    recentEvents: telemetryRecentEvents,
-    outcomeCounters: telemetryOutcomeCounters,
-    isLoading: isTelemetryLoading,
-    error: telemetryError
-  } = useChiefTelemetryHealth();
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
   const result = toPanelResult(latestResponse);
   const notesLength = typeof notes === "string" ? notes.length : 0;
   const notesLimitReached = notesLength >= MAX_NOTES_LENGTH;
 
-  const feedbackMessage = loadError || feedback;
+  const feedbackMessage = loadError
+    ? "Review the workspace status above, then retry when ready."
+    : feedback;
+  const actionHint = notesLimitReached
+    ? "Notes reached the current limit. Trim them before generating a new action plan."
+    : notes.trim()
+      ? "Your notes stay editable. Review every recommendation before using it."
+      : "Add a few founder notes to generate an action plan.";
 
   return (
     <section className="chief-page-grid">
@@ -97,6 +102,15 @@ export default function ChiefOfStaff() {
             Paste notes, founder thoughts, meeting takeaways, or rough strategy
             ideas.
           </p>
+          <SourceStatusNotice
+            source={source}
+            supabaseText={buildSourceNotice("supabase", { supabasePrefix: "Chief workspace: " })}
+            localText="Chief workspace is stored locally on this device right now."
+            loadError={isLoading ? "" : loadError}
+            onRetry={refreshWorkspace}
+            retryAriaLabel="Retry loading chief workspace"
+            retryDisabled={isGenerating}
+          />
 
           <label htmlFor="chief-notes-input" className="sr-only">
             Founder notes
@@ -111,7 +125,8 @@ export default function ChiefOfStaff() {
             disabled={isGenerating}
             aria-disabled={isGenerating}
             aria-label="Founder notes for chief of staff workspace"
-            aria-describedby="chief-notes-meta"
+            aria-describedby="chief-notes-meta chief-action-hint"
+            aria-invalid={notesLimitReached}
           />
           <p
             id="chief-notes-meta"
@@ -136,22 +151,27 @@ export default function ChiefOfStaff() {
               {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
             </Button>
           </div>
+          <p id="chief-action-hint" className="chief-helper-text" role="status" aria-live="polite">
+            {actionHint}
+          </p>
 
           <p className="chief-feedback-text" role="status" aria-live="polite">
             {isGenerating ? "Generating recommendations from your notes..." : feedbackMessage}
           </p>
 
-          <ChiefTelemetryDiagnostics
-            source={telemetrySource}
-            recentCount={telemetryRecentCount}
-            lastEventTimestamp={telemetryLastEventTimestamp}
-            lastRequestId={telemetryLastRequestId}
-            lastCorrelationId={telemetryLastCorrelationId}
-            recentEvents={telemetryRecentEvents}
-            outcomeCounters={telemetryOutcomeCounters}
-            isLoading={isTelemetryLoading}
-            error={telemetryError}
-          />
+          <Suspense
+            fallback={(
+              <div className="chief-card" aria-live="polite">
+                <div className="chief-section-header">
+                  <h4>Decision Engine Health</h4>
+                  <span className="chief-count-badge">--</span>
+                </div>
+                <p className="chief-helper-text">Loading telemetry diagnostics...</p>
+              </div>
+            )}
+          >
+            <ChiefTelemetryDiagnosticsPanel />
+          </Suspense>
         </div>
       </div>
 

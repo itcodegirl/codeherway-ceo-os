@@ -14,6 +14,9 @@ export function normalizeChiefOutput(payload = {}) {
     title: normalizeText(payload.title, "Executive Action Plan"),
     summary: normalizeText(payload.summary, ""),
     source: normalizeText(payload.source, "proxy"),
+    fallbackReason: normalizeText(payload.fallbackReason),
+    errorCode: normalizeText(payload.errorCode),
+    errorMessage: normalizeText(payload.errorMessage),
     structured: {
       priorities: normalizeArray(structured.priorities)
         .map((item) => ({

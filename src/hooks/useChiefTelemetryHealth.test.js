@@ -17,6 +17,18 @@ vi.mock('../lib/chiefTelemetryRepository', () => ({
 
 import { useChiefTelemetryHealth } from './useChiefTelemetryHealth';
 
+function createDeferred() {
+  let resolve;
+  const promise = new Promise((nextResolve) => {
+    resolve = nextResolve;
+  });
+
+  return {
+    promise,
+    resolve,
+  };
+}
+
 describe('useChiefTelemetryHealth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -112,5 +124,78 @@ describe('useChiefTelemetryHealth', () => {
     expect(result.current.source).toBe('supabase');
     expect(result.current.recentCount).toBe(2);
     expect(result.current.lastEventTimestamp).toBe('2026-04-21T09:30:00.000Z');
+  });
+
+  it('ignores stale telemetry responses when a newer refresh resolves first', async () => {
+    const firstLoad = createDeferred();
+    const secondLoad = createDeferred();
+
+    listChiefTelemetryEventsMock
+      .mockImplementationOnce(() => firstLoad.promise)
+      .mockImplementationOnce(() => secondLoad.promise);
+
+    const { result } = renderHook(() => useChiefTelemetryHealth());
+
+    await waitFor(() => {
+      expect(listChiefTelemetryEventsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('ceo-os:chief-telemetry-updated'));
+    });
+
+    await waitFor(() => {
+      expect(listChiefTelemetryEventsMock).toHaveBeenCalledTimes(2);
+    });
+
+    await act(async () => {
+      secondLoad.resolve({
+        source: 'supabase',
+        events: [
+          {
+            id: 'event-new-1',
+            event: 'accept_all_completed',
+            saved: 2,
+            skipped: 1,
+            failed: 0,
+            timestamp: '2026-04-30T12:00:00.000Z',
+          },
+          {
+            id: 'event-new-2',
+            event: 'generate_completed',
+            timestamp: '2026-04-30T11:00:00.000Z',
+          },
+        ],
+      });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.source).toBe('supabase');
+      expect(result.current.recentCount).toBe(2);
+    });
+
+    await act(async () => {
+      firstLoad.resolve({
+        source: 'local',
+        events: [
+          {
+            id: 'event-old',
+            event: 'accept_item_failed',
+            timestamp: '2026-04-29T08:00:00.000Z',
+          },
+        ],
+      });
+      await Promise.resolve();
+    });
+
+    expect(result.current.source).toBe('supabase');
+    expect(result.current.recentCount).toBe(2);
+    expect(result.current.outcomeCounters).toEqual({
+      saved: 2,
+      skipped: 1,
+      failed: 0,
+    });
   });
 });

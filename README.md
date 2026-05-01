@@ -47,7 +47,33 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 2. Capture: add one sticky note as `idea`, then edit text/category inline.
 3. Journal: answer one prompt and show immediate autosave status.
 4. Weekly Brief + Opportunities: add one blocker or in-progress item and return to Focus Home.
-5. Chief of Staff: paste notes, generate output, and accept at least one structured recommendation.
+5. Chief of Staff: paste notes, reload once to show local persistence, then generate output and accept at least one structured recommendation.
+
+## Portfolio review snapshot
+
+This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. The current implementation now covers the core reviewer risks:
+
+- Direct Netlify routes are protected with an SPA fallback and E2E direct-route refresh tests.
+- Route labels, navigation, and metadata come from one route definition source to reduce product drift.
+- App routing now derives route paths from the same route metadata used by navigation and page descriptions.
+- Route error recovery returns users directly to Focus Home instead of relying on fragile browser history.
+- CRUD mutation flows guard in-flight saves, deletes, and pending confirmations so rapid clicks or route changes do not create duplicate writes or late state updates.
+- Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
+- Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
+- Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
+- Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
+- System Pulse and Chief telemetry refreshes ignore stale async results, reducing noisy state updates during Strict Mode, fast navigation, and reviewer reloads.
+- Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
+- Focus Home support modes now use keyboard-friendly roving focus, with E2E coverage for mode switching and reminder completion.
+- Chief telemetry diagnostics are split from the initial route bundle so observability detail stays available without bloating the first Chief of Staff load.
+- CI covers lint, build, typecheck, unit tests, route performance budgets, and Playwright smoke flows.
+
+### Honest current boundaries
+
+- Authentication and multi-user account UX are not yet a complete product experience.
+- Supabase persistence exists as an upgrade path, but several local-first workflows still need end-to-end authenticated UX review.
+- Chief of Staff is useful as a structured assistant workflow, but production AI readiness still depends on deployed secrets, proxy auth, observability, and usage controls.
+- Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
 
 ## What this repository demonstrates
 
@@ -113,6 +139,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Hook tests cover orchestration and synchronization.
 - Library tests cover parsing, settings normalization, and metadata helper behavior.
 - Route tests cover key visibility and accessibility flows.
+- Playwright covers direct-route refreshes, CRUD smoke paths, Focus Home execution, and Chief workspace persistence/reset behavior.
 
 ## Project layout
 
@@ -141,9 +168,11 @@ npm run build
 npm run test:run
 npm run test:integration:telemetry
 npm run typecheck
+npm run test:e2e
 npm run check:route-budgets
 npm run check:route-budgets:trend
 npm run report:route-budgets
+npx markdownlint-cli2 "**/*.md" "!node_modules/**"
 npm run check:telemetry-ingest:health
 npm run check:telemetry-ingest:slo
 npm run build:slo-trend-snapshot
@@ -165,10 +194,13 @@ npm run transition:ops-incident-state
 
 GitHub Actions runs the quality gate on every push to `main` and every pull request:
 
+- Markdown lint
 - `npm run lint`
 - `npm run build`
 - `npm run test:run`
 - `npm run typecheck`
+
+The PR test suite also runs route performance budget checks and Playwright smoke tests, including direct route refresh coverage for every primary route.
 
 ### Branch protection automation
 
@@ -344,12 +376,15 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 
 ## Release evidence
 
-- Verification snapshot date: April 21, 2026
+- Verification snapshot date: April 30, 2026
 - Quality gates executed successfully:
   - `npm run lint`
   - `npm run build`
   - `npm run test:run`
   - `npm run typecheck`
+  - `npm run check:route-budgets`
+  - `npm run check:route-budgets:trend`
+  - `npm run test:e2e`
 - Final hardening and readiness commits:
   - `d95e8d3` - test: harden chief-of-staff edge-case coverage
   - `188dcc7` - test: harden dashboard insight edge-case resilience
@@ -366,6 +401,30 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `a13bd86` - feat: add journal page with local daily prompt autosave
   - `eec8c74` - feat: add deterministic reminders and suggestion layer
   - `0c15d13` - feat: add shared system pulse across the app shell
+- Product hardening cycle (April 30, 2026):
+  - `3708271` - fix: guard stale settings and weekly brief loads
+  - `66a4c0d` - refactor: centralize shared state utilities
+  - `c1f43a5` - feat: preserve chief workspace edits during refresh
+  - `fe94f2b` - fix: improve chief workspace trust cues
+  - `9a5098d` - fix: restore chief workspace hydration in strict mode
+- Stability and execution hardening cycle (April 30, 2026):
+  - `da56ca5` - fix: guard system pulse and telemetry refreshes
+  - `00eb961` - refactor: remove legacy chief ai components
+  - `bbbf75b` - fix: keep dashboard next moves current
+  - `d504d74` - fix: improve focus mode keyboard navigation
+  - `e340d4b` - test: cover focus home execution flow
+- Recovery and reminder hardening cycle (April 30, 2026):
+  - `dd8d31d` - fix: make error recovery return home
+  - `0128dba` - refactor: derive app routes from route metadata
+  - `4ba77bc` - fix: keep completed reminders recoverable
+  - `f3a7a60` - fix: polish recovery and focus accessibility
+  - `7a8865e` - test: cover reversible reminder completion
+- CRUD lifecycle hardening cycle (April 30, 2026):
+  - `0b8db1d` - fix: guard crud mutation lifecycle
+  - `fbfa22e` - refactor: centralize mounted ref lifecycle
+  - `22ccc3a` - fix: reject stale reminder mutations
+  - `4942074` - fix: preserve reminder control contrast
+  - `f2fcd90` - test: cover confirm unmount safety
 
 ## Author
 
