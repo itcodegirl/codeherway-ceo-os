@@ -7,6 +7,7 @@ import {
   JOURNAL_PROMPTS,
   saveJournalEntry,
 } from '../lib/journalRepository';
+import { buildAutosaveHelperText } from '../lib/uiCopy';
 import '../styles/journal.css';
 
 function formatSavedAt(value) {
@@ -50,6 +51,11 @@ function Journal() {
   }, [dateKey]);
 
   const savedAtLabel = useMemo(() => formatSavedAt(lastSavedAt), [lastSavedAt]);
+  const journalSaveStatus = buildAutosaveHelperText({
+    hasError: Boolean(errorMessage),
+    healthyText: savedAtLabel,
+    pausedText: 'Autosave is paused. Your latest journal changes are not saved yet.',
+  });
   const isEntryEmpty = useMemo(
     () => JOURNAL_PROMPTS.every((prompt) => !(entry[prompt.id] || '').trim()),
     [entry],
@@ -110,7 +116,7 @@ function Journal() {
           </label>
         </header>
 
-        <p className="helper-text" role="status">{savedAtLabel}</p>
+        <p className="helper-text" role="status" aria-live="polite">{journalSaveStatus}</p>
         {errorMessage ? <p role="alert" className="form-error">{errorMessage}</p> : null}
         {isEntryEmpty ? (
           <p className="helper-text">Start with one sentence. Small reflections count.</p>
