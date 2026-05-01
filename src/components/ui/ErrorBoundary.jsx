@@ -22,6 +22,15 @@ class ErrorBoundary extends Component {
     }
   }
 
+  handleReturnHome = () => {
+    if (typeof this.props.onReturnHome === 'function') {
+      this.props.onReturnHome();
+      return;
+    }
+
+    window.location.assign('/');
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -40,7 +49,7 @@ class ErrorBoundary extends Component {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => this.props.onReturnHome?.()}
+              onClick={this.handleReturnHome}
               ariaLabel="Return to Focus Home"
               icon={{ name: 'back', size: 14 }}
             >
