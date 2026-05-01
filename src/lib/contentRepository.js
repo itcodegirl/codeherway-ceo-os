@@ -1,4 +1,5 @@
 import { contentItems as mockContentItems } from '../data/mockData';
+import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
@@ -147,7 +148,9 @@ export async function updateContentItem(id, payload) {
   }
 
   const current = readLocalContentItems();
-  const next = current.map((item) => (item.id === String(id) ? normalizedPayload : item));
+  const next = replaceRecordById(current, id, normalizedPayload, {
+    notFoundMessage: 'Content item not found',
+  });
   writeLocalContentItems(next);
   notifyContentItemsUpdated({ source: 'local', type: 'update' });
   return normalizedPayload;
@@ -171,7 +174,9 @@ export async function deleteContentItem(id) {
   }
 
   const current = readLocalContentItems();
-  const next = current.filter((item) => item.id !== String(id));
+  const next = deleteRecordById(current, id, {
+    notFoundMessage: 'Content item not found',
+  });
   writeLocalContentItems(next);
   notifyContentItemsUpdated({ source: 'local', type: 'delete' });
 }
