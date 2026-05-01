@@ -9,7 +9,7 @@ Use this guide when updating screenshot or demo assets for portfolio packaging.
    - `npm run dev`
 2. Open the app in a desktop browser at a stable viewport (recommended: 1440x900).
 3. Capture one screenshot per route:
-   - `dashboard-overview.png` for Focus Home
+   - `dashboard-overview.png` for Focus Home, including System Pulse, source-status cue, and next-move panel
    - `capture-workspace.png`
    - `journal-reflection.png`
    - `opportunities-pipeline.png`
@@ -20,11 +20,13 @@ Use this guide when updating screenshot or demo assets for portfolio packaging.
    - `settings-workspace-profile.png`
 4. Save files under `docs/assets/screenshots/`.
 5. Keep filenames stable so README and case study links remain valid.
+6. After responsive UI changes, also inspect Focus Home at 390x844 and confirm topbar status, System Pulse nodes, reminder rows, and primary buttons wrap without clipping.
 
 ## Demo walkthrough capture flow
 
 1. Record a 45-90 second flow covering:
    - Focus Home overview
+   - Source-status trust cue and System Pulse next move
    - Focus Home support-mode keyboard switching
    - Reminder completion progress after checking and unchecking one reminder
    - Capture or Journal low-friction input

@@ -75,6 +75,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Explicit user feedback for generation/acceptance outcomes and errors
 - Deterministic metadata and shell behavior for route transitions
 - Route rendering derived from shared route metadata so navigation, page metadata, and router paths stay aligned
+- App-shell error recovery catches layout/sidebar/topbar crashes, not only route-view crashes
 - Event-driven refresh strategy to keep screens synchronized after mutations
 - Deterministic route-crash recovery back to Focus Home rather than browser-history-dependent recovery
 - Mounted-ref lifecycle guards for CRUD saves/deletes and confirmation flows so async mutations do not update unmounted screens
@@ -94,6 +95,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - One consistent navigation shell with skip-link + focus restore
 - Semantic route composition and consistent form behavior
 - Local status indicators for data source and loading/error state
+- Source-status and System Pulse cues expose accessible status/labels while staying visually lightweight
 - Keyboard-friendly editing and workflow actions
 - Settings form states expose busy, disabled, and invalid-timezone feedback through accessible control names without duplicate alerts
 - Weekly Brief autosave copy changes when persistence is paused so the page does not reassure users incorrectly during failures
@@ -139,6 +141,7 @@ npm run test:e2e
 - Sample-data/source messaging has been rewritten as product-facing local workspace language rather than developer setup copy.
 - System Pulse and Chief telemetry refreshes now ignore stale async responses during fast navigation and Strict Mode remounts.
 - Dashboard next-move recommendations now clear when they no longer belong to the current execution queue.
+- Focus Home next-action logic is extracted to `src/lib/focusHomeLogic.js`, where blocked work, reminders, and journal heaviness are ranked as calm decision-support signals.
 - Focus Home support-mode controls now use roving keyboard focus and have Playwright coverage for keyboard switching plus reminder completion.
 - Obsolete legacy Chief AI prompt/output components were removed so the product has one maintained Chief of Staff workflow path.
 - Chief telemetry diagnostics are lazy-loaded separately from the main Chief of Staff route to keep route budgets green while preserving observability.
@@ -167,3 +170,12 @@ npm run test:e2e
 - Opportunities and Content OS stale edits/deletes now reject without emitting fake update events.
 - Shared record-mutation guards in `src/lib/stateUtils.js` reduce duplicated local CRUD failure handling.
 - Integration tests cover stale-record recovery guidance in Opportunity and Content workflows.
+
+## 9) Latest hardening updates (May 1, 2026)
+
+- App-shell crash recovery now wraps the full router/Suspense shell, so non-route shell failures return a stable recovery UI instead of a blank app.
+- Focus Home decision-support logic moved out of the route page and into tested product logic.
+- Next-move recommendations now include blocked priorities, pending reminders, and journal entries that name heaviness without a next action.
+- Source-status cues and System Pulse nodes now have accessible status/label semantics and stronger small-screen wrapping behavior.
+- Added tests for global app recovery, source-status trust cues, System Pulse labels, and Focus Home decision rules.
+- Full local verification passed on May 1, 2026: lint, typecheck, full Vitest, build, route budgets, and Playwright E2E.

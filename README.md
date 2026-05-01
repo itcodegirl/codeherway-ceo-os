@@ -70,7 +70,10 @@ This project is strongest when presented as a local-first productivity system wi
 - Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
 - System Pulse and Chief telemetry refreshes ignore stale async results, reducing noisy state updates during Strict Mode, fast navigation, and reviewer reloads.
 - Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
+- Focus Home decision rules now live in tested product logic, including blocked-work context, pending reminders, and journal heaviness without a next action.
 - Focus Home support modes now use keyboard-friendly roving focus, with E2E coverage for mode switching and reminder completion.
+- App-shell crash recovery is covered globally, so sidebar/topbar/shell failures are caught instead of blanking the whole app.
+- Source and System Pulse cues now expose accessible status/labels while staying visually quiet on mobile screens.
 - Chief telemetry diagnostics are split from the initial route bundle so observability detail stays available without bloating the first Chief of Staff load.
 - CI covers lint, build, typecheck, unit tests, route performance budgets, and Playwright smoke flows.
 
@@ -80,6 +83,7 @@ This project is strongest when presented as a local-first productivity system wi
 - Supabase persistence exists as an upgrade path, but several local-first workflows still need end-to-end authenticated UX review.
 - Chief of Staff is useful as a structured assistant workflow, but production AI readiness still depends on deployed secrets, proxy auth, observability, and usage controls.
 - Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
+- See [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for the current recruiter-facing limitation list.
 
 ## What this repository demonstrates
 
@@ -112,6 +116,7 @@ Each repository follows the same contract:
 - Keep consumers independent of storage transport details
 
 The deterministic recommendation layer is handled by `src/lib/suggestions.js`, and shared cross-route pulse orchestration is handled by `src/hooks/useSystemPulse.js`.
+Focus Home next-action ranking is handled by `src/lib/focusHomeLogic.js` so decision-support behavior can evolve without bloating the route page.
 
 ### 3) Reliable local-first + optional cloud workflows
 
@@ -137,6 +142,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Single semantic page landmarks and route heading structure
 - Clear loading, empty, and fallback states
 - Source/status messaging for persistence mode
+- Accessible source-status and System Pulse labels for trust cues that assistive technology can read
 - Controlled keyboard interactions and form behavior in core workflows
 - Interactive data rows in opportunities/content tables support keyboard activation (`Enter` / `Space`) in addition to pointer interaction.
 - Settings validation announces invalid timezone feedback once, keeps the save action disabled with a descriptive name, and exposes save progress through form busy state.
@@ -308,6 +314,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 - [CHANGELOG.md](./CHANGELOG.md) for timestamped hardening and release-readiness updates.
 - [docs/assets/README.md](./docs/assets/README.md) for screenshot and demo asset structure.
 - [docs/assets/CAPTURE_GUIDE.md](./docs/assets/CAPTURE_GUIDE.md) for updating screenshots and walkthrough captures.
+- [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for honest boundaries to mention in interviews.
 
 ## Product visuals and proof
 
@@ -382,6 +389,8 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/lib/stateUtils.test.js`
   - `src/pages/Capture.test.jsx`
   - `src/pages/Journal.test.jsx`
+  - `src/lib/focusHomeLogic.test.js`
+  - `src/App.test.jsx`
 
 ### Production readiness checklist
 
@@ -471,6 +480,19 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `8477064` - fix: reject stale content mutations
   - `204ae9b` - fix: clarify crud stale record errors
   - `88c46d3` - test: cover crud stale record guidance
+- Calm OS recovery and decision-support cycle (May 1, 2026):
+  - `19ebcb2` - fix: harden app shell crash recovery
+  - `3b9266f` - refactor: extract focus home decision logic
+  - `3786ca1` - feat: strengthen focus home decision support
+  - `2be9bd6` - style: improve calm responsive trust cues
+  - `bfb5167` - test: cover app recovery and trust cues
+- May 1, 2026 local verification:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test:run` (80 files passed, 302 tests passed, 1 skipped)
+  - `npm run build`
+  - `npm run check:route-budgets`
+  - `npm run test:e2e` (18 passed)
 
 ## Author
 

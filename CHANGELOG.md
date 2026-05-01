@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-01 - Calm recovery and decision-support hardening
+
+- `19ebcb2` - Added app-shell crash recovery around the full router/Suspense shell.
+- `3b9266f` - Extracted Focus Home decision rules into tested product logic.
+- `3786ca1` - Ranked blocked priorities, pending reminders, and journal heaviness in the next-move queue.
+- `2be9bd6` - Improved responsive wrapping plus accessible source-status and System Pulse trust cues.
+- `bfb5167` - Added QA coverage for app recovery, source-status semantics, and pulse labels.
+
 ## 2026-05-01 - CRUD stale-record integrity hardening
 
 - `0a6a97c` - Rejected stale Opportunity update/delete attempts without emitting fake update events.
