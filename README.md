@@ -84,6 +84,8 @@ This project is strongest when presented as a local-first productivity system wi
 - Focus Home capture, journal, and reminder signal loading is centralized in a dedicated hook so the command center stays composition-first.
 - Next-move guidance now prioritizes the oldest unfinished reminder, reducing the risk that quiet commitments get buried.
 - Focus Home loading and reminder-helper states now expose busy/status/description semantics without making the interface visually louder.
+- Focus Home and Weekly Brief now refresh from storage, focus, and visibility changes so the command center is less likely to show stale context after tab switches.
+- Capture empty-submit feedback is connected directly to the note field, and the Capture workspace has reload-persistence E2E coverage.
 - App-shell crash recovery is covered globally, so sidebar/topbar/shell failures are caught instead of blanking the whole app.
 - Source and System Pulse cues now expose accessible status/labels while staying visually quiet on mobile screens.
 - Chief telemetry diagnostics are split from the initial route bundle so observability detail stays available without bloating the first Chief of Staff load.
@@ -393,7 +395,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/hooks/useChiefOfStaff.test.js`
   - `src/hooks/useDashboardInsights.test.js`
   - `src/hooks/useWeeklyBrief.test.js`
+  - `src/hooks/useWorkspaceSettings.test.js`
   - `src/hooks/useFocusHomeSignals.test.js`
+  - `src/lib/focusSignalUtils.test.js`
   - `src/lib/pageMeta.test.js`
   - `src/pages/Settings.test.jsx`
   - `src/hooks/useSettings.test.js`
@@ -410,7 +414,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/lib/focusHomeLogic.test.js`
   - `src/App.test.jsx`
   - `src/components/ui/Sidebar.test.jsx`
+  - `e2e/capture-workspace.spec.js`
   - `e2e/mobile-navigation.spec.js`
+  - `e2e/settings-shell.spec.js`
 
 ### Production readiness checklist
 
@@ -527,16 +533,33 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `npm run check:route-budgets`
   - `npm run test:e2e` (19 passed)
 - Product hardening batch (May 1, 2026):
+  - `3d03dec` - fix: reset transient home route errors
+  - `008b56b` - refactor: share focus signal helpers
   - `d8bc496` - fix: harden persisted state and crud loading
+  - `cec77dd` - fix: keep fallback record ids unique
+  - `49e88bd` - fix: refresh focus and weekly data after external updates
   - `82ed2f2` - refactor: unify shell settings consumption
+  - `2571fb9` - refactor: centralize workspace settings refresh logic
   - `5a21229` - fix: recover weekly brief state after save failures
   - `4b4e528` - fix: clarify data recovery status cues
+  - `77963de` - fix: harden dashboard reminder interactions
+  - `a236504` - fix: improve capture feedback and compact nav focus
   - `c30dc06` - test: cover shell settings sync and reminder timing
 - May 1, 2026 third local verification:
   - `npm run lint`
   - `npm run build`
   - `npm run test:run` (83 files passed, 322 tests passed, 1 skipped)
   - `npx playwright test` (21 passed)
+- QA and route-budget verification pass (May 1, 2026):
+  - `52bd2a1` - test: cover capture flow and route budgets
+- May 1, 2026 fourth local verification:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test:run` (83 files passed, 324 tests passed, 1 skipped)
+  - `npm run build`
+  - `npm run check:route-budgets`
+  - `npm run check:route-budgets:trend`
+  - `npm run test:e2e` (21 passed)
 
 ## Author
 

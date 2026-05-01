@@ -2,6 +2,21 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-01 - State recovery, shell sync, and QA hardening
+
+- `3d03dec` - Reset transient Focus Home route errors when returning home keeps the same path.
+- `008b56b` - Shared focus signal normalization helpers across suggestions and next-move logic.
+- `d8bc496` - Hardened persisted state key changes and malformed CRUD load responses.
+- `cec77dd` - Kept fallback record IDs unique when `crypto.randomUUID` is unavailable.
+- `49e88bd` - Refreshed Focus Home and Weekly Brief data after relevant storage, focus, and visibility changes.
+- `82ed2f2` / `2571fb9` - Unified shell settings consumption through a shared workspace-settings hook.
+- `5a21229` - Recovered Weekly Brief state after save failures so optimistic edits do not linger as truth.
+- `4b4e528` - Clarified source-status recovery copy for cached workspace snapshots.
+- `77963de` - Guarded Dashboard reminder submission timing and stale reminder interactions.
+- `a236504` - Improved Capture feedback semantics and compact navigation focus behavior.
+- `c30dc06` - Added shell settings sync and reminder timing coverage.
+- `52bd2a1` - Added Capture workspace E2E coverage and refreshed route performance budgets/baseline.
+
 ## 2026-05-01 - Compact navigation and Focus Home signal hardening
 
 - `4484b5b` - Stabilized compact sidebar state across programmatic route changes and history returns.

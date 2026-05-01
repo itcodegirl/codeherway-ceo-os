@@ -196,3 +196,5 @@ npm run test:e2e
 - Weekly Brief optimistic edits now recover to the persisted record after save failures, which is a more honest product behavior for planning workflows.
 - Source-status banners now explain when the interface is showing the latest available snapshot while sync reconnects.
 - Browser coverage now includes the settings-to-shell workflow so portfolio demos prove that saved workspace identity updates survive routed navigation.
+- Capture empty-submit feedback is now wired directly to the note field and covered by a reload-persistence Playwright flow.
+- Route performance static budgets and the tracked baseline were refreshed after the latest Dashboard trust/recovery work, with both static and trend checks passing locally.
