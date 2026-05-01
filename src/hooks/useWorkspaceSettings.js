@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../lib/settings';
 import { getSettingsSource, loadSettings, SETTINGS_UPDATED_EVENT } from '../lib/settingsRepository';
+import { shallowEqualRecords } from '../lib/stateUtils';
+
+const SETTINGS_STORAGE_KEYS = new Set([
+  'ceo-os-settings',
+  'ceo-os-settings-saved-at',
+]);
+const SILENT_REFRESH_COALESCE_MS = 400;
 
 export function useWorkspaceSettings() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [source, setSource] = useState(getSettingsSource());
   const requestIdRef = useRef(0);
+  const lastRefreshAtRef = useRef(0);
 
   const refreshWorkspaceSettings = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -17,8 +25,13 @@ export function useWorkspaceSettings() {
         return;
       }
 
-      setSettings(result?.settings || DEFAULT_SETTINGS);
-      setSource(result?.source || getSettingsSource());
+      const nextSettings = result?.settings || DEFAULT_SETTINGS;
+      const nextSource = result?.source || getSettingsSource();
+
+      setSettings((current) => (
+        shallowEqualRecords(current, nextSettings) ? current : nextSettings
+      ));
+      setSource((current) => (current === nextSource ? current : nextSource));
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('Failed to load workspace settings', error);
@@ -41,14 +54,42 @@ export function useWorkspaceSettings() {
   }, [refreshWorkspaceSettings]);
 
   useEffect(() => {
-    const handleSettingsUpdated = () => {
+    const requestRefresh = () => {
+      const now = Date.now();
+      if (now - lastRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
+        return;
+      }
+
+      lastRefreshAtRef.current = now;
       void refreshWorkspaceSettings();
     };
 
+    const handleSettingsUpdated = () => {
+      requestRefresh();
+    };
+
+    const handleStorageChange = (event) => {
+      if (event?.key === null || SETTINGS_STORAGE_KEYS.has(event?.key)) {
+        requestRefresh();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        requestRefresh();
+      }
+    };
+
     window.addEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', requestRefresh);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', requestRefresh);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refreshWorkspaceSettings]);
 

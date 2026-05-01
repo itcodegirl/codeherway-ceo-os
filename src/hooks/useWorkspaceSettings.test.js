@@ -97,4 +97,119 @@ describe('useWorkspaceSettings', () => {
     expect(result.current.timezone).toBe('UTC');
     expect(result.current.source).toBe('supabase');
   });
+
+  it('refreshes on focus, visibility, and relevant storage updates without replacing unchanged settings', async () => {
+    const addWindowListener = vi.spyOn(window, 'addEventListener');
+    const addDocumentListener = vi.spyOn(document, 'addEventListener');
+    const dateNowSpy = vi.spyOn(Date, 'now');
+    const capturedWindowHandlers = {};
+    const capturedDocumentHandlers = {};
+    let nowMs = 1_000;
+
+    dateNowSpy.mockImplementation(() => nowMs);
+
+    repositoryState.loadSettings
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay',
+          timezone: 'America/Chicago',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay Local',
+          timezone: 'UTC',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay Visibility',
+          timezone: 'UTC',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'supabase',
+      });
+
+    addWindowListener.mockImplementation((type, listener) => {
+      capturedWindowHandlers[type] = listener;
+      return undefined;
+    });
+    addDocumentListener.mockImplementation((type, listener) => {
+      capturedDocumentHandlers[type] = listener;
+      return undefined;
+    });
+
+    try {
+      const { result } = renderHook(() => useWorkspaceSettings());
+
+      await waitFor(() => {
+        expect(result.current.teamName).toBe('CodeHerWay');
+      });
+
+      const initialSettingsRef = result.current.settings;
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers.focus();
+      });
+
+      await waitFor(() => {
+        expect(result.current.teamName).toBe('CodeHerWay Local');
+      });
+      expect(result.current.source).toBe('local');
+
+      act(() => {
+        nowMs += 500;
+        Object.defineProperty(document, 'visibilityState', {
+          configurable: true,
+          value: 'visible',
+        });
+        capturedDocumentHandlers.visibilitychange();
+      });
+
+      await waitFor(() => {
+        expect(result.current.teamName).toBe('CodeHerWay Visibility');
+      });
+      expect(result.current.source).toBe('supabase');
+
+      repositoryState.loadSettings.mockResolvedValue({
+        settings: {
+          teamName: 'CodeHerWay Visibility',
+          timezone: 'UTC',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'supabase',
+      });
+
+      const refreshedSettingsRef = result.current.settings;
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers.storage({ key: 'ceo-os-settings' });
+      });
+
+      await waitFor(() => {
+        expect(repositoryState.loadSettings).toHaveBeenCalledTimes(4);
+      });
+
+      expect(result.current.settings).toBe(refreshedSettingsRef);
+      expect(initialSettingsRef).not.toBe(refreshedSettingsRef);
+    } finally {
+      dateNowSpy.mockRestore();
+      addWindowListener.mockRestore();
+      addDocumentListener.mockRestore();
+    }
+  });
 });
