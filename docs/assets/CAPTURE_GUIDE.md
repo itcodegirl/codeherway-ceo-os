@@ -25,6 +25,8 @@ Use this guide when updating screenshot or demo assets for portfolio packaging.
 
 1. Record a 45-90 second flow covering:
    - Focus Home overview
+   - Focus Home support-mode keyboard switching
+   - Reminder completion progress after checking one reminder
    - Capture or Journal low-friction input
    - Weekly Brief priorities/blockers
    - Chief of Staff local workspace persistence (type notes, refresh once, confirm they return)

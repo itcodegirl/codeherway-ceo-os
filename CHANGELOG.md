@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-04-30 - Stability, execution, and route-budget hardening
+
+- `da56ca5` - Guarded System Pulse and Chief telemetry refreshes against stale async updates after remounts or fast navigation.
+- `00eb961` - Removed obsolete legacy Chief AI prompt/output components so the maintained Chief of Staff path is the single source of truth.
+- `bbbf75b` - Prevented Dashboard next-move recommendations from staying pinned after they fall out of the current execution queue.
+- `d504d74` - Improved Focus Home support-mode keyboard navigation with roving focus semantics.
+- `e340d4b` - Added Playwright coverage for Focus Home keyboard mode switching and reminder completion, and split Chief telemetry diagnostics from the initial route bundle to keep route budgets green.
+
 ## 2026-04-23 - Accessibility, reliability, and CI quality pass
 
 - `5081529` - Added keyboard activation (Enter/Space) and focusability for interactive rows in opportunity/content tables, with test coverage.

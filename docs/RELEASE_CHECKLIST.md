@@ -32,8 +32,10 @@ Validate core flows without changing source code:
 - Confirm route-level error recovery does not trap navigation after one view fails.
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.
 - Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
+- Confirm Focus Home support modes can be reached from keyboard, switched with arrow keys, and retain visible focus.
 - Confirm reminder completion progress updates after checking and unchecking reminders.
 - On `Chief of Staff`, type notes, refresh, confirm the notes return, then reset the workspace and confirm the cleared state survives another refresh.
+- On `Chief of Staff`, confirm telemetry diagnostics can load without blocking the primary note-to-action workflow.
 - Confirm no visible console errors in normal user flows.
 
 ## 3) AI workflow confidence checks
@@ -57,6 +59,7 @@ Validate core flows without changing source code:
 ## 5) Portfolio packaging checks
 
 - Keep `README.md` and `CASE_STUDY.md` aligned with current architecture and test scope.
+- Update `docs/PR_SUMMARY_TEMPLATE.md` so the PR narrative matches the actual hardening commits under review.
 - Add screenshots or short demo media when available, and keep labels consistent with route names.
 - Ensure roadmap items are honest and separated from completed work.
 

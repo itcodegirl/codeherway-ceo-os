@@ -59,6 +59,10 @@ This project is strongest when presented as a local-first productivity system wi
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
 - Reminder completion is timestamped and summarized so Focus Home shows real execution progress instead of only open tasks.
 - Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
+- System Pulse and Chief telemetry refreshes ignore stale async results, reducing noisy state updates during Strict Mode, fast navigation, and reviewer reloads.
+- Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
+- Focus Home support modes now use keyboard-friendly roving focus, with E2E coverage for mode switching and reminder completion.
+- Chief telemetry diagnostics are split from the initial route bundle so observability detail stays available without bloating the first Chief of Staff load.
 - CI covers lint, build, typecheck, unit tests, route performance budgets, and Playwright smoke flows.
 
 ### Honest current boundaries
@@ -132,7 +136,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Hook tests cover orchestration and synchronization.
 - Library tests cover parsing, settings normalization, and metadata helper behavior.
 - Route tests cover key visibility and accessibility flows.
-- Playwright covers direct-route refreshes, CRUD smoke paths, and Chief workspace persistence/reset behavior.
+- Playwright covers direct-route refreshes, CRUD smoke paths, Focus Home execution, and Chief workspace persistence/reset behavior.
 
 ## Project layout
 
@@ -400,6 +404,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `c1f43a5` - feat: preserve chief workspace edits during refresh
   - `fe94f2b` - fix: improve chief workspace trust cues
   - `9a5098d` - fix: restore chief workspace hydration in strict mode
+- Stability and execution hardening cycle (April 30, 2026):
+  - `da56ca5` - fix: guard system pulse and telemetry refreshes
+  - `00eb961` - refactor: remove legacy chief ai components
+  - `bbbf75b` - fix: keep dashboard next moves current
+  - `d504d74` - fix: improve focus mode keyboard navigation
+  - `e340d4b` - test: cover focus home execution flow
 
 ## Author
 

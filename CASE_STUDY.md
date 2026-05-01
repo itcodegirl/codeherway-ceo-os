@@ -76,6 +76,8 @@ The following assets are referenced for portfolio review and should be kept curr
 - Deterministic metadata and shell behavior for route transitions
 - Event-driven refresh strategy to keep screens synchronized after mutations
 - Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
+- Stale async refresh guards for shared pulse and telemetry hooks so route changes do not overwrite current state with older request results
+- Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
 
@@ -123,3 +125,8 @@ npm run test:e2e
 - Async mount guards were normalized for Strict Mode so dev/test reload behavior matches production expectations more closely.
 - Reminder completion now records completion timestamps and feeds a visible Focus Home progress summary.
 - Sample-data/source messaging has been rewritten as product-facing local workspace language rather than developer setup copy.
+- System Pulse and Chief telemetry refreshes now ignore stale async responses during fast navigation and Strict Mode remounts.
+- Dashboard next-move recommendations now clear when they no longer belong to the current execution queue.
+- Focus Home support-mode controls now use roving keyboard focus and have Playwright coverage for keyboard switching plus reminder completion.
+- Obsolete legacy Chief AI prompt/output components were removed so the product has one maintained Chief of Staff workflow path.
+- Chief telemetry diagnostics are lazy-loaded separately from the main Chief of Staff route to keep route budgets green while preserving observability.
