@@ -62,6 +62,9 @@ function Capture() {
     healthyText: 'Auto-saved locally and ready whenever your brain moves fast.',
     pausedText: 'Autosave is paused until sticky notes save successfully again.',
   });
+  const captureComposerDescriptionId = errorMessage
+    ? 'capture-composer-error'
+    : 'capture-composer-helper';
 
   const createNote = (event) => {
     event.preventDefault();
@@ -116,12 +119,17 @@ function Capture() {
         </p>
         <form onSubmit={createNote} className="capture-composer__form">
           <label htmlFor="capture-note-text" className="helper-text">Note</label>
+          <p id="capture-composer-helper" className="sr-only">
+            Capture one thought, task, or idea at a time.
+          </p>
           <textarea
             id="capture-note-text"
             value={draftText}
             onChange={(event) => setDraftText(event.target.value)}
             rows={3}
             placeholder="What do you want to remember?"
+            aria-describedby={captureComposerDescriptionId}
+            aria-invalid={errorMessage ? 'true' : undefined}
           />
 
           <label htmlFor="capture-note-category" className="helper-text">Category</label>
@@ -143,13 +151,17 @@ function Capture() {
             </Button>
           </div>
         </form>
-        {errorMessage ? <p role="alert" className="form-error">{errorMessage}</p> : null}
+        {errorMessage ? (
+          <p id="capture-composer-error" role="alert" className="form-error">
+            {errorMessage}
+          </p>
+        ) : null}
       </section>
 
       <section className="capture-wall" aria-label="Sticky note wall">
         <header className="capture-wall__header">
           <h2>Sticky Notes</h2>
-          <p className="helper-text" aria-live="polite">{captureSaveHelper}</p>
+          <p className="helper-text" role="status" aria-live="polite">{captureSaveHelper}</p>
         </header>
         {sortedNotes.length ? (
           <div className="sticky-wall">
