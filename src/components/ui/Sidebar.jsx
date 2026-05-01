@@ -23,6 +23,7 @@ function Sidebar() {
   const { teamName } = useWorkspaceSettings();
   const [mobileMenuOpenKey, setMobileMenuOpenKey] = useState('');
   const menuToggleRef = useRef(null);
+  const navRef = useRef(null);
   const [isCompactViewport, setIsCompactViewport] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return false;
@@ -74,6 +75,18 @@ function Sidebar() {
     };
   }, [isCompactViewport, isMobileMenuOpen]);
 
+  useEffect(() => {
+    if (!isCompactViewport || !isMobileMenuOpen) {
+      return;
+    }
+
+    const currentLink = navRef.current?.querySelector?.('a[aria-current="page"]');
+    const fallbackLink = navRef.current?.querySelector?.('a');
+    const nextFocusTarget = currentLink || fallbackLink;
+
+    nextFocusTarget?.focus?.();
+  }, [isCompactViewport, isMobileMenuOpen, location.pathname]);
+
   const navId = 'primary-navigation';
 
   return (
@@ -104,6 +117,7 @@ function Sidebar() {
       </div>
 
       <nav
+        ref={navRef}
         id={navId}
         className={isMobileMenuOpen ? 'sidebar__nav sidebar__nav--open' : 'sidebar__nav'}
         hidden={isCompactViewport && !isMobileMenuOpen}

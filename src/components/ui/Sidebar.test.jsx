@@ -98,6 +98,21 @@ describe('src/components/ui/Sidebar', () => {
     expect(navElement).toHaveAttribute('hidden');
   });
 
+  it('moves focus to the active link when the compact menu opens', () => {
+    const { matchMedia } = createMatchMediaMock({ matches: true });
+    window.matchMedia = matchMedia;
+
+    render(
+      <MemoryRouter initialEntries={['/capture']}>
+        <Sidebar />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
+
+    expect(screen.getByRole('link', { name: 'Capture', exact: true })).toHaveFocus();
+  });
+
   it('falls back to legacy media query listeners when addEventListener is unavailable', () => {
     const { matchMedia, addListener, removeListener } = createMatchMediaMock({
       useLegacyListeners: true,

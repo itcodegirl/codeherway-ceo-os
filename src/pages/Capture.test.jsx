@@ -65,7 +65,31 @@ describe('src/pages/Capture', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Add a quick note before saving.');
     expect(noteField).toHaveAttribute('aria-invalid', 'true');
-    expect(noteField).toHaveAccessibleDescription('Add a quick note before saving.');
+    expect(noteField).toHaveAccessibleDescription(
+      'Capture one thought, task, or idea at a time. Add a quick note before saving.',
+    );
+    expect(noteField).toHaveFocus();
+  });
+
+  it('clears composer errors as soon as the note draft changes', () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    const noteField = screen.getByLabelText('Note');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Add a quick note before saving.');
+
+    fireEvent.change(noteField, {
+      target: { value: 'Capture the next sales call idea' },
+    });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(noteField).not.toHaveAttribute('aria-invalid');
+    expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
   it('pauses autosave confidence copy when a sticky note cannot be saved', () => {
