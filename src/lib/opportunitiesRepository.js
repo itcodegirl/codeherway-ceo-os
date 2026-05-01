@@ -1,4 +1,5 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
+import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
@@ -155,20 +156,9 @@ export async function updateOpportunity(id, payload) {
   }
 
   const current = readLocalOpportunities();
-  let didUpdate = false;
-  const next = current.map((item) => {
-    if (item.id !== String(id)) {
-      return item;
-    }
-
-    didUpdate = true;
-    return normalizedPayload;
+  const next = replaceRecordById(current, id, normalizedPayload, {
+    notFoundMessage: 'Opportunity not found',
   });
-
-  if (!didUpdate) {
-    throw new Error('Opportunity not found');
-  }
-
   writeLocalOpportunities(next);
   notifyOpportunitiesUpdated({ source: 'local', type: 'update' });
   return normalizedPayload;
@@ -192,12 +182,9 @@ export async function deleteOpportunity(id) {
   }
 
   const current = readLocalOpportunities();
-  const didDelete = current.some((item) => item.id === String(id));
-  if (!didDelete) {
-    throw new Error('Opportunity not found');
-  }
-
-  const next = current.filter((item) => item.id !== String(id));
+  const next = deleteRecordById(current, id, {
+    notFoundMessage: 'Opportunity not found',
+  });
   writeLocalOpportunities(next);
   notifyOpportunitiesUpdated({ source: 'local', type: 'delete' });
 }
