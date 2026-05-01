@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Journal from './Journal';
 
@@ -36,5 +36,31 @@ describe('src/pages/Journal', () => {
     const storagePayload = window.localStorage.getItem('ceo-os-journal-entries') || '';
     expect(storagePayload).toContain('Draft one outreach message');
     expect(screen.getByRole('status')).toHaveTextContent('Auto-saved');
+  });
+
+  it('pauses autosave status when a journal entry cannot be saved', () => {
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(() => {
+      throw new Error('storage full');
+    });
+
+    try {
+      render(
+        <MemoryRouter>
+          <Journal />
+        </MemoryRouter>,
+      );
+
+      fireEvent.change(screen.getByLabelText('What is on my mind?'), {
+        target: { value: 'Unsaved reflection' },
+      });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Unable to auto-save journal entry right now.');
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Autosave is paused. Your latest journal changes are not saved yet.',
+      );
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
   });
 });
