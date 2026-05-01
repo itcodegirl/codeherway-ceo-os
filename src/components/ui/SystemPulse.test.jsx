@@ -28,5 +28,7 @@ describe('src/components/ui/SystemPulse', () => {
     expect(screen.getByText('Blockers')).toBeInTheDocument();
     expect(screen.getByText('Ideas')).toBeInTheDocument();
     expect(screen.getByText('Reset')).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Focus: 2' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Blockers: 1' })).toBeInTheDocument();
   });
 });

@@ -8,6 +8,7 @@ describe('SourceStatusNotice', () => {
     render(<SourceStatusNotice />);
 
     expect(screen.getByText(SOURCE_NOTICE_SAMPLE_DATA)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(SOURCE_NOTICE_SAMPLE_DATA);
   });
 
   it('renders supabase source copy when source is supabase', () => {
@@ -19,6 +20,7 @@ describe('SourceStatusNotice', () => {
     );
 
     expect(screen.getByText('Weekly data source: Supabase.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Weekly data source: Supabase.');
   });
 
   it('shows alert and retry action when loadError is present', () => {
