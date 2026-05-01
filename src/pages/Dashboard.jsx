@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
@@ -7,18 +7,11 @@ import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboar
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
-import { CAPTURE_NOTES_UPDATED_EVENT, listCaptureNotes } from '../lib/captureRepository';
-import {
-  getJournalEntryByDate,
-  getTodayJournalDateKey,
-  JOURNAL_ENTRIES_UPDATED_EVENT,
-} from '../lib/journalRepository';
+import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import {
   createReminder,
   deleteReminder,
   getReminderProgress,
-  listReminders,
-  REMINDERS_UPDATED_EVENT,
   toggleReminder,
 } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
@@ -42,9 +35,7 @@ function Dashboard() {
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
-  const [captureNotes, setCaptureNotes] = useState(() => listCaptureNotes());
-  const [journalEntry, setJournalEntry] = useState(() => getJournalEntryByDate(getTodayJournalDateKey()));
-  const [reminders, setReminders] = useState(() => listReminders());
+  const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
   const [reminderDraft, setReminderDraft] = useState('');
   const nextMoveCursorRef = useRef(0);
 
@@ -72,28 +63,6 @@ function Dashboard() {
     loadError: weeklyLoadError,
     refreshWeeklyBrief,
   } = useWeeklyBrief();
-
-  useEffect(() => {
-    const syncCaptureNotes = () => {
-      setCaptureNotes(listCaptureNotes());
-    };
-    const syncJournalEntry = () => {
-      setJournalEntry(getJournalEntryByDate(getTodayJournalDateKey()));
-    };
-    const syncReminders = () => {
-      setReminders(listReminders());
-    };
-
-    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, syncCaptureNotes);
-    window.addEventListener(JOURNAL_ENTRIES_UPDATED_EVENT, syncJournalEntry);
-    window.addEventListener(REMINDERS_UPDATED_EVENT, syncReminders);
-
-    return () => {
-      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, syncCaptureNotes);
-      window.removeEventListener(JOURNAL_ENTRIES_UPDATED_EVENT, syncJournalEntry);
-      window.removeEventListener(REMINDERS_UPDATED_EVENT, syncReminders);
-    };
-  }, []);
 
   const supportCopy = useMemo(() => {
     const activeMode = resolveFocusMode(focusMode);
