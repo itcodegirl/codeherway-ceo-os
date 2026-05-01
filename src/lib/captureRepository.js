@@ -152,6 +152,11 @@ export function updateCaptureNote(id, payload) {
 export function deleteCaptureNote(id) {
   const normalizedId = String(id || '');
   const current = readStorage();
+  const didDelete = current.some((note) => note.id === normalizedId);
+  if (!didDelete) {
+    throw new Error('Capture note not found');
+  }
+
   const next = current.filter((note) => note.id !== normalizedId);
   writeStorage(next);
   emitCaptureNotesUpdated({ type: 'delete', id: normalizedId });
