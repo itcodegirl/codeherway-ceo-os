@@ -1,9 +1,12 @@
+let fallbackIdCounter = 0;
+
 export function buildCreateId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
 
-  return String(Date.now());
+  fallbackIdCounter = (fallbackIdCounter + 1) % Number.MAX_SAFE_INTEGER;
+  return `${Date.now().toString(36)}-${fallbackIdCounter.toString(36)}`;
 }
 
 export function formatIsoDate(date, timeZone) {

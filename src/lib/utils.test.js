@@ -20,6 +20,23 @@ describe('src/lib/utils', () => {
     expect(value.length).toBeGreaterThan(0);
   });
 
+  it('keeps fallback ids unique within the same millisecond', () => {
+    const originalCrypto = globalThis.crypto;
+
+    vi.stubGlobal('crypto', {});
+    vi.spyOn(Date, 'now').mockReturnValue(1770000000000);
+
+    try {
+      const first = buildCreateId();
+      const second = buildCreateId();
+
+      expect(first).not.toBe(second);
+      expect(new Set([first, second]).size).toBe(2);
+    } finally {
+      vi.stubGlobal('crypto', originalCrypto);
+    }
+  });
+
   it('formats dates as ISO local date strings', () => {
     const date = new Date('2026-04-20T15:30:00.000Z');
 
