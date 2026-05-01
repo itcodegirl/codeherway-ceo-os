@@ -74,13 +74,16 @@ describe('focusHomeLogic', () => {
       blockers: [{ text: 'Legal review is waiting.' }],
       opportunities: [{ name: 'Acme renewal', stage: 'Awaiting Reply' }],
       contentRows: [{ title: 'Weekly memo', status: 'Drafting' }],
-      reminders: [{ text: 'Send sponsor recap', isDone: false }],
+      reminders: [
+        { text: 'Newer reminder', isDone: false, createdAt: '2026-05-01T12:00:00.000Z' },
+        { text: 'Send sponsor recap', isDone: false, createdAt: '2026-04-28T12:00:00.000Z' },
+      ],
       journalEntry: { feelsHeavy: 'Launch ambiguity', oneNextThing: '' },
     });
 
     expect(queue).toEqual([
       'Send one unblock message for "Partner launch".',
-      'Define one owner and one deadline for: "Legal review is waiting.".',
+      'Define one owner and one deadline for: "Legal review is waiting."',
       'Spend 20 focused minutes on "Customer update".',
       'Draft a concise follow-up for "Acme renewal".',
       'Write the opening paragraph for "Weekly memo".',

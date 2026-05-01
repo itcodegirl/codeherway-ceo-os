@@ -31,8 +31,29 @@ function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
+}
+
+function parseCreatedAt(value) {
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+}
+
+function findOldestPendingReminder(reminders) {
+  return reminders
+    .filter((item) => !item?.isDone && hasText(item?.text))
+    .sort((left, right) => parseCreatedAt(left?.createdAt) - parseCreatedAt(right?.createdAt))[0];
+}
+
+function buildQuotedInstruction(prefix, value) {
+  const normalized = normalizeText(value);
+  const punctuation = /[.!?]$/.test(normalized) ? '' : '.';
+  return `${prefix} "${normalized}"${punctuation}`;
 }
 
 export function resolveFocusMode(modeId) {
@@ -110,26 +131,26 @@ export function buildNextMoveQueue({
   const activePriority = safePriorities.find((item) => item?.status === 'In Progress' && item?.title);
   const waitingOpportunity = safeOpportunities.find((item) => item?.stage === 'Awaiting Reply' && item?.name);
   const draftingContent = safeContentRows.find((item) => item?.status === 'Drafting' && item?.title);
-  const pendingReminder = safeReminders.find((item) => !item?.isDone && item?.text);
+  const pendingReminder = findOldestPendingReminder(safeReminders);
   const journalNeedsNextStep = hasText(journalEntry?.feelsHeavy) && !hasText(journalEntry?.oneNextThing);
 
   if (blockedPriority) {
-    moves.push(`Send one unblock message for "${blockedPriority.title}".`);
+    moves.push(buildQuotedInstruction('Send one unblock message for', blockedPriority.title));
   }
   if (activeBlocker) {
-    moves.push(`Define one owner and one deadline for: "${activeBlocker.text}".`);
+    moves.push(buildQuotedInstruction('Define one owner and one deadline for:', activeBlocker.text));
   }
   if (activePriority) {
-    moves.push(`Spend 20 focused minutes on "${activePriority.title}".`);
+    moves.push(buildQuotedInstruction('Spend 20 focused minutes on', activePriority.title));
   }
   if (waitingOpportunity) {
-    moves.push(`Draft a concise follow-up for "${waitingOpportunity.name}".`);
+    moves.push(buildQuotedInstruction('Draft a concise follow-up for', waitingOpportunity.name));
   }
   if (draftingContent) {
-    moves.push(`Write the opening paragraph for "${draftingContent.title}".`);
+    moves.push(buildQuotedInstruction('Write the opening paragraph for', draftingContent.title));
   }
   if (pendingReminder) {
-    moves.push(`Complete or reschedule reminder: "${pendingReminder.text}".`);
+    moves.push(buildQuotedInstruction('Complete or reschedule reminder:', pendingReminder.text));
   }
   if (journalNeedsNextStep) {
     moves.push('Turn today\'s heavy journal note into one tiny next action.');
