@@ -83,6 +83,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Settings persistence rejects failed writes explicitly and prevents duplicate save submissions while a save is already in flight
 - Chief workspace and Weekly Brief persistence use required local-write semantics so failed browser storage cannot look like a successful save
 - Weekly Brief rejects stale local item mutations before writing or emitting update events
+- Capture rejects stale sticky-note update/delete attempts before writing or emitting update events
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
@@ -95,6 +96,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Keyboard-friendly editing and workflow actions
 - Settings form states expose busy, disabled, and invalid-timezone feedback through accessible control names without duplicate alerts
 - Weekly Brief autosave copy changes when persistence is paused so the page does not reassure users incorrectly during failures
+- Capture and Journal share autosave health copy so local save failures are visible without adding extra decision load
 
 ## 5) Verification set
 
@@ -157,3 +159,6 @@ npm run test:e2e
 - Weekly Brief update/delete mutations now reject stale item ids without emitting fake update events.
 - Weekly Brief communicates paused autosave state when persistence errors are active.
 - Tests cover Chief note-save errors, Weekly stale mutations, failed weekly persistence, and Weekly Brief autosave copy.
+- Capture stale edits/deletes now reject without emitting fake sticky-note update events.
+- Capture and Journal autosave status now moves to paused copy when local persistence fails.
+- Tests cover Capture stale mutations and Capture/Journal local save failure UI.

@@ -12,6 +12,7 @@ import {
   defaultWins,
 } from '../lib/weeklyData';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
+import { buildAutosaveHelperText } from '../lib/uiCopy';
 import '../styles/forms.css';
 import '../styles/weekly.css';
 
@@ -34,9 +35,11 @@ function WeeklyBrief() {
   const priorityItems = Array.isArray(priorities) ? priorities : defaultPriorities;
   const winItems = Array.isArray(wins) ? wins : defaultWins;
   const blockerItems = Array.isArray(blockers) ? blockers : defaultBlockers;
-  const reviewNotesHelper = loadError
-    ? 'Autosave is paused until the weekly brief saves successfully again.'
-    : 'Notes are saved automatically for this workspace.';
+  const reviewNotesHelper = buildAutosaveHelperText({
+    hasError: Boolean(loadError),
+    healthyText: 'Notes are saved automatically for this workspace.',
+    pausedText: 'Autosave is paused until the weekly brief saves successfully again.',
+  });
 
   return (
     <section className="weekly-page">

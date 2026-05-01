@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Capture from './Capture';
 
@@ -45,5 +45,30 @@ describe('src/pages/Capture', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete Content note' }));
     expect(screen.getByText('No sticky notes yet')).toBeInTheDocument();
+  });
+
+  it('pauses autosave confidence copy when a sticky note cannot be saved', () => {
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(() => {
+      throw new Error('storage full');
+    });
+
+    try {
+      render(
+        <MemoryRouter>
+          <Capture />
+        </MemoryRouter>,
+      );
+
+      fireEvent.change(screen.getByLabelText('Note'), {
+        target: { value: 'This needs to survive' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Unable to save this note right now.');
+      expect(screen.getByText('Autosave is paused until sticky notes save successfully again.')).toBeInTheDocument();
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
   });
 });

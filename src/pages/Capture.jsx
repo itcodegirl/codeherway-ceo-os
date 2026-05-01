@@ -9,6 +9,7 @@ import {
   listCaptureNotes,
   updateCaptureNote,
 } from '../lib/captureRepository';
+import { buildAutosaveHelperText } from '../lib/uiCopy';
 import '../styles/capture.css';
 
 function formatCategoryLabel(category) {
@@ -56,6 +57,11 @@ function Capture() {
       new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
     ))
   ), [notes]);
+  const captureSaveHelper = buildAutosaveHelperText({
+    hasError: Boolean(errorMessage),
+    healthyText: 'Auto-saved locally and ready whenever your brain moves fast.',
+    pausedText: 'Autosave is paused until sticky notes save successfully again.',
+  });
 
   const createNote = (event) => {
     event.preventDefault();
@@ -143,7 +149,7 @@ function Capture() {
       <section className="capture-wall" aria-label="Sticky note wall">
         <header className="capture-wall__header">
           <h2>Sticky Notes</h2>
-          <p className="helper-text">Auto-saved locally and ready whenever your brain moves fast.</p>
+          <p className="helper-text" aria-live="polite">{captureSaveHelper}</p>
         </header>
         {sortedNotes.length ? (
           <div className="sticky-wall">

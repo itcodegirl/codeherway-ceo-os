@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-04-30 - Capture and journal autosave trust hardening
+
+- `c444cd2` - Rejected stale Capture deletes without emitting fake update events.
+- `1b4089d` - Centralized autosave helper copy for healthy versus paused save states.
+- `0780d8a` - Rejected stale Capture updates instead of silently clearing error state.
+- `f715acb` - Clarified Capture and Journal paused-autosave feedback when saves fail.
+- `fdf01c4` - Added Capture and Journal page coverage for local save failure states.
+
 ## 2026-04-30 - Chief and weekly persistence truth hardening
 
 - `bccafd8` - Made Chief workspace local note/output persistence fail explicitly when browser storage rejects writes.

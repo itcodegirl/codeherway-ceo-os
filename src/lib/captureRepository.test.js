@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  CAPTURE_NOTES_UPDATED_EVENT,
   createCaptureNote,
   deleteCaptureNote,
   listCaptureNotes,
@@ -55,5 +56,44 @@ describe('src/lib/captureRepository', () => {
 
     const notes = listCaptureNotes();
     expect(notes).toHaveLength(0);
+  });
+
+  it('rejects stale deletes without emitting a fake update event', () => {
+    const created = createCaptureNote({
+      text: 'Keep me',
+      category: 'idea',
+    });
+    const updateListener = vi.fn();
+    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, updateListener);
+
+    try {
+      expect(() => deleteCaptureNote('missing-note')).toThrow('Capture note not found');
+    } finally {
+      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, updateListener);
+    }
+
+    expect(updateListener).not.toHaveBeenCalled();
+    expect(listCaptureNotes()).toEqual([created]);
+  });
+
+  it('rejects stale updates without emitting a fake update event', () => {
+    const created = createCaptureNote({
+      text: 'Keep this idea',
+      category: 'idea',
+    });
+    const updateListener = vi.fn();
+    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, updateListener);
+
+    try {
+      expect(() => updateCaptureNote('missing-note', {
+        text: 'Unexpected overwrite',
+        category: 'task',
+      })).toThrow('Capture note not found');
+    } finally {
+      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, updateListener);
+    }
+
+    expect(updateListener).not.toHaveBeenCalled();
+    expect(listCaptureNotes()).toEqual([created]);
   });
 });
