@@ -120,7 +120,9 @@ describe('OpportunityCrudPage integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create opportunity' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Unable to save opportunity right now.');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Unable to save opportunity right now. Refresh and try again if this record changed elsewhere.',
+      );
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Create opportunity' }));
@@ -149,7 +151,9 @@ describe('OpportunityCrudPage integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Unable to delete opportunity right now.');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Unable to delete opportunity right now. Refresh and try again if this record changed elsewhere.',
+      );
       expect(within(table).getByText('Advisory Partnership')).toBeInTheDocument();
     });
 
@@ -158,7 +162,9 @@ describe('OpportunityCrudPage integration', () => {
     await waitFor(() => {
       expect(within(table).queryByText('Advisory Partnership')).not.toBeInTheDocument();
     });
-    expect(screen.queryByText('Unable to delete opportunity right now.')).not.toBeInTheDocument();
+    expect(screen.queryByText(
+      'Unable to delete opportunity right now. Refresh and try again if this record changed elsewhere.',
+    )).not.toBeInTheDocument();
     expect(deleteOpportunity.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });
