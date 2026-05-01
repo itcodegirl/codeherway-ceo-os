@@ -113,6 +113,30 @@ describe('useCrudPage', () => {
     expect(result.current.items).toEqual([]);
   });
 
+  it('surfaces malformed load responses instead of showing a false empty state', async () => {
+    const listItems = vi.fn(() => Promise.resolve({ id: 'not-an-array' }));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: '1' }),
+      updateFn: () => Promise.resolve({ id: '1' }),
+      deleteFn: () => Promise.resolve({ id: '1' }),
+      defaultFormValues: {},
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+      messages: {
+        load: 'Unable to load opportunities right now.',
+      },
+    }));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.loadError).toBe('Unable to load opportunities right now.');
+    expect(result.current.items).toEqual([]);
+  });
+
   it('handles missing list function as a recoverable load error', async () => {
     const { result } = renderHook(() => useCrudPage({
       createFn: () => Promise.resolve({ id: '1' }),

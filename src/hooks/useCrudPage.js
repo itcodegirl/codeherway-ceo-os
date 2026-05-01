@@ -134,6 +134,10 @@ export function useCrudPage(config) {
         if (!Array.isArray(nextItems)) {
           if (isActive) {
             setItems([]);
+            setLoadError(loadErrorMessage);
+          }
+          if (import.meta.env.DEV) {
+            console.error(`Failed to load ${logPrefix}`, new Error('List operation returned a non-array result.'));
           }
           return;
         }

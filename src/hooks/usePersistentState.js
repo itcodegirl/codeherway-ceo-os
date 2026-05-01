@@ -81,7 +81,20 @@ export function usePersistentState(key, initialValue) {
 
   useEffect(() => {
     initialValueRef.current = initialValue;
-  }, [key, initialValue]);
+  }, [initialValue]);
+
+  useEffect(() => {
+    setState((currentState) => {
+      if (currentState.key === key) {
+        return currentState;
+      }
+
+      return {
+        key,
+        value: loadValue(key, initialValueRef.current),
+      };
+    });
+  }, [key]);
 
   const value = state.key === key ? state.value : loadValue(key, initialValue);
 
@@ -105,6 +118,10 @@ export function usePersistentState(key, initialValue) {
       return;
     }
 
+    if (state.key !== key) {
+      return;
+    }
+
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
       window.dispatchEvent(
@@ -117,7 +134,7 @@ export function usePersistentState(key, initialValue) {
         console.error('localStorage save failed', error);
       }
     }
-  }, [key, value]);
+  }, [key, state.key, value]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
