@@ -109,6 +109,7 @@ export function useWeeklyBrief() {
       const nextWins = normalizeCollectionPayload(payload, 'wins');
       const nextBlockers = normalizeCollectionPayload(payload, 'blockers');
 
+      setLoadError('');
       setSource((current) => (current === nextSource ? current : nextSource));
       setReviewNotesState((current) => (current === nextReviewNotes ? current : nextReviewNotes));
       setPrioritiesState((current) => (
@@ -190,6 +191,14 @@ export function useWeeklyBrief() {
     };
   }, [loadWeeklyBrief]);
 
+  const recoverAfterPersistenceFailure = useCallback((message, logLabel, error) => {
+    setLoadError(message);
+    if (import.meta.env.DEV) {
+      console.error(logLabel, error);
+    }
+    void loadWeeklyBrief({ silent: true });
+  }, [loadWeeklyBrief]);
+
   const persistCollectionDiff = useCallback(async (itemType, previousItems, nextItems) => {
     const previousMap = new Map(previousItems.map((item) => [String(item.id), item]));
     const nextMap = new Map(nextItems.map((item) => [String(item.id), item]));
@@ -261,15 +270,16 @@ export function useWeeklyBrief() {
         weekStart,
         reviewNotes: normalizedValue,
       }).catch((error) => {
-        setLoadError('Unable to save weekly review notes right now.');
-        if (import.meta.env.DEV) {
-          console.error('Failed to save weekly review notes', error);
-        }
+        recoverAfterPersistenceFailure(
+          'Unable to save weekly review notes right now.',
+          'Failed to save weekly review notes',
+          error,
+        );
       });
 
       return normalizedValue;
     });
-  }, [weekStart]);
+  }, [recoverAfterPersistenceFailure, weekStart]);
 
   const setPriorities = useCallback((nextValue) => {
     setPrioritiesState((currentValue) => {
@@ -277,15 +287,16 @@ export function useWeeklyBrief() {
       const normalizedValue = normalizeArrayValue(resolvedValue, []);
 
       void persistCollectionDiff('priority', currentValue, normalizedValue).catch((error) => {
-        setLoadError('Unable to save weekly priorities right now.');
-        if (import.meta.env.DEV) {
-          console.error('Failed to persist weekly priorities', error);
-        }
+        recoverAfterPersistenceFailure(
+          'Unable to save weekly priorities right now.',
+          'Failed to persist weekly priorities',
+          error,
+        );
       });
 
       return normalizedValue;
     });
-  }, [persistCollectionDiff]);
+  }, [persistCollectionDiff, recoverAfterPersistenceFailure]);
 
   const setWins = useCallback((nextValue) => {
     setWinsState((currentValue) => {
@@ -293,15 +304,16 @@ export function useWeeklyBrief() {
       const normalizedValue = normalizeArrayValue(resolvedValue, []);
 
       void persistCollectionDiff('win', currentValue, normalizedValue).catch((error) => {
-        setLoadError('Unable to save weekly wins right now.');
-        if (import.meta.env.DEV) {
-          console.error('Failed to persist weekly wins', error);
-        }
+        recoverAfterPersistenceFailure(
+          'Unable to save weekly wins right now.',
+          'Failed to persist weekly wins',
+          error,
+        );
       });
 
       return normalizedValue;
     });
-  }, [persistCollectionDiff]);
+  }, [persistCollectionDiff, recoverAfterPersistenceFailure]);
 
   const setBlockers = useCallback((nextValue) => {
     setBlockersState((currentValue) => {
@@ -309,15 +321,16 @@ export function useWeeklyBrief() {
       const normalizedValue = normalizeArrayValue(resolvedValue, []);
 
       void persistCollectionDiff('blocker', currentValue, normalizedValue).catch((error) => {
-        setLoadError('Unable to save weekly blockers right now.');
-        if (import.meta.env.DEV) {
-          console.error('Failed to persist weekly blockers', error);
-        }
+        recoverAfterPersistenceFailure(
+          'Unable to save weekly blockers right now.',
+          'Failed to persist weekly blockers',
+          error,
+        );
       });
 
       return normalizedValue;
     });
-  }, [persistCollectionDiff]);
+  }, [persistCollectionDiff, recoverAfterPersistenceFailure]);
 
   return {
     weekStart,

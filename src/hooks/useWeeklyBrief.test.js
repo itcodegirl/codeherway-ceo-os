@@ -29,7 +29,13 @@ vi.mock('../lib/weeklyRepository', () => ({
   updateWeeklyItem: vi.fn(),
 }));
 
-import { createWeeklyItem, deleteWeeklyItem, getCurrentWeekStart, getWeeklyBriefByWeek } from '../lib/weeklyRepository';
+import {
+  createWeeklyItem,
+  deleteWeeklyItem,
+  getCurrentWeekStart,
+  getWeeklyBriefByWeek,
+  saveWeeklyBriefReviewNotes,
+} from '../lib/weeklyRepository';
 
 describe('useWeeklyBrief', () => {
   let originalRequestAnimationFrame;
@@ -289,5 +295,82 @@ describe('useWeeklyBrief', () => {
       addWindowListener.mockRestore();
       addDocumentListener.mockRestore();
     }
+  });
+
+  it('recovers review notes from persisted state when a save fails', async () => {
+    getWeeklyBriefByWeek
+      .mockResolvedValueOnce({
+        reviewNotes: 'Persisted notes',
+        priorities: [],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        reviewNotes: 'Persisted notes',
+        priorities: [],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+    saveWeeklyBriefReviewNotes.mockRejectedValueOnce(new Error('save failed'));
+
+    const { result } = renderHook(() => useWeeklyBrief());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.reviewNotes).toBe('Persisted notes');
+    });
+
+    act(() => {
+      result.current.setReviewNotes('Unsaved notes');
+    });
+
+    expect(result.current.reviewNotes).toBe('Unsaved notes');
+
+    await waitFor(() => {
+      expect(result.current.reviewNotes).toBe('Persisted notes');
+    });
+
+    expect(result.current.loadError).toBe('');
+  });
+
+  it('recovers priorities from persisted state when collection persistence fails', async () => {
+    const persistedPriorities = [...defaultPriorities];
+    getWeeklyBriefByWeek
+      .mockResolvedValueOnce({
+        reviewNotes: DEFAULT_REVIEW_NOTES,
+        priorities: persistedPriorities,
+        wins: [],
+        blockers: [],
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        reviewNotes: DEFAULT_REVIEW_NOTES,
+        priorities: persistedPriorities,
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+    deleteWeeklyItem.mockRejectedValueOnce(new Error('delete failed'));
+
+    const { result } = renderHook(() => useWeeklyBrief());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.priorities).toEqual(persistedPriorities);
+    });
+
+    act(() => {
+      result.current.setPriorities([]);
+    });
+
+    expect(result.current.priorities).toEqual([]);
+
+    await waitFor(() => {
+      expect(result.current.priorities).toEqual(persistedPriorities);
+    });
+
+    expect(result.current.loadError).toBe('');
   });
 });
