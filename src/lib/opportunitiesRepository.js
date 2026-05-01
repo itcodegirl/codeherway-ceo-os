@@ -155,7 +155,20 @@ export async function updateOpportunity(id, payload) {
   }
 
   const current = readLocalOpportunities();
-  const next = current.map((item) => (item.id === String(id) ? normalizedPayload : item));
+  let didUpdate = false;
+  const next = current.map((item) => {
+    if (item.id !== String(id)) {
+      return item;
+    }
+
+    didUpdate = true;
+    return normalizedPayload;
+  });
+
+  if (!didUpdate) {
+    throw new Error('Opportunity not found');
+  }
+
   writeLocalOpportunities(next);
   notifyOpportunitiesUpdated({ source: 'local', type: 'update' });
   return normalizedPayload;
@@ -179,6 +192,11 @@ export async function deleteOpportunity(id) {
   }
 
   const current = readLocalOpportunities();
+  const didDelete = current.some((item) => item.id === String(id));
+  if (!didDelete) {
+    throw new Error('Opportunity not found');
+  }
+
   const next = current.filter((item) => item.id !== String(id));
   writeLocalOpportunities(next);
   notifyOpportunitiesUpdated({ source: 'local', type: 'delete' });
