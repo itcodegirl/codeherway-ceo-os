@@ -2,6 +2,18 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useConfirmDelete } from './useConfirmDelete';
 
+function createDeferred() {
+  let resolve;
+  const promise = new Promise((nextResolve) => {
+    resolve = nextResolve;
+  });
+
+  return {
+    promise,
+    resolve,
+  };
+}
+
 describe('useConfirmDelete', () => {
   it('supports callback + message resolver API', async () => {
     const onConfirm = vi.fn(async (payload) => payload);
@@ -49,5 +61,33 @@ describe('useConfirmDelete', () => {
       payload: { id: 'manual' },
     });
     expect(result.current.isConfirmOpen).toBe(false);
+  });
+
+  it('lets pending confirmation complete after unmount without requiring state updates', async () => {
+    const pendingConfirm = createDeferred();
+    const onConfirm = vi.fn(() => pendingConfirm.promise);
+
+    const { result, unmount } = renderHook(() => useConfirmDelete(onConfirm));
+
+    act(() => {
+      result.current.requestConfirm({ id: 'item-2' });
+    });
+
+    let confirmationPromise;
+    await act(async () => {
+      confirmationPromise = result.current.confirm();
+      await Promise.resolve();
+    });
+
+    expect(onConfirm).toHaveBeenCalledWith({ id: 'item-2' });
+
+    unmount();
+
+    await act(async () => {
+      pendingConfirm.resolve();
+      await confirmationPromise;
+    });
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 });
