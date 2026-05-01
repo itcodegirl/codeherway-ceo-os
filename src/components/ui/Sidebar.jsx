@@ -22,7 +22,7 @@ function subscribeToMediaQuery(mediaQuery, listener) {
 function Sidebar() {
   const location = useLocation();
   const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
-  const [mobileMenuOpenPath, setMobileMenuOpenPath] = useState('');
+  const [mobileMenuOpenKey, setMobileMenuOpenKey] = useState('');
   const menuToggleRef = useRef(null);
   const [isCompactViewport, setIsCompactViewport] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -44,7 +44,7 @@ function Sidebar() {
       const isCompact = event.matches;
       setIsCompactViewport(isCompact);
       if (!isCompact) {
-        setMobileMenuOpenPath('');
+        setMobileMenuOpenKey('');
       }
     };
 
@@ -52,7 +52,7 @@ function Sidebar() {
   }, []);
 
   const isMobileMenuOpen = isCompactViewport
-    ? mobileMenuOpenPath === location.pathname
+    ? mobileMenuOpenKey === location.key
     : true;
 
   useEffect(() => {
@@ -66,7 +66,7 @@ function Sidebar() {
       }
 
       event.preventDefault();
-      setMobileMenuOpenPath('');
+      setMobileMenuOpenKey('');
       menuToggleRef.current?.focus?.();
     };
 
@@ -95,8 +95,8 @@ function Sidebar() {
           aria-controls={navId}
           aria-expanded={isMobileMenuOpen}
           onClick={() => {
-            setMobileMenuOpenPath((currentPath) => (
-              currentPath === location.pathname ? '' : location.pathname
+            setMobileMenuOpenKey((currentKey) => (
+              currentKey === location.key ? '' : location.key
             ));
           }}
         >
@@ -122,7 +122,7 @@ function Sidebar() {
                 className={({ isActive }) =>
                   isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
                 }
-                onClick={() => setMobileMenuOpenPath('')}
+                onClick={() => setMobileMenuOpenKey('')}
               >
                 <span className="sidebar__link-icon" aria-hidden="true">
                   <Icon name={item.icon} size={16} />
