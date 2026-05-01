@@ -10,7 +10,7 @@ async function resetToSeedState(page) {
 }
 
 test.describe('Focus Home execution flow', () => {
-  test('supports keyboard mode switching and reminder completion feedback', async ({ page }) => {
+  test('supports keyboard mode switching and reversible reminder completion feedback', async ({ page }) => {
     await resetToSeedState(page);
 
     const planningMode = page.getByRole('radio', { name: 'Planning' });
@@ -33,6 +33,12 @@ test.describe('Focus Home execution flow', () => {
     await page.getByRole('checkbox', { name: 'Send launch recap' }).click();
 
     await expect(page.getByText('1 of 1 reminders complete (100%)')).toBeVisible();
-    await expect(page.getByText('No reminders yet. Add one small commitment.')).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: 'Send launch recap' })).toBeChecked();
+
+    await page.getByRole('checkbox', { name: 'Send launch recap' }).click();
+
+    await expect(page.getByText('0 of 1 reminders complete (0%)')).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: 'Send launch recap' })).not.toBeChecked();
+    await expect(page.getByText('No reminders yet. Add one small commitment.')).toBeHidden();
   });
 });

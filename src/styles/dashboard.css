@@ -185,12 +185,10 @@
 }
 
 .focus-reminder-list__item--done {
-	border-color: color-mix(in srgb, var(--border-success-soft) 64%, var(--border) 36%);
-	background: color-mix(in srgb, var(--surface-card) 86%, rgba(98, 188, 130, 0.14) 14%);
+	opacity: 0.74;
 }
 
 .focus-reminder-list__item--done label span {
-	color: var(--text-muted);
 	text-decoration: line-through;
 }
 
