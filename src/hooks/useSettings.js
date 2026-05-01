@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../lib/settings';
 import { getSettingsSource, loadSettings, saveSettings as persistSettings } from '../lib/settingsRepository';
 import { resolveNextValue } from '../lib/stateUtils';
+import { useIsMountedRef } from './useIsMountedRef';
 
 function resolveSettingValue(key, nextValue) {
   if (key === 'teamName') {
@@ -26,19 +27,13 @@ export function useSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
   const isSavingRef = useRef(false);
   const timezoneIsValid = Boolean(resolveTimeZone(settings.timezone || ''));
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-      isSavingRef.current = false;
-    };
+  const resetSavingRef = useCallback(() => {
+    isSavingRef.current = false;
   }, []);
+  const isMountedRef = useIsMountedRef(resetSavingRef);
 
   const loadCurrentSettings = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -70,7 +65,7 @@ export function useSettings() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [isMountedRef]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -155,7 +150,7 @@ export function useSettings() {
         setIsSaving(false);
       }
     }
-  }, [settings]);
+  }, [isMountedRef, settings]);
 
   const normalizeTimezone = useCallback(() => {
     setSettingsState((current) => {
