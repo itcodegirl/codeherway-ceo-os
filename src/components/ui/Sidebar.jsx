@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
-import { usePersistentState } from '../../hooks/usePersistentState';
+import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { NAV_ITEMS } from '../../lib/routes';
-import { DEFAULT_SETTINGS, resolveTeamName } from '../../lib/settings';
 
 function subscribeToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery?.addEventListener === 'function') {
@@ -21,7 +20,7 @@ function subscribeToMediaQuery(mediaQuery, listener) {
 
 function Sidebar() {
   const location = useLocation();
-  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
+  const { teamName } = useWorkspaceSettings();
   const [mobileMenuOpenKey, setMobileMenuOpenKey] = useState('');
   const menuToggleRef = useRef(null);
   const [isCompactViewport, setIsCompactViewport] = useState(() => {
@@ -31,8 +30,6 @@ function Sidebar() {
 
     return window.matchMedia('(max-width: 860px)').matches;
   });
-  const teamName = resolveTeamName(settings?.teamName);
-
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return undefined;

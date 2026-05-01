@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { usePersistentState } from '../../hooks/usePersistentState';
-import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../../lib/settings';
+import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { formatIsoDate } from '../../lib/utils';
 
 const ONE_MINUTE_MS = 60 * 1000;
@@ -11,7 +10,7 @@ function getMsUntilNextMinute(nowMs = Date.now()) {
 }
 
 function Topbar({ pageTitle = 'Focus Home' }) {
-  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
+  const { teamName, timezone } = useWorkspaceSettings();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -33,8 +32,6 @@ function Topbar({ pageTitle = 'Focus Home' }) {
     };
   }, []);
 
-  const resolvedTimeZone = useMemo(() => resolveTimeZone(settings?.timezone), [settings?.timezone]);
-
   const todayFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(undefined, {
@@ -42,15 +39,14 @@ function Topbar({ pageTitle = 'Focus Home' }) {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
-        timeZone: resolvedTimeZone || undefined,
+        timeZone: timezone || undefined,
       }),
-    [resolvedTimeZone],
+    [timezone],
   );
 
   const today = todayFormatter.format(now);
-  const isoDate = formatIsoDate(now, resolvedTimeZone);
-  const timezoneLabel = resolvedTimeZone || 'Local Time';
-  const teamName = resolveTeamName(settings?.teamName);
+  const isoDate = formatIsoDate(now, timezone);
+  const timezoneLabel = timezone || 'Local Time';
 
   return (
     <header className="topbar">
