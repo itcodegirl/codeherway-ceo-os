@@ -28,6 +28,7 @@ export function useSettings() {
   const [loadError, setLoadError] = useState('');
   const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  const isSavingRef = useRef(false);
   const timezoneIsValid = Boolean(resolveTimeZone(settings.timezone || ''));
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function useSettings() {
 
     return () => {
       isMountedRef.current = false;
+      isSavingRef.current = false;
     };
   }, []);
 
@@ -92,9 +94,14 @@ export function useSettings() {
   }, []);
 
   const saveSettings = useCallback(async (nextSettings) => {
+    if (isSavingRef.current) {
+      return undefined;
+    }
+
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
 
+    isSavingRef.current = true;
     setIsSaving(true);
     setLoadError('');
     const resolvedNextSettings = nextSettings || settings;
@@ -118,6 +125,7 @@ export function useSettings() {
         keyboardShortcuts: normalizedSettings.keyboardShortcuts,
         autoSave: normalizedSettings.autoSave,
       }));
+      isSavingRef.current = false;
       setIsSaving(false);
       return;
     }
@@ -143,6 +151,7 @@ export function useSettings() {
       }
     } finally {
       if (isMountedRef.current && requestId === requestIdRef.current) {
+        isSavingRef.current = false;
         setIsSaving(false);
       }
     }
