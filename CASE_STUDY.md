@@ -187,3 +187,12 @@ npm run test:e2e
 - Next-move guidance now prioritizes the oldest pending reminder and avoids awkward punctuation in quoted actions.
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
+
+## 10) Latest hardening updates (May 1, 2026, batch two)
+
+- Persisted state now reloads cleanly when a storage key changes, preventing stale shell or settings values from leaking between contexts.
+- CRUD list hooks now treat malformed repository payloads as real load failures instead of quietly rendering a false empty state.
+- Sidebar branding and topbar timezone metadata now refresh through a shared workspace-settings hook, reducing drift between the Settings page and the app shell.
+- Weekly Brief optimistic edits now recover to the persisted record after save failures, which is a more honest product behavior for planning workflows.
+- Source-status banners now explain when the interface is showing the latest available snapshot while sync reconnects.
+- Browser coverage now includes the settings-to-shell workflow so portfolio demos prove that saved workspace identity updates survive routed navigation.

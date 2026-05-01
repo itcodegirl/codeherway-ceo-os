@@ -49,24 +49,32 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 4. Weekly Brief + Opportunities: add one blocker or in-progress item and return to Focus Home.
 5. Chief of Staff: paste notes, reload once to show local persistence, then generate output and accept at least one structured recommendation.
 
+## Recruiter summary
+
+CodeHerWay CEO OS is best framed as a product-minded frontend systems project: a calm founder command center with local-first resilience, a Supabase upgrade path, explicit failure handling, and end-to-end verification for the workflows reviewers can actually click through.
+
 ## Portfolio review snapshot
 
 This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. The current implementation now covers the core reviewer risks:
 
 - Direct Netlify routes are protected with an SPA fallback and E2E direct-route refresh tests.
+- Persisted state key swaps and malformed CRUD repository responses now recover cleanly instead of silently reusing stale values or showing false empty states.
 - Route labels, navigation, and metadata come from one route definition source to reduce product drift.
 - App routing now derives route paths from the same route metadata used by navigation and page descriptions.
 - Route error recovery returns users directly to Focus Home instead of relying on fragile browser history.
+- Sidebar branding and topbar timezone metadata now consume the same workspace-settings pathway as the Settings page, with browser coverage for the save-to-shell flow.
 - CRUD mutation flows guard in-flight saves, deletes, and pending confirmations so rapid clicks or route changes do not create duplicate writes or late state updates.
 - Settings saves now guard duplicate submits, reject failed local persistence explicitly, and expose busy/invalid states through accessible button names.
 - Chief workspace and Weekly Brief local persistence now fail explicitly when browser storage rejects writes, so the UI does not imply unsaved work was safely stored.
 - Weekly Brief rejects stale item update/delete attempts without emitting fake progress events.
+- Weekly Brief recovery now reloads persisted data after save failures so optimistic edits do not linger as false truth in the interface.
 - Capture rejects stale sticky-note edits/deletes without fake update events.
 - Opportunities and Content OS reject stale local edits/deletes without writing unchanged data or emitting fake update events.
 - Capture and Journal autosave copy now changes to a paused state when local saves fail.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
 - Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
+- Source-status recovery cues now explain when the app is showing a cached workspace snapshot while sync reconnects.
 - Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
 - System Pulse and Chief telemetry refreshes ignore stale async results, reducing noisy state updates during Strict Mode, fast navigation, and reviewer reloads.
 - Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
@@ -164,6 +172,7 @@ Focus Home supporting signals are handled by `src/hooks/useFocusHomeSignals.js`,
 - Route tests cover key visibility and accessibility flows.
 - Playwright covers direct-route refreshes, CRUD smoke paths, Focus Home execution, and Chief workspace persistence/reset behavior.
 - Playwright also covers compact mobile navigation behavior so portfolio demos do not depend on untested responsive shell assumptions.
+- Playwright now also covers saving workspace settings and seeing shell branding/timezone update across routed navigation.
 
 ## Project layout
 
@@ -517,6 +526,17 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `npm run build`
   - `npm run check:route-budgets`
   - `npm run test:e2e` (19 passed)
+- Product hardening batch (May 1, 2026):
+  - `d8bc496` - fix: harden persisted state and crud loading
+  - `82ed2f2` - refactor: unify shell settings consumption
+  - `5a21229` - fix: recover weekly brief state after save failures
+  - `4b4e528` - fix: clarify data recovery status cues
+  - `c30dc06` - test: cover shell settings sync and reminder timing
+- May 1, 2026 third local verification:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:run` (83 files passed, 322 tests passed, 1 skipped)
+  - `npx playwright test` (21 passed)
 
 ## Author
 
