@@ -38,6 +38,7 @@ Validate core flows without changing source code:
 - Confirm Focus Home support modes can be reached from keyboard, switched with arrow keys, and retain visible focus.
 - Confirm reminder completion progress updates after checking and unchecking reminders, and completed reminders stay recoverable.
 - Confirm rapid create/save clicks do not duplicate records in Opportunities or Content OS.
+- On `Opportunities` and `Content OS`, confirm stale edit/delete failures keep the record visible and explain refresh/retry recovery.
 - Confirm navigating away during modal or confirmation work does not leave stale pending UI behind.
 - On `Weekly Brief`, confirm stale edit/delete recovery does not create fake progress after a failed save.
 - On `Weekly Brief`, confirm the review-note helper switches away from autosave reassurance when a save/load error is active.

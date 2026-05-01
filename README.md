@@ -62,6 +62,7 @@ This project is strongest when presented as a local-first productivity system wi
 - Chief workspace and Weekly Brief local persistence now fail explicitly when browser storage rejects writes, so the UI does not imply unsaved work was safely stored.
 - Weekly Brief rejects stale item update/delete attempts without emitting fake progress events.
 - Capture rejects stale sticky-note edits/deletes without fake update events.
+- Opportunities and Content OS reject stale local edits/deletes without writing unchanged data or emitting fake update events.
 - Capture and Journal autosave copy now changes to a paused state when local saves fail.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
@@ -141,6 +142,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Settings validation announces invalid timezone feedback once, keeps the save action disabled with a descriptive name, and exposes save progress through form busy state.
 - Weekly Brief pauses its autosave confidence copy when a save/load error is active instead of over-promising persistence.
 - Capture and Journal use the same autosave health copy pattern, so failure states do not keep reassuring users incorrectly.
+- Opportunity and Content stale-record errors tell users to refresh and retry when a record changed elsewhere.
 
 ### 6) Test and quality culture
 
@@ -375,6 +377,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/pages/WeeklyBrief.test.jsx`
   - `src/hooks/useChiefWorkspace.test.js`
   - `src/lib/captureRepository.test.js`
+  - `src/lib/opportunitiesRepository.test.js`
+  - `src/lib/contentRepository.test.js`
+  - `src/lib/stateUtils.test.js`
   - `src/pages/Capture.test.jsx`
   - `src/pages/Journal.test.jsx`
 
@@ -460,6 +465,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `0780d8a` - fix: reject stale capture updates
   - `f715acb` - fix: clarify capture and journal autosave failures
   - `fdf01c4` - test: cover capture and journal save failures
+- CRUD stale-record integrity hardening cycle (May 1, 2026):
+  - `0a6a97c` - fix: reject stale opportunity mutations
+  - `d040d08` - refactor: share local record mutation guards
+  - `8477064` - fix: reject stale content mutations
+  - `204ae9b` - fix: clarify crud stale record errors
+  - `88c46d3` - test: cover crud stale record guidance
 
 ## Author
 
