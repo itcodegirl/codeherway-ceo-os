@@ -220,6 +220,7 @@
 	flex-direction: column;
 	justify-content: center;
 	gap: 0.42rem;
+	min-width: 0;
 }
 
 .topbar__right {
@@ -228,6 +229,7 @@
 	gap: 0.75rem;
 	flex-wrap: wrap;
 	justify-content: flex-end;
+	min-width: 0;
 }
 
 .topbar__action {
@@ -242,6 +244,7 @@
 	font-size: var(--fs-meta);
 	line-height: 1.2;
 	margin: 0;
+	min-width: 0;
 }
 
 .topbar__status {
@@ -252,6 +255,7 @@
 	border: 1px solid var(--border-contrast-medium);
 	border-radius: 999px;
 	background: var(--bg-accent-subtle);
+	min-width: 0;
 }
 
 .system-pulse {
@@ -285,6 +289,8 @@
 	margin: 0;
 	font-size: 0.9rem;
 	color: var(--text-soft-strong);
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .system-pulse__nodes {
@@ -303,6 +309,7 @@
 	display: grid;
 	gap: 0.12rem;
 	background: color-mix(in srgb, var(--surface-card) 88%, rgba(70, 163, 244, 0.12) 12%);
+	min-width: 0;
 }
 
 .system-pulse__node-label {
@@ -410,7 +417,10 @@
 	}
 
 	.topbar__right {
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: 1fr;
+		justify-items: start;
+		width: 100%;
 	}
 
 	.system-pulse {

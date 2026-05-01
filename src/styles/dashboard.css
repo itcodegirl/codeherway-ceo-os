@@ -81,6 +81,7 @@
 
 .focus-home__next-move p {
 	margin: 0;
+	overflow-wrap: anywhere;
 }
 
 .focus-list {
@@ -178,6 +179,8 @@
 
 .focus-reminder-list__item label span {
 	line-height: 1.35;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .focus-reminder-list__item--empty {
@@ -195,6 +198,7 @@
 	color: var(--text-muted);
 	text-decoration: underline;
 	cursor: pointer;
+	flex-shrink: 0;
 }
 
 .focus-reminder-list__delete:hover {

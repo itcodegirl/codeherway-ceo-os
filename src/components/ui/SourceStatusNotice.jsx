@@ -12,10 +12,16 @@ function SourceStatusNotice({
   retryDisabled = false,
 }) {
   const sourceText = source === 'supabase' ? supabaseText : localText;
+  const sourceClassName = source === 'supabase'
+    ? 'source-status source-status--supabase'
+    : 'source-status source-status--local';
 
   return (
     <>
-      <p className="helper-text">{sourceText}</p>
+      <p className={sourceClassName} role="status" aria-live="polite">
+        <span className="source-status__dot" aria-hidden="true" />
+        <span>{sourceText}</span>
+      </p>
       {loadError ? (
         <div className="helper-inline-actions">
           <p className="helper-text" role="alert">{loadError}</p>

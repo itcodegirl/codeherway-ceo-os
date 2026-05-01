@@ -9,7 +9,7 @@ function SystemPulse() {
         <p className="system-pulse__eyebrow">Command Signal</p>
         <p className="system-pulse__next-move">
           <strong>Next Move:</strong>{' '}
-          <span>{isLoading ? 'Syncing your system pulse...' : nextMove}</span>
+          <span aria-live="polite">{isLoading ? 'Syncing your system pulse...' : nextMove}</span>
         </p>
       </div>
 
@@ -18,6 +18,7 @@ function SystemPulse() {
           <li
             key={item.id}
             className={`system-pulse__node system-pulse__node--${item.tone}`}
+            aria-label={`${item.label}: ${item.value}`}
           >
             <span className="system-pulse__node-label">{item.label}</span>
             <strong className="system-pulse__node-value">{item.value}</strong>
