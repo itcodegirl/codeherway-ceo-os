@@ -80,6 +80,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Mounted-ref lifecycle guards for CRUD saves/deletes and confirmation flows so async mutations do not update unmounted screens
 - Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
 - Stale async refresh guards for shared pulse and telemetry hooks so route changes do not overwrite current state with older request results
+- Settings persistence rejects failed writes explicitly and prevents duplicate save submissions while a save is already in flight
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
@@ -90,6 +91,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Semantic route composition and consistent form behavior
 - Local status indicators for data source and loading/error state
 - Keyboard-friendly editing and workflow actions
+- Settings form states expose busy, disabled, and invalid-timezone feedback through accessible control names without duplicate alerts
 
 ## 5) Verification set
 
@@ -143,3 +145,7 @@ npm run test:e2e
 - Stale reminder toggle/delete attempts are rejected without emitting fake progress events.
 - Completed reminder styling now preserves checkbox/control contrast while keeping text-level completion cues.
 - Confirmation unmount safety is covered with targeted hook tests, and the full QA gate remains green.
+- Settings saves now guard duplicate in-flight submits and reuse the shared mounted-ref lifecycle helper.
+- Settings persistence failures now reject explicitly, avoiding false cross-tab update events when local storage fails.
+- Settings validation now disables saving with an explanatory accessible name and announces invalid timezone feedback once.
+- Settings page tests cover saving state, invalid timezone feedback, changed workspace fields, and save submission.

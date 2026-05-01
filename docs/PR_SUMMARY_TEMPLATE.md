@@ -4,11 +4,11 @@ Use this template when opening a PR that summarizes the current product-hardenin
 
 ## Title
 
-`Product hardening: recovery, routing, execution flow, and portfolio docs`
+`Product hardening: recovery, execution flow, settings reliability, and portfolio docs`
 
 ## Why this matters
 
-This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, guarding CRUD mutation lifecycles, reducing Chief of Staff bundle weight, and expanding proof around the daily execution workflow.
+This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, guarding CRUD and Settings mutation lifecycles, reducing Chief of Staff bundle weight, and expanding proof around the daily execution workflow.
 
 ## Commits covered
 
@@ -29,6 +29,11 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 | `22ccc3a` | Rejected stale reminder mutations without fake update events |
 | `4942074` | Preserved completed reminder control contrast |
 | `f2fcd90` | Added confirm-delete unmount safety coverage |
+| `41b8764` | Guarded duplicate Settings saves |
+| `03b0bbc` | Reused shared mounted-ref lifecycle handling in Settings |
+| `632b18e` | Failed Settings persistence explicitly when local writes fail |
+| `d013ca7` | Clarified Settings save and validation state |
+| `91ce193` | Added Settings page accessibility and save-flow coverage |
 
 ## What changed
 
@@ -37,6 +42,7 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Added stale-result protection to shared async hooks used by the system pulse and Chief telemetry surfaces.
 - Derived router paths from shared route metadata so routes, nav labels, and page metadata stay aligned.
 - Guarded shared CRUD mutation flows against duplicate in-flight saves and stale async state updates after unmount.
+- Guarded Settings saves against duplicate in-flight submissions and failed local persistence that previously could look successful.
 - Centralized mounted-ref lifecycle handling for hooks that need async safety.
 - Removed dead legacy Chief AI components that no longer represented the active product workflow.
 - Split Chief telemetry diagnostics into a lazy-loaded panel so observability detail does not bloat the first Chief of Staff route load.
@@ -47,12 +53,14 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Focus Home support modes use roving keyboard focus and visible focus retention.
 - Reminder completion is visible, reversible, and covered in browser tests as part of the daily execution path.
 - Stale reminder mutations now fail clearly instead of emitting fake progress events.
+- Settings validation now keeps the save action disabled with a descriptive accessible name and a single invalid-timezone alert.
 
 ### Accessibility
 
 - Added keyboard-mode switching coverage for the support-mode group.
 - Route-level crash recovery now has a deterministic Focus Home escape hatch.
 - Completed reminders preserve checkbox/control contrast while still showing text-level completion state.
+- Settings exposes save progress through form busy state and avoids duplicate validation announcements.
 - Preserved skip-link, route focus, CRUD keyboard activation, and retry/error behaviors covered by the existing suite.
 
 ### Maintainability
@@ -60,6 +68,7 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 - Reduced duplicate Chief AI surface area.
 - Reduced route declaration drift by keeping app paths tied to the route metadata source.
 - Reduced lifecycle boilerplate with a shared mounted-ref hook.
+- Added explicit Settings repository failure behavior so persistence errors do not emit false cross-tab update events.
 - Kept telemetry detail available behind a focused component boundary instead of loading it with the primary workflow.
 - Strengthened tests around the parts most likely to regress during portfolio demos.
 
@@ -92,4 +101,5 @@ This PR improves portfolio readiness by tightening runtime recovery, keeping rou
 4. Review Dashboard next-move queue validation and reversible reminder state.
 5. Review Focus Home keyboard behavior and Playwright coverage.
 6. Review Chief telemetry lazy split and route-budget results.
-7. Confirm docs and release evidence match the branch.
+7. Review Settings save-state accessibility and persistence-failure coverage.
+8. Confirm docs and release evidence match the branch.

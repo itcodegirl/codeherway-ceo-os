@@ -58,6 +58,7 @@ This project is strongest when presented as a local-first productivity system wi
 - App routing now derives route paths from the same route metadata used by navigation and page descriptions.
 - Route error recovery returns users directly to Focus Home instead of relying on fragile browser history.
 - CRUD mutation flows guard in-flight saves, deletes, and pending confirmations so rapid clicks or route changes do not create duplicate writes or late state updates.
+- Settings saves now guard duplicate submits, reject failed local persistence explicitly, and expose busy/invalid states through accessible button names.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
 - Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
@@ -133,6 +134,7 @@ The deterministic recommendation layer is handled by `src/lib/suggestions.js`, a
 - Source/status messaging for persistence mode
 - Controlled keyboard interactions and form behavior in core workflows
 - Interactive data rows in opportunities/content tables support keyboard activation (`Enter` / `Space`) in addition to pointer interaction.
+- Settings validation announces invalid timezone feedback once, keeps the save action disabled with a descriptive name, and exposes save progress through form busy state.
 
 ### 6) Test and quality culture
 
@@ -360,6 +362,9 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `src/hooks/useDashboardInsights.test.js`
   - `src/hooks/useWeeklyBrief.test.js`
   - `src/lib/pageMeta.test.js`
+  - `src/pages/Settings.test.jsx`
+  - `src/hooks/useSettings.test.js`
+  - `src/lib/settingsRepository.test.js`
 
 ### Production readiness checklist
 
@@ -425,6 +430,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `22ccc3a` - fix: reject stale reminder mutations
   - `4942074` - fix: preserve reminder control contrast
   - `f2fcd90` - test: cover confirm unmount safety
+- Settings persistence and accessibility hardening cycle (April 30, 2026):
+  - `41b8764` - fix: guard duplicate settings saves
+  - `03b0bbc` - refactor: reuse mounted lifecycle for settings
+  - `632b18e` - fix: fail settings persistence explicitly
+  - `d013ca7` - fix: clarify settings save state
+  - `91ce193` - test: cover settings save accessibility
 
 ## Author
 
