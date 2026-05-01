@@ -142,4 +142,52 @@ describe('chiefRepository', () => {
     expect(persisted[0].title).toBe('Fallback response');
   });
 
+  it('rejects local note saves when browser storage fails', async () => {
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(() => {
+      throw new Error('storage full');
+    });
+
+    const { saveChiefNotes } = await loadChiefRepositoryWithSupabaseMock({
+      isSupabaseConfigured: false,
+    });
+
+    try {
+      await expect(saveChiefNotes('Important founder notes')).rejects.toThrow(
+        'Failed to persist chief notes to localStorage',
+      );
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
+  });
+
+  it('rejects local output saves when browser storage fails', async () => {
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(() => {
+      throw new Error('storage full');
+    });
+
+    const { saveChiefOutput } = await loadChiefRepositoryWithSupabaseMock({
+      isSupabaseConfigured: false,
+    });
+
+    try {
+      await expect(saveChiefOutput({
+        sessionId: 'session-1',
+        outputType: 'response',
+        title: 'Fallback response',
+        content: 'Fallback output text',
+        structuredPayload: {
+          priorities: [],
+          opportunities: [],
+          contentItems: [],
+          tasks: [],
+        },
+        source: 'proxy',
+      })).rejects.toThrow('Failed to persist chief responses to localStorage');
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
+  });
+
 });

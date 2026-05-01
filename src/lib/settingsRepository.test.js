@@ -105,6 +105,39 @@ describe('settingsRepository', () => {
     }
   });
 
+  it('throws and skips update events when local settings persistence fails', async () => {
+    const updateListener = vi.fn();
+    const originalSetItem = window.localStorage.setItem;
+    window.addEventListener('ceo-os:settings-updated', updateListener);
+
+    window.localStorage.setItem = vi.fn((key, value) => {
+      if (key === 'ceo-os-settings') {
+        throw new Error('storage full');
+      }
+
+      return originalSetItem.call(window.localStorage, key, value);
+    });
+
+    try {
+      const { saveSettings } = await loadSettingsRepositoryWithSupabaseMock({
+        isSupabaseConfigured: false,
+      });
+
+      await expect(saveSettings({
+        teamName: 'Local Team',
+        timezone: 'America/Chicago',
+        emailDigest: true,
+        keyboardShortcuts: false,
+        autoSave: true,
+      })).rejects.toThrow('Failed to persist settings to localStorage');
+
+      expect(updateListener).not.toHaveBeenCalled();
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+      window.removeEventListener('ceo-os:settings-updated', updateListener);
+    }
+  });
+
   it('uses Supabase profile data when Supabase is configured and available', async () => {
     const maybeSingle = vi.fn(async () => ({
       data: {

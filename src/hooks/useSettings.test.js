@@ -94,6 +94,56 @@ describe('useSettings', () => {
     expect(repositoryState.saveSettings).not.toHaveBeenCalled();
   });
 
+  it('ignores duplicate save requests while settings are already saving', async () => {
+    const pendingSave = createDeferred();
+
+    repositoryState.saveSettings.mockImplementationOnce(() => pendingSave.promise);
+
+    const { result } = renderHook(() => useSettings());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    let firstSave;
+    await act(async () => {
+      firstSave = result.current.saveSettings({
+        timezone: 'America/Chicago',
+        teamName: 'CodeHerWay',
+        emailDigest: true,
+        keyboardShortcuts: false,
+        autoSave: true,
+      });
+      await result.current.saveSettings({
+        timezone: 'America/New_York',
+        teamName: 'Duplicate Team',
+        emailDigest: false,
+        keyboardShortcuts: true,
+        autoSave: false,
+      });
+    });
+
+    expect(repositoryState.saveSettings).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      pendingSave.resolve({
+        settings: {
+          timezone: 'America/Chicago',
+          teamName: 'CodeHerWay',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        savedAt: 333,
+        source: 'local',
+      });
+      await firstSave;
+    });
+
+    expect(result.current.isSaving).toBe(false);
+    expect(result.current.settings.teamName).toBe('CodeHerWay');
+  });
+
   it('ignores stale settings loads when a newer refresh resolves first', async () => {
     const firstLoad = createDeferred();
     const secondLoad = createDeferred();

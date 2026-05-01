@@ -36,7 +36,13 @@ Validate core flows without changing source code:
 - Confirm reminder completion progress updates after checking and unchecking reminders, and completed reminders stay recoverable.
 - Confirm rapid create/save clicks do not duplicate records in Opportunities or Content OS.
 - Confirm navigating away during modal or confirmation work does not leave stale pending UI behind.
+- On `Weekly Brief`, confirm stale edit/delete recovery does not create fake progress after a failed save.
+- On `Weekly Brief`, confirm the review-note helper switches away from autosave reassurance when a save/load error is active.
+- On `Settings`, confirm rapid save clicks do not produce duplicate saves or misleading saved state.
+- On `Settings`, enter an invalid timezone and confirm saving is disabled with one clear validation alert.
+- On `Settings`, confirm save progress exposes a busy form state and descriptive save-button name.
 - On `Chief of Staff`, type notes, refresh, confirm the notes return, then reset the workspace and confirm the cleared state survives another refresh.
+- On `Chief of Staff`, confirm note/output persistence errors surface as workspace status instead of silently implying saved state.
 - On `Chief of Staff`, confirm telemetry diagnostics can load without blocking the primary note-to-action workflow.
 - Confirm no visible console errors in normal user flows.
 

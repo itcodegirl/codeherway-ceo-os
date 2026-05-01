@@ -1,4 +1,4 @@
-import { formatIsoDate, safeLocalStorageSetItem } from './utils';
+import { formatIsoDate, requireLocalStorageSetItem } from './utils';
 
 const STORAGE_KEY = 'ceo-os-journal-entries';
 export const JOURNAL_ENTRIES_UPDATED_EVENT = 'ceo-os:journal-entries-updated';
@@ -67,15 +67,11 @@ function readStore() {
 }
 
 function writeStore(store) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(store),
     'Failed to persist journal entries to localStorage',
   );
-
-  if (!didPersist) {
-    throw new Error('Failed to persist journal entries to localStorage');
-  }
 }
 
 function emitJournalEntriesUpdated(detail = {}) {

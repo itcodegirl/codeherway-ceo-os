@@ -48,3 +48,13 @@ export function safeLocalStorageSetItem(key, value, warningMessage = 'Failed to 
     return false;
   }
 }
+
+export function requireLocalStorageSetItem(key, value, errorMessage = 'Failed to persist local data') {
+  const didPersist = safeLocalStorageSetItem(key, value, errorMessage);
+
+  if (!didPersist) {
+    throw new Error(errorMessage);
+  }
+
+  return true;
+}

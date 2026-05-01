@@ -4,7 +4,7 @@ import {
   defaultPriorities,
   defaultWins,
 } from './weeklyData';
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
@@ -201,7 +201,7 @@ function readLocalWeekStore() {
 }
 
 function writeLocalWeekStore(store) {
-  safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     LOCAL_WEEKLY_BRIEFS_KEY,
     JSON.stringify(store),
     'Failed to persist weekly brief data to localStorage',
@@ -685,6 +685,10 @@ export async function updateWeeklyItem({
       });
     }
 
+    if (!nextItem) {
+      throw new Error('Weekly item not found');
+    }
+
     return next;
   });
 
@@ -740,17 +744,25 @@ export async function deleteWeeklyItem({
     return;
   }
 
+  let didDelete = false;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
     const next = {
       ...current,
     };
 
     if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
+      didDelete = current.priorities.some((item) => String(item.id) === normalizedItemId);
       next.priorities = current.priorities.filter((item) => String(item.id) !== normalizedItemId);
     } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
+      didDelete = current.wins.some((item) => String(item.id) === normalizedItemId);
       next.wins = current.wins.filter((item) => String(item.id) !== normalizedItemId);
     } else {
+      didDelete = current.blockers.some((item) => String(item.id) === normalizedItemId);
       next.blockers = current.blockers.filter((item) => String(item.id) !== normalizedItemId);
+    }
+
+    if (!didDelete) {
+      throw new Error('Weekly item not found');
     }
 
     return next;

@@ -1,5 +1,5 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
-import { buildCreateId, safeLocalStorageSetItem } from './utils';
+import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
@@ -49,14 +49,11 @@ function readLocalOpportunities() {
 }
 
 function writeLocalOpportunities(items) {
-  const didPersist = safeLocalStorageSetItem(
+  requireLocalStorageSetItem(
     STORAGE_KEY,
     JSON.stringify(items),
     'Failed to persist opportunities to localStorage',
   );
-  if (!didPersist) {
-    throw new Error('Failed to persist opportunities to localStorage');
-  }
 }
 
 function notifyOpportunitiesUpdated(detail = {}) {

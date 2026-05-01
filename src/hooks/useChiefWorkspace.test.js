@@ -117,4 +117,21 @@ describe('useChiefWorkspace', () => {
     expect(result.current.source).toBe('local');
     expect(result.current.isLoading).toBe(false);
   });
+
+  it('surfaces note persistence failures without reverting the editable draft', async () => {
+    repositoryState.saveChiefNotes.mockRejectedValueOnce(new Error('storage full'));
+    const isMountedRef = { current: true };
+
+    const { result } = renderHook(() => useChiefWorkspace({ isMountedRef }));
+
+    act(() => {
+      result.current.setNotes('Draft that failed to save');
+    });
+
+    expect(result.current.notes).toBe('Draft that failed to save');
+
+    await waitFor(() => {
+      expect(result.current.loadError).toBe('Unable to save notes right now.');
+    });
+  });
 });

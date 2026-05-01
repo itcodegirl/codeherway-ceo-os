@@ -34,6 +34,9 @@ function WeeklyBrief() {
   const priorityItems = Array.isArray(priorities) ? priorities : defaultPriorities;
   const winItems = Array.isArray(wins) ? wins : defaultWins;
   const blockerItems = Array.isArray(blockers) ? blockers : defaultBlockers;
+  const reviewNotesHelper = loadError
+    ? 'Autosave is paused until the weekly brief saves successfully again.'
+    : 'Notes are saved automatically for this workspace.';
 
   return (
     <section className="weekly-page">
@@ -110,7 +113,7 @@ function WeeklyBrief() {
             rows={5}
             placeholder="Capture outcomes at close of week in plain language: what moved, what stalled, and what your next executive move is for the coming seven days."
           />
-          <p className="helper-text">Notes are saved automatically for this workspace.</p>
+          <p className="helper-text" aria-live="polite">{reviewNotesHelper}</p>
         </SectionCard>
       </div>
     </section>
