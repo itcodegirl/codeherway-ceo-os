@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useIsMountedRef } from './useIsMountedRef';
 
 const DEFAULT_CONFIRM_STATE = {
   isOpen: false,
@@ -31,15 +32,7 @@ export function useConfirmDelete(onConfirm, getMessage) {
 
   const [confirmState, setConfirmState] = useState(DEFAULT_CONFIRM_STATE);
   const [isConfirmPending, setIsConfirmPending] = useState(false);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+  const isMountedRef = useIsMountedRef();
 
   const requestConfirm = useCallback((payload) => {
     if (isConfirmPending) {
@@ -87,7 +80,7 @@ export function useConfirmDelete(onConfirm, getMessage) {
         setIsConfirmPending(false);
       }
     }
-  }, [confirmState.isOpen, confirmState.payload, onConfirmFn]);
+  }, [confirmState.isOpen, confirmState.payload, isMountedRef, onConfirmFn]);
 
   return {
     isConfirmOpen: confirmState.isOpen,

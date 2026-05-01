@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConfirmDelete } from './useConfirmDelete';
+import { useIsMountedRef } from './useIsMountedRef';
 
 function isValidCrudItem(value) {
   return Boolean(value && typeof value === 'object' && typeof value.id === 'string' && value.id.trim());
@@ -63,17 +64,11 @@ export function useCrudPage(config) {
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
   const selectedItem = selectedItemState;
-  const isMountedRef = useRef(true);
   const isSavingRef = useRef(false);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-      isSavingRef.current = false;
-    };
+  const resetSavingRef = useCallback(() => {
+    isSavingRef.current = false;
   }, []);
+  const isMountedRef = useIsMountedRef(resetSavingRef);
 
   const {
     isConfirmOpen: isDeleteConfirmOpen,
@@ -286,6 +281,7 @@ export function useCrudPage(config) {
   }, [
     createItemFn,
     formValues,
+    isMountedRef,
     logPrefix,
     mapFormValuesToPayloadFn,
     saveErrorMessage,
