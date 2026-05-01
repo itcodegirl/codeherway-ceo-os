@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConfirmDelete } from './useConfirmDelete';
 
 function isValidCrudItem(value) {
@@ -63,6 +63,17 @@ export function useCrudPage(config) {
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
   const selectedItem = selectedItemState;
+  const isMountedRef = useRef(true);
+  const isSavingRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      isSavingRef.current = false;
+    };
+  }, []);
 
   const {
     isConfirmOpen: isDeleteConfirmOpen,
@@ -84,10 +95,15 @@ export function useCrudPage(config) {
           throw new Error('Delete operation is not configured.');
         }
         await deleteItemFn(itemToDelete.id);
+        if (!isMountedRef.current) {
+          return;
+        }
         setItems((current) => current.filter((item) => item.id !== itemToDelete.id));
         setSelectedItemState(null);
       } catch (error) {
-        setLoadError(deleteErrorMessage);
+        if (isMountedRef.current) {
+          setLoadError(deleteErrorMessage);
+        }
         if (import.meta.env.DEV) {
           console.error(`Failed to delete ${logPrefix}`, error);
         }
@@ -203,6 +219,10 @@ export function useCrudPage(config) {
 
   const handleFormSubmit = useCallback(async (event) => {
     event.preventDefault();
+    if (isSavingRef.current) {
+      return;
+    }
+
     const payload = mapFormValuesToPayloadFn ? mapFormValuesToPayloadFn(formValues) : formValues;
     const validationError = validatePayloadFn(payload);
 
@@ -220,6 +240,7 @@ export function useCrudPage(config) {
       return;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     setFormError('');
     setLoadError('');
@@ -227,6 +248,9 @@ export function useCrudPage(config) {
     try {
       if (selectedItem) {
         const updated = await updateItemFn(selectedItem.id, payload);
+        if (!isMountedRef.current) {
+          return;
+        }
         if (!isValidCrudItem(updated)) {
           throw new Error('Update operation returned an invalid item shape.');
         }
@@ -235,6 +259,9 @@ export function useCrudPage(config) {
         setSelectedItemState(updated);
       } else {
         const created = await createItemFn(payload);
+        if (!isMountedRef.current) {
+          return;
+        }
         if (!isValidCrudItem(created)) {
           throw new Error('Create operation returned an invalid item shape.');
         }
@@ -244,12 +271,17 @@ export function useCrudPage(config) {
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
-      setFormError(saveErrorMessage);
+      if (isMountedRef.current) {
+        setFormError(saveErrorMessage);
+      }
       if (import.meta.env.DEV) {
         console.error(`Failed to save ${logPrefix}`, error);
       }
     } finally {
-      setIsSaving(false);
+      isSavingRef.current = false;
+      if (isMountedRef.current) {
+        setIsSaving(false);
+      }
     }
   }, [
     createItemFn,

@@ -200,6 +200,48 @@ describe('useCrudPage', () => {
     expect(result.current.items).toEqual([]);
   });
 
+  it('ignores duplicate save submissions while a create is in flight', async () => {
+    let resolveCreate;
+    const listItems = vi.fn(() => Promise.resolve([]));
+    const createItem = vi.fn((payload) => new Promise((resolve) => {
+      resolveCreate = () => resolve({ id: '2', ...payload });
+    }));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: createItem,
+      updateFn: () => Promise.resolve({ id: '1' }),
+      deleteFn: () => Promise.resolve({ id: '1' }),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.handleOpenCreateModal();
+      result.current.handleFormChange('name', 'Draft item');
+    });
+
+    let firstSubmit;
+    await act(async () => {
+      firstSubmit = result.current.handleFormSubmit(createSubmitEvent());
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    expect(createItem).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveCreate();
+      await firstSubmit;
+    });
+
+    expect(result.current.items).toEqual([{ id: '2', name: 'Draft item' }]);
+  });
+
   it('surfaces update errors and preserves the current item state', async () => {
     const listItems = vi.fn(() => Promise.resolve([{ id: '1', name: 'Opportunity A', status: 'Draft' }]));
     const updateItem = vi.fn(() => Promise.reject(new Error('update failed')));
