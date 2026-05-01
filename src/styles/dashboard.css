@@ -184,11 +184,8 @@
 	justify-content: flex-start;
 }
 
-.focus-reminder-list__item--done {
-	opacity: 0.74;
-}
-
 .focus-reminder-list__item--done label span {
+	color: var(--text-muted);
 	text-decoration: line-through;
 }
 
