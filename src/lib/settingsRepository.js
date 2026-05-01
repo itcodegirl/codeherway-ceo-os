@@ -62,16 +62,19 @@ function readLocalSavedAt() {
 }
 
 function writeLocalSettings(settings, savedAt = Date.now()) {
-  safeLocalStorageSetItem(
+  const didPersistSettings = safeLocalStorageSetItem(
     LOCAL_SETTINGS_KEY,
     JSON.stringify(settings),
     'Failed to persist settings to localStorage',
   );
-  safeLocalStorageSetItem(
+  const didPersistSavedAt = safeLocalStorageSetItem(
     LOCAL_SETTINGS_SAVED_AT_KEY,
     String(savedAt),
     'Failed to persist settings to localStorage',
   );
+  if (!didPersistSettings || !didPersistSavedAt) {
+    throw new Error('Failed to persist settings to localStorage');
+  }
 }
 
 function mapSettingsToProfileFields(settings) {
