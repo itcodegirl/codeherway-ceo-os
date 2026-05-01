@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
+import { APP_ROUTES, toNestedRoutePath } from './lib/routes';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Capture = lazy(() => import('./pages/Capture'));
@@ -11,6 +12,18 @@ const WeeklyBrief = lazy(() => import('./pages/WeeklyBrief'));
 const ChiefOfStaff = lazy(() => import('./pages/ChiefOfStaff'));
 const OpsReliability = lazy(() => import('./pages/OpsReliability'));
 const Settings = lazy(() => import('./pages/Settings'));
+
+const ROUTE_COMPONENTS = {
+  'focus-home': Dashboard,
+  capture: Capture,
+  journal: Journal,
+  opportunities: Opportunities,
+  content: ContentOS,
+  'weekly-brief': WeeklyBrief,
+  'chief-of-staff': ChiefOfStaff,
+  'ops-reliability': OpsReliability,
+  settings: Settings,
+};
 
 function App() {
   return (
@@ -23,15 +36,24 @@ function App() {
     >
       <Routes>
         <Route path="/" element={<AppLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="capture" element={<Capture />} />
-          <Route path="journal" element={<Journal />} />
-          <Route path="opportunities" element={<Opportunities />} />
-          <Route path="content" element={<ContentOS />} />
-          <Route path="weekly-brief" element={<WeeklyBrief />} />
-          <Route path="chief-of-staff" element={<ChiefOfStaff />} />
-          <Route path="ops-reliability" element={<OpsReliability />} />
-          <Route path="settings" element={<Settings />} />
+          {APP_ROUTES.map((route) => {
+            const RouteComponent = ROUTE_COMPONENTS[route.id];
+            if (!RouteComponent) {
+              return null;
+            }
+
+            if (route.path === '/') {
+              return <Route key={route.id} index element={<RouteComponent />} />;
+            }
+
+            return (
+              <Route
+                key={route.id}
+                path={toNestedRoutePath(route.path)}
+                element={<RouteComponent />}
+              />
+            );
+          })}
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

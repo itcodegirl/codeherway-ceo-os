@@ -69,3 +69,11 @@ export const NAV_ITEMS = APP_ROUTES.map(({ label, path, icon }) => ({
   path,
   icon,
 }));
+
+export function toNestedRoutePath(path) {
+  if (path === '/') {
+    return '';
+  }
+
+  return String(path || '').replace(/^\/+/, '');
+}

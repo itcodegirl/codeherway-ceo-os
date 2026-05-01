@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { APP_ROUTES, NAV_ITEMS } from './routes';
+import { APP_ROUTES, NAV_ITEMS, toNestedRoutePath } from './routes';
 import { buildPageMetaByRoute } from './pageMeta';
 
 describe('src/lib/routes', () => {
@@ -27,5 +27,11 @@ describe('src/lib/routes', () => {
         icon,
       })),
     );
+  });
+
+  it('derives nested React Router paths from public route paths', () => {
+    expect(toNestedRoutePath('/')).toBe('');
+    expect(toNestedRoutePath('/chief-of-staff')).toBe('chief-of-staff');
+    expect(toNestedRoutePath('settings')).toBe('settings');
   });
 });
