@@ -4,11 +4,11 @@ Use this template when opening a PR that summarizes the current product-hardenin
 
 ## Title
 
-`Product hardening: stability, execution flow, route budgets, and portfolio docs`
+`Product hardening: recovery, routing, execution flow, and portfolio docs`
 
 ## Why this matters
 
-This PR improves portfolio readiness by tightening runtime reliability, making Focus Home more keyboard-friendly, keeping Dashboard recommendations current, reducing Chief of Staff bundle weight, and expanding E2E proof around the daily execution workflow.
+This PR improves portfolio readiness by tightening runtime recovery, keeping router/navigation metadata aligned, making Focus Home more keyboard-friendly, keeping reminders reversible, reducing Chief of Staff bundle weight, and expanding E2E proof around the daily execution workflow.
 
 ## Commits covered
 
@@ -19,12 +19,18 @@ This PR improves portfolio readiness by tightening runtime reliability, making F
 | `bbbf75b` | Kept Dashboard next-move recommendations tied to the current execution queue |
 | `d504d74` | Improved Focus Home support-mode keyboard navigation |
 | `e340d4b` | Added Focus Home E2E coverage and split Chief telemetry diagnostics from the initial route bundle |
+| `dd8d31d` | Made route error recovery return directly to Focus Home |
+| `0128dba` | Derived app route declarations from shared route metadata |
+| `4ba77bc` | Kept completed reminders visible and recoverable |
+| `f3a7a60` | Polished shared recovery styling, modal mobile behavior, and focus keyboard support |
+| `7a8865e` | Added E2E coverage for reversible reminder completion |
 
 ## What changed
 
 ### Engineering quality
 
 - Added stale-result protection to shared async hooks used by the system pulse and Chief telemetry surfaces.
+- Derived router paths from shared route metadata so routes, nav labels, and page metadata stay aligned.
 - Removed dead legacy Chief AI components that no longer represented the active product workflow.
 - Split Chief telemetry diagnostics into a lazy-loaded panel so observability detail does not bloat the first Chief of Staff route load.
 
@@ -32,16 +38,18 @@ This PR improves portfolio readiness by tightening runtime reliability, making F
 
 - Dashboard next-move state now clears when an old recommendation no longer belongs to the current queue.
 - Focus Home support modes use roving keyboard focus and visible focus retention.
-- Reminder completion is covered in browser tests as part of the daily execution path.
+- Reminder completion is visible, reversible, and covered in browser tests as part of the daily execution path.
 
 ### Accessibility
 
 - Added keyboard-mode switching coverage for the support-mode group.
+- Route-level crash recovery now has a deterministic Focus Home escape hatch.
 - Preserved skip-link, route focus, CRUD keyboard activation, and retry/error behaviors covered by the existing suite.
 
 ### Maintainability
 
 - Reduced duplicate Chief AI surface area.
+- Reduced route declaration drift by keeping app paths tied to the route metadata source.
 - Kept telemetry detail available behind a focused component boundary instead of loading it with the primary workflow.
 - Strengthened tests around the parts most likely to regress during portfolio demos.
 
@@ -68,8 +76,9 @@ This PR improves portfolio readiness by tightening runtime reliability, making F
 
 ## Reviewer guide (fast path)
 
-1. Review stale-result guards in the shared pulse and telemetry hooks.
-2. Review Dashboard next-move queue validation.
-3. Review Focus Home keyboard mode behavior and Playwright coverage.
-4. Review Chief telemetry lazy split and route-budget results.
-5. Confirm docs and release evidence match the branch.
+1. Review route metadata-driven app routing.
+2. Review error-boundary Focus Home recovery.
+3. Review Dashboard next-move queue validation and reversible reminder state.
+4. Review Focus Home keyboard behavior and Playwright coverage.
+5. Review Chief telemetry lazy split and route-budget results.
+6. Confirm docs and release evidence match the branch.

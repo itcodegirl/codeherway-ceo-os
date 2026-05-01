@@ -2,6 +2,14 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-04-30 - Recovery, routing, and reversible execution hardening
+
+- `dd8d31d` - Made route error recovery return directly to Focus Home instead of depending on browser history.
+- `0128dba` - Derived React Router paths from shared route metadata to reduce navigation and metadata drift.
+- `4ba77bc` - Kept completed reminders visible and recoverable so accidental checks can be undone.
+- `f3a7a60` - Polished shared recovery styling, modal mobile behavior, and Focus Home arrow-key support.
+- `7a8865e` - Added Playwright coverage for reversible reminder completion while keeping route budgets under trend limits.
+
 ## 2026-04-30 - Stability, execution, and route-budget hardening
 
 - `da56ca5` - Guarded System Pulse and Chief telemetry refreshes against stale async updates after remounts or fast navigation.

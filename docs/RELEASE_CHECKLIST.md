@@ -29,11 +29,11 @@ Validate core flows without changing source code:
 - Refresh each direct route and confirm the app shell renders instead of a platform 404.
 - Confirm loading, empty, and populated states render correctly.
 - Confirm skip-link and route focus restoration still work from keyboard-only navigation.
-- Confirm route-level error recovery does not trap navigation after one view fails.
+- Confirm route-level error recovery returns to Focus Home and does not trap navigation after one view fails.
 - Confirm source-status messaging appears correctly for local-first and Supabase-enabled environments.
 - Confirm KPI tone semantics are credible (risk-heavy cards should not render as positive state).
 - Confirm Focus Home support modes can be reached from keyboard, switched with arrow keys, and retain visible focus.
-- Confirm reminder completion progress updates after checking and unchecking reminders.
+- Confirm reminder completion progress updates after checking and unchecking reminders, and completed reminders stay recoverable.
 - On `Chief of Staff`, type notes, refresh, confirm the notes return, then reset the workspace and confirm the cleared state survives another refresh.
 - On `Chief of Staff`, confirm telemetry diagnostics can load without blocking the primary note-to-action workflow.
 - Confirm no visible console errors in normal user flows.

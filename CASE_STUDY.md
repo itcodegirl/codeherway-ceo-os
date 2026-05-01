@@ -74,7 +74,9 @@ The following assets are referenced for portfolio review and should be kept curr
   - structured AI outputs
 - Explicit user feedback for generation/acceptance outcomes and errors
 - Deterministic metadata and shell behavior for route transitions
+- Route rendering derived from shared route metadata so navigation, page metadata, and router paths stay aligned
 - Event-driven refresh strategy to keep screens synchronized after mutations
+- Deterministic route-crash recovery back to Focus Home rather than browser-history-dependent recovery
 - Strict-mode-safe hydration guards so local-first state restores reliably during real browser reloads and reviewer demos
 - Stale async refresh guards for shared pulse and telemetry hooks so route changes do not overwrite current state with older request results
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
@@ -130,3 +132,8 @@ npm run test:e2e
 - Focus Home support-mode controls now use roving keyboard focus and have Playwright coverage for keyboard switching plus reminder completion.
 - Obsolete legacy Chief AI prompt/output components were removed so the product has one maintained Chief of Staff workflow path.
 - Chief telemetry diagnostics are lazy-loaded separately from the main Chief of Staff route to keep route budgets green while preserving observability.
+- Error-boundary recovery now routes directly to Focus Home, giving users a reliable escape hatch from a failed view.
+- App route declarations now derive paths from shared route metadata, reducing future route/navigation drift.
+- Completed reminders remain visible and can be toggled back to pending, so progress tracking is reversible.
+- Focus Home support-mode radios now support vertical arrow keys as well as horizontal arrows.
+- Playwright now verifies reversible reminder completion and route budgets remain within trend limits.

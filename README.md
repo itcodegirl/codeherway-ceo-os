@@ -55,9 +55,11 @@ This project is strongest when presented as a local-first productivity system wi
 
 - Direct Netlify routes are protected with an SPA fallback and E2E direct-route refresh tests.
 - Route labels, navigation, and metadata come from one route definition source to reduce product drift.
+- App routing now derives route paths from the same route metadata used by navigation and page descriptions.
+- Route error recovery returns users directly to Focus Home instead of relying on fragile browser history.
 - Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
 - Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
-- Reminder completion is timestamped and summarized so Focus Home shows real execution progress instead of only open tasks.
+- Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
 - Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
 - System Pulse and Chief telemetry refreshes ignore stale async results, reducing noisy state updates during Strict Mode, fast navigation, and reviewer reloads.
 - Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
@@ -410,6 +412,12 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `bbbf75b` - fix: keep dashboard next moves current
   - `d504d74` - fix: improve focus mode keyboard navigation
   - `e340d4b` - test: cover focus home execution flow
+- Recovery and reminder hardening cycle (April 30, 2026):
+  - `dd8d31d` - fix: make error recovery return home
+  - `0128dba` - refactor: derive app routes from route metadata
+  - `4ba77bc` - fix: keep completed reminders recoverable
+  - `f3a7a60` - fix: polish recovery and focus accessibility
+  - `7a8865e` - test: cover reversible reminder completion
 
 ## Author
 
