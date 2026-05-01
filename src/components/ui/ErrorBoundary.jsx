@@ -12,6 +12,15 @@ class ErrorBoundary extends Component {
     return { hasError: true };
   }
 
+  componentDidUpdate(previousProps) {
+    if (
+      this.state.hasError
+      && previousProps.resetKey !== this.props.resetKey
+    ) {
+      this.setState({ hasError: false });
+    }
+  }
+
   componentDidCatch(error, info) {
     emitAppErrorTelemetry(error, info, {
       boundary: this.props.name || 'ErrorBoundary',
@@ -21,6 +30,15 @@ class ErrorBoundary extends Component {
       console.error('App ErrorBoundary caught:', error, info);
     }
   }
+
+  handleReturnHome = () => {
+    if (typeof this.props.onReturnHome === 'function') {
+      this.props.onReturnHome();
+      return;
+    }
+
+    window.location.assign('/');
+  };
 
   render() {
     if (this.state.hasError) {
@@ -40,7 +58,7 @@ class ErrorBoundary extends Component {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => this.props.onReturnHome?.()}
+              onClick={this.handleReturnHome}
               ariaLabel="Return to Focus Home"
               icon={{ name: 'back', size: 14 }}
             >

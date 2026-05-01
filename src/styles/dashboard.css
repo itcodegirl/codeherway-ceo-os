@@ -19,6 +19,13 @@
 	gap: 0.55rem;
 }
 
+.focus-mode__chips .focus-chip {
+	min-height: 2rem;
+	max-width: 100%;
+	justify-content: center;
+	text-align: center;
+}
+
 .focus-home__grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -81,6 +88,7 @@
 
 .focus-home__next-move p {
 	margin: 0;
+	overflow-wrap: anywhere;
 }
 
 .focus-list {
@@ -137,6 +145,7 @@
 .focus-reminder-form {
 	display: flex;
 	gap: 0.45rem;
+	align-items: flex-start;
 }
 
 .focus-reminder-form input {
@@ -158,6 +167,10 @@
 	font-size: 0.84rem;
 }
 
+.focus-reminder-helper {
+	margin: -0.15rem 0 0;
+}
+
 .focus-reminder-list__item {
 	display: flex;
 	align-items: center;
@@ -174,10 +187,13 @@
 	align-items: center;
 	gap: 0.55rem;
 	min-width: 0;
+	flex: 1 1 auto;
 }
 
 .focus-reminder-list__item label span {
 	line-height: 1.35;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .focus-reminder-list__item--empty {
@@ -195,6 +211,7 @@
 	color: var(--text-muted);
 	text-decoration: underline;
 	cursor: pointer;
+	flex-shrink: 0;
 }
 
 .focus-reminder-list__delete:hover {
@@ -236,5 +253,9 @@
 	.focus-reminder-list__item {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+
+	.focus-mode__chips .focus-chip {
+		flex: 1 1 9rem;
 	}
 }

@@ -14,6 +14,8 @@ Current screenshot set:
 - `screenshots/chief-of-staff-structured-output.png`
 - `screenshots/settings-workspace-profile.png`
 
+Refresh note: after the May 1, 2026 responsive trust-cue and compact navigation passes, the next screenshot update should show Focus Home with the source-status pill, System Pulse next move, calm next-action panel, and mobile navigation behavior verified at 390px width.
+
 Current demo set:
 
 - `demo/ceo-os-workflow-walkthrough.webm`

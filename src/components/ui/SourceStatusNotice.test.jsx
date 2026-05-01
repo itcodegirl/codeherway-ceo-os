@@ -8,6 +8,7 @@ describe('SourceStatusNotice', () => {
     render(<SourceStatusNotice />);
 
     expect(screen.getByText(SOURCE_NOTICE_SAMPLE_DATA)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(SOURCE_NOTICE_SAMPLE_DATA);
   });
 
   it('renders supabase source copy when source is supabase', () => {
@@ -19,6 +20,7 @@ describe('SourceStatusNotice', () => {
     );
 
     expect(screen.getByText('Weekly data source: Supabase.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Weekly data source: Supabase.');
   });
 
   it('shows alert and retry action when loadError is present', () => {
@@ -33,10 +35,25 @@ describe('SourceStatusNotice', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load weekly brief right now.');
+    expect(screen.getByText('Showing the latest local workspace snapshot while we retry.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry loading weekly dashboard data' }));
 
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a supabase recovery cue when live sync is unavailable', () => {
+    render(
+      <SourceStatusNotice
+        source="supabase"
+        loadError="Unable to refresh live workspace data."
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to refresh live workspace data.');
+    expect(
+      screen.getByText('Showing the latest workspace snapshot available while live sync reconnects.'),
+    ).toBeInTheDocument();
   });
 
   it('hides retry action when no retry callback is provided', () => {

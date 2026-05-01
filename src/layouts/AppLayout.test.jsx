@@ -123,4 +123,37 @@ describe('src/layouts/AppLayout', () => {
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('can retry a transient focus-home crash when return-home keeps the same path', async () => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    let shouldThrow = true;
+
+    function TransientFocusHome() {
+      if (shouldThrow) {
+        throw new Error('Focus Home failed once');
+      }
+
+      return <div>Recovered Focus Home</div>;
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<TransientFocusHome />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong in this view.');
+
+    shouldThrow = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Return to Focus Home' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Recovered Focus Home')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

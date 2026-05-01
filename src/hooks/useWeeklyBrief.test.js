@@ -29,7 +29,13 @@ vi.mock('../lib/weeklyRepository', () => ({
   updateWeeklyItem: vi.fn(),
 }));
 
-import { createWeeklyItem, deleteWeeklyItem, getCurrentWeekStart, getWeeklyBriefByWeek } from '../lib/weeklyRepository';
+import {
+  createWeeklyItem,
+  deleteWeeklyItem,
+  getCurrentWeekStart,
+  getWeeklyBriefByWeek,
+  saveWeeklyBriefReviewNotes,
+} from '../lib/weeklyRepository';
 
 describe('useWeeklyBrief', () => {
   let originalRequestAnimationFrame;
@@ -170,5 +176,201 @@ describe('useWeeklyBrief', () => {
     expect(result.current.reviewNotes).toBe('Newest weekly brief');
     expect(result.current.priorities).toEqual([{ id: 'priority-2', text: 'Ship roadmap', status: 'Planned' }]);
     expect(result.current.source).toBe('supabase');
+  });
+
+  it('silently refreshes the current week on focus, visibility, storage, and weekly update events', async () => {
+    getWeeklyBriefByWeek.mockResolvedValue({
+      reviewNotes: 'Initial weekly brief',
+      priorities: [{ id: 'priority-1', text: 'Initial plan', status: 'Planned' }],
+      wins: [],
+      blockers: [],
+      source: 'local',
+    });
+
+    const addWindowListener = vi.spyOn(window, 'addEventListener');
+    const addDocumentListener = vi.spyOn(document, 'addEventListener');
+    const dateNowSpy = vi.spyOn(Date, 'now');
+    const capturedWindowHandlers = {};
+    const capturedDocumentHandlers = {};
+    let nowMs = 1_000;
+
+    dateNowSpy.mockImplementation(() => nowMs);
+
+    addWindowListener.mockImplementation((type, listener) => {
+      capturedWindowHandlers[type] = listener;
+      return undefined;
+    });
+    addDocumentListener.mockImplementation((type, listener) => {
+      capturedDocumentHandlers[type] = listener;
+      return undefined;
+    });
+
+    try {
+      const { result } = renderHook(() => useWeeklyBrief());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(typeof capturedWindowHandlers.focus).toBe('function');
+      expect(typeof capturedWindowHandlers.storage).toBe('function');
+      expect(typeof capturedWindowHandlers['ceo-os:weekly-brief-updated']).toBe('function');
+      expect(typeof capturedDocumentHandlers.visibilitychange).toBe('function');
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Refreshed weekly brief',
+        priorities: [{ id: 'priority-2', text: 'Refreshed plan', status: 'In Progress' }],
+        wins: [],
+        blockers: [],
+        source: 'supabase',
+      });
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers.focus();
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Refreshed weekly brief');
+      });
+      expect(result.current.source).toBe('supabase');
+      expect(result.current.isLoading).toBe(false);
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Storage refresh',
+        priorities: [{ id: 'priority-3', text: 'Storage plan', status: 'Blocked' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers.storage({ key: 'ceo-os-weekly-briefs' });
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Storage refresh');
+      });
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Visibility refresh',
+        priorities: [{ id: 'priority-4', text: 'Visibility plan', status: 'Planned' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+
+      act(() => {
+        nowMs += 500;
+        Object.defineProperty(document, 'visibilityState', {
+          configurable: true,
+          value: 'visible',
+        });
+        capturedDocumentHandlers.visibilitychange();
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Visibility refresh');
+      });
+
+      getWeeklyBriefByWeek.mockResolvedValue({
+        reviewNotes: 'Event refresh',
+        priorities: [{ id: 'priority-5', text: 'Event plan', status: 'Planned' }],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+
+      act(() => {
+        nowMs += 500;
+        capturedWindowHandlers['ceo-os:weekly-brief-updated']({ detail: { weekStart: currentWeekStart } });
+      });
+
+      await waitFor(() => {
+        expect(result.current.reviewNotes).toBe('Event refresh');
+      });
+    } finally {
+      dateNowSpy.mockRestore();
+      addWindowListener.mockRestore();
+      addDocumentListener.mockRestore();
+    }
+  });
+
+  it('recovers review notes from persisted state when a save fails', async () => {
+    getWeeklyBriefByWeek
+      .mockResolvedValueOnce({
+        reviewNotes: 'Persisted notes',
+        priorities: [],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        reviewNotes: 'Persisted notes',
+        priorities: [],
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+    saveWeeklyBriefReviewNotes.mockRejectedValueOnce(new Error('save failed'));
+
+    const { result } = renderHook(() => useWeeklyBrief());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.reviewNotes).toBe('Persisted notes');
+    });
+
+    act(() => {
+      result.current.setReviewNotes('Unsaved notes');
+    });
+
+    expect(result.current.reviewNotes).toBe('Unsaved notes');
+
+    await waitFor(() => {
+      expect(result.current.reviewNotes).toBe('Persisted notes');
+    });
+
+    expect(result.current.loadError).toBe('');
+  });
+
+  it('recovers priorities from persisted state when collection persistence fails', async () => {
+    const persistedPriorities = [...defaultPriorities];
+    getWeeklyBriefByWeek
+      .mockResolvedValueOnce({
+        reviewNotes: DEFAULT_REVIEW_NOTES,
+        priorities: persistedPriorities,
+        wins: [],
+        blockers: [],
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        reviewNotes: DEFAULT_REVIEW_NOTES,
+        priorities: persistedPriorities,
+        wins: [],
+        blockers: [],
+        source: 'local',
+      });
+    deleteWeeklyItem.mockRejectedValueOnce(new Error('delete failed'));
+
+    const { result } = renderHook(() => useWeeklyBrief());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.priorities).toEqual(persistedPriorities);
+    });
+
+    act(() => {
+      result.current.setPriorities([]);
+    });
+
+    expect(result.current.priorities).toEqual([]);
+
+    await waitFor(() => {
+      expect(result.current.priorities).toEqual(persistedPriorities);
+    });
+
+    expect(result.current.loadError).toBe('');
   });
 });

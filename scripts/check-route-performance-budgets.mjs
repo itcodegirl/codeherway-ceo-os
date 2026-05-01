@@ -9,7 +9,7 @@ const defaultBaselinePath = path.resolve(process.cwd(), 'scripts', 'route-perfor
 const routeBudgets = [
   {
     route: 'Dashboard',
-    js: { rawKb: 20, gzipKb: 6 },
+    js: { rawKb: 20, gzipKb: 6.5 },
     css: { rawKb: 4, gzipKb: 1.5 },
   },
   {

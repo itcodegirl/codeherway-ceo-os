@@ -7,6 +7,21 @@ import { beforeEach, describe, expect, it, afterEach, vi } from 'vitest';
 import Topbar from './Topbar';
 import { formatIsoDate } from '../../lib/utils';
 
+const hookState = vi.hoisted(() => ({
+  teamName: 'Jenna',
+  timezone: 'UTC',
+}));
+
+vi.mock('../../hooks/useWorkspaceSettings', () => ({
+  useWorkspaceSettings: () => ({
+    teamName: hookState.teamName,
+    timezone: hookState.timezone,
+    source: 'local',
+    settings: {},
+    refreshWorkspaceSettings: vi.fn(),
+  }),
+}));
+
 describe('src/components/ui/Topbar', () => {
   const dateFormatter = new Intl.DateTimeFormat(undefined, {
     weekday: 'long',
@@ -17,7 +32,8 @@ describe('src/components/ui/Topbar', () => {
   });
 
   beforeEach(() => {
-    window.localStorage.clear();
+    hookState.teamName = 'Jenna';
+    hookState.timezone = 'UTC';
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-04-20T23:58:00.000Z'));
   });
@@ -27,14 +43,6 @@ describe('src/components/ui/Topbar', () => {
   });
 
   it('renders persistent team name, route title, and locale/date metadata from settings', () => {
-    window.localStorage.setItem(
-      'ceo-os-settings',
-      JSON.stringify({
-        timezone: 'UTC',
-        teamName: 'Jenna',
-      }),
-    );
-
     render(<Topbar pageTitle="Chief of Staff" />);
 
     expect(screen.getByText('Team: Jenna')).toBeInTheDocument();
@@ -44,18 +52,13 @@ describe('src/components/ui/Topbar', () => {
   });
 
   it('updates displayed date when a minute interval crosses midnight', () => {
-    window.localStorage.setItem(
-      'ceo-os-settings',
-      JSON.stringify({
-        timezone: 'UTC',
-        teamName: 'Team Alpha',
-      }),
-    );
+    hookState.teamName = 'Team Alpha';
 
     render(<Topbar />);
 
     const timeElement = screen.getByRole('time');
 
+    expect(screen.getByText('Team: Team Alpha')).toBeInTheDocument();
     expect(timeElement).toHaveTextContent(dateFormatter.format(new Date('2026-04-20T23:58:00.000Z')));
 
     act(() => {
@@ -68,18 +71,13 @@ describe('src/components/ui/Topbar', () => {
 
   it('updates on the next minute boundary when close to midnight', () => {
     vi.setSystemTime(new Date('2026-04-20T23:59:45.000Z'));
-    window.localStorage.setItem(
-      'ceo-os-settings',
-      JSON.stringify({
-        timezone: 'UTC',
-        teamName: 'Team Alpha',
-      }),
-    );
+    hookState.teamName = 'Team Alpha';
 
     render(<Topbar />);
 
     const timeElement = screen.getByRole('time');
 
+    expect(screen.getByText('Team: Team Alpha')).toBeInTheDocument();
     expect(timeElement).toHaveTextContent(dateFormatter.format(new Date('2026-04-20T23:59:45.000Z')));
 
     act(() => {

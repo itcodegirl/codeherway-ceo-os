@@ -75,4 +75,35 @@ describe('usePersistentState', () => {
       expect(result.current[0]).toStrictEqual({ team: 'Founder' });
     });
   });
+
+  it('reloads state when the storage key changes without leaking the previous value', async () => {
+    window.localStorage.setItem('ceo-os-secondary-persistent-state', JSON.stringify('Secondary value'));
+
+    const { result, rerender } = renderHook(
+      ({ activeKey }) => usePersistentState(activeKey, ''),
+      {
+        initialProps: {
+          activeKey: storageKey,
+        },
+      },
+    );
+
+    act(() => {
+      result.current[1]('Primary value');
+    });
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem(storageKey)).toBe(JSON.stringify('Primary value'));
+    });
+
+    rerender({ activeKey: 'ceo-os-secondary-persistent-state' });
+
+    await waitFor(() => {
+      expect(result.current[0]).toBe('Secondary value');
+    });
+
+    expect(window.localStorage.getItem('ceo-os-secondary-persistent-state')).toBe(
+      JSON.stringify('Secondary value'),
+    );
+  });
 });

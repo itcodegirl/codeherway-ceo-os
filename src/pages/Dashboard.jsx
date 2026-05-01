@@ -7,159 +7,29 @@ import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboar
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
-import { CAPTURE_NOTES_UPDATED_EVENT, listCaptureNotes } from '../lib/captureRepository';
-import {
-  getJournalEntryByDate,
-  getTodayJournalDateKey,
-  JOURNAL_ENTRIES_UPDATED_EVENT,
-} from '../lib/journalRepository';
+import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import {
   createReminder,
   deleteReminder,
   getReminderProgress,
-  listReminders,
-  REMINDERS_UPDATED_EVENT,
   toggleReminder,
 } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
+import {
+  FOCUS_MODES,
+  buildMainFocus,
+  buildMomentumMessage,
+  buildNextMoveQueue,
+  buildQuickWin,
+  resolveFocusMode,
+} from '../lib/focusHomeLogic';
 import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
-const FOCUS_MODES = [
-  {
-    id: 'focused',
-    label: 'Focused',
-    support: 'You are in execution mode. Keep scope tiny and finish one concrete move.',
-  },
-  {
-    id: 'planning',
-    label: 'Planning',
-    support: 'Clarify one outcome, choose one next action, then start before perfect.',
-  },
-  {
-    id: 'reflection',
-    label: 'Reflection',
-    support: 'Look at what worked, what felt heavy, and adjust gently for tomorrow.',
-  },
-  {
-    id: 'overwhelmed',
-    label: 'Overwhelmed',
-    support: 'You are not behind. Shrink the task, breathe, and complete one two-minute step.',
-  },
-];
+const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
 
-function findMainFocus(priorities, opportunities, contentRows) {
-  const inProgressPriority = priorities.find((item) => item?.status === 'In Progress' && item?.title);
-  if (inProgressPriority) {
-    return {
-      title: inProgressPriority.title,
-      context: 'This is already in motion. Protect your attention until one visible step is done.',
-    };
-  }
-
-  const plannedPriority = priorities.find((item) => item?.title);
-  if (plannedPriority) {
-    return {
-      title: plannedPriority.title,
-      context: 'This is your highest leverage item right now. Start with the smallest visible action.',
-    };
-  }
-
-  const highPriorityOpportunity = opportunities.find((item) => item?.priority === 'High' && item?.name);
-  if (highPriorityOpportunity) {
-    return {
-      title: `${highPriorityOpportunity.name} (${highPriorityOpportunity.company || 'Opportunity'})`,
-      context: 'This opportunity can move quickly with one clear follow-up.',
-    };
-  }
-
-  const draftContent = contentRows.find((item) => item?.title);
-  if (draftContent) {
-    return {
-      title: draftContent.title,
-      context: 'Shipping this content keeps your founder signal active.',
-    };
-  }
-
-  return {
-    title: 'Create one calming priority for today',
-    context: 'Start with a 10-minute planning pass and commit to one realistic next move.',
-  };
-}
-
-function buildNextMoveQueue({ priorities, blockers, opportunities, contentRows }) {
-  const moves = [];
-  const blockedPriority = priorities.find((item) => item?.status === 'Blocked' && item?.title);
-  const activeBlocker = blockers.find((item) => item?.text);
-  const activePriority = priorities.find((item) => item?.status === 'In Progress' && item?.title);
-  const waitingOpportunity = opportunities.find((item) => item?.stage === 'Awaiting Reply' && item?.name);
-  const draftingContent = contentRows.find((item) => item?.status === 'Drafting' && item?.title);
-
-  if (blockedPriority) {
-    moves.push(`Send one unblock message for "${blockedPriority.title}".`);
-  }
-  if (activeBlocker) {
-    moves.push(`Define one owner and one deadline for: "${activeBlocker.text}".`);
-  }
-  if (activePriority) {
-    moves.push(`Spend 20 focused minutes on "${activePriority.title}".`);
-  }
-  if (waitingOpportunity) {
-    moves.push(`Draft a concise follow-up for "${waitingOpportunity.name}".`);
-  }
-  if (draftingContent) {
-    moves.push(`Write the opening paragraph for "${draftingContent.title}".`);
-  }
-  moves.push('Set a 15-minute timer and complete one tiny action without switching tabs.');
-
-  return Array.from(new Set(moves));
-}
-
-function buildQuickWin(wins, opportunities, contentRows) {
-  const firstWin = wins.find((item) => item?.text);
-  if (firstWin) {
-    return `Celebrate and build on this: ${firstWin.text}`;
-  }
-
-  const inProgressOpportunity = opportunities.find((item) => item?.stage === 'In Progress' && item?.name);
-  if (inProgressOpportunity) {
-    return `Quick win waiting: send an update for "${inProgressOpportunity.name}".`;
-  }
-
-  const scheduledContent = contentRows.find((item) => item?.status === 'Scheduled' && item?.title);
-  if (scheduledContent) {
-    return `Quick win waiting: repurpose "${scheduledContent.title}" for a second channel.`;
-  }
-
-  return 'Quick win waiting: close one tiny loop before opening a new one.';
-}
-
-function buildMomentumMessage({
-  inProgressCount,
-  blockerCount,
-  winsCount,
-  completedReminderCount,
-  pendingReminderCount,
-}) {
-  const score = Math.max(0, Math.min(
-    100,
-    45
-      + (inProgressCount * 14)
-      + (winsCount * 10)
-      + (completedReminderCount * 6)
-      - (pendingReminderCount * 4)
-      - (blockerCount * 12),
-  ));
-  if (completedReminderCount > 0 && score >= 60) {
-    return { score, text: 'Momentum is visible. Completed reminders are turning intent into proof.' };
-  }
-  if (score >= 75) {
-    return { score, text: 'Momentum is strong. Protect this lane and finish one more step.' };
-  }
-  if (score >= 55) {
-    return { score, text: 'Momentum is building. Keep actions tiny and visibly complete.' };
-  }
-  return { score, text: 'Momentum is fragile. Use reset mode and complete one two-minute action.' };
+function isReminderNotFoundError(error) {
+  return error instanceof Error && error.message === 'Reminder not found';
 }
 
 function Dashboard() {
@@ -171,11 +41,12 @@ function Dashboard() {
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
-  const [captureNotes, setCaptureNotes] = useState(() => listCaptureNotes());
-  const [journalEntry, setJournalEntry] = useState(() => getJournalEntryByDate(getTodayJournalDateKey()));
-  const [reminders, setReminders] = useState(() => listReminders());
+  const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
   const [reminderDraft, setReminderDraft] = useState('');
+  const [isAddingReminder, setIsAddingReminder] = useState(false);
   const nextMoveCursorRef = useRef(0);
+  const isAddingReminderRef = useRef(false);
+  const addReminderReleaseTimerRef = useRef(null);
 
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh your focus data right now.');
@@ -202,31 +73,9 @@ function Dashboard() {
     refreshWeeklyBrief,
   } = useWeeklyBrief();
 
-  useEffect(() => {
-    const syncCaptureNotes = () => {
-      setCaptureNotes(listCaptureNotes());
-    };
-    const syncJournalEntry = () => {
-      setJournalEntry(getJournalEntryByDate(getTodayJournalDateKey()));
-    };
-    const syncReminders = () => {
-      setReminders(listReminders());
-    };
-
-    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, syncCaptureNotes);
-    window.addEventListener(JOURNAL_ENTRIES_UPDATED_EVENT, syncJournalEntry);
-    window.addEventListener(REMINDERS_UPDATED_EVENT, syncReminders);
-
-    return () => {
-      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, syncCaptureNotes);
-      window.removeEventListener(JOURNAL_ENTRIES_UPDATED_EVENT, syncJournalEntry);
-      window.removeEventListener(REMINDERS_UPDATED_EVENT, syncReminders);
-    };
-  }, []);
-
   const supportCopy = useMemo(() => {
-    const activeMode = FOCUS_MODES.find((mode) => mode.id === focusMode);
-    return activeMode?.support || FOCUS_MODES[1].support;
+    const activeMode = resolveFocusMode(focusMode);
+    return activeMode.support;
   }, [focusMode]);
 
   const nextMoveQueue = useMemo(() => buildNextMoveQueue({
@@ -234,15 +83,19 @@ function Dashboard() {
     blockers: weeklyBlockers,
     opportunities: opportunityItems,
     contentRows,
+    reminders,
+    journalEntry,
   }), [
     contentRows,
+    journalEntry,
     opportunityItems,
+    reminders,
     weeklyBlockers,
     weeklyPriorities,
   ]);
 
   const mainFocus = useMemo(
-    () => findMainFocus(weeklyPriorities, opportunityItems, contentRows),
+    () => buildMainFocus(weeklyPriorities, opportunityItems, contentRows),
     [contentRows, opportunityItems, weeklyPriorities],
   );
 
@@ -308,6 +161,24 @@ function Dashboard() {
   const activeNextMove = nextMove && nextMoveQueue.includes(nextMove) ? nextMove : '';
   const displayedNextMove = activeNextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
 
+  useEffect(() => () => {
+    if (addReminderReleaseTimerRef.current !== null) {
+      window.clearTimeout(addReminderReleaseTimerRef.current);
+    }
+  }, []);
+
+  const scheduleReminderFormRelease = useCallback(() => {
+    if (addReminderReleaseTimerRef.current !== null) {
+      window.clearTimeout(addReminderReleaseTimerRef.current);
+    }
+
+    addReminderReleaseTimerRef.current = window.setTimeout(() => {
+      isAddingReminderRef.current = false;
+      setIsAddingReminder(false);
+      addReminderReleaseTimerRef.current = null;
+    }, REMINDER_ACTION_SETTLE_DELAY_MS);
+  }, []);
+
   const handleTellMeWhatToDoNext = () => {
     const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
       || 'Take one deep breath, choose one action, and complete it before context-switching.';
@@ -325,33 +196,54 @@ function Dashboard() {
 
   const handleAddReminder = (event) => {
     event.preventDefault();
+    if (isAddingReminderRef.current) {
+      return;
+    }
+
     const nextText = reminderDraft.trim();
     if (!nextText) {
       showToast('Add reminder text before saving.');
       return;
     }
 
+    isAddingReminderRef.current = true;
+    setIsAddingReminder(true);
+
     try {
       createReminder({ text: nextText });
       setReminderDraft('');
     } catch {
       showToast('Unable to save reminder right now.');
+    } finally {
+      scheduleReminderFormRelease();
     }
   };
 
   const handleToggleReminder = (id, isDone) => {
+    if (!reminders.some((item) => item.id === id)) {
+      return;
+    }
+
     try {
       toggleReminder(id, isDone);
-    } catch {
-      showToast('Unable to update reminder right now.');
+    } catch (error) {
+      if (!isReminderNotFoundError(error)) {
+        showToast('Unable to update reminder right now.');
+      }
     }
   };
 
   const handleDeleteReminder = (id) => {
+    if (!reminders.some((item) => item.id === id)) {
+      return;
+    }
+
     try {
       deleteReminder(id);
-    } catch {
-      showToast('Unable to delete reminder right now.');
+    } catch (error) {
+      if (!isReminderNotFoundError(error)) {
+        showToast('Unable to delete reminder right now.');
+      }
     }
   };
 
@@ -392,12 +284,13 @@ function Dashboard() {
     nextButton?.focus?.();
   };
 
-  const modeClassName = FOCUS_MODES.some((mode) => mode.id === focusMode)
-    ? focusMode
-    : 'planning';
+  const modeClassName = resolveFocusMode(focusMode).id;
 
   return (
-    <section className={`dashboard-page focus-home-page focus-home-page--${modeClassName}`}>
+    <section
+      className={`dashboard-page focus-home-page focus-home-page--${modeClassName}`}
+      aria-busy={isFocusDataLoading}
+    >
       <PageHeader
         title="Focus Home"
         description="Today / Focus Command Center for clear execution, supportive resets, and daily momentum."
@@ -454,7 +347,11 @@ function Dashboard() {
             <p>{displayedNextMove}</p>
           </div>
 
-          {isFocusDataLoading ? <p className="helper-text">Loading your focus context...</p> : null}
+          {isFocusDataLoading ? (
+            <p className="helper-text" role="status" aria-live="polite">
+              Loading your focus context...
+            </p>
+          ) : null}
           {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
         </article>
 
@@ -470,7 +367,11 @@ function Dashboard() {
           </ul>
         </article>
 
-        <article className="focus-panel" aria-label="Reminders panel">
+        <article
+          className="focus-panel"
+          aria-label="Reminders panel"
+          aria-busy={isAddingReminder ? 'true' : undefined}
+        >
           <div className="focus-panel__header">
             <h2>Reminders</h2>
             <span className="signal-node" aria-hidden="true" />
@@ -485,13 +386,24 @@ function Dashboard() {
               value={reminderDraft}
               onChange={(event) => setReminderDraft(event.target.value)}
               placeholder="Add a quick reminder"
+              aria-describedby="focus-reminder-helper focus-reminder-progress"
+              disabled={isAddingReminder}
             />
-            <Button type="submit" size="small" icon={{ name: 'add' }}>
-              Add
+            <Button
+              type="submit"
+              size="small"
+              icon={{ name: 'add' }}
+              disabled={isAddingReminder}
+              ariaLabel={isAddingReminder ? 'Adding reminder' : undefined}
+            >
+              {isAddingReminder ? 'Adding...' : 'Add'}
             </Button>
           </form>
+          <p id="focus-reminder-helper" className="helper-text focus-reminder-helper">
+            Keep it small enough to finish today.
+          </p>
 
-          <p className="focus-reminder-progress" aria-live="polite">
+          <p id="focus-reminder-progress" className="focus-reminder-progress" aria-live="polite">
             {reminderProgress.total > 0
               ? `${reminderProgress.completed} of ${reminderProgress.total} reminders complete (${reminderProgress.completionRate}%)`
               : 'No reminder progress yet.'}

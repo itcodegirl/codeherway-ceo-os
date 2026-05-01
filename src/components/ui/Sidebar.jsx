@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
-import { usePersistentState } from '../../hooks/usePersistentState';
+import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { NAV_ITEMS } from '../../lib/routes';
-import { DEFAULT_SETTINGS, resolveTeamName } from '../../lib/settings';
 
 function subscribeToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery?.addEventListener === 'function') {
@@ -21,9 +20,10 @@ function subscribeToMediaQuery(mediaQuery, listener) {
 
 function Sidebar() {
   const location = useLocation();
-  const [settings] = usePersistentState('ceo-os-settings', DEFAULT_SETTINGS);
-  const [mobileMenuOpenPath, setMobileMenuOpenPath] = useState('');
+  const { teamName } = useWorkspaceSettings();
+  const [mobileMenuOpenKey, setMobileMenuOpenKey] = useState('');
   const menuToggleRef = useRef(null);
+  const navRef = useRef(null);
   const [isCompactViewport, setIsCompactViewport] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return false;
@@ -31,8 +31,6 @@ function Sidebar() {
 
     return window.matchMedia('(max-width: 860px)').matches;
   });
-  const teamName = resolveTeamName(settings?.teamName);
-
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return undefined;
@@ -44,7 +42,7 @@ function Sidebar() {
       const isCompact = event.matches;
       setIsCompactViewport(isCompact);
       if (!isCompact) {
-        setMobileMenuOpenPath('');
+        setMobileMenuOpenKey('');
       }
     };
 
@@ -52,7 +50,7 @@ function Sidebar() {
   }, []);
 
   const isMobileMenuOpen = isCompactViewport
-    ? mobileMenuOpenPath === location.pathname
+    ? mobileMenuOpenKey === location.key
     : true;
 
   useEffect(() => {
@@ -66,7 +64,7 @@ function Sidebar() {
       }
 
       event.preventDefault();
-      setMobileMenuOpenPath('');
+      setMobileMenuOpenKey('');
       menuToggleRef.current?.focus?.();
     };
 
@@ -76,6 +74,18 @@ function Sidebar() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isCompactViewport, isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!isCompactViewport || !isMobileMenuOpen) {
+      return;
+    }
+
+    const currentLink = navRef.current?.querySelector?.('a[aria-current="page"]');
+    const fallbackLink = navRef.current?.querySelector?.('a');
+    const nextFocusTarget = currentLink || fallbackLink;
+
+    nextFocusTarget?.focus?.();
+  }, [isCompactViewport, isMobileMenuOpen, location.pathname]);
 
   const navId = 'primary-navigation';
 
@@ -95,8 +105,8 @@ function Sidebar() {
           aria-controls={navId}
           aria-expanded={isMobileMenuOpen}
           onClick={() => {
-            setMobileMenuOpenPath((currentPath) => (
-              currentPath === location.pathname ? '' : location.pathname
+            setMobileMenuOpenKey((currentKey) => (
+              currentKey === location.key ? '' : location.key
             ));
           }}
         >
@@ -107,6 +117,7 @@ function Sidebar() {
       </div>
 
       <nav
+        ref={navRef}
         id={navId}
         className={isMobileMenuOpen ? 'sidebar__nav sidebar__nav--open' : 'sidebar__nav'}
         hidden={isCompactViewport && !isMobileMenuOpen}
@@ -122,7 +133,7 @@ function Sidebar() {
                 className={({ isActive }) =>
                   isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
                 }
-                onClick={() => setMobileMenuOpenPath('')}
+                onClick={() => setMobileMenuOpenKey('')}
               >
                 <span className="sidebar__link-icon" aria-hidden="true">
                   <Icon name={item.icon} size={16} />

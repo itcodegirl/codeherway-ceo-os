@@ -15,6 +15,8 @@
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   cursor: pointer;
   white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .ui-icon {
@@ -258,6 +260,46 @@
 .settings-saved-indicator {
   display: inline;
   color: var(--success);
+}
+
+.source-status {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  max-width: min(100%, 760px);
+  margin: 0;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-card) 88%, var(--surface-overlay-subtle) 12%);
+  color: var(--text-soft-strong);
+  font-size: var(--fs-helper);
+  line-height: 1.35;
+}
+
+.source-status__dot {
+  width: 0.52rem;
+  height: 0.52rem;
+  border-radius: 999px;
+  margin-top: 0.27rem;
+  flex: 0 0 auto;
+  background: var(--warning-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning-soft) 18%, transparent 82%);
+}
+
+.source-status--supabase .source-status__dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent 82%);
+}
+
+.source-status__recovery-group {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.source-status__recovery {
+  margin: 0;
+  color: var(--text-soft-strong);
 }
 
 button:focus-visible,
@@ -550,12 +592,29 @@ textarea:focus-visible,
     width: 100%;
   }
 
+  .source-status {
+    width: 100%;
+    border-radius: 0.85rem;
+  }
+
   .modal-overlay {
     align-items: flex-start;
   }
 
   .modal-panel {
     max-height: calc(100vh - 2rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .action-button {
+    height: auto;
+    min-height: var(--action-height);
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
   }
 }
 

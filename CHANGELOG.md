@@ -2,6 +2,37 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-01 - State recovery, shell sync, and QA hardening
+
+- `3d03dec` - Reset transient Focus Home route errors when returning home keeps the same path.
+- `008b56b` - Shared focus signal normalization helpers across suggestions and next-move logic.
+- `d8bc496` - Hardened persisted state key changes and malformed CRUD load responses.
+- `cec77dd` - Kept fallback record IDs unique when `crypto.randomUUID` is unavailable.
+- `49e88bd` - Refreshed Focus Home and Weekly Brief data after relevant storage, focus, and visibility changes.
+- `82ed2f2` / `2571fb9` - Unified shell settings consumption through a shared workspace-settings hook.
+- `5a21229` - Recovered Weekly Brief state after save failures so optimistic edits do not linger as truth.
+- `4b4e528` - Clarified source-status recovery copy for cached workspace snapshots.
+- `77963de` - Guarded Dashboard reminder submission timing and stale reminder interactions.
+- `a236504` - Improved Capture feedback semantics and compact navigation focus behavior.
+- `c30dc06` - Added shell settings sync and reminder timing coverage.
+- `52bd2a1` - Added Capture workspace E2E coverage and refreshed route performance budgets/baseline.
+
+## 2026-05-01 - Compact navigation and Focus Home signal hardening
+
+- `4484b5b` - Stabilized compact sidebar state across programmatic route changes and history returns.
+- `99944c3` - Centralized Focus Home capture, journal, and reminder signals in a dedicated hook.
+- `4736a4d` - Prioritized the oldest pending reminder in next-move guidance and cleaned action-copy punctuation.
+- `2f7f94f` - Added accessible loading and reminder helper semantics to Focus Home with responsive chip/list polish.
+- `e14d497` - Added Playwright coverage for compact mobile navigation route/history behavior.
+
+## 2026-05-01 - Calm recovery and decision-support hardening
+
+- `19ebcb2` - Added app-shell crash recovery around the full router/Suspense shell.
+- `3b9266f` - Extracted Focus Home decision rules into tested product logic.
+- `3786ca1` - Ranked blocked priorities, pending reminders, and journal heaviness in the next-move queue.
+- `2be9bd6` - Improved responsive wrapping plus accessible source-status and System Pulse trust cues.
+- `bfb5167` - Added QA coverage for app recovery, source-status semantics, and pulse labels.
+
 ## 2026-05-01 - CRUD stale-record integrity hardening
 
 - `0a6a97c` - Rejected stale Opportunity update/delete attempts without emitting fake update events.

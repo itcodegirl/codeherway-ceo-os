@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
 function createMatchMediaMock({
@@ -48,6 +48,22 @@ function createMatchMediaMock({
   };
 }
 
+function SidebarRouteHarness() {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Sidebar />
+      <button type="button" onClick={() => navigate('/capture')}>
+        Programmatic route change
+      </button>
+      <button type="button" onClick={() => navigate('/')}>
+        Return to focus
+      </button>
+    </>
+  );
+}
+
 describe('src/components/ui/Sidebar', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -82,6 +98,21 @@ describe('src/components/ui/Sidebar', () => {
     expect(navElement).toHaveAttribute('hidden');
   });
 
+  it('moves focus to the active link when the compact menu opens', () => {
+    const { matchMedia } = createMatchMediaMock({ matches: true });
+    window.matchMedia = matchMedia;
+
+    render(
+      <MemoryRouter initialEntries={['/capture']}>
+        <Sidebar />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
+
+    expect(screen.getByRole('link', { name: 'Capture', exact: true })).toHaveFocus();
+  });
+
   it('falls back to legacy media query listeners when addEventListener is unavailable', () => {
     const { matchMedia, addListener, removeListener } = createMatchMediaMock({
       useLegacyListeners: true,
@@ -99,5 +130,26 @@ describe('src/components/ui/Sidebar', () => {
     unmount();
 
     expect(removeListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('collapses compact navigation when the route changes programmatically', () => {
+    const { matchMedia } = createMatchMediaMock({ matches: true });
+    window.matchMedia = matchMedia;
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SidebarRouteHarness />
+      </MemoryRouter>,
+    );
+
+    const navElement = document.getElementById('primary-navigation');
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
+    expect(navElement).not.toHaveAttribute('hidden');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Programmatic route change' }));
+    expect(navElement).toHaveAttribute('hidden');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Return to focus' }));
+    expect(navElement).toHaveAttribute('hidden');
   });
 });

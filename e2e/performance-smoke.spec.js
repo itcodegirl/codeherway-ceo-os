@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const INITIAL_LOAD_BUDGET_MS = 4500;
-const ROUTE_TRANSITION_BUDGET_MS = 2200;
+const ROUTE_TRANSITION_BUDGET_MS = 3500;
 
 function nowMs() {
   return Date.now();

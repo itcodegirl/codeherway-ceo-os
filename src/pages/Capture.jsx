@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import {
@@ -40,6 +40,7 @@ function Capture() {
   const [draftText, setDraftText] = useState('');
   const [draftCategory, setDraftCategory] = useState(CAPTURE_CATEGORY_OPTIONS[0]);
   const [errorMessage, setErrorMessage] = useState('');
+  const composerTextareaRef = useRef(null);
 
   useEffect(() => {
     const handleCaptureUpdate = () => {
@@ -62,12 +63,35 @@ function Capture() {
     healthyText: 'Auto-saved locally and ready whenever your brain moves fast.',
     pausedText: 'Autosave is paused until sticky notes save successfully again.',
   });
+  const captureComposerDescriptionId = [
+    'capture-composer-helper',
+    errorMessage ? 'capture-composer-error' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const clearComposerError = () => {
+    if (errorMessage) {
+      setErrorMessage('');
+    }
+  };
+
+  const handleDraftTextChange = (event) => {
+    clearComposerError();
+    setDraftText(event.target.value);
+  };
+
+  const handleDraftCategoryChange = (event) => {
+    clearComposerError();
+    setDraftCategory(event.target.value);
+  };
 
   const createNote = (event) => {
     event.preventDefault();
     const text = draftText.trim();
     if (!text) {
       setErrorMessage('Add a quick note before saving.');
+      composerTextareaRef.current?.focus?.();
       return;
     }
 
@@ -81,6 +105,7 @@ function Capture() {
       setErrorMessage('');
     } catch {
       setErrorMessage('Unable to save this note right now.');
+      composerTextareaRef.current?.focus?.();
     }
   };
 
@@ -116,19 +141,25 @@ function Capture() {
         </p>
         <form onSubmit={createNote} className="capture-composer__form">
           <label htmlFor="capture-note-text" className="helper-text">Note</label>
+          <p id="capture-composer-helper" className="sr-only">
+            Capture one thought, task, or idea at a time.
+          </p>
           <textarea
+            ref={composerTextareaRef}
             id="capture-note-text"
             value={draftText}
-            onChange={(event) => setDraftText(event.target.value)}
+            onChange={handleDraftTextChange}
             rows={3}
             placeholder="What do you want to remember?"
+            aria-describedby={captureComposerDescriptionId}
+            aria-invalid={errorMessage ? 'true' : undefined}
           />
 
           <label htmlFor="capture-note-category" className="helper-text">Category</label>
           <select
             id="capture-note-category"
             value={draftCategory}
-            onChange={(event) => setDraftCategory(event.target.value)}
+            onChange={handleDraftCategoryChange}
           >
             {CAPTURE_CATEGORY_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -143,13 +174,17 @@ function Capture() {
             </Button>
           </div>
         </form>
-        {errorMessage ? <p role="alert" className="form-error">{errorMessage}</p> : null}
+        {errorMessage ? (
+          <p id="capture-composer-error" role="alert" className="form-error">
+            {errorMessage}
+          </p>
+        ) : null}
       </section>
 
       <section className="capture-wall" aria-label="Sticky note wall">
         <header className="capture-wall__header">
           <h2>Sticky Notes</h2>
-          <p className="helper-text" aria-live="polite">{captureSaveHelper}</p>
+          <p className="helper-text" role="status" aria-live="polite">{captureSaveHelper}</p>
         </header>
         {sortedNotes.length ? (
           <div className="sticky-wall">

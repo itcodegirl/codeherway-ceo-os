@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import { APP_ROUTES, toNestedRoutePath } from './lib/routes';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -27,38 +28,40 @@ const ROUTE_COMPONENTS = {
 
 function App() {
   return (
-    <Suspense
-      fallback={
-        <div className="app-shell-load" role="status" aria-live="polite">
-          Loading CEO OS...
-        </div>
-      }
-    >
-      <Routes>
-        <Route path="/" element={<AppLayout />}>
-          {APP_ROUTES.map((route) => {
-            const RouteComponent = ROUTE_COMPONENTS[route.id];
-            if (!RouteComponent) {
-              return null;
-            }
+    <ErrorBoundary name="App shell">
+      <Suspense
+        fallback={
+          <div className="app-shell-load" role="status" aria-live="polite">
+            Loading CEO OS...
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            {APP_ROUTES.map((route) => {
+              const RouteComponent = ROUTE_COMPONENTS[route.id];
+              if (!RouteComponent) {
+                return null;
+              }
 
-            if (route.path === '/') {
-              return <Route key={route.id} index element={<RouteComponent />} />;
-            }
+              if (route.path === '/') {
+                return <Route key={route.id} index element={<RouteComponent />} />;
+              }
 
-            return (
-              <Route
-                key={route.id}
-                path={toNestedRoutePath(route.path)}
-                element={<RouteComponent />}
-              />
-            );
-          })}
-        </Route>
+              return (
+                <Route
+                  key={route.id}
+                  path={toNestedRoutePath(route.path)}
+                  element={<RouteComponent />}
+                />
+              );
+            })}
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
