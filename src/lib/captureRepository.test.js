@@ -75,4 +75,25 @@ describe('src/lib/captureRepository', () => {
     expect(updateListener).not.toHaveBeenCalled();
     expect(listCaptureNotes()).toEqual([created]);
   });
+
+  it('rejects stale updates without emitting a fake update event', () => {
+    const created = createCaptureNote({
+      text: 'Keep this idea',
+      category: 'idea',
+    });
+    const updateListener = vi.fn();
+    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, updateListener);
+
+    try {
+      expect(() => updateCaptureNote('missing-note', {
+        text: 'Unexpected overwrite',
+        category: 'task',
+      })).toThrow('Capture note not found');
+    } finally {
+      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, updateListener);
+    }
+
+    expect(updateListener).not.toHaveBeenCalled();
+    expect(listCaptureNotes()).toEqual([created]);
+  });
 });

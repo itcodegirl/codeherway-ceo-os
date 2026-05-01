@@ -141,7 +141,7 @@ export function updateCaptureNote(id, payload) {
   });
 
   if (!didUpdate) {
-    return null;
+    throw new Error('Capture note not found');
   }
 
   writeStorage(next);
