@@ -188,6 +188,33 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 13) Calm-OS audit follow-ups (May 2, 2026, batch three)
+
+Closing the next four items from the audit's remaining-risks list:
+
+- **Weekly Brief stale-write rejection** (`weeklyRepository`, `useWeeklyBrief`)
+  - Extended the Phase 9-10 pattern to weekly priorities, wins, and blockers. `createWeeklyItem` stamps `updatedAt`; `updateWeeklyItem` accepts `expectedUpdatedAt` and the local path throws `StaleRecordError` when the persisted timestamp drifts.
+  - `useWeeklyBrief.persistCollectionDiff` threads each previous record's `updatedAt` through, and the recovery handler shows a friendly *"changed in another window"* message instead of the generic copy when a stale conflict is detected.
+
+- **Cross-page promotion: Capture → Reminder** (`Capture.jsx`)
+  - Each sticky note now has a "Make reminder" action next to Delete. It calls `createReminder({ text })` on the existing reminders repository so the new reminder shows up immediately on Focus Home through the same `REMINDERS_UPDATED_EVENT` path other surfaces listen to.
+  - The original sticky stays so the user can decide whether to keep the long-form context or delete it manually.
+
+- **Light-mode visual sweep** (`system.css`, `chief-of-staff.css`)
+  - System.css and chief-of-staff.css use raw `rgba()` for the brand-specific glow geometry (radial body backgrounds, card top-shimmer, focus panels, focus chips, signal nodes, sticky notes, fallback warning surfaces). On dark these read fine; on light they either disappear or read as smudges.
+  - Added focused `:root[data-theme="light"]` override blocks at the bottom of each file that retune those surfaces for proper contrast and warmth without touching the dark theme.
+
+- **axe-core a11y scaffolding** (`e2e/a11y-sweep.spec.js`)
+  - Added `@axe-core/playwright` and a Playwright spec that scans every primary route with `wcag2a`/`wcag2aa`/`best-practice` rules.
+  - Test fails only on `serious` or `critical` impacts so the suite stays a reliable guardrail without flaking on cosmetic minor issues; lighter findings are reported via `console.info` for review.
+
+### Tests added in this batch
+- 3 new cases in `weeklyRepository.test.js` — stamped on create, stale rejection across two simulated tabs, back-compat without `expectedUpdatedAt`.
+- 1 new case in `Capture.test.jsx` — promotion writes a reminder to localStorage and the sticky stays.
+- 9 new Playwright cases in `e2e/a11y-sweep.spec.js` — one axe scan per primary route.
+
+Lint, typecheck, the full Vitest suite (372 tests), production build, and route-budget checks all pass on this branch. The Playwright a11y sweep parses cleanly and registers all 9 cases — exercising it requires browsers installed via `npx playwright install`.
+
 ## 12) Calm-OS audit follow-ups (May 2, 2026, batch two)
 
 Closing the highest-value items from the audit's "remaining risks" list:

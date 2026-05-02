@@ -16,21 +16,22 @@ Use this as the honest interview framing for CodeHerWay CEO OS. The project is s
 
 The May 2026 calm-OS audit pass closed several gaps in this branch:
 
-- ✅ **Light theme.** A `:root[data-theme="light"]` overlay and a System / Dark / Light picker in Settings, persisted locally.
+- ✅ **Light theme.** A `:root[data-theme="light"]` overlay and a System / Dark / Light picker in Settings, persisted locally. Raw-rgba surfaces in `system.css` and `chief-of-staff.css` are retuned in light mode.
 - ✅ **Online/offline awareness.** A three-state sync pill (Synced / Local only / Offline) backed by `useOnlineStatus`.
-- ✅ **Optimistic locking for local CRUD on Opportunities and Content OS.** `updatedAt` stamping plus `StaleRecordError` rejection prevents two-tab data loss in the local-first path.
-- ✅ **Chief of Staff dedup against existing rows** — exact-match dedup against existing opportunities/content/priorities is already in place at every acceptance branch (re-verified in code review).
+- ✅ **Optimistic locking for local CRUD on Opportunities, Content OS, and Weekly Brief items.** `updatedAt` stamping plus `StaleRecordError` rejection prevents two-tab data loss across all three local-first surfaces.
+- ✅ **Chief of Staff dedup against existing rows** — exact-match dedup against existing opportunities/content/priorities runs at every acceptance branch (re-verified in code review).
+- ✅ **Cross-page promotion (Capture → Reminder).** Each sticky note now has a "Make reminder" action that creates a Dashboard reminder via `createReminder` and shows a calm toast confirmation.
+- ✅ **Accessibility automation.** `@axe-core/playwright` scans every primary route with a wcag2a/wcag2aa/best-practice rule set; test fails on serious or critical violations and reports lighter findings to the test output for review.
 
 ## Open audit follow-ups
 
 These items remain intentionally outside the current scope and are good candidates for the next iteration:
 
-- **Per-record writes for Weekly Brief.** Weekly Brief still uses whole-collection rewrites; the same `updatedAt`/`StaleRecordError` pattern used for Opportunities and Content OS should be applied there too.
 - **Server-side optimistic locking.** Local-first stale-write detection is in place, but Supabase-backed updates do not yet use ETags or a version column. A schema migration plus repository-side check would extend the protection across devices.
 - **Offline write replay.** Local writes survive offline, but they do not replay upstream when connectivity returns. An `offlineWriteQueue` keyed in localStorage (mirroring the pattern in `appErrorTelemetry`) would harden this.
-- **Cross-page promotion.** A Capture sticky cannot become a Reminder, and a Reminder cannot become a Weekly Priority. The audit recommends adding per-item "Promote to…" verbs that reuse existing repositories.
+- **More cross-page promotion verbs.** Capture → Reminder is in place; Reminder → Weekly Priority and Capture → Opportunity are the natural next additions.
 - **Fuzzy dedup in Chief of Staff acceptance.** Exact-match dedup is in place; titles like "Q3 launch" vs "Q3 Launch Plan" still pass through. A similarity heuristic would help, but it has to balance recall against false positives that could block legitimate distinct items.
-- **Accessibility automation.** Manual a11y is good (skip link, focus rings, focus trap, reduced-motion); axe-core in Playwright would add automated coverage.
+- **Light-mode polish across page-specific CSS.** The light overlay covers the brand surfaces; per-page CSS files (dashboard.css, journal.css, weekly.css) still rely on token-mediated `color-mix` paths and may need targeted overrides if specific surfaces look off in production demos.
 
 ## Best Portfolio Framing
 
