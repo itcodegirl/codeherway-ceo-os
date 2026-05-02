@@ -313,6 +313,28 @@
 	box-shadow: 0 0 0 2px rgba(255, 203, 118, 0.15);
 }
 
+.sync-status-pill--offline {
+	color: var(--text);
+	border-color: var(--border-danger-soft, var(--border));
+}
+
+.sync-status-pill--offline .sync-status-pill__dot {
+	background: var(--danger);
+	box-shadow: 0 0 0 2px rgba(255, 155, 155, 0.18);
+	animation: sync-status-offline-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes sync-status-offline-pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sync-status-pill--offline .sync-status-pill__dot {
+		animation: none;
+	}
+}
+
 .topbar__meta {
 	color: var(--text-meta);
 	font-size: var(--fs-meta);
