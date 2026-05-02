@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConfirmDelete } from './useConfirmDelete';
 import { useIsMountedRef } from './useIsMountedRef';
+import { isStaleRecordError } from '../lib/staleRecordError';
+
+const STALE_RECORD_FORM_MESSAGE =
+  'This record was changed in another window. Reload to see the latest version before saving.';
 
 function isValidCrudItem(value) {
   return Boolean(value && typeof value === 'object' && typeof value.id === 'string' && value.id.trim());
@@ -246,7 +250,10 @@ export function useCrudPage(config) {
 
     try {
       if (selectedItem) {
-        const updated = await updateItemFn(selectedItem.id, payload);
+        const expectedUpdatedAt = Number(selectedItem.updatedAt);
+        const updated = Number.isFinite(expectedUpdatedAt) && expectedUpdatedAt > 0
+          ? await updateItemFn(selectedItem.id, payload, { expectedUpdatedAt })
+          : await updateItemFn(selectedItem.id, payload);
         if (!isMountedRef.current) {
           return;
         }
@@ -271,7 +278,7 @@ export function useCrudPage(config) {
       resetForm();
     } catch (error) {
       if (isMountedRef.current) {
-        setFormError(saveErrorMessage);
+        setFormError(isStaleRecordError(error) ? STALE_RECORD_FORM_MESSAGE : saveErrorMessage);
       }
       if (import.meta.env.DEV) {
         console.error(`Failed to save ${logPrefix}`, error);

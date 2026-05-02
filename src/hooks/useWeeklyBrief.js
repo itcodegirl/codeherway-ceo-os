@@ -46,6 +46,7 @@ export function useWeeklyBrief() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [reviewNotes, setReviewNotesState] = useState(DEFAULT_REVIEW_NOTES);
+  const [reviewNotesStatus, setReviewNotesStatus] = useState('idle');
   const [priorities, setPrioritiesState] = useState(defaultPriorities);
   const [wins, setWinsState] = useState(defaultWins);
   const [blockers, setBlockersState] = useState(defaultBlockers);
@@ -266,16 +267,27 @@ export function useWeeklyBrief() {
       const resolvedValue = resolveNextValue(nextValue, currentValue);
       const normalizedValue = typeof resolvedValue === 'string' ? resolvedValue : DEFAULT_REVIEW_NOTES;
 
-      void saveWeeklyBriefReviewNotes({
+      setReviewNotesStatus('saving');
+
+      Promise.resolve(saveWeeklyBriefReviewNotes({
         weekStart,
         reviewNotes: normalizedValue,
-      }).catch((error) => {
-        recoverAfterPersistenceFailure(
-          'Unable to save weekly review notes right now.',
-          'Failed to save weekly review notes',
-          error,
-        );
-      });
+      }))
+        .then(() => {
+          if (isMountedRef.current) {
+            setReviewNotesStatus('saved');
+          }
+        })
+        .catch((error) => {
+          if (isMountedRef.current) {
+            setReviewNotesStatus('error');
+          }
+          recoverAfterPersistenceFailure(
+            'Unable to save weekly review notes right now.',
+            'Failed to save weekly review notes',
+            error,
+          );
+        });
 
       return normalizedValue;
     });
@@ -338,6 +350,7 @@ export function useWeeklyBrief() {
     isLoading,
     loadError,
     reviewNotes,
+    reviewNotesStatus,
     priorities,
     wins,
     blockers,

@@ -5,8 +5,15 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
+import { useThemePreference } from '../hooks/useThemePreference';
 import { SOURCE_NOTICE_SAMPLE_DATA } from '../lib/uiCopy';
 import '../styles/forms.css';
+
+const THEME_CHOICES = [
+  { value: 'system', label: 'Match system', description: 'Follow your OS dark or light setting.' },
+  { value: 'dark', label: 'Dark', description: 'The original calm-night palette.' },
+  { value: 'light', label: 'Light', description: 'Warm-paper palette for bright environments.' },
+];
 
 function Settings() {
   const {
@@ -27,6 +34,8 @@ function Settings() {
   const autoSaveToggleId = useId();
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
+  const themeRadiogroupId = useId();
+  const { preference: themePreference, setThemePreference } = useThemePreference();
   const canSave = timezoneIsValid && !isSaving;
   const saveButtonLabel = isSaving
     ? 'Saving settings'
@@ -49,6 +58,20 @@ function Settings() {
   const handleSubmit = (event) => {
     event.preventDefault();
     void markSave();
+  };
+
+  const handleBlurSave = () => {
+    if (!canSave) {
+      return;
+    }
+    void saveSettings(settings);
+  };
+
+  const handleToggle = (key, value) => {
+    handleChange(key, value);
+    if (canSave) {
+      void saveSettings({ ...settings, [key]: value });
+    }
   };
 
   return (
@@ -83,6 +106,7 @@ function Settings() {
             minLength={2}
             disabled={isSaving}
             onChange={(e) => handleChange('teamName', e.target.value)}
+            onBlur={handleBlurSave}
           />
 
           <div className="form-field">
@@ -102,7 +126,10 @@ function Settings() {
                   ? 'Use an IANA timezone, for example America/Chicago.'
                   : 'Enter a valid IANA timezone, for example America/Chicago.'
               }
-              onBlur={normalizeTimezone}
+              onBlur={() => {
+                normalizeTimezone();
+                handleBlurSave();
+              }}
               onChange={(e) => handleChange('timezone', e.target.value)}
             />
             {timezoneIsValid ? (
@@ -111,6 +138,49 @@ function Settings() {
               </span>
             ) : null}
           </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Theme"
+          iconName="settings"
+        >
+          <fieldset
+            className="settings-theme"
+            aria-describedby={`${themeRadiogroupId}-helper`}
+          >
+            <legend className="settings-theme__legend">Display theme</legend>
+            <div className="settings-theme__choices" role="radiogroup">
+              {THEME_CHOICES.map((choice) => {
+                const isActive = themePreference === choice.value;
+                const radioId = `${themeRadiogroupId}-${choice.value}`;
+                return (
+                  <label
+                    key={choice.value}
+                    htmlFor={radioId}
+                    className={
+                      isActive
+                        ? 'settings-theme__choice settings-theme__choice--active'
+                        : 'settings-theme__choice'
+                    }
+                  >
+                    <input
+                      id={radioId}
+                      type="radio"
+                      name={themeRadiogroupId}
+                      value={choice.value}
+                      checked={isActive}
+                      onChange={() => setThemePreference(choice.value)}
+                    />
+                    <span className="settings-theme__choice-label">{choice.label}</span>
+                    <span className="settings-theme__choice-description">{choice.description}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <p id={`${themeRadiogroupId}-helper`} className="helper-text helper-text--muted">
+              Stored in this browser. Changes apply immediately.
+            </p>
+          </fieldset>
         </SectionCard>
 
         <SectionCard
@@ -123,7 +193,7 @@ function Settings() {
               type="checkbox"
               checked={settings.autoSave}
               disabled={isSaving}
-              onChange={(e) => handleChange('autoSave', e.target.checked)}
+              onChange={(e) => handleToggle('autoSave', e.target.checked)}
             />
             <span>Enable auto-save for drafts and notes</span>
           </label>
@@ -134,7 +204,7 @@ function Settings() {
               type="checkbox"
               checked={settings.emailDigest}
               disabled={isSaving}
-              onChange={(e) => handleChange('emailDigest', e.target.checked)}
+              onChange={(e) => handleToggle('emailDigest', e.target.checked)}
             />
             <span>Send weekly digest reminders</span>
           </label>
@@ -145,7 +215,7 @@ function Settings() {
               type="checkbox"
               checked={settings.keyboardShortcuts}
               disabled={isSaving}
-              onChange={(e) => handleChange('keyboardShortcuts', e.target.checked)}
+              onChange={(e) => handleToggle('keyboardShortcuts', e.target.checked)}
             />
             <span>Enable keyboard shortcuts</span>
           </label>

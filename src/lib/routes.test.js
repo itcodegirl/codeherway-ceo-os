@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { APP_ROUTES, NAV_ITEMS, toNestedRoutePath } from './routes';
+import {
+  APP_ROUTES,
+  NAV_GROUPS,
+  NAV_ITEMS,
+  buildNavGroups,
+  toNestedRoutePath,
+} from './routes';
 import { buildPageMetaByRoute } from './pageMeta';
 
 describe('src/lib/routes', () => {
@@ -33,5 +39,24 @@ describe('src/lib/routes', () => {
     expect(toNestedRoutePath('/')).toBe('');
     expect(toNestedRoutePath('/chief-of-staff')).toBe('chief-of-staff');
     expect(toNestedRoutePath('settings')).toBe('settings');
+  });
+
+  it('groups navigation items by their assigned group, in declared order', () => {
+    const groups = buildNavGroups();
+    const groupIds = groups.map((group) => group.id);
+    expect(groupIds).toEqual(['today', 'this-week', 'workspace', 'account']);
+
+    const settingsGroup = groups.find((group) => group.id === 'account');
+    expect(settingsGroup.items.map((item) => item.path)).toContain('/settings');
+    expect(settingsGroup.items.map((item) => item.path)).toContain('/ops-reliability');
+
+    const todayGroup = groups.find((group) => group.id === 'today');
+    expect(todayGroup.items[0].path).toBe('/');
+  });
+
+  it('exposes a stable NAV_GROUPS export covering every route', () => {
+    const allGroupedPaths = NAV_GROUPS.flatMap((group) => group.items.map((item) => item.path));
+    const allRoutePaths = APP_ROUTES.map((route) => route.path);
+    expect(new Set(allGroupedPaths)).toEqual(new Set(allRoutePaths));
   });
 });

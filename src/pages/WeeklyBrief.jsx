@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import SummaryCards from '../components/ui/SummaryCards';
@@ -16,12 +17,28 @@ import { buildAutosaveHelperText } from '../lib/uiCopy';
 import '../styles/forms.css';
 import '../styles/weekly.css';
 
+const REVIEW_NOTES_DEBOUNCE_MS = 600;
+
+function describeReviewNotesStatus({ status, hasPending, hasError }) {
+  if (hasError) {
+    return { tone: 'error', text: 'Couldn’t save your reflection. We’ll keep trying.' };
+  }
+  if (hasPending || status === 'saving') {
+    return { tone: 'saving', text: 'Saving your reflection…' };
+  }
+  if (status === 'saved') {
+    return { tone: 'saved', text: 'Saved.' };
+  }
+  return { tone: 'idle', text: 'Notes are saved automatically for this workspace.' };
+}
+
 function WeeklyBrief() {
   const {
     source,
     isLoading,
     loadError,
     reviewNotes,
+    reviewNotesStatus,
     priorities,
     wins,
     blockers,
@@ -39,6 +56,47 @@ function WeeklyBrief() {
     hasError: Boolean(loadError),
     healthyText: 'Notes are saved automatically for this workspace.',
     pausedText: 'Autosave is paused until the weekly brief saves successfully again.',
+  });
+
+  // Debounced review-notes autosave. Local draft mirrors the input synchronously
+  // so typing stays instant; commits to the hook fire 600ms after the last keystroke.
+  const [reviewNotesDraft, setReviewNotesDraft] = useState(reviewNotes);
+  const draftRef = useRef(reviewNotes);
+  const debounceTimerRef = useRef(null);
+  const [hasPendingSave, setHasPendingSave] = useState(false);
+
+  useEffect(() => {
+    if (reviewNotesStatus !== 'saving' && reviewNotes !== draftRef.current) {
+      draftRef.current = reviewNotes;
+      setReviewNotesDraft(reviewNotes);
+    }
+  }, [reviewNotes, reviewNotesStatus]);
+
+  useEffect(() => () => {
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+  }, []);
+
+  const handleReviewNotesChange = (event) => {
+    const value = event.target.value;
+    draftRef.current = value;
+    setReviewNotesDraft(value);
+    setHasPendingSave(true);
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      debounceTimerRef.current = null;
+      setHasPendingSave(false);
+      setReviewNotes(draftRef.current);
+    }, REVIEW_NOTES_DEBOUNCE_MS);
+  };
+
+  const reviewNotesStatusDescriptor = describeReviewNotesStatus({
+    status: reviewNotesStatus,
+    hasPending: hasPendingSave,
+    hasError: Boolean(loadError) || reviewNotesStatus === 'error',
   });
 
   return (
@@ -111,11 +169,21 @@ function WeeklyBrief() {
             className="form-field weekly-review-notes__field"
             labelClassName="form-field__label"
             controlClassName="weekly-review-notes__control"
-            value={reviewNotes}
-            onChange={(event) => setReviewNotes(event.target.value)}
+            value={reviewNotesDraft}
+            onChange={handleReviewNotesChange}
             rows={5}
             placeholder="Capture outcomes at close of week in plain language: what moved, what stalled, and what your next executive move is for the coming seven days."
           />
+          {reviewNotesStatusDescriptor.tone !== 'idle' ? (
+            <p
+              className={`helper-text weekly-review-notes__status weekly-review-notes__status--${reviewNotesStatusDescriptor.tone}`}
+              aria-live="polite"
+              data-status={reviewNotesStatusDescriptor.tone}
+            >
+              <span aria-hidden="true" className="weekly-review-notes__status-dot" />
+              {reviewNotesStatusDescriptor.text}
+            </p>
+          ) : null}
           <p className="helper-text" aria-live="polite">{reviewNotesHelper}</p>
         </SectionCard>
       </div>

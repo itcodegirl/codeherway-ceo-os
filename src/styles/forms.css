@@ -119,3 +119,74 @@
   outline-offset: 2px;
 }
 
+.settings-theme {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.settings-theme__legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+  padding: 0;
+}
+
+.settings-theme__choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.settings-theme__choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-action);
+  border: 1px solid var(--border);
+  background: var(--surface-input);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--duration-base, 200ms) var(--easing-standard, ease),
+    background-color var(--duration-base, 200ms) var(--easing-standard, ease);
+}
+
+.settings-theme__choice:hover {
+  border-color: var(--border-accent);
+}
+
+.settings-theme__choice--active {
+  border-color: var(--border-accent-strong);
+  background: var(--bg-accent-soft);
+}
+
+.settings-theme__choice input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.settings-theme__choice input[type='radio']:focus-visible + .settings-theme__choice-label {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.settings-theme__choice-label {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.settings-theme__choice-description {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+

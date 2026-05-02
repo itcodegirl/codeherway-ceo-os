@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { resolveNextValue } from '../lib/stateUtils';
+import { preserveCorruptStorageValue } from '../lib/storageCorruption';
 
 const PERSISTENT_STATE_EVENT = 'ceo-os:persistent-state';
 
@@ -12,14 +13,18 @@ function loadValue(key, initialValue) {
     return resolveInitialValue(initialValue);
   }
 
+  let rawItem = null;
   try {
-    const item = window.localStorage.getItem(key);
-    if (item === null) {
+    rawItem = window.localStorage.getItem(key);
+    if (rawItem === null) {
       return resolveInitialValue(initialValue);
     }
 
-    return JSON.parse(item);
-  } catch {
+    return JSON.parse(rawItem);
+  } catch (error) {
+    if (rawItem !== null) {
+      preserveCorruptStorageValue(key, rawItem, error);
+    }
     return resolveInitialValue(initialValue);
   }
 }
@@ -172,7 +177,8 @@ export function usePersistentState(key, initialValue) {
 
           return { key, value: parsedValue };
         });
-      } catch {
+      } catch (error) {
+        preserveCorruptStorageValue(key, event.newValue, error);
         setState((currentState) => {
           const nextValue = resolveInitialValue(initialValueRef.current);
 

@@ -99,6 +99,23 @@ This project is strongest when presented as a local-first productivity system wi
 - Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
 - See [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for the current recruiter-facing limitation list.
 
+## Recent calm-OS audit improvements
+
+Driven by a structured product + UX audit of the system, this branch adds:
+
+- **Honest sync status** — a `SyncStatusPill` in the topbar combines `useWorkspaceSettings().source` with `useOnlineStatus()` and renders one of three states: **Synced**, **Local only**, or **Offline** (with a calm pulse animation that respects `prefers-reduced-motion`). Users never silently fall off Supabase, and they always know when the network is gone.
+- **Corruption recovery, not silent loss** — `usePersistentState` now preserves any unreadable JSON blob under a `${key}__corrupt_<ts>` backup key and emits a `ceo-os:storage-corruption` event. A non-blocking `StorageCorruptionBanner` tells the user we kept a copy.
+- **Optimistic locking for local CRUD** — local Opportunities and Content OS updates now stamp `updatedAt` on writes and reject stale saves with a `StaleRecordError`. `useCrudPage` surfaces this as a friendly form error: *"This record was changed in another window."* — closing the silent two-tab data-loss path without requiring a Supabase schema migration.
+- **Debounced reflective autosave** — the Weekly Brief close-of-week reflection now debounces to 600ms and surfaces an explicit `Saving / Saved / Couldn't save` indicator next to the field; errors are routed through toasts and `appErrorTelemetry`.
+- **Tonal scope** — `SystemPulse` is hidden on Settings and Ops Reliability so action-mode copy doesn't pull at users who are in setup or diagnostic contexts.
+- **Grouped IA** — the sidebar now groups routes into **Today / This week / Workspace / Account**. Account links (Ops Reliability, Settings) are visually demoted so daily surfaces lead the eye.
+- **Light theme** — a `:root[data-theme="light"]` overlay in `tokens.css` and a `useThemePreference` hook expose a System / Dark / Light picker in Settings. The preference is stored locally so no Supabase profile-schema migration is required, and OS preference changes are reactive when "System" is selected.
+- **Architecture cleanup** — `Dashboard.jsx` is split into `FocusModeChips` and `RemindersPanel` (491 → 379 lines); the `.crm-table` primitives are extracted into a shared `crm-table.css` consumed by Opportunities and Content OS; the sync-pill descriptor is a pure helper at `src/lib/syncStatusDescriptors.js`.
+- **Settings autosave on blur** — input fields and toggles persist immediately while the explicit `Save Settings` button is preserved as a "save now" affordance.
+- **Motion token system** — `--duration-fast / --duration-base / --duration-deliberate` and `--easing-standard` are exported from `tokens.css` so transitions can converge on a calm rhythm.
+
+Coverage for the above ships in this branch: 368 unit/integration tests, lint, typecheck, build, and route-budget checks all pass.
+
 ## What this repository demonstrates
 
 ### 1) Architecture consistency

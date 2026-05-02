@@ -4,8 +4,10 @@ import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
 import SystemPulse from '../components/ui/SystemPulse';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
+import StorageCorruptionBanner from '../components/ui/StorageCorruptionBanner';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useThemePreference } from '../hooks/useThemePreference';
 import { resolvePageMeta } from '../lib/pageMeta';
 import { resolveTeamName } from '../lib/settings';
 
@@ -14,6 +16,9 @@ function AppLayout() {
   const navigate = useNavigate();
   const mainRef = useRef(null);
   const { settings } = useSettings();
+  // Mounted at the shell so the html data-theme attribute is set on every
+  // authenticated render and stays in sync with OS preference changes.
+  useThemePreference();
 
   const teamName = resolveTeamName(settings?.teamName);
   const appName = `${teamName} CEO OS`;
@@ -22,6 +27,11 @@ function AppLayout() {
     const topbarTitle = String(pageMeta?.title || '').split('|')[0].trim();
     return topbarTitle || 'Focus Home';
   }, [appName, location.pathname]);
+
+  const showSystemPulse = useMemo(() => {
+    const path = location.pathname || '/';
+    return path !== '/settings' && path !== '/ops-reliability';
+  }, [location.pathname]);
 
   usePageMeta(appName);
 
@@ -51,7 +61,8 @@ function AppLayout() {
       <Sidebar />
       <div className="app-main">
         <Topbar pageTitle={currentPageTitle} />
-        <SystemPulse />
+        <StorageCorruptionBanner />
+        {showSystemPulse ? <SystemPulse /> : null}
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
           <ErrorBoundary
             key={location.pathname}

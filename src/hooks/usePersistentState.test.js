@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { usePersistentState } from './usePersistentState';
+import { STORAGE_CORRUPTION_EVENT } from '../lib/storageCorruption';
 
 describe('usePersistentState', () => {
   const storageKey = 'ceo-os-test-persistent-state';
@@ -74,6 +75,27 @@ describe('usePersistentState', () => {
     await waitFor(() => {
       expect(result.current[0]).toStrictEqual({ team: 'Founder' });
     });
+  });
+
+  it('preserves a corrupted localStorage payload and emits a recovery event', async () => {
+    const corruptKey = 'ceo-os-test-corrupt-load';
+    window.localStorage.setItem(corruptKey, '{not valid json');
+
+    const events = [];
+    const listener = (event) => events.push(event.detail);
+    window.addEventListener(STORAGE_CORRUPTION_EVENT, listener);
+
+    try {
+      const { result } = renderHook(() => usePersistentState(corruptKey, 'fallback'));
+      expect(result.current[0]).toBe('fallback');
+    } finally {
+      window.removeEventListener(STORAGE_CORRUPTION_EVENT, listener);
+    }
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ key: corruptKey });
+    expect(typeof events[0].backupKey).toBe('string');
+    expect(window.localStorage.getItem(events[0].backupKey)).toBe('{not valid json');
   });
 
   it('reloads state when the storage key changes without leaking the previous value', async () => {

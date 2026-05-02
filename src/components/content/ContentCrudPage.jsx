@@ -17,6 +17,7 @@ import {
 import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
+import '../../styles/crm-table.css';
 import '../../styles/content.css';
 
 const DEFAULT_FORM = {

@@ -100,6 +100,69 @@
 	min-height: 8.5rem;
 }
 
+.weekly-review-notes__status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	margin-top: 0.4rem;
+	font-size: 0.85rem;
+	color: var(--text-muted);
+}
+
+.weekly-review-notes__status-dot {
+	display: inline-block;
+	width: 0.55rem;
+	height: 0.55rem;
+	border-radius: 999px;
+	background: var(--text-muted);
+	box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+	transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.weekly-review-notes__status--saving .weekly-review-notes__status-dot {
+	background: var(--accent);
+	box-shadow: 0 0 0 3px rgba(60, 185, 255, 0.18);
+	animation: weekly-review-notes-pulse 1.4s ease-in-out infinite;
+}
+
+.weekly-review-notes__status--saved .weekly-review-notes__status-dot {
+	background: var(--success);
+	box-shadow: 0 0 0 3px rgba(123, 229, 188, 0.16);
+}
+
+.weekly-review-notes__status--error .weekly-review-notes__status-dot {
+	background: var(--danger);
+	box-shadow: 0 0 0 3px rgba(255, 155, 155, 0.18);
+}
+
+.weekly-review-notes__status--saving {
+	color: var(--text);
+}
+
+.weekly-review-notes__status--error {
+	color: var(--danger-text, var(--danger));
+}
+
+.helper-text--muted {
+	color: var(--text-muted);
+}
+
+@keyframes weekly-review-notes-pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.45;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.weekly-review-notes__status--saving .weekly-review-notes__status-dot {
+		animation: none;
+	}
+}
+
 .weekly-modal-actions {
 	display: flex;
 	flex-wrap: wrap;

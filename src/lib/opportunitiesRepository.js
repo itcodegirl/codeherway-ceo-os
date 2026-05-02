@@ -2,11 +2,13 @@ import { opportunities as mockOpportunities } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
+import { StaleRecordError } from './staleRecordError';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
 
 function normalizeOpportunity(item) {
+  const rawUpdatedAt = Number(item.updatedAt ?? item.updated_at);
   return {
     id: String(item.id),
     name: item.name || '',
@@ -14,6 +16,7 @@ function normalizeOpportunity(item) {
     priority: item.priority || 'Low',
     stage: item.stage || 'New',
     nextStep: item.nextStep || item.next_step || '',
+    updatedAt: Number.isFinite(rawUpdatedAt) ? rawUpdatedAt : 0,
   };
 }
 
@@ -105,7 +108,11 @@ export async function listOpportunities() {
 }
 
 export async function createOpportunity(payload) {
-  const normalizedPayload = normalizeOpportunity({ id: buildCreateId(), ...payload });
+  const normalizedPayload = normalizeOpportunity({
+    id: buildCreateId(),
+    updatedAt: Date.now(),
+    ...payload,
+  });
 
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
@@ -132,12 +139,11 @@ export async function createOpportunity(payload) {
   return normalizedPayload;
 }
 
-export async function updateOpportunity(id, payload) {
-  const normalizedPayload = normalizeOpportunity({ id, ...payload });
-
+export async function updateOpportunity(id, payload, options = {}) {
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
   if (supabaseClient) {
+    const normalizedPayload = normalizeOpportunity({ id, ...payload });
     const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('opportunities')
@@ -155,7 +161,29 @@ export async function updateOpportunity(id, payload) {
     return normalizeOpportunity(data);
   }
 
+  // Local-only path enforces optimistic locking via the updatedAt timestamp.
   const current = readLocalOpportunities();
+  const persisted = current.find((item) => String(item.id) === String(id));
+
+  const expected = Number(options.expectedUpdatedAt);
+  if (
+    Number.isFinite(expected)
+    && expected > 0
+    && persisted
+    && Number.isFinite(persisted.updatedAt)
+    && persisted.updatedAt > 0
+    && persisted.updatedAt !== expected
+  ) {
+    throw new StaleRecordError(
+      'This opportunity was changed in another window. Reload to see the latest version before saving.',
+    );
+  }
+
+  const normalizedPayload = normalizeOpportunity({
+    id,
+    ...payload,
+    updatedAt: Date.now(),
+  });
   const next = replaceRecordById(current, id, normalizedPayload, {
     notFoundMessage: 'Opportunity not found',
   });

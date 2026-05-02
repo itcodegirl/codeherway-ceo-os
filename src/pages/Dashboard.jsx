@@ -3,6 +3,8 @@ import Button from '../components/ui/Button';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
+import FocusModeChips from '../components/dashboard/FocusModeChips';
+import RemindersPanel from '../components/dashboard/RemindersPanel';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
@@ -16,7 +18,6 @@ import {
 } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
-  FOCUS_MODES,
   buildMainFocus,
   buildMomentumMessage,
   buildNextMoveQueue,
@@ -259,31 +260,6 @@ function Dashboard() {
     'Set a 15-minute timer. Ignore everything else until it ends.',
   ], [displayedNextMove]);
 
-  const handleFocusModeKeyDown = (event, currentIndex) => {
-    const key = event.key;
-    if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(key)) {
-      return;
-    }
-
-    event.preventDefault();
-    let nextIndex = currentIndex;
-    if (key === 'ArrowRight' || key === 'ArrowDown') {
-      nextIndex = (currentIndex + 1) % FOCUS_MODES.length;
-    } else if (key === 'ArrowLeft' || key === 'ArrowUp') {
-      nextIndex = (currentIndex - 1 + FOCUS_MODES.length) % FOCUS_MODES.length;
-    } else if (key === 'Home') {
-      nextIndex = 0;
-    } else if (key === 'End') {
-      nextIndex = FOCUS_MODES.length - 1;
-    }
-
-    const nextMode = FOCUS_MODES[nextIndex];
-    setFocusMode(nextMode.id);
-    const container = event.currentTarget?.closest?.('.focus-mode__chips');
-    const nextButton = container?.querySelector?.(`[data-focus-mode="${nextMode.id}"]`);
-    nextButton?.focus?.();
-  };
-
   const modeClassName = resolveFocusMode(focusMode).id;
 
   return (
@@ -304,26 +280,11 @@ function Dashboard() {
         retryAriaLabel="Retry loading focus command center data"
       />
 
-      <section className="focus-mode" aria-label="ADHD support layer">
-        <div className="focus-mode__chips" role="radiogroup" aria-label="Choose your support mode">
-          {FOCUS_MODES.map((mode, index) => (
-            <button
-              key={mode.id}
-              data-focus-mode={mode.id}
-              type="button"
-              role="radio"
-              aria-checked={focusMode === mode.id}
-              tabIndex={focusMode === mode.id ? 0 : -1}
-              className={focusMode === mode.id ? 'focus-chip focus-chip--active' : 'focus-chip'}
-              onClick={() => setFocusMode(mode.id)}
-              onKeyDown={(event) => handleFocusModeKeyDown(event, index)}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-        <p className="supportive-copy">{supportCopy}</p>
-      </section>
+      <FocusModeChips
+        focusMode={focusMode}
+        onFocusModeChange={setFocusMode}
+        supportCopy={supportCopy}
+      />
 
       <div className="focus-home__grid">
         <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
@@ -367,90 +328,17 @@ function Dashboard() {
           </ul>
         </article>
 
-        <article
-          className="focus-panel"
-          aria-label="Reminders panel"
-          aria-busy={isAddingReminder ? 'true' : undefined}
-        >
-          <div className="focus-panel__header">
-            <h2>Reminders</h2>
-            <span className="signal-node" aria-hidden="true" />
-          </div>
-          <form className="focus-reminder-form" onSubmit={handleAddReminder}>
-            <label className="sr-only" htmlFor="focus-reminder-input">
-              Add reminder
-            </label>
-            <input
-              id="focus-reminder-input"
-              type="text"
-              value={reminderDraft}
-              onChange={(event) => setReminderDraft(event.target.value)}
-              placeholder="Add a quick reminder"
-              aria-describedby="focus-reminder-helper focus-reminder-progress"
-              disabled={isAddingReminder}
-            />
-            <Button
-              type="submit"
-              size="small"
-              icon={{ name: 'add' }}
-              disabled={isAddingReminder}
-              ariaLabel={isAddingReminder ? 'Adding reminder' : undefined}
-            >
-              {isAddingReminder ? 'Adding...' : 'Add'}
-            </Button>
-          </form>
-          <p id="focus-reminder-helper" className="helper-text focus-reminder-helper">
-            Keep it small enough to finish today.
-          </p>
-
-          <p id="focus-reminder-progress" className="focus-reminder-progress" aria-live="polite">
-            {reminderProgress.total > 0
-              ? `${reminderProgress.completed} of ${reminderProgress.total} reminders complete (${reminderProgress.completionRate}%)`
-              : 'No reminder progress yet.'}
-          </p>
-
-          <ul className="focus-reminder-list">
-            {visibleReminders.length ? visibleReminders.map((item) => (
-              <li
-                key={item.id}
-                className={item.isDone
-                  ? 'focus-reminder-list__item focus-reminder-list__item--done'
-                  : 'focus-reminder-list__item'}
-              >
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={item.isDone}
-                    onChange={(event) => handleToggleReminder(item.id, event.target.checked)}
-                  />
-                  <span>{item.text}</span>
-                </label>
-                <button
-                  type="button"
-                  className="focus-reminder-list__delete"
-                  aria-label={`Delete reminder ${item.text}`}
-                  onClick={() => handleDeleteReminder(item.id)}
-                >
-                  Remove
-                </button>
-              </li>
-            )) : (
-              <li className="focus-reminder-list__item focus-reminder-list__item--empty">
-                <span>No reminders yet. Add one small commitment.</span>
-              </li>
-            )}
-          </ul>
-
-          <p className="focus-home__subheading">Suggestions</p>
-          <ul className="focus-list" aria-live="polite">
-            {suggestions.map((item) => (
-              <li key={item.id}>
-                <p>{item.text}</p>
-                {item.context ? <p className="helper-text">{item.context}</p> : null}
-              </li>
-            ))}
-          </ul>
-        </article>
+        <RemindersPanel
+          reminderDraft={reminderDraft}
+          onReminderDraftChange={setReminderDraft}
+          isAddingReminder={isAddingReminder}
+          onAddReminderSubmit={handleAddReminder}
+          reminderProgress={reminderProgress}
+          visibleReminders={visibleReminders}
+          suggestions={suggestions}
+          onToggleReminder={handleToggleReminder}
+          onDeleteReminder={handleDeleteReminder}
+        />
 
         <article className="focus-panel" aria-label="Momentum panel">
           <div className="focus-panel__header">

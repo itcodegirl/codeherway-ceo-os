@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useCrudPage } from './useCrudPage';
+import { StaleRecordError } from '../lib/staleRecordError';
 
 function createSubmitEvent() {
   return {
@@ -391,5 +392,87 @@ describe('useCrudPage', () => {
     expect(result.current.formError).toBe('Name is required.');
     expect(createItem).not.toHaveBeenCalled();
     expect(updateItem).not.toHaveBeenCalled();
+  });
+
+  it('threads expectedUpdatedAt into updateFn for items that carry a timestamp', async () => {
+    const listItems = vi.fn(() => Promise.resolve([
+      { id: '1', name: 'Opportunity A', updatedAt: 1700000000000 },
+    ]));
+    const updateItem = vi.fn((id, payload) => Promise.resolve({ id, ...payload, updatedAt: 1700000111111 }));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
+      updateFn: updateItem,
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapItemToFormValues: (item) => ({ name: item.name }),
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.setSelectedItem({ id: '1', name: 'Opportunity A', updatedAt: 1700000000000 });
+    });
+    await waitFor(() => expect(result.current.selectedItem?.id).toBe('1'));
+
+    act(() => {
+      result.current.handleOpenEditModal();
+      result.current.handleFormChange('name', 'Opportunity A2');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    expect(updateItem).toHaveBeenCalledWith(
+      '1',
+      { name: 'Opportunity A2' },
+      { expectedUpdatedAt: 1700000000000 },
+    );
+    expect(result.current.formError).toBe('');
+  });
+
+  it('shows a friendly stale-record message and keeps the form open when updateFn rejects with StaleRecordError', async () => {
+    const listItems = vi.fn(() => Promise.resolve([
+      { id: '1', name: 'Opportunity A', updatedAt: 1700000000000 },
+    ]));
+    const updateItem = vi.fn(() => Promise.reject(new StaleRecordError()));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
+      updateFn: updateItem,
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapItemToFormValues: (item) => ({ name: item.name }),
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+      messages: {
+        save: 'Generic save error.',
+      },
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.setSelectedItem({ id: '1', name: 'Opportunity A', updatedAt: 1700000000000 });
+    });
+    await waitFor(() => expect(result.current.selectedItem?.id).toBe('1'));
+
+    act(() => {
+      result.current.handleOpenEditModal();
+      result.current.handleFormChange('name', 'Opportunity A2');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    expect(result.current.formError).toContain('changed in another window');
+    expect(result.current.formError).not.toBe('Generic save error.');
+    expect(result.current.isFormOpen).toBe(true);
   });
 });
