@@ -159,6 +159,34 @@ describe('src/pages/Capture', () => {
     expect(screen.getByDisplayValue('Acme partnership intro from Sarah')).toBeInTheDocument();
   });
 
+  it('does not duplicate content items when Draft as content is double-clicked', async () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Founders weekly recap thread' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+    const draftButton = screen.getByRole('button', {
+      name: /Draft .* note on Content OS/,
+    });
+
+    fireEvent.click(draftButton);
+    fireEvent.click(draftButton);
+    fireEvent.click(draftButton);
+
+    expect(await screen.findByText(/Drafted on Content OS/)).toBeInTheDocument();
+
+    const contentRaw = window.localStorage.getItem('ceo-os-content-items');
+    const items = JSON.parse(contentRaw);
+    const matching = items.filter((entry) => entry.title === 'Founders weekly recap thread');
+    expect(matching).toHaveLength(1);
+  });
+
   it('does not duplicate opportunities when Track opportunity is double-clicked', async () => {
     render(
       <MemoryRouter>
