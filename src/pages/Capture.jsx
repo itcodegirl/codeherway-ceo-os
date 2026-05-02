@@ -3,6 +3,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import Toast from '../components/ui/Toast';
+import StickyNoteCard from '../components/capture/StickyNoteCard';
 import {
   CAPTURE_CATEGORY_OPTIONS,
   CAPTURE_NOTES_UPDATED_EVENT,
@@ -224,75 +225,17 @@ function Capture() {
         {sortedNotes.length ? (
           <div className="sticky-wall">
             {sortedNotes.map((note) => (
-              <article key={note.id} className="sticky-note">
-                <header className="sticky-note__meta">
-                  <span className="sticky-note__tag">
-                    {formatCategoryLabel(note.category)}
-                  </span>
-                  <span className="helper-text">{formatRelativeDate(note.updatedAt)}</span>
-                </header>
-                <label htmlFor={`capture-note-${note.id}`} className="sr-only">
-                  Edit note
-                </label>
-                <textarea
-                  id={`capture-note-${note.id}`}
-                  value={note.text}
-                  rows={4}
-                  onChange={(event) => updateNote(note.id, {
-                    text: event.target.value,
-                    category: note.category,
-                  })}
-                />
-                <div className="sticky-note__controls">
-                  <label htmlFor={`capture-category-${note.id}`} className="sr-only">
-                    Edit note category
-                  </label>
-                  <select
-                    id={`capture-category-${note.id}`}
-                    value={note.category}
-                    onChange={(event) => updateNote(note.id, {
-                      text: note.text,
-                      category: event.target.value,
-                    })}
-                  >
-                    {CAPTURE_CATEGORY_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {formatCategoryLabel(option)}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="small"
-                    icon={{ name: 'check', size: 14 }}
-                    onClick={() => promoteNoteToReminder(note)}
-                    ariaLabel={`Make a reminder from ${formatCategoryLabel(note.category)} note`}
-                  >
-                    Make reminder
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="small"
-                    icon={{ name: 'opportunities', size: 14 }}
-                    onClick={() => promoteNoteToOpportunity(note)}
-                    ariaLabel={`Track ${formatCategoryLabel(note.category)} note as a new opportunity`}
-                  >
-                    Track opportunity
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="small"
-                    icon={{ name: 'delete' }}
-                    onClick={() => removeNote(note.id)}
-                    ariaLabel={`Delete ${formatCategoryLabel(note.category)} note`}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </article>
+              <StickyNoteCard
+                key={note.id}
+                note={note}
+                categoryOptions={CAPTURE_CATEGORY_OPTIONS}
+                formatCategoryLabel={formatCategoryLabel}
+                formatRelativeDate={formatRelativeDate}
+                onEdit={updateNote}
+                onPromoteToReminder={promoteNoteToReminder}
+                onPromoteToOpportunity={promoteNoteToOpportunity}
+                onDelete={removeNote}
+              />
             ))}
           </div>
         ) : (
