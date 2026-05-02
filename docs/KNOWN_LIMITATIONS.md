@@ -12,15 +12,24 @@ Use this as the honest interview framing for CodeHerWay CEO OS. The project is s
 - Screenshots and demo recordings should be refreshed after UI changes, especially Focus Home source-status styling, System Pulse trust cues, and compact mobile navigation.
 - Operational telemetry and route-budget tooling demonstrate production thinking, but alert response workflows are still portfolio evidence rather than a fully staffed production process.
 
+## Recently closed audit items
+
+The May 2026 calm-OS audit pass closed several gaps in this branch:
+
+- ✅ **Light theme.** A `:root[data-theme="light"]` overlay and a System / Dark / Light picker in Settings, persisted locally.
+- ✅ **Online/offline awareness.** A three-state sync pill (Synced / Local only / Offline) backed by `useOnlineStatus`.
+- ✅ **Optimistic locking for local CRUD on Opportunities and Content OS.** `updatedAt` stamping plus `StaleRecordError` rejection prevents two-tab data loss in the local-first path.
+- ✅ **Chief of Staff dedup against existing rows** — exact-match dedup against existing opportunities/content/priorities is already in place at every acceptance branch (re-verified in code review).
+
 ## Open audit follow-ups
 
-These items came out of the May 2026 calm-OS audit and are intentionally not addressed in the current branch — they are good candidates for the next iteration:
+These items remain intentionally outside the current scope and are good candidates for the next iteration:
 
-- **Per-record writes for Weekly Brief and Opportunities.** Both currently rewrite the whole collection on update, which can lose concurrent edits when two tabs save at once. A per-record update with `updated_at` + stale-write rejection would close this.
-- **Offline write replay.** Local-first writes still do not replay upstream when connectivity returns. An `offlineWriteQueue` keyed in localStorage (mirroring the pattern in `appErrorTelemetry`) would harden this.
+- **Per-record writes for Weekly Brief.** Weekly Brief still uses whole-collection rewrites; the same `updatedAt`/`StaleRecordError` pattern used for Opportunities and Content OS should be applied there too.
+- **Server-side optimistic locking.** Local-first stale-write detection is in place, but Supabase-backed updates do not yet use ETags or a version column. A schema migration plus repository-side check would extend the protection across devices.
+- **Offline write replay.** Local writes survive offline, but they do not replay upstream when connectivity returns. An `offlineWriteQueue` keyed in localStorage (mirroring the pattern in `appErrorTelemetry`) would harden this.
 - **Cross-page promotion.** A Capture sticky cannot become a Reminder, and a Reminder cannot become a Weekly Priority. The audit recommends adding per-item "Promote to…" verbs that reuse existing repositories.
-- **Chief of Staff dedup on acceptance.** Generated priorities/opportunities/content can be accepted without checking against existing rows — a fuzzy title match before creation would prevent duplicates.
-- **Light theme.** Tokens are semantic and dark-only today; a `:root[data-theme="light"]` overlay plus a persisted toggle would close the premium-feel gap noted in the audit.
+- **Fuzzy dedup in Chief of Staff acceptance.** Exact-match dedup is in place; titles like "Q3 launch" vs "Q3 Launch Plan" still pass through. A similarity heuristic would help, but it has to balance recall against false positives that could block legitimate distinct items.
 - **Accessibility automation.** Manual a11y is good (skip link, focus rings, focus trap, reduced-motion); axe-core in Playwright would add automated coverage.
 
 ## Best Portfolio Framing

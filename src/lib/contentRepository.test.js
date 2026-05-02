@@ -57,4 +57,57 @@ describe('src/lib/contentRepository', () => {
     expect(updateListener).not.toHaveBeenCalled();
     expect(items.some((item) => item.id === created.id && item.title === created.title)).toBe(true);
   });
+
+  it('stamps and bumps updatedAt on local content writes', async () => {
+    const created = await createContentItem({
+      title: 'Founder note',
+      platform: 'Newsletter',
+      status: 'Drafting',
+    });
+    expect(created.updatedAt).toBeGreaterThan(0);
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const updated = await updateContentItem(
+      created.id,
+      { ...created, title: 'Founder note (revised)' },
+      { expectedUpdatedAt: created.updatedAt },
+    );
+
+    expect(updated.updatedAt).toBeGreaterThan(created.updatedAt);
+    expect(updated.title).toBe('Founder note (revised)');
+  });
+
+  it('rejects a local content update when the expected updatedAt is stale', async () => {
+    const created = await createContentItem({
+      title: 'Two-tab content',
+      platform: 'Newsletter',
+      status: 'Drafting',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    await updateContentItem(
+      created.id,
+      { ...created, title: 'Tab B saved first' },
+      { expectedUpdatedAt: created.updatedAt },
+    );
+
+    const updateListener = vi.fn();
+    window.addEventListener(CONTENT_ITEMS_UPDATED_EVENT, updateListener);
+    try {
+      await expect(
+        updateContentItem(
+          created.id,
+          { ...created, title: 'Tab A tried second' },
+          { expectedUpdatedAt: created.updatedAt },
+        ),
+      ).rejects.toMatchObject({ name: 'StaleRecordError' });
+    } finally {
+      window.removeEventListener(CONTENT_ITEMS_UPDATED_EVENT, updateListener);
+    }
+
+    const items = await listContentItems();
+    const persisted = items.find((item) => item.id === created.id);
+    expect(persisted.title).toBe('Tab B saved first');
+    expect(updateListener).not.toHaveBeenCalled();
+  });
 });

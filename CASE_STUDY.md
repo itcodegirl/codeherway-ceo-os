@@ -188,6 +188,41 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 12) Calm-OS audit follow-ups (May 2, 2026, batch two)
+
+Closing the highest-value items from the audit's "remaining risks" list:
+
+- **Light theme** (`tokens.css`, `useThemePreference`, Settings)
+  - Added a `:root[data-theme="light"]` overlay that retunes ~70 semantic tokens (surfaces, borders, shadows, accents, danger/warning, blueprint glows) without removing the dark palette. Token semantics already supported this.
+  - `useThemePreference` reads a System / Dark / Light preference from a dedicated localStorage key (no Supabase profile-schema migration needed), reacts to `prefers-color-scheme` changes when "System" is selected, and applies `data-theme` to `<html>`.
+  - Settings exposes a three-choice radio group with descriptive helper text. Changes apply immediately.
+
+- **Online/offline awareness** (`useOnlineStatus`, `SyncStatusPill`)
+  - `useOnlineStatus` subscribes to `online`/`offline` events and defaults to true in SSR-safe contexts.
+  - The sync pill now combines source and online status with a clear priority: **Offline** > **Local only** > **Synced**. The offline state has a calm pulse animation that respects `prefers-reduced-motion`.
+  - Descriptor logic moved to `src/lib/syncStatusDescriptors.js` so the component file only exports a component (Vite Fast Refresh) and the helper is independently unit-tested.
+
+- **Optimistic locking for local CRUD** (`opportunitiesRepository`, `contentRepository`, `useCrudPage`, `staleRecordError`)
+  - Local writes now stamp `updatedAt` on create/update.
+  - `updateOpportunity` and `updateContentItem` accept `options.expectedUpdatedAt`. When the persisted timestamp doesn't match, they throw a `StaleRecordError` *before* writing or emitting an update event — closing the previously-silent "two tabs save the same record" data-loss path on the local-first surface.
+  - `useCrudPage` threads the timestamp through for items that have one (the legacy two-arg contract is preserved for repos that don't track timestamps), detects the conflict via `isStaleRecordError`, and shows a friendly form error: *"This record was changed in another window. Reload to see the latest version before saving."*
+  - Supabase-backed paths are intentionally unchanged here — server-side optimistic locking would require a schema migration that is out of scope for this branch.
+
+- **Chief of Staff dedup** (no code change needed)
+  - Re-reading `useChiefStructuredAcceptance` showed that exact-match dedup against existing rows already runs at every acceptance branch. A *fuzzy*-match upgrade is real product work that risks blocking legitimate distinct items, so it was reframed as a follow-up rather than a fix.
+
+### Tests added in this batch
+- `themePreference.test.js` (6 tests) — pure helper validation and applied-theme resolution.
+- `useThemePreference.test.js` (5 tests) — initial OS read, attribute application, persistence, invalid-value rejection, OS-change reactivity.
+- `useOnlineStatus.test.js` (3 tests) — initial value, online event, offline event.
+- Extended `SyncStatusPill.test.jsx` (8 tests total) — covering offline > local > synced priority.
+- `staleRecordError.test.js` (3 tests) — code/name/instance detection.
+- New `useCrudPage` tests (2) — `expectedUpdatedAt` threading and friendly stale-record form error.
+- New `opportunitiesRepository.test.js` cases (3) — stamped timestamps, stale rejection, back-compat without `expectedUpdatedAt`.
+- New `contentRepository.test.js` cases (2) — stamped timestamps and stale rejection.
+
+Lint, typecheck, the full Vitest suite (368 tests), production build, and route-budget checks all pass on this branch.
+
 ## 11) Calm-OS audit pass (May 2, 2026)
 
 Driven by a structured product/UX audit of the CEO OS. Highlights:
