@@ -14,6 +14,7 @@ import {
 } from '../lib/captureRepository';
 import { createReminder } from '../lib/remindersRepository';
 import { createOpportunity } from '../lib/opportunitiesRepository';
+import { createContentItem } from '../lib/contentRepository';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
 import { useToast } from '../hooks/useToast';
 import { usePromotionAction } from '../hooks/usePromotionAction';
@@ -163,6 +164,21 @@ function Capture() {
     },
   });
 
+  const promoteNoteToContentDraft = usePromotionAction({
+    onShowToast: showToast,
+    isRecordKnown: (id) => notes.some((entry) => entry.id === id),
+    emptyTextMessage: 'Add some text to this note before promoting it.',
+    successMessage: 'Drafted on Content OS. Open the Content page to set platform and publish status.',
+    failureMessage: 'Unable to draft this note as content right now.',
+    run: async (note) => {
+      await createContentItem({
+        title: (note.text || '').trim(),
+        platform: '',
+        status: 'Drafting',
+      });
+    },
+  });
+
   return (
     <section className="capture-page">
       <PageHeader
@@ -234,6 +250,7 @@ function Capture() {
                 onEdit={updateNote}
                 onPromoteToReminder={promoteNoteToReminder}
                 onPromoteToOpportunity={promoteNoteToOpportunity}
+                onPromoteToContentDraft={promoteNoteToContentDraft}
                 onDelete={removeNote}
               />
             ))}

@@ -92,6 +92,38 @@ describe('src/pages/Capture', () => {
     expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
+  it('drafts a sticky note as a new content item via the per-note action', async () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Q3 launch retrospective post' },
+    });
+    fireEvent.change(screen.getByLabelText('Category'), {
+      target: { value: 'content' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+    fireEvent.click(screen.getByRole('button', {
+      name: 'Draft Content note on Content OS',
+    }));
+
+    expect(await screen.findByText(/Drafted on Content OS/)).toBeInTheDocument();
+
+    const contentRaw = window.localStorage.getItem('ceo-os-content-items');
+    expect(contentRaw).toBeTruthy();
+    const contentItems = JSON.parse(contentRaw);
+    const drafted = contentItems.find((entry) => entry.title === 'Q3 launch retrospective post');
+    expect(drafted).toBeDefined();
+    expect(drafted.status).toBe('Drafting');
+    expect(drafted.platform).toBe('');
+
+    expect(screen.getByDisplayValue('Q3 launch retrospective post')).toBeInTheDocument();
+  });
+
   it('tracks a sticky note as a new opportunity via the per-note action', async () => {
     render(
       <MemoryRouter>

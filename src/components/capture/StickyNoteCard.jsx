@@ -15,6 +15,7 @@ function StickyNoteCard({
   onEdit,
   onPromoteToReminder,
   onPromoteToOpportunity,
+  onPromoteToContentDraft,
   onDelete,
 }) {
   const categoryLabel = formatCategoryLabel(note.category);
@@ -77,6 +78,18 @@ function StickyNoteCard({
             ariaLabel={`Track ${categoryLabel} note as a new opportunity`}
           >
             Track opportunity
+          </Button>
+        ) : null}
+        {typeof onPromoteToContentDraft === 'function' ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="small"
+            icon={{ name: 'content', size: 14 }}
+            onClick={() => onPromoteToContentDraft(note)}
+            ariaLabel={`Draft ${categoryLabel} note on Content OS`}
+          >
+            Draft as content
           </Button>
         ) : null}
         <Button
