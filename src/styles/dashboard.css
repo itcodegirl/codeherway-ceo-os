@@ -214,21 +214,30 @@
 
 .focus-reminder-list__delete,
 .focus-reminder-list__promote {
-	border: 0;
+	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
 	text-decoration: underline;
 	cursor: pointer;
 	flex-shrink: 0;
 	font-size: 0.85rem;
-	padding: 0;
+	padding: 0.4rem 0.55rem;
+	border-radius: 0.5rem;
+	min-height: 2rem;
+	display: inline-flex;
+	align-items: center;
 }
 
 .focus-reminder-list__delete:hover,
+.focus-reminder-list__promote:hover {
+	color: var(--text);
+}
+
 .focus-reminder-list__delete:focus-visible,
-.focus-reminder-list__promote:hover,
 .focus-reminder-list__promote:focus-visible {
 	color: var(--text);
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
 }
 
 .focus-reminder-list__promote {

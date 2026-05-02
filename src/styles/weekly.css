@@ -192,3 +192,23 @@
 	}
 }
 
+/* Light-theme retuning for the autosave status dot rings.
+ * The default rings use rgba white at 0.04 (idle) and brand-cyan at 0.18
+ * (saving). On a light surface white-on-white rings disappear and the cyan
+ * ring is washed out, so we swap them for ink-on-paper halos. */
+:root[data-theme="light"] .weekly-review-notes__status-dot {
+	box-shadow: 0 0 0 3px rgba(11, 30, 56, 0.05);
+}
+
+:root[data-theme="light"] .weekly-review-notes__status--saving .weekly-review-notes__status-dot {
+	box-shadow: 0 0 0 3px rgba(31, 127, 198, 0.16);
+}
+
+:root[data-theme="light"] .weekly-review-notes__status--saved .weekly-review-notes__status-dot {
+	box-shadow: 0 0 0 3px rgba(43, 167, 132, 0.18);
+}
+
+:root[data-theme="light"] .weekly-review-notes__status--error .weekly-review-notes__status-dot {
+	box-shadow: 0 0 0 3px rgba(177, 69, 69, 0.18);
+}
+
