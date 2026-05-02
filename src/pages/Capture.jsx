@@ -14,6 +14,7 @@ import {
 import { createReminder } from '../lib/remindersRepository';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
 import { useToast } from '../hooks/useToast';
+import { usePromotionAction } from '../hooks/usePromotionAction';
 import '../styles/capture.css';
 
 function formatCategoryLabel(category) {
@@ -45,7 +46,6 @@ function Capture() {
   const [draftCategory, setDraftCategory] = useState(CAPTURE_CATEGORY_OPTIONS[0]);
   const [errorMessage, setErrorMessage] = useState('');
   const composerTextareaRef = useRef(null);
-  const promotingNoteIdsRef = useRef(new Set());
   const { toastMessage, isToastVisible, showToast } = useToast();
 
   useEffect(() => {
@@ -133,29 +133,16 @@ function Capture() {
     }
   };
 
-  const promoteNoteToReminder = (note) => {
-    if (!note?.id || !notes.some((entry) => entry.id === note.id)) {
-      return;
-    }
-    if (promotingNoteIdsRef.current.has(note.id)) {
-      return;
-    }
-    const text = (note.text || '').trim();
-    if (!text) {
-      showToast('Add some text to this note before promoting it.');
-      return;
-    }
-
-    promotingNoteIdsRef.current.add(note.id);
-    try {
-      createReminder({ text });
-      showToast('Added a reminder from this note. The sticky stays here in case you still need it.');
-    } catch {
-      showToast('Unable to create a reminder right now.');
-    } finally {
-      promotingNoteIdsRef.current.delete(note.id);
-    }
-  };
+  const promoteNoteToReminder = usePromotionAction({
+    onShowToast: showToast,
+    isRecordKnown: (id) => notes.some((entry) => entry.id === id),
+    emptyTextMessage: 'Add some text to this note before promoting it.',
+    successMessage: 'Added a reminder from this note. The sticky stays here in case you still need it.',
+    failureMessage: 'Unable to create a reminder right now.',
+    run: (note) => {
+      createReminder({ text: (note.text || '').trim() });
+    },
+  });
 
   return (
     <section className="capture-page">

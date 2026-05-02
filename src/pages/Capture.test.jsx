@@ -92,7 +92,7 @@ describe('src/pages/Capture', () => {
     expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
-  it('promotes a sticky note into a reminder via the per-note action', () => {
+  it('promotes a sticky note into a reminder via the per-note action', async () => {
     render(
       <MemoryRouter>
         <Capture />
@@ -106,7 +106,7 @@ describe('src/pages/Capture', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Make a reminder from Idea note' }));
 
-    expect(screen.getByText(/Added a reminder from this note/)).toBeInTheDocument();
+    expect(await screen.findByText(/Added a reminder from this note/)).toBeInTheDocument();
 
     const remindersRaw = window.localStorage.getItem('ceo-os-reminders');
     expect(remindersRaw).toBeTruthy();
