@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import WeeklyBrief from './WeeklyBrief';
@@ -15,6 +15,7 @@ function createWeeklyState(overrides = {}) {
     isLoading: false,
     loadError: '',
     reviewNotes: 'Review the week.',
+    reviewNotesStatus: 'idle',
     priorities: [],
     wins: [],
     blockers: [],
@@ -57,5 +58,36 @@ describe('src/pages/WeeklyBrief', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to save weekly review notes right now.');
     expect(screen.getByText('Autosave is paused until the weekly brief saves successfully again.')).toBeInTheDocument();
+  });
+
+  it('shows a Saved indicator when reviewNotesStatus is saved', () => {
+    useWeeklyBrief.mockReturnValue(createWeeklyState({ reviewNotesStatus: 'saved' }));
+    renderWeeklyBrief();
+    expect(screen.getByText('Saved.')).toBeInTheDocument();
+  });
+
+  it('shows a saving indicator while keystrokes are pending', () => {
+    vi.useFakeTimers();
+    try {
+      const setReviewNotes = vi.fn();
+      useWeeklyBrief.mockReturnValue(createWeeklyState({ setReviewNotes }));
+
+      renderWeeklyBrief();
+
+      const textarea = screen.getByLabelText('Close-Of-Week Reflection');
+      fireEvent.change(textarea, { target: { value: 'New thought' } });
+
+      // Pending state: a keystroke happened but the debounce hasn't fired yet.
+      expect(screen.getByText('Saving your reflection…')).toBeInTheDocument();
+      expect(setReviewNotes).not.toHaveBeenCalled();
+
+      act(() => {
+        vi.advanceTimersByTime(700);
+      });
+
+      expect(setReviewNotes).toHaveBeenCalledWith('New thought');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
