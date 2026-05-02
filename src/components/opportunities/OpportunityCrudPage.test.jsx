@@ -8,6 +8,7 @@ vi.mock('../../hooks/useCrudPage', () => ({
 }));
 
 vi.mock('../../lib/opportunitiesRepository', () => ({
+  OPPORTUNITIES_UPDATED_EVENT: 'ceo-os:opportunities-updated',
   createOpportunity: vi.fn(),
   deleteOpportunity: vi.fn(),
   getOpportunitiesSource: vi.fn(),

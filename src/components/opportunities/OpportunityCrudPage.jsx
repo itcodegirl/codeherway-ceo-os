@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 import SummaryCards from '../ui/SummaryCards';
 import { CrudTableLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
+  OPPORTUNITIES_UPDATED_EVENT,
   createOpportunity,
   deleteOpportunity,
   getOpportunitiesSource,
@@ -84,6 +85,7 @@ function OpportunityCrudPage() {
     createItem: createOpportunity,
     updateItem: updateOpportunity,
     deleteItem: deleteOpportunity,
+    updatedEventName: OPPORTUNITIES_UPDATED_EVENT,
     mapItemToFormValues: mapOpportunityToFormValues,
     mapFormValuesToPayload: mapOpportunityFormValuesToPayload,
     validatePayload: validateOpportunityPayload,

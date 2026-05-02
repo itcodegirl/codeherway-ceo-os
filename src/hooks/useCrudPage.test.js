@@ -557,4 +557,64 @@ describe('useCrudPage', () => {
       expect(result.current.items.find((item) => item.id === '1')?.name).toBe('From other tab'),
     );
   });
+
+  it('refreshes items when the configured updatedEventName is dispatched', async () => {
+    const listItems = vi.fn();
+    listItems
+      .mockResolvedValueOnce([{ id: '1', name: 'Initial' }])
+      .mockResolvedValueOnce([
+        { id: '1', name: 'Initial' },
+        { id: '2', name: 'Promoted from another surface' },
+      ]);
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      updateFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+      updatedEventName: 'ceo-os:test-updated',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:test-updated', {
+        detail: { source: 'local', type: 'create' },
+      }));
+    });
+
+    await waitFor(() => expect(listItems).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(result.current.items.some((item) => item.id === '2')).toBe(true),
+    );
+  });
+
+  it('does not subscribe to any event when updatedEventName is omitted', async () => {
+    const listItems = vi.fn(() => Promise.resolve([{ id: '1', name: 'Initial' }]));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      updateFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:test-updated', { detail: {} }));
+    });
+
+    // No subscription, so the event must not trigger a refetch.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(listItems).toHaveBeenCalledTimes(1);
+  });
 });

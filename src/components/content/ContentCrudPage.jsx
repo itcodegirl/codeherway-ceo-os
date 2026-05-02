@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 import SummaryCards from '../ui/SummaryCards';
 import { CrudCardGridLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
+  CONTENT_ITEMS_UPDATED_EVENT,
   createContentItem,
   deleteContentItem,
   getContentSource,
@@ -78,6 +79,7 @@ function ContentCrudPage() {
     createItem: createContentItem,
     updateItem: updateContentItem,
     deleteItem: deleteContentItem,
+    updatedEventName: CONTENT_ITEMS_UPDATED_EVENT,
     mapItemToFormValues: mapContentItemToFormValues,
     mapFormValuesToPayload: mapContentFormValuesToPayload,
     validatePayload: validateContentPayload,

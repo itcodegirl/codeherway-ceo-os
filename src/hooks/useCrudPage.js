@@ -24,6 +24,7 @@ export function useCrudPage(config) {
     createItem,
     updateItem,
     deleteItem,
+    updatedEventName,
     mapItemToFormValues,
     mapFormValuesToPayload,
     getDeleteLabel,
@@ -174,6 +175,29 @@ export function useCrudPage(config) {
   const refreshItems = useCallback(() => {
     setRefreshToken((current) => current + 1);
   }, []);
+
+  // When the repository advertises an updated-event name, subscribe so that
+  // writes from other surfaces (cross-page promotions, other tabs) silently
+  // refresh this page's list without forcing the user to reload. We
+  // intentionally ignore detail.source so events fired by both local and
+  // supabase paths trigger a refetch.
+  useEffect(() => {
+    if (typeof updatedEventName !== 'string' || !updatedEventName) {
+      return undefined;
+    }
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleUpdate = () => {
+      refreshItems();
+    };
+
+    window.addEventListener(updatedEventName, handleUpdate);
+    return () => {
+      window.removeEventListener(updatedEventName, handleUpdate);
+    };
+  }, [refreshItems, updatedEventName]);
 
   const resetForm = useCallback(() => {
     setFormValues(defaultFormValuesResolved);
