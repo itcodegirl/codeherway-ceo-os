@@ -16,6 +16,7 @@ import {
   getReminderProgress,
   toggleReminder,
 } from '../lib/remindersRepository';
+import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
   buildMainFocus,
@@ -248,6 +249,28 @@ function Dashboard() {
     }
   };
 
+  const handlePromoteReminderToPriority = async (reminder) => {
+    const text = (reminder?.text || '').trim();
+    if (!text) {
+      showToast('Add reminder text before promoting it.');
+      return;
+    }
+    try {
+      await createWeeklyItem({
+        itemType: 'priority',
+        item: {
+          title: text,
+          owner: 'You',
+          status: 'In Progress',
+        },
+      });
+      await refreshWeeklyBrief({ silent: true });
+      showToast("Added to this week's priorities. The reminder stays here.");
+    } catch {
+      showToast('Unable to promote this reminder right now.');
+    }
+  };
+
   const dashboardDemoNote = isLocalDashboardDemoMode
     ? SOURCE_NOTICE_SAMPLE_DATA
     : '';
@@ -338,6 +361,7 @@ function Dashboard() {
           suggestions={suggestions}
           onToggleReminder={handleToggleReminder}
           onDeleteReminder={handleDeleteReminder}
+          onPromoteReminder={handlePromoteReminderToPriority}
         />
 
         <article className="focus-panel" aria-label="Momentum panel">

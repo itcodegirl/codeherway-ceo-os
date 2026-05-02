@@ -21,15 +21,21 @@ vi.mock('../hooks/useWeeklyBrief', () => ({
   useWeeklyBrief: vi.fn(),
 }));
 
+vi.mock('../lib/weeklyRepository', () => ({
+  createWeeklyItem: vi.fn(() => Promise.resolve({ id: 'priority-new', title: 'mock' })),
+}));
+
 import Dashboard from './Dashboard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { listReminders } from '../lib/remindersRepository';
+import { createWeeklyItem } from '../lib/weeklyRepository';
 
 describe('src/pages/Dashboard', () => {
   beforeEach(() => {
     window.localStorage.clear();
     showToastSpy.mockReset();
+    createWeeklyItem.mockClear();
     vi.useRealTimers();
 
     useWeeklyBrief.mockReturnValue({
@@ -279,6 +285,55 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
     expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
+  });
+
+  it('promotes a pending reminder into a weekly priority via the per-item action', async () => {
+    const refreshWeeklyBrief = vi.fn().mockResolvedValue();
+    useWeeklyBrief.mockReturnValue({
+      priorities: [],
+      blockers: [],
+      wins: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief,
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a quick reminder'), {
+      target: { value: 'Send investor follow-up' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    const promoteButton = screen.getByRole('button', {
+      name: 'Promote reminder Send investor follow-up to a weekly priority',
+    });
+
+    await act(async () => {
+      fireEvent.click(promoteButton);
+    });
+
+    expect(createWeeklyItem).toHaveBeenCalledTimes(1);
+    expect(createWeeklyItem).toHaveBeenCalledWith({
+      itemType: 'priority',
+      item: {
+        title: 'Send investor follow-up',
+        owner: 'You',
+        status: 'In Progress',
+      },
+    });
+    expect(refreshWeeklyBrief).toHaveBeenCalledWith({ silent: true });
+    expect(showToastSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Added to this week's priorities"),
+    );
+
+    // The reminder should remain in the list — promotion does not delete it.
+    expect(screen.getByText('Send investor follow-up')).toBeInTheDocument();
   });
 
   it('announces loading focus context without hiding the command center', () => {

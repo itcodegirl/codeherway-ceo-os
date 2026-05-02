@@ -205,17 +205,39 @@
 	text-decoration: line-through;
 }
 
-.focus-reminder-list__delete {
+.focus-reminder-list__actions {
+	display: inline-flex;
+	gap: 0.55rem;
+	flex-shrink: 0;
+	align-items: center;
+}
+
+.focus-reminder-list__delete,
+.focus-reminder-list__promote {
 	border: 0;
 	background: transparent;
 	color: var(--text-muted);
 	text-decoration: underline;
 	cursor: pointer;
 	flex-shrink: 0;
+	font-size: 0.85rem;
+	padding: 0;
 }
 
-.focus-reminder-list__delete:hover {
+.focus-reminder-list__delete:hover,
+.focus-reminder-list__delete:focus-visible,
+.focus-reminder-list__promote:hover,
+.focus-reminder-list__promote:focus-visible {
 	color: var(--text);
+}
+
+.focus-reminder-list__promote {
+	color: var(--accent-soft-strong);
+}
+
+.focus-reminder-list__promote:hover,
+.focus-reminder-list__promote:focus-visible {
+	color: var(--accent);
 }
 
 .focus-home-page--overwhelmed .focus-panel--main {
