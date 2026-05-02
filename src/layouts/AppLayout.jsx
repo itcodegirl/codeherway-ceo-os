@@ -7,6 +7,7 @@ import ErrorBoundary from '../components/ui/ErrorBoundary';
 import StorageCorruptionBanner from '../components/ui/StorageCorruptionBanner';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useThemePreference } from '../hooks/useThemePreference';
 import { resolvePageMeta } from '../lib/pageMeta';
 import { resolveTeamName } from '../lib/settings';
 
@@ -15,6 +16,9 @@ function AppLayout() {
   const navigate = useNavigate();
   const mainRef = useRef(null);
   const { settings } = useSettings();
+  // Mounted at the shell so the html data-theme attribute is set on every
+  // authenticated render and stays in sync with OS preference changes.
+  useThemePreference();
 
   const teamName = resolveTeamName(settings?.teamName);
   const appName = `${teamName} CEO OS`;
