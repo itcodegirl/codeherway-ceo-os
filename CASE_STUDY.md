@@ -188,6 +188,59 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 17) Calm-OS audit follow-ups (May 2, 2026, batch seven)
+
+A focused six-phase pass surfacing two real bugs introduced by recent
+batches and adding genuine product polish:
+
+- **Silent refresh in `useCrudPage`** (`src/hooks/useCrudPage.js`)
+  - Batch six wired `useCrudPage` to listen for the repository's
+    `*_UPDATED_EVENT` so cross-tab writes refresh the open list. But
+    the load effect always called `setIsLoading(true)`, so every CRUD
+    write inside the page also briefly flashed the loading skeleton —
+    the repository fires its event synchronously after a successful
+    write.
+  - Treat `refreshToken === 0` as the cold-load path (toggles
+    `isLoading` as before) and any positive value as a refresh that
+    should keep existing items on screen. Both stale-record refreshes
+    and event-driven refreshes now update the list in place.
+
+- **Shared `readUpdatedAtMs` helper** (`src/lib/staleRecordError.js`)
+  - Three repositories had inline parsers for the optimistic-locking
+    timestamp:
+    `Number(item.updatedAt ?? item.updated_at) → finite ? raw : 0`,
+    plus weeklyRepository wrapped its copy in a private function.
+    Extracted into one helper next to `assertRecordIsFresh` and
+    consumed by all three repos.
+
+- **Composer persistence on Capture** (`src/pages/Capture.jsx`)
+  - Replaced the local `useState` for draft text and draft category
+    with `usePersistentState` so a long brain-dump survives reloads,
+    route changes, and accidental navigation.
+  - After a successful save, only the text resets; the category stays
+    selected so the user can rapid-fire several stickies in the same
+    category without reselecting.
+  - Defensive normalization: an invalid stored category value (legacy
+    or hand-edited) falls back to the first valid option.
+
+- **Chief notes-limit warning token** (`src/styles/chief-of-staff.css`)
+  - `.chief-notes-meta--limit` hardcoded `color: #f8a2b4` (soft pink),
+    which fades to nearly invisible against a light-mode warm-paper
+    background. Replaced with `var(--danger-text)` so the warning
+    carries clear meaning in both themes.
+
+### Tests added in this batch
+- 1 case in `useCrudPage.test.js` — event-driven refresh keeps
+  `isLoading` false; no skeleton flash.
+- 4 cases in `staleRecordError.test.js` — `readUpdatedAtMs` covering
+  camelCase, snake_case, mixed-precedence, and missing/non-finite paths.
+- 4 cases in `Capture.test.jsx` — composer rehydration on mount,
+  invalid-category fallback, persistence across remount, and
+  category-stays-after-save behavior.
+
+Lint, typecheck, the full Vitest suite (407 tests), production build,
+and route-budget checks all pass on this branch.
+
 ## 16) Calm-OS audit follow-ups (May 2, 2026, batch six)
 
 A focused six-phase pass that closes the cross-page promotion roadmap
