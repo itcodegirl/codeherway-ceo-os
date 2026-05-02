@@ -4,6 +4,7 @@ import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import Toast from '../components/ui/Toast';
 import StickyNoteCard from '../components/capture/StickyNoteCard';
+import { usePersistentState } from '../hooks/usePersistentState';
 import {
   CAPTURE_CATEGORY_OPTIONS,
   CAPTURE_NOTES_UPDATED_EVENT,
@@ -45,8 +46,18 @@ function formatRelativeDate(value) {
 
 function Capture() {
   const [notes, setNotes] = useState(() => listCaptureNotes());
-  const [draftText, setDraftText] = useState('');
-  const [draftCategory, setDraftCategory] = useState(CAPTURE_CATEGORY_OPTIONS[0]);
+  // Composer state survives reloads + navigation so a long brain-dump in
+  // progress is never lost. The category remembers the last choice so the
+  // user does not have to reselect it for every note.
+  const [draftText, setDraftText] = usePersistentState('ceo-os-capture-draft-text', '');
+  const [storedCategory, setStoredCategory] = usePersistentState(
+    'ceo-os-capture-draft-category',
+    CAPTURE_CATEGORY_OPTIONS[0],
+  );
+  const draftCategory = CAPTURE_CATEGORY_OPTIONS.includes(storedCategory)
+    ? storedCategory
+    : CAPTURE_CATEGORY_OPTIONS[0];
+  const setDraftCategory = setStoredCategory;
   const [errorMessage, setErrorMessage] = useState('');
   const composerTextareaRef = useRef(null);
   const { toastMessage, isToastVisible, showToast } = useToast();
@@ -110,7 +121,8 @@ function Capture() {
         category: draftCategory,
       });
       setDraftText('');
-      setDraftCategory(CAPTURE_CATEGORY_OPTIONS[0]);
+      // Keep draftCategory as the last-used selection so the user does not
+      // have to reselect it for the next note.
       setErrorMessage('');
     } catch {
       setErrorMessage('Unable to save this note right now.');

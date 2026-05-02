@@ -92,6 +92,52 @@ describe('src/pages/Capture', () => {
     expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
+  it('persists the composer draft and last-used category across remounts', () => {
+    const { unmount } = render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Half-typed thought to recover' },
+    });
+    fireEvent.change(screen.getByLabelText('Category'), {
+      target: { value: 'task' },
+    });
+
+    unmount();
+
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText('Note')).toHaveValue('Half-typed thought to recover');
+    expect(screen.getByLabelText('Category')).toHaveValue('task');
+  });
+
+  it('keeps the last-used category selected after a successful save', () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Run experiment for pricing page' },
+    });
+    fireEvent.change(screen.getByLabelText('Category'), {
+      target: { value: 'task' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+    // Category remains as the last selection; text resets so the next note can be typed quickly.
+    expect(screen.getByLabelText('Category')).toHaveValue('task');
+    expect(screen.getByLabelText('Note')).toHaveValue('');
+  });
+
   it('drafts a sticky note as a new content item via the per-note action', async () => {
     render(
       <MemoryRouter>
