@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
 import Toast from '../components/ui/Toast';
 import {
   CAPTURE_CATEGORY_OPTIONS,
@@ -269,12 +270,10 @@ function Capture() {
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <p className="empty-state__title">No sticky notes yet</p>
-            <p className="empty-state__description">
-              Start with one idea or one tiny task to clear mental load.
-            </p>
-          </div>
+          <EmptyState
+            title="No sticky notes yet"
+            description="Start with one idea or one tiny task to clear mental load."
+          />
         )}
       </section>
       <Toast className="toast--capture" isVisible={isToastVisible} message={toastMessage} />

@@ -281,3 +281,18 @@
 		flex: 1 1 9rem;
 	}
 }
+
+/*
+ * Light-theme retuning. The default accent stripe and per-panel tints are
+ * tuned for a dark background; they read too saturated against warm paper.
+ */
+:root[data-theme="light"] .focus-home__grid::before {
+	background:
+		linear-gradient(115deg, transparent 4%, rgba(31, 127, 198, 0.07) 36%, transparent 68%);
+	opacity: 0.6;
+}
+
+:root[data-theme="light"] .focus-home-page--overwhelmed .focus-panel--main,
+:root[data-theme="light"] .focus-home-page--focused .focus-panel--main {
+	border-color: var(--border-accent);
+}

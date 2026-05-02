@@ -683,3 +683,8 @@ textarea:focus-visible,
   border-color: var(--border-accent);
 }
 
+:root[data-theme="light"] .storage-corruption-banner {
+  background: rgba(204, 130, 28, 0.1);
+  border-color: rgba(204, 130, 28, 0.4);
+}
+
