@@ -188,6 +188,62 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 14) Calm-OS audit follow-ups (May 2, 2026, batch four)
+
+A focused six-phase pass on the next set of audit follow-ups, paired with two
+quality additions that fell out of recent work:
+
+- **Stale-write recovery now refreshes the list** (`useCrudPage`)
+  - After Phases 9–11 added `StaleRecordError` rejection on save, the form
+    modal stayed open with the friendly *"changed in another window"*
+    message — but the items list behind it still showed the old snapshot.
+  - Added a `refreshToken` state and a `refreshItems` callback. On
+    stale-record errors only, `useCrudPage` bumps the token to re-fetch
+    the list while keeping the modal open. Non-stale errors do not
+    trigger a refetch (covered by an explicit test) so transient network
+    failures don't spam the API.
+
+- **Shared `assertRecordIsFresh` helper** (`staleRecordError.js`)
+  - Three repositories carried the same shape of optimistic-locking guard
+    inside their local update paths. About 30 lines of duplication.
+  - Extracted a single `assertRecordIsFresh(persistedRecord,
+    expectedUpdatedAt, message)` helper encoding the same back-compat
+    semantics: skip when `expectedUpdatedAt` is missing/non-positive,
+    skip when persisted has no positive timestamp (legacy data), throw
+    on real mismatch. Opportunities, Content OS, and Weekly items all
+    consume the helper now.
+
+- **Reminder → Weekly Priority promotion** (`Dashboard`, `RemindersPanel`)
+  - Mirrors the Capture sticky → Reminder verb: each pending reminder
+    exposes a "Promote" button that calls `createWeeklyItem` with
+    `itemType: 'priority'`, refreshes the weekly brief silently, and
+    shows a calm toast: *"Added to this week's priorities. The reminder
+    stays here."*
+  - Original reminder stays so the user can choose whether to keep it
+    as a daily nudge or remove it manually.
+
+- **Light-mode polish + empty-state consistency**
+  - Toned down the diagonal accent stripe behind the Focus Home grid in
+    light mode; reset focus-panel borders so overwhelmed/focused chips
+    don't bleed warning colors into a calm-paper surface.
+  - Strengthened the storage-corruption banner contrast in light mode.
+  - Replaced Capture's inline `<div className="empty-state">` with the
+    shared `<EmptyState />` component to match the pattern used by
+    Opportunities and Content OS.
+
+### Tests added in this batch
+- 1 case in `useCrudPage.test.js` — stale-record error triggers `refreshItems`.
+- 1 case in `useCrudPage.test.js` — non-stale errors do NOT trigger a refetch.
+- 5 cases in `staleRecordError.test.js` — helper throw/default/exact-match/skip paths.
+- 1 case in `Dashboard.test.jsx` — promotion creates a weekly priority, fires `refreshWeeklyBrief({ silent: true })`, shows toast, leaves the reminder visible.
+
+### Budget note
+Dashboard CSS raw budget bumped from 4.0 kB → 5.0 kB to absorb the
+Reminder → Priority promote button styles and the Focus Home light-theme
+overrides. Gzip ceiling unchanged at 1.5 kB (current ship: 1.32 kB).
+
+Lint, typecheck, the full Vitest suite (380 tests), production build, and route-budget checks all pass on this branch.
+
 ## 13) Calm-OS audit follow-ups (May 2, 2026, batch three)
 
 Closing the next four items from the audit's remaining-risks list:
