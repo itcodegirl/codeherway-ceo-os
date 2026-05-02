@@ -23,6 +23,11 @@ function AppLayout() {
     return topbarTitle || 'Focus Home';
   }, [appName, location.pathname]);
 
+  const showSystemPulse = useMemo(() => {
+    const path = location.pathname || '/';
+    return path !== '/settings' && path !== '/ops-reliability';
+  }, [location.pathname]);
+
   usePageMeta(appName);
 
   const handleReturnHome = useCallback(() => {
@@ -51,7 +56,7 @@ function AppLayout() {
       <Sidebar />
       <div className="app-main">
         <Topbar pageTitle={currentPageTitle} />
-        <SystemPulse />
+        {showSystemPulse ? <SystemPulse /> : null}
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
           <ErrorBoundary
             key={location.pathname}
