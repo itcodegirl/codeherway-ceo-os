@@ -67,6 +67,7 @@ export function useCrudPage(config) {
   const [formValues, setFormValues] = useState(defaultFormValuesResolved);
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [refreshToken, setRefreshToken] = useState(0);
   const selectedItem = selectedItemState;
   const isSavingRef = useRef(false);
   const resetSavingRef = useCallback(() => {
@@ -168,7 +169,11 @@ export function useCrudPage(config) {
     return () => {
       isActive = false;
     };
-  }, [listItemsFn, loadErrorMessage, logPrefix]);
+  }, [listItemsFn, loadErrorMessage, logPrefix, refreshToken]);
+
+  const refreshItems = useCallback(() => {
+    setRefreshToken((current) => current + 1);
+  }, []);
 
   const resetForm = useCallback(() => {
     setFormValues(defaultFormValuesResolved);
@@ -277,8 +282,13 @@ export function useCrudPage(config) {
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
+      const isStale = isStaleRecordError(error);
       if (isMountedRef.current) {
-        setFormError(isStaleRecordError(error) ? STALE_RECORD_FORM_MESSAGE : saveErrorMessage);
+        setFormError(isStale ? STALE_RECORD_FORM_MESSAGE : saveErrorMessage);
+      }
+      if (isStale) {
+        // Pull the latest snapshot so closing the modal shows the up-to-date row.
+        refreshItems();
       }
       if (import.meta.env.DEV) {
         console.error(`Failed to save ${logPrefix}`, error);
@@ -295,6 +305,7 @@ export function useCrudPage(config) {
     isMountedRef,
     logPrefix,
     mapFormValuesToPayloadFn,
+    refreshItems,
     saveErrorMessage,
     resetForm,
     selectedItem,
@@ -331,5 +342,6 @@ export function useCrudPage(config) {
     handleCloseDeleteConfirm,
     handleConfirmDeleteSelected,
     deletePrompt,
+    refreshItems,
   };
 }

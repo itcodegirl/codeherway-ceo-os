@@ -475,4 +475,46 @@ describe('useCrudPage', () => {
     expect(result.current.formError).not.toBe('Generic save error.');
     expect(result.current.isFormOpen).toBe(true);
   });
+
+  it('refreshes the items list when an update fails with StaleRecordError', async () => {
+    const listItems = vi.fn();
+    listItems
+      .mockResolvedValueOnce([{ id: '1', name: 'Original', updatedAt: 1700000000000 }])
+      .mockResolvedValueOnce([{ id: '1', name: 'From other tab', updatedAt: 1700000999999 }]);
+    const updateItem = vi.fn(() => Promise.reject(new StaleRecordError()));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: '2', name: 'B' }),
+      updateFn: updateItem,
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapItemToFormValues: (item) => ({ name: item.name }),
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      result.current.setSelectedItem({ id: '1', name: 'Original', updatedAt: 1700000000000 });
+    });
+    await waitFor(() => expect(result.current.selectedItem?.id).toBe('1'));
+
+    act(() => {
+      result.current.handleOpenEditModal();
+      result.current.handleFormChange('name', 'Local edit');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    // Stale-record path should trigger a fresh list fetch.
+    await waitFor(() => expect(listItems).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(result.current.items.find((item) => item.id === '1')?.name).toBe('From other tab'),
+    );
+  });
 });
