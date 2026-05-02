@@ -207,3 +207,19 @@
   }
 }
 
+/* Light-theme retuning for the Chief fallback semantic surfaces. */
+:root[data-theme="light"] .chief-source-badge--fallback {
+  background: rgba(177, 69, 69, 0.08);
+  border-color: rgba(177, 69, 69, 0.4);
+  color: var(--danger-text);
+}
+
+:root[data-theme="light"] .chief-output-warning {
+  background: rgba(177, 69, 69, 0.06);
+  border-color: rgba(177, 69, 69, 0.32);
+}
+
+:root[data-theme="light"] .chief-output-warning strong {
+  color: var(--danger-text);
+}
+
