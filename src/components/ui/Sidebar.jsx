@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
-import { NAV_ITEMS } from '../../lib/routes';
+import { NAV_GROUPS } from '../../lib/routes';
 
 function subscribeToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery?.addEventListener === 'function') {
@@ -124,25 +124,32 @@ function Sidebar() {
         aria-hidden={isCompactViewport && !isMobileMenuOpen ? 'true' : undefined}
         aria-label="Main navigation"
       >
-        <ul className="sidebar__list">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.path} className="sidebar__item">
-              <NavLink
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) =>
-                  isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
-                }
-                onClick={() => setMobileMenuOpenKey('')}
-              >
-                <span className="sidebar__link-icon" aria-hidden="true">
-                  <Icon name={item.icon} size={16} />
-                </span>
-                <span className="sidebar__link-label">{item.label}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+        {NAV_GROUPS.map((group) => (
+          <div key={group.id} className={`sidebar__group sidebar__group--${group.id}`}>
+            <p className="sidebar__group-label" id={`sidebar-group-${group.id}`}>
+              {group.label}
+            </p>
+            <ul className="sidebar__list" aria-labelledby={`sidebar-group-${group.id}`}>
+              {group.items.map((item) => (
+                <li key={item.path} className="sidebar__item">
+                  <NavLink
+                    to={item.path}
+                    end={item.path === '/'}
+                    className={({ isActive }) =>
+                      isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'
+                    }
+                    onClick={() => setMobileMenuOpenKey('')}
+                  >
+                    <span className="sidebar__link-icon" aria-hidden="true">
+                      <Icon name={item.icon} size={16} />
+                    </span>
+                    <span className="sidebar__link-label">{item.label}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
     </aside>
   );

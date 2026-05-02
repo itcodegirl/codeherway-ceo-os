@@ -138,4 +138,10 @@
   --glow-primary: rgba(62, 189, 255, 0.33);
   --glow-secondary: rgba(114, 146, 255, 0.22);
   --glow-soft: rgba(116, 213, 255, 0.14);
+
+  /* Motion tokens — keep transitions on a calm, consistent rhythm */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-deliberate: 280ms;
+  --easing-standard: ease;
 }
