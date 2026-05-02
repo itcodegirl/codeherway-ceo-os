@@ -24,106 +24,7 @@
 	color: var(--danger-text);
 }
 
-.crm-table {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-list-gap);
-}
-
-.crm-table__native {
-	width: 100%;
-	border-collapse: separate;
-	border-spacing: 0 var(--space-list-gap);
-}
-
-.crm-table__header,
-.crm-table__row {
-	display: grid;
-	grid-template-columns: 1.35fr 0.9fr 0.8fr 1.2fr 0.55fr;
-	gap: var(--space-list-gap);
-	align-items: baseline;
-	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
-	background: var(--surface-card);
-	box-shadow: var(--shadow-soft);
-}
-
-.crm-table__header {
-	color: var(--text-muted);
-	font-size: var(--fs-helper);
-	padding: 0.75rem 0.85rem 0.7rem;
-	line-height: 1.35;
-}
-
-.crm-table__header > * {
-	margin: 0;
-	line-height: 1.2;
-	align-self: baseline;
-	text-align: left;
-	font-weight: 500;
-}
-
-.crm-table__row {
-	background: var(--surface-card);
-	border-radius: var(--radius-lg);
-	padding: var(--space-card-padding);
-	line-height: 1.35;
-}
-
-.crm-table__title {
-	font-size: var(--fs-helper);
-	color: var(--text);
-	font-weight: 600;
-	margin-bottom: 0.35rem;
-	margin-top: 0;
-	line-height: 1.25;
-}
-
-.crm-table__subtitle {
-	color: var(--text-muted);
-	font-size: var(--fs-helper);
-	margin: 0;
-	line-height: 1.35;
-}
-
-.crm-stage,
-.crm-next-step {
-	color: var(--text-sidebar-hover);
-	font-size: var(--fs-helper);
-}
-
-.crm-table__cell {
-	display: flex;
-	align-items: center;
-	line-height: 1.35;
-}
-
-.crm-table__cell--action {
-	justify-content: flex-end;
-}
-
-.crm-table__open-button {
-	border: 1px solid var(--border-accent);
-	background: var(--bg-accent-soft);
-	color: var(--accent-soft-strong);
-	border-radius: var(--radius-action);
-	padding: 0.4rem 0.7rem;
-	font-size: 0.8rem;
-	font-weight: 600;
-	display: inline-flex;
-	align-items: center;
-}
-
-.crm-table__cell::before {
-	display: none;
-	content: attr(data-label);
-	color: var(--text-muted);
-	font-size: 0.76rem;
-	font-weight: 500;
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
-	margin-bottom: 0.2rem;
-}
+/* Shared CRM table styles live in crm-table.css. Page-specific overrides only. */
 
 .opportunity-modal-content {
 	display: flex;
@@ -152,39 +53,6 @@
 @media (max-width: 1100px) {
 	.opportunities-summary {
 		grid-template-columns: 1fr;
-	}
-
-	.crm-table__header {
-		display: none;
-	}
-
-	.crm-table__row {
-		grid-template-columns: 1fr;
-		gap: var(--space-list-gap);
-		align-items: stretch;
-	}
-
-	.crm-table__cell {
-		flex-direction: column;
-		align-items: flex-start;
-		justify-content: flex-start;
-	}
-
-	.crm-table__cell--action {
-		justify-content: flex-start;
-	}
-
-	.crm-table__cell::before {
-		display: block;
-	}
-
-	.crm-table__cell .crm-table__subtitle,
-	.crm-table__cell .crm-table__title {
-		margin-top: 0;
-	}
-
-	.crm-table__cell {
-		justify-content: flex-start;
 	}
 }
 

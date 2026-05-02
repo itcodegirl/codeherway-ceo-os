@@ -119,18 +119,6 @@
 	border-color: var(--border-success-soft);
 }
 
-.crm-table__open-button {
-	border: 1px solid var(--border-accent);
-	background: var(--bg-accent-soft);
-	color: var(--accent-soft-strong);
-	border-radius: var(--radius-action);
-	padding: 0.4rem 0.7rem;
-	font-size: 0.8rem;
-	font-weight: 600;
-	display: inline-flex;
-	align-items: center;
-}
-
 .content-modal-content {
 	display: flex;
 	flex-direction: column;
