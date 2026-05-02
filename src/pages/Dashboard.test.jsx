@@ -336,6 +336,49 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByText('Send investor follow-up')).toBeInTheDocument();
   });
 
+  it('does not duplicate the priority when the user double-clicks Promote', async () => {
+    let resolveCreate;
+    createWeeklyItem.mockImplementation(() => new Promise((resolve) => {
+      resolveCreate = () => resolve({ id: 'priority-new', title: 'mock' });
+    }));
+    const refreshWeeklyBrief = vi.fn().mockResolvedValue();
+    useWeeklyBrief.mockReturnValue({
+      priorities: [],
+      blockers: [],
+      wins: [],
+      isLoading: false,
+      source: 'local',
+      loadError: '',
+      refreshWeeklyBrief,
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Add a quick reminder'), {
+      target: { value: 'Reach out to Sarah' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    const promoteButton = screen.getByRole('button', {
+      name: 'Promote reminder Reach out to Sarah to a weekly priority',
+    });
+
+    fireEvent.click(promoteButton);
+    fireEvent.click(promoteButton);
+    fireEvent.click(promoteButton);
+
+    expect(createWeeklyItem).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveCreate();
+      await Promise.resolve();
+    });
+  });
+
   it('announces loading focus context without hiding the command center', () => {
     useDashboardData.mockReturnValue({
       opportunityItems: [],

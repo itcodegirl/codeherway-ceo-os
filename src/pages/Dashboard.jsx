@@ -49,6 +49,7 @@ function Dashboard() {
   const nextMoveCursorRef = useRef(0);
   const isAddingReminderRef = useRef(false);
   const addReminderReleaseTimerRef = useRef(null);
+  const promotingReminderIdsRef = useRef(new Set());
 
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh your focus data right now.');
@@ -250,11 +251,19 @@ function Dashboard() {
   };
 
   const handlePromoteReminderToPriority = async (reminder) => {
-    const text = (reminder?.text || '').trim();
+    if (!reminder?.id || !reminders.some((item) => item.id === reminder.id)) {
+      return;
+    }
+    if (promotingReminderIdsRef.current.has(reminder.id)) {
+      return;
+    }
+    const text = (reminder.text || '').trim();
     if (!text) {
       showToast('Add reminder text before promoting it.');
       return;
     }
+
+    promotingReminderIdsRef.current.add(reminder.id);
     try {
       await createWeeklyItem({
         itemType: 'priority',
@@ -268,6 +277,8 @@ function Dashboard() {
       showToast("Added to this week's priorities. The reminder stays here.");
     } catch {
       showToast('Unable to promote this reminder right now.');
+    } finally {
+      promotingReminderIdsRef.current.delete(reminder.id);
     }
   };
 
