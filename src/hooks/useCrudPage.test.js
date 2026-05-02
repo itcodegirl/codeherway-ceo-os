@@ -558,6 +558,44 @@ describe('useCrudPage', () => {
     );
   });
 
+  it('keeps isLoading false during event-driven refreshes so the page does not flash a skeleton', async () => {
+    const listItems = vi.fn();
+    listItems
+      .mockResolvedValueOnce([{ id: '1', name: 'First' }])
+      .mockImplementationOnce(() => new Promise((resolve) => {
+        setTimeout(() => resolve([
+          { id: '1', name: 'First' },
+          { id: '2', name: 'Refreshed' },
+        ]), 25);
+      }));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: 'x' }),
+      updateFn: () => Promise.resolve({ id: 'x' }),
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+      updatedEventName: 'ceo-os:silent-refresh-test',
+    }));
+
+    // First mount: isLoading flips to false once items arrive.
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:silent-refresh-test'));
+    });
+
+    // While the refetch is in flight, isLoading must stay false (no flash).
+    expect(result.current.isLoading).toBe(false);
+
+    await waitFor(() =>
+      expect(result.current.items.some((item) => item.id === '2')).toBe(true),
+    );
+    expect(result.current.isLoading).toBe(false);
+  });
+
   it('refreshes items when the configured updatedEventName is dispatched', async () => {
     const listItems = vi.fn();
     listItems

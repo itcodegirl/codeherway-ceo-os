@@ -123,15 +123,24 @@ export function useCrudPage(config) {
 
   useEffect(() => {
     let isActive = true;
+    // refreshToken === 0 is the first mount (cold load); any positive value
+    // is a refresh triggered by refreshItems(). Refreshes already have items
+    // on screen, so we keep the loading state quiet and avoid a skeleton
+    // flash whenever the repository fires its UPDATED_EVENT after a write.
+    const isInitialLoad = refreshToken === 0;
 
     const load = async () => {
-      setIsLoading(true);
+      if (isInitialLoad) {
+        setIsLoading(true);
+      }
       setLoadError('');
       if (typeof listItemsFn !== 'function') {
         if (isActive) {
           setItems([]);
           setLoadError(loadErrorMessage);
-          setIsLoading(false);
+          if (isInitialLoad) {
+            setIsLoading(false);
+          }
         }
         return;
       }
@@ -159,7 +168,7 @@ export function useCrudPage(config) {
           console.error(`Failed to load ${logPrefix}`, error);
         }
       } finally {
-        if (isActive) {
+        if (isActive && isInitialLoad) {
           setIsLoading(false);
         }
       }
