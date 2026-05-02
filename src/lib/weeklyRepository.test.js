@@ -49,14 +49,13 @@ describe('src/lib/weeklyRepository', () => {
 
     const brief = await getWeeklyBriefByWeek(weekStart);
     expect(updateListener).not.toHaveBeenCalled();
-    expect(brief.priorities).toEqual([
-      {
-        id: 'priority-1',
-        title: 'Ship planner',
-        owner: 'Jenna',
-        status: 'Planned',
-      },
-    ]);
+    expect(brief.priorities).toHaveLength(1);
+    expect(brief.priorities[0]).toMatchObject({
+      id: 'priority-1',
+      title: 'Ship planner',
+      owner: 'Jenna',
+      status: 'Planned',
+    });
   });
 
   it('rejects stale local item deletes without emitting a fake update event', async () => {
@@ -86,13 +85,12 @@ describe('src/lib/weeklyRepository', () => {
 
     const brief = await getWeeklyBriefByWeek(weekStart);
     expect(updateListener).not.toHaveBeenCalled();
-    expect(brief.wins).toEqual([
-      {
-        id: 'win-1',
-        text: 'Published case study',
-        category: 'Portfolio',
-      },
-    ]);
+    expect(brief.wins).toHaveLength(1);
+    expect(brief.wins[0]).toMatchObject({
+      id: 'win-1',
+      text: 'Published case study',
+      category: 'Portfolio',
+    });
   });
 
   it('rejects failed local review-note persistence before emitting an update event', async () => {
@@ -114,5 +112,97 @@ describe('src/lib/weeklyRepository', () => {
     }
 
     expect(updateListener).not.toHaveBeenCalled();
+  });
+
+  it('stamps updatedAt on local create and bumps it on local update', async () => {
+    const created = await createWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      item: {
+        id: 'priority-stamped',
+        title: 'Initial title',
+        owner: 'Jenna',
+        status: 'Planned',
+      },
+      emitEvent: false,
+    });
+
+    expect(created.updatedAt).toBeGreaterThan(0);
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const updated = await updateWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      itemId: 'priority-stamped',
+      item: {
+        ...created,
+        title: 'Updated title',
+      },
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    });
+
+    expect(updated.updatedAt).toBeGreaterThan(created.updatedAt);
+    expect(updated.title).toBe('Updated title');
+  });
+
+  it('rejects a local weekly update when expectedUpdatedAt is stale', async () => {
+    const created = await createWeeklyItem({
+      weekStart,
+      itemType: 'win',
+      item: {
+        id: 'win-conflict',
+        text: 'Original win text',
+        category: 'Portfolio',
+      },
+      emitEvent: false,
+    });
+
+    // Simulate another tab writing to the persisted record.
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    await updateWeeklyItem({
+      weekStart,
+      itemType: 'win',
+      itemId: 'win-conflict',
+      item: { ...created, text: 'Tab B saved first' },
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    });
+
+    await expect(updateWeeklyItem({
+      weekStart,
+      itemType: 'win',
+      itemId: 'win-conflict',
+      item: { ...created, text: 'Tab A tried second' },
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    })).rejects.toMatchObject({ name: 'StaleRecordError' });
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+    const persisted = brief.wins.find((entry) => entry.id === 'win-conflict');
+    expect(persisted.text).toBe('Tab B saved first');
+  });
+
+  it('skips the stale check when no expectedUpdatedAt is provided (back-compat)', async () => {
+    const created = await createWeeklyItem({
+      weekStart,
+      itemType: 'blocker',
+      item: {
+        id: 'blocker-compat',
+        text: 'Initial blocker',
+        severity: 'warning',
+      },
+      emitEvent: false,
+    });
+
+    const updated = await updateWeeklyItem({
+      weekStart,
+      itemType: 'blocker',
+      itemId: 'blocker-compat',
+      item: { ...created, text: 'Updated without timestamp' },
+      emitEvent: false,
+    });
+
+    expect(updated.text).toBe('Updated without timestamp');
   });
 });

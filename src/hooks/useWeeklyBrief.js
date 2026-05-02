@@ -17,6 +17,9 @@ import {
   defaultWins,
 } from '../lib/weeklyData';
 import { resolveNextValue, shallowEqualRecordArrays, shallowEqualRecords } from '../lib/stateUtils';
+import { isStaleRecordError } from '../lib/staleRecordError';
+
+const STALE_RECORD_MESSAGE = 'A weekly item was changed in another window. We pulled the latest version. Try your edit again.';
 
 const SILENT_REFRESH_COALESCE_MS = 400;
 const WEEKLY_STORAGE_KEYS = new Set([
@@ -240,6 +243,7 @@ export function useWeeklyBrief() {
       }
 
       if (!shallowEqualRecords(previousItem, nextItem)) {
+        const expectedUpdatedAt = Number(previousItem?.updatedAt);
         await updateWeeklyItem({
           weekStart,
           itemType,
@@ -247,6 +251,9 @@ export function useWeeklyBrief() {
           item: nextItem,
           sortOrder: index,
           emitEvent: false,
+          ...(Number.isFinite(expectedUpdatedAt) && expectedUpdatedAt > 0
+            ? { expectedUpdatedAt }
+            : {}),
         });
         hasChanges = true;
       }
@@ -300,7 +307,7 @@ export function useWeeklyBrief() {
 
       void persistCollectionDiff('priority', currentValue, normalizedValue).catch((error) => {
         recoverAfterPersistenceFailure(
-          'Unable to save weekly priorities right now.',
+          isStaleRecordError(error) ? STALE_RECORD_MESSAGE : 'Unable to save weekly priorities right now.',
           'Failed to persist weekly priorities',
           error,
         );
@@ -317,7 +324,7 @@ export function useWeeklyBrief() {
 
       void persistCollectionDiff('win', currentValue, normalizedValue).catch((error) => {
         recoverAfterPersistenceFailure(
-          'Unable to save weekly wins right now.',
+          isStaleRecordError(error) ? STALE_RECORD_MESSAGE : 'Unable to save weekly wins right now.',
           'Failed to persist weekly wins',
           error,
         );
@@ -334,7 +341,7 @@ export function useWeeklyBrief() {
 
       void persistCollectionDiff('blocker', currentValue, normalizedValue).catch((error) => {
         recoverAfterPersistenceFailure(
-          'Unable to save weekly blockers right now.',
+          isStaleRecordError(error) ? STALE_RECORD_MESSAGE : 'Unable to save weekly blockers right now.',
           'Failed to persist weekly blockers',
           error,
         );
