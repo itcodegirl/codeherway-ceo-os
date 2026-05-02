@@ -13,12 +13,9 @@ import {
   listCaptureNotes,
   updateCaptureNote,
 } from '../lib/captureRepository';
-import { createReminder } from '../lib/remindersRepository';
-import { createOpportunity } from '../lib/opportunitiesRepository';
-import { createContentItem } from '../lib/contentRepository';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
 import { useToast } from '../hooks/useToast';
-import { usePromotionAction } from '../hooks/usePromotionAction';
+import { useCaptureNotePromotions } from '../hooks/useCaptureNotePromotions';
 import '../styles/capture.css';
 
 function formatCategoryLabel(category) {
@@ -148,48 +145,11 @@ function Capture() {
     }
   };
 
-  const promoteNoteToReminder = usePromotionAction({
-    onShowToast: showToast,
-    isRecordKnown: (id) => notes.some((entry) => entry.id === id),
-    emptyTextMessage: 'Add some text to this note before promoting it.',
-    successMessage: 'Added a reminder from this note. The sticky stays here in case you still need it.',
-    failureMessage: 'Unable to create a reminder right now.',
-    run: (note) => {
-      createReminder({ text: (note.text || '').trim() });
-    },
-  });
-
-  const promoteNoteToOpportunity = usePromotionAction({
-    onShowToast: showToast,
-    isRecordKnown: (id) => notes.some((entry) => entry.id === id),
-    emptyTextMessage: 'Add some text to this note before promoting it.',
-    successMessage: 'Tracked as a new opportunity. Open the Opportunities page to fill in company and next step.',
-    failureMessage: 'Unable to track this note as an opportunity right now.',
-    run: async (note) => {
-      await createOpportunity({
-        name: (note.text || '').trim(),
-        company: '',
-        priority: 'Medium',
-        stage: 'New',
-        nextStep: '',
-      });
-    },
-  });
-
-  const promoteNoteToContentDraft = usePromotionAction({
-    onShowToast: showToast,
-    isRecordKnown: (id) => notes.some((entry) => entry.id === id),
-    emptyTextMessage: 'Add some text to this note before promoting it.',
-    successMessage: 'Drafted on Content OS. Open the Content page to set platform and publish status.',
-    failureMessage: 'Unable to draft this note as content right now.',
-    run: async (note) => {
-      await createContentItem({
-        title: (note.text || '').trim(),
-        platform: '',
-        status: 'Drafting',
-      });
-    },
-  });
+  const {
+    promoteToReminder: promoteNoteToReminder,
+    promoteToOpportunity: promoteNoteToOpportunity,
+    promoteToContentDraft: promoteNoteToContentDraft,
+  } = useCaptureNotePromotions({ notes, showToast });
 
   return (
     <section className="capture-page">
