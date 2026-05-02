@@ -20,7 +20,8 @@ The May 2026 calm-OS audit pass closed several gaps in this branch:
 - ✅ **Online/offline awareness.** A three-state sync pill (Synced / Local only / Offline) backed by `useOnlineStatus`.
 - ✅ **Optimistic locking for local CRUD on Opportunities, Content OS, and Weekly Brief items.** `updatedAt` stamping plus `StaleRecordError` rejection prevents two-tab data loss across all three local-first surfaces.
 - ✅ **Chief of Staff dedup against existing rows** — exact-match dedup against existing opportunities/content/priorities runs at every acceptance branch (re-verified in code review).
-- ✅ **Cross-page promotion verbs.** Three verbs share the same `usePromotionAction` hook: Capture sticky → Dashboard reminder, Capture sticky → Opportunity, and pending reminder → weekly priority. All reuse the existing repositories, leave the source record in place, confirm via toast, and reject rapid double-clicks via a per-record in-flight guard.
+- ✅ **Cross-page promotion verbs.** Four verbs share the same `usePromotionAction` hook: Capture sticky → Dashboard reminder, Capture sticky → Opportunity, Capture sticky → Content draft, and pending reminder → weekly priority. All reuse the existing repositories, leave the source record in place, confirm via toast, and reject rapid double-clicks via a per-record in-flight guard.
+- ✅ **Cross-tab list refresh.** `useCrudPage` subscribes to its repository's `*_UPDATED_EVENT` so writes from other surfaces (cross-page promotions, other tabs) silently re-fetch the current page's list without a manual reload.
 - ✅ **Accessibility automation.** `@axe-core/playwright` scans every primary route with a wcag2a/wcag2aa/best-practice rule set; test fails on serious or critical violations and reports lighter findings to the test output for review.
 - ✅ **Stale-write recovery refresh.** When a save is rejected as stale, the items list re-fetches under the open modal so closing it reveals the up-to-date row instead of hiding the conflict. Non-stale errors do NOT trigger a refetch (covered by an explicit test).
 - ✅ **Shared optimistic-locking helper.** Three repositories shared the same locking guard; extracted into `assertRecordIsFresh` with full back-compat semantics.
@@ -33,7 +34,6 @@ These items remain intentionally outside the current scope and are good candidat
 
 - **Server-side optimistic locking.** Local-first stale-write detection is in place, but Supabase-backed updates do not yet use ETags or a version column. A schema migration plus repository-side check would extend the protection across devices.
 - **Offline write replay.** Local writes survive offline, but they do not replay upstream when connectivity returns. An `offlineWriteQueue` keyed in localStorage (mirroring the pattern in `appErrorTelemetry`) would harden this.
-- **Capture → Content draft promotion.** The Capture sticky now has Reminder and Opportunity verbs; a third "Draft as content" verb would close the loop on the four CRUD surfaces.
 - **Fuzzy dedup in Chief of Staff acceptance.** Exact-match dedup is in place; titles like "Q3 launch" vs "Q3 Launch Plan" still pass through. A similarity heuristic would help, but it has to balance recall against false positives that could block legitimate distinct items.
 - **Light-mode polish across the remaining page-specific surfaces.** Focus Home, the corruption banner, and the weekly autosave dot are tuned; `journal.css` and Chief of Staff secondary surfaces may still need targeted overrides if production demos show issues.
 

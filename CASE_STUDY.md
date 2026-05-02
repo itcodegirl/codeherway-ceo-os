@@ -188,6 +188,67 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 16) Calm-OS audit follow-ups (May 2, 2026, batch six)
+
+A focused six-phase pass that closes the cross-page promotion roadmap
+and adds cross-tab list refresh:
+
+- **Cross-tab list refresh in `useCrudPage`** (`src/hooks/useCrudPage.js`)
+  - Cross-page promotion verbs fired createOpportunity / createContentItem
+    from outside the CRUD page itself. The repository emitted its
+    `*_UPDATED_EVENT` but `useCrudPage` never listened — so an open
+    Opportunities or Content OS page (in another tab, or even the same
+    tab right after promoting from Capture) showed stale data until reload.
+  - Added an optional `updatedEventName` config; the hook subscribes to
+    that window event and silently bumps the existing `refreshToken` so
+    the list refetches. Cleans up on unmount or event-name change.
+  - Wired `OPPORTUNITIES_UPDATED_EVENT` and `CONTENT_ITEMS_UPDATED_EVENT`
+    through their respective CRUD pages, plus updated four test mocks
+    to expose the new exports.
+
+- **Extracted `StickyNoteCard` component** (`src/components/capture/StickyNoteCard.jsx`)
+  - Capture.jsx had grown to 310 lines as the per-note action surface
+    accumulated four buttons. The mapped `<article>` block was 70 lines
+    on its own.
+  - Moved the entire sticky-note DOM (meta header, textarea, controls,
+    promotion buttons) into a focused component. Promotion buttons
+    render only when their handler is supplied so future verbs can be
+    added without touching the markup.
+  - Capture.jsx is now composition-only over the sticky list (310 → 253
+    lines); same DOM shape, no behavior change.
+
+- **Capture → Content draft promotion** (`Capture.jsx`)
+  - Fourth and final cross-page verb. "Draft as content" button on every
+    sticky calls `createContentItem` with the note text as the title;
+    platform is empty and status is `Drafting` so the user lands on
+    Content OS ready to fill in platform and publish status.
+  - Toast: *"Drafted on Content OS. Open the Content page to set
+    platform and publish status."* The original sticky stays.
+
+- **Mobile sticky controls + journal light polish** (capture.css, journal.css)
+  - With four promotion buttons + a category select, a vertical stack
+    pushed each sticky to ~360 px tall on mobile. Switched to a CSS
+    grid with the select spanning the full row and the four buttons
+    in a 2×2 grid below, keeping every action above the fold.
+  - Added a `:root[data-theme="light"]` override for
+    `.journal-prompts__item`. The default border mixes 24% accent into
+    the translucent ink-blue border, which read slightly too saturated
+    on a light surface for reflective writing. Dropped to plain
+    `var(--border)` and lightened the surface to
+    `rgba(255, 255, 255, 0.85)` so the prompts feel like calm paper.
+
+### Tests added in this batch
+- 2 cases in `useCrudPage.test.js` — `updatedEventName` triggers
+  refetch; missing config means no event subscription (back-compat).
+- 5 cases in `StickyNoteCard.test.jsx` — the component contract
+  (always-on Delete, opt-in promotion buttons, edit and delete
+  forwarding).
+- 1 case in `Capture.test.jsx` — Draft-as-content success path.
+- 1 case in `Capture.test.jsx` — Draft-as-content double-click guard.
+
+Lint, typecheck, the full Vitest suite (398 tests), production build,
+and route-budget checks all pass on this branch.
+
 ## 15) Calm-OS audit follow-ups (May 2, 2026, batch five)
 
 A focused six-phase pass on the next set of audit follow-ups, plus
