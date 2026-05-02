@@ -109,6 +109,7 @@ Driven by a structured product + UX audit of the system, this branch adds:
 - **Cross-page promotion** — four verbs share a single `usePromotionAction` hook (per-record in-flight guard, id-membership check, async run, toast feedback): each Capture sticky has "Make reminder", "Track opportunity", and "Draft as content" actions, and each pending Focus Home reminder has a "Promote" action that creates a weekly priority. All four use the existing repositories, fire calm toast confirmations, and leave the source record in place so the user decides whether to keep the long-form context.
 - **Cross-tab list refresh** — `useCrudPage` subscribes to its repository's `*_UPDATED_EVENT` so promotions from Capture (or any other tab) silently re-fetch an open Opportunities or Content OS list without a manual reload, and refreshes never flash the loading skeleton because items stay on screen during the refetch.
 - **Composer rehydration** — the Capture composer persists in-progress draft text and the last-used category through `usePersistentState`, so a long brain-dump survives reloads, route changes, and accidental navigation. Invalid stored category values fall back to the default safely.
+- **Offline write queue infrastructure** — `src/lib/offlineWriteQueue.js` ships a localStorage-backed queue with FIFO drop, drain-on-handler, stop-on-first-failure, attempt counters, and `OFFLINE_QUEUE_UPDATED_EVENT` notifications. The topbar `SyncStatusPill` renders a `+N` badge whenever there are queued writes (singular/plural aria-label, theme-aware tone). Repository wiring is deferred until a Supabase staging environment is available; the contract is locked in by an executable integration-shape test.
 - **Accessibility automation** — `@axe-core/playwright` scans every primary route with the wcag2a/wcag2aa/best-practice rule set; serious/critical violations fail CI, and lighter findings are reported for review.
 - **Debounced reflective autosave** — the Weekly Brief close-of-week reflection now debounces to 600ms and surfaces an explicit `Saving / Saved / Couldn't save` indicator next to the field; errors are routed through toasts and `appErrorTelemetry`.
 - **Tonal scope** — `SystemPulse` is hidden on Settings and Ops Reliability so action-mode copy doesn't pull at users who are in setup or diagnostic contexts.
@@ -118,7 +119,7 @@ Driven by a structured product + UX audit of the system, this branch adds:
 - **Settings autosave on blur** — input fields and toggles persist immediately while the explicit `Save Settings` button is preserved as a "save now" affordance.
 - **Motion token system** — `--duration-fast / --duration-base / --duration-deliberate` and `--easing-standard` are exported from `tokens.css` so transitions can converge on a calm rhythm.
 
-Coverage for the above ships in this branch: 407 unit/integration tests, lint, typecheck, build, and route-budget checks all pass. The `@axe-core/playwright` sweep ships as a Playwright spec — exercise it on a machine with browsers installed (`npx playwright install` first).
+Coverage for the above ships in this branch: 434 unit/integration tests, lint, typecheck, build, and route-budget checks all pass. The `@axe-core/playwright` sweep ships as a Playwright spec — exercise it on a machine with browsers installed (`npx playwright install` first).
 
 ## What this repository demonstrates
 

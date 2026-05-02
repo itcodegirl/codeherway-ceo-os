@@ -188,6 +188,61 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 18) Calm-OS audit follow-ups (May 2, 2026, batch eight)
+
+A focused six-phase pass that ships the long-pending offline-write queue
+infrastructure plus several smaller correctness wins:
+
+- **Unmount-safe promotion toasts** (`usePromotionAction`)
+  - The hook awaited an async run, then called `onShowToast`. If the
+    parent unmounted while run was pending, the toast still fired
+    through a stale closure. Added `useIsMountedRef` and gated all
+    three toast callsites (success, failure, empty-text) on
+    `isMountedRef.current`. Two new tests prove no toast fires
+    after unmount on either resolve or reject.
+
+- **Capture promotions consolidated** (`useCaptureNotePromotions`)
+  - Three near-identical `usePromotionAction` blocks on `Capture.jsx`
+    (~45 lines of repeated config) collapsed into one
+    `useCaptureNotePromotions({ notes, showToast })` hook returning
+    `{ promoteToReminder, promoteToOpportunity, promoteToContentDraft }`.
+    Page composition reads as intent. 5 new tests cover the hook end
+    to end.
+
+- **Offline write queue** (`offlineWriteQueue`, `useOfflineWriteQueueSize`,
+  `SyncStatusPill`)
+  - Long-pending audit item. `src/lib/offlineWriteQueue.js` exports
+    `enqueueOfflineWrite`, `getOfflineQueue`, `removeOfflineWrite`,
+    `clearOfflineQueue`, and `drainOfflineQueue(handlerByKind)`. Backed
+    by localStorage, FIFO-trimmed at 200 entries, emits
+    `ceo-os:offline-queue-updated`, stops on first failure, bumps
+    attempts on the failed entry, leaves unknown-kind entries in place
+    for forward compat.
+  - `useOfflineWriteQueueSize` subscribes to the event plus the storage
+    event so other tabs propagate. The `SyncStatusPill` renders a
+    `+N` badge with singular/plural aria-label when the queue is
+    non-empty.
+  - Repository wiring is deferred until a Supabase staging environment
+    is available. The intended contract is locked in by an executable
+    integration-shape test (FIFO replay, stop-on-failure preserves
+    later entries, multi-kind routing).
+
+- **Storage corruption banner mobile stack**
+  - Added a `max-width: 540px` breakpoint that switches the banner to
+    a vertical stack with a full-width Dismiss button so the body and
+    action don't squeeze each other on small phones.
+
+### Tests added in this batch
+- 2 cases in `usePromotionAction.test.js` — unmount during resolve, unmount during reject.
+- 5 cases in `useCaptureNotePromotions.test.js` — full hook contract.
+- 11 cases in `offlineWriteQueue.test.js` — module behaviors.
+- 4 cases in `useOfflineWriteQueue.test.js` — hook subscription.
+- 3 cases in `SyncStatusPill.test.jsx` — pending pill rendering.
+- 3 cases in `offlineWriteQueue.integration.test.js` — replay order, stop-on-failure preservation, multi-kind routing.
+
+Lint, typecheck, the full Vitest suite (434 tests), production build,
+and route-budget checks all pass on this branch.
+
 ## 17) Calm-OS audit follow-ups (May 2, 2026, batch seven)
 
 A focused six-phase pass surfacing two real bugs introduced by recent
