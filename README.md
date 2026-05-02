@@ -99,6 +99,21 @@ This project is strongest when presented as a local-first productivity system wi
 - Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
 - See [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for the current recruiter-facing limitation list.
 
+## Recent calm-OS audit improvements
+
+Driven by a structured product + UX audit of the system, this branch adds:
+
+- **Honest sync status** — a `SyncStatusPill` in the topbar reads from `useWorkspaceSettings` and renders `Synced` or `Local only`, so users never silently fall off Supabase.
+- **Corruption recovery, not silent loss** — `usePersistentState` now preserves any unreadable JSON blob under a `${key}__corrupt_<ts>` backup key and emits a `ceo-os:storage-corruption` event. A non-blocking `StorageCorruptionBanner` tells the user we kept a copy.
+- **Debounced reflective autosave** — the Weekly Brief close-of-week reflection now debounces to 600ms and surfaces an explicit `Saving / Saved / Couldn't save` indicator next to the field; errors are routed through toasts and `appErrorTelemetry`.
+- **Tonal scope** — `SystemPulse` is hidden on Settings and Ops Reliability so action-mode copy doesn't pull at users who are in setup or diagnostic contexts.
+- **Grouped IA** — the sidebar now groups routes into **Today / This week / Workspace / Account**. Account links (Ops Reliability, Settings) are visually demoted so daily surfaces lead the eye.
+- **Architecture cleanup** — `Dashboard.jsx` is split into `FocusModeChips` and `RemindersPanel` (491 → 379 lines), and the `.crm-table` primitives are extracted into a shared `crm-table.css` consumed by both Opportunities and Content OS.
+- **Settings autosave on blur** — input fields and toggles persist immediately while the explicit `Save Settings` button is preserved as a "save now" affordance.
+- **Motion token system** — `--duration-fast / --duration-base / --duration-deliberate` and `--easing-standard` are exported from `tokens.css` so transitions can converge on a calm rhythm.
+
+Coverage for the above ships in this branch: full Vitest suite, lint, typecheck, build, and route-budget checks all pass.
+
 ## What this repository demonstrates
 
 ### 1) Architecture consistency

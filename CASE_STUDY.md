@@ -188,6 +188,33 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 11) Calm-OS audit pass (May 2, 2026)
+
+Driven by a structured product/UX audit of the CEO OS. Highlights:
+
+- **Trust signals over silence**
+  - `usePersistentState` now preserves any unreadable JSON blob under `${key}__corrupt_<ts>` (capped at three backups per key) and emits `ceo-os:storage-corruption`. The new `StorageCorruptionBanner` renders an inline, dismissible notice so a parse failure can never silently empty a journal or weekly brief.
+  - `SyncStatusPill` reads `useWorkspaceSettings().source` and exposes `Synced` / `Local only` directly in the topbar — closing the previously silent Supabase-fallback path.
+  - The Weekly Brief close-of-week reflection now debounces autosave to 600ms, surfaces a `Saving / Saved / Couldn’t save` indicator, and routes failures through `useToast` and `appErrorTelemetry`.
+- **IA + tonal scope**
+  - The sidebar now groups routes into **Today / This week / Workspace / Account**. Account-group links (including Ops Reliability) are visually demoted so daily surfaces lead the eye, without removing the underlying SLO/telemetry infrastructure.
+  - `SystemPulse` is hidden on Settings and Ops Reliability so action-mode copy does not pull at users in setup or diagnostic contexts.
+- **Architecture**
+  - `Dashboard.jsx` is split into `FocusModeChips` and `RemindersPanel` (491 → 379 lines).
+  - The `.crm-table` primitives are extracted into a shared `src/styles/crm-table.css` consumed by Opportunities and Content OS, removing duplicated rules.
+  - Settings now autosaves on blur and on toggle change while keeping the explicit Save button as a "save now" affordance.
+- **Motion**
+  - `--duration-fast / --duration-base / --duration-deliberate` and `--easing-standard` added to `tokens.css`. Sidebar links and the new sync pill consume them; further surfaces can converge incrementally.
+- **Tests added in this pass**
+  - `storageCorruption.test.js` — backup-key shape, event payload, 3-backup cap.
+  - `StorageCorruptionBanner.test.jsx` — appears on event, dismisses on click.
+  - `SyncStatusPill.test.jsx` — supabase / local / unknown rendering.
+  - Extra `WeeklyBrief` tests — `Saved.` indicator, debounced commit on idle.
+  - Extra `usePersistentState` test — corrupted load preserves blob and emits event.
+  - Extra `routes` tests — `buildNavGroups` ordering and complete coverage.
+
+Lint, typecheck, the full Vitest suite (340 tests), production build, and route-budget checks all pass on this branch. Playwright e2e was not exercised in the sandbox because the browser binaries were not installed; the suites themselves were not modified.
+
 ## 10) Latest hardening updates (May 1, 2026, batch two)
 
 - Persisted state now reloads cleanly when a storage key changes, preventing stale shell or settings values from leaking between contexts.
