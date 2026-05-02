@@ -92,6 +92,33 @@ describe('src/pages/Capture', () => {
     expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
+  it('rehydrates the composer when a draft is in localStorage at mount', () => {
+    window.localStorage.setItem('ceo-os-capture-draft-text', JSON.stringify('Saved draft from earlier'));
+    window.localStorage.setItem('ceo-os-capture-draft-category', JSON.stringify('opportunity'));
+
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText('Note')).toHaveValue('Saved draft from earlier');
+    expect(screen.getByLabelText('Category')).toHaveValue('opportunity');
+  });
+
+  it('falls back to the default category if a stored value is no longer valid', () => {
+    window.localStorage.setItem('ceo-os-capture-draft-category', JSON.stringify('not-a-real-category'));
+
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    // First valid option in CAPTURE_CATEGORY_OPTIONS is 'idea'.
+    expect(screen.getByLabelText('Category')).toHaveValue('idea');
+  });
+
   it('persists the composer draft and last-used category across remounts', () => {
     const { unmount } = render(
       <MemoryRouter>
