@@ -51,6 +51,20 @@ function Settings() {
     void markSave();
   };
 
+  const handleBlurSave = () => {
+    if (!canSave) {
+      return;
+    }
+    void saveSettings(settings);
+  };
+
+  const handleToggle = (key, value) => {
+    handleChange(key, value);
+    if (canSave) {
+      void saveSettings({ ...settings, [key]: value });
+    }
+  };
+
   return (
     <section className="settings-page">
       <PageHeader
@@ -83,6 +97,7 @@ function Settings() {
             minLength={2}
             disabled={isSaving}
             onChange={(e) => handleChange('teamName', e.target.value)}
+            onBlur={handleBlurSave}
           />
 
           <div className="form-field">
@@ -102,7 +117,10 @@ function Settings() {
                   ? 'Use an IANA timezone, for example America/Chicago.'
                   : 'Enter a valid IANA timezone, for example America/Chicago.'
               }
-              onBlur={normalizeTimezone}
+              onBlur={() => {
+                normalizeTimezone();
+                handleBlurSave();
+              }}
               onChange={(e) => handleChange('timezone', e.target.value)}
             />
             {timezoneIsValid ? (
@@ -123,7 +141,7 @@ function Settings() {
               type="checkbox"
               checked={settings.autoSave}
               disabled={isSaving}
-              onChange={(e) => handleChange('autoSave', e.target.checked)}
+              onChange={(e) => handleToggle('autoSave', e.target.checked)}
             />
             <span>Enable auto-save for drafts and notes</span>
           </label>
@@ -134,7 +152,7 @@ function Settings() {
               type="checkbox"
               checked={settings.emailDigest}
               disabled={isSaving}
-              onChange={(e) => handleChange('emailDigest', e.target.checked)}
+              onChange={(e) => handleToggle('emailDigest', e.target.checked)}
             />
             <span>Send weekly digest reminders</span>
           </label>
@@ -145,7 +163,7 @@ function Settings() {
               type="checkbox"
               checked={settings.keyboardShortcuts}
               disabled={isSaving}
-              onChange={(e) => handleChange('keyboardShortcuts', e.target.checked)}
+              onChange={(e) => handleToggle('keyboardShortcuts', e.target.checked)}
             />
             <span>Enable keyboard shortcuts</span>
           </label>

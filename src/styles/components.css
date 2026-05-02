@@ -630,3 +630,56 @@ textarea:focus-visible,
   }
 }
 
+.storage-corruption-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  margin: 0.6rem 1.25rem 0;
+  background: rgba(255, 203, 118, 0.08);
+  border: 1px solid var(--warning, #ffcb76);
+  border-radius: var(--radius-lg, 14px);
+  color: var(--text);
+  box-shadow: var(--shadow-soft);
+}
+
+.storage-corruption-banner__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.storage-corruption-banner__title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.storage-corruption-banner__text {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.storage-corruption-banner__dismiss {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-action, 12px);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.storage-corruption-banner__dismiss:hover,
+.storage-corruption-banner__dismiss:focus-visible {
+  background: var(--bg-accent-soft);
+  border-color: var(--border-accent);
+}
+

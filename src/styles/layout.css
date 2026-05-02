@@ -239,6 +239,50 @@
 	white-space: nowrap;
 }
 
+.sync-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.22rem 0.6rem 0.22rem 0.5rem;
+	font-size: 0.74rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--text-meta);
+	background: var(--surface-input);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	white-space: nowrap;
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.sync-status-pill__dot {
+	display: inline-block;
+	width: 0.45rem;
+	height: 0.45rem;
+	border-radius: 999px;
+	background: var(--text-meta);
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04);
+}
+
+.sync-status-pill--ok {
+	color: var(--text);
+	border-color: var(--border-success-soft, var(--border));
+}
+
+.sync-status-pill--ok .sync-status-pill__dot {
+	background: var(--success);
+	box-shadow: 0 0 0 2px rgba(123, 229, 188, 0.15);
+}
+
+.sync-status-pill--local {
+	color: var(--text);
+}
+
+.sync-status-pill--local .sync-status-pill__dot {
+	background: var(--warning);
+	box-shadow: 0 0 0 2px rgba(255, 203, 118, 0.15);
+}
+
 .topbar__meta {
 	color: var(--text-meta);
 	font-size: var(--fs-meta);

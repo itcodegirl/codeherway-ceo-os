@@ -4,6 +4,7 @@ import Sidebar from '../components/ui/Sidebar';
 import Topbar from '../components/ui/Topbar';
 import SystemPulse from '../components/ui/SystemPulse';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
+import StorageCorruptionBanner from '../components/ui/StorageCorruptionBanner';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { resolvePageMeta } from '../lib/pageMeta';
@@ -56,6 +57,7 @@ function AppLayout() {
       <Sidebar />
       <div className="app-main">
         <Topbar pageTitle={currentPageTitle} />
+        <StorageCorruptionBanner />
         {showSystemPulse ? <SystemPulse /> : null}
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
           <ErrorBoundary
