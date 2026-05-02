@@ -19,6 +19,18 @@ export function isStaleRecordError(error) {
 }
 
 /**
+ * Parses an `updatedAt` value off a record. Accepts both camelCase
+ * (`updatedAt`) and snake_case (`updated_at`) so repositories can normalize
+ * payloads from local storage and Supabase rows through a single helper.
+ * Returns 0 for missing or non-finite values, which the optimistic-locking
+ * check treats as legacy data and safely skips.
+ */
+export function readUpdatedAtMs(record) {
+  const raw = Number(record?.updatedAt ?? record?.updated_at);
+  return Number.isFinite(raw) ? raw : 0;
+}
+
+/**
  * Asserts that a persisted record's updatedAt has not drifted from what the
  * caller expected. Used by the local-first repositories (opportunities,
  * content, weekly items) to reject two-tab conflicts before mutating.

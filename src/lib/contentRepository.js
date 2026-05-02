@@ -2,19 +2,18 @@ import { contentItems as mockContentItems } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { assertRecordIsFresh } from './staleRecordError';
+import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
 
 function normalizeContentItem(item) {
-  const rawUpdatedAt = Number(item.updatedAt ?? item.updated_at);
   return {
     id: String(item.id),
     title: item.title || '',
     platform: item.platform || '',
     status: item.status || 'Drafting',
-    updatedAt: Number.isFinite(rawUpdatedAt) ? rawUpdatedAt : 0,
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 

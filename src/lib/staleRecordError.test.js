@@ -4,6 +4,7 @@ import {
   StaleRecordError,
   assertRecordIsFresh,
   isStaleRecordError,
+  readUpdatedAtMs,
 } from './staleRecordError';
 
 describe('StaleRecordError', () => {
@@ -68,5 +69,27 @@ describe('assertRecordIsFresh', () => {
     expect(() => assertRecordIsFresh({ updatedAt: 0 }, 1700000000000)).not.toThrow();
     expect(() => assertRecordIsFresh({}, 1700000000000)).not.toThrow();
     expect(() => assertRecordIsFresh(null, 1700000000000)).not.toThrow();
+  });
+});
+
+describe('readUpdatedAtMs', () => {
+  it('reads a numeric updatedAt value', () => {
+    expect(readUpdatedAtMs({ updatedAt: 1700000000000 })).toBe(1700000000000);
+  });
+
+  it('falls back to updated_at (snake_case) for Supabase row payloads', () => {
+    expect(readUpdatedAtMs({ updated_at: 1700000111111 })).toBe(1700000111111);
+  });
+
+  it('prefers updatedAt over updated_at when both are present', () => {
+    expect(readUpdatedAtMs({ updatedAt: 100, updated_at: 200 })).toBe(100);
+  });
+
+  it('returns 0 for missing, non-finite, null, or undefined inputs', () => {
+    expect(readUpdatedAtMs({})).toBe(0);
+    expect(readUpdatedAtMs({ updatedAt: 'never' })).toBe(0);
+    expect(readUpdatedAtMs({ updatedAt: NaN })).toBe(0);
+    expect(readUpdatedAtMs(null)).toBe(0);
+    expect(readUpdatedAtMs(undefined)).toBe(0);
   });
 });

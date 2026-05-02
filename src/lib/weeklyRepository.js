@@ -6,7 +6,7 @@ import {
 } from './weeklyData';
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { assertRecordIsFresh } from './staleRecordError';
+import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -65,18 +65,13 @@ function getFallbackBlockers() {
   }));
 }
 
-function readUpdatedAt(item) {
-  const raw = Number(item?.updatedAt ?? item?.updated_at);
-  return Number.isFinite(raw) ? raw : 0;
-}
-
 function normalizePriorityItem(item) {
   return {
     id: String(item?.id || buildCreateId()),
     title: item?.title || '',
     owner: item?.owner || 'Team Member',
     status: item?.status || 'Planned',
-    updatedAt: readUpdatedAt(item),
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -85,7 +80,7 @@ function normalizeWinItem(item) {
     id: String(item?.id || buildCreateId()),
     text: item?.text || '',
     category: item?.category || 'Execution',
-    updatedAt: readUpdatedAt(item),
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -94,7 +89,7 @@ function normalizeBlockerItem(item) {
     id: String(item?.id || buildCreateId()),
     text: item?.text || '',
     severity: item?.severity || 'warning',
-    updatedAt: readUpdatedAt(item),
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
