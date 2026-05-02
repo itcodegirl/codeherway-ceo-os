@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import Toast from '../components/ui/Toast';
 import {
   CAPTURE_CATEGORY_OPTIONS,
   CAPTURE_NOTES_UPDATED_EVENT,
@@ -9,7 +10,9 @@ import {
   listCaptureNotes,
   updateCaptureNote,
 } from '../lib/captureRepository';
+import { createReminder } from '../lib/remindersRepository';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
+import { useToast } from '../hooks/useToast';
 import '../styles/capture.css';
 
 function formatCategoryLabel(category) {
@@ -41,6 +44,7 @@ function Capture() {
   const [draftCategory, setDraftCategory] = useState(CAPTURE_CATEGORY_OPTIONS[0]);
   const [errorMessage, setErrorMessage] = useState('');
   const composerTextareaRef = useRef(null);
+  const { toastMessage, isToastVisible, showToast } = useToast();
 
   useEffect(() => {
     const handleCaptureUpdate = () => {
@@ -124,6 +128,20 @@ function Capture() {
       setErrorMessage('');
     } catch {
       setErrorMessage('Unable to delete this note right now.');
+    }
+  };
+
+  const promoteNoteToReminder = (note) => {
+    const text = (note?.text || '').trim();
+    if (!text) {
+      showToast('Add some text to this note before promoting it.');
+      return;
+    }
+    try {
+      createReminder({ text });
+      showToast('Added a reminder from this note. The sticky stays here in case you still need it.');
+    } catch {
+      showToast('Unable to create a reminder right now.');
     }
   };
 
@@ -230,6 +248,16 @@ function Capture() {
                     type="button"
                     variant="ghost"
                     size="small"
+                    icon={{ name: 'check', size: 14 }}
+                    onClick={() => promoteNoteToReminder(note)}
+                    ariaLabel={`Make a reminder from ${formatCategoryLabel(note.category)} note`}
+                  >
+                    Make reminder
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="small"
                     icon={{ name: 'delete' }}
                     onClick={() => removeNote(note.id)}
                     ariaLabel={`Delete ${formatCategoryLabel(note.category)} note`}
@@ -249,6 +277,7 @@ function Capture() {
           </div>
         )}
       </section>
+      <Toast className="toast--capture" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }

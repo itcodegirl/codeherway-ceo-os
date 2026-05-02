@@ -92,6 +92,33 @@ describe('src/pages/Capture', () => {
     expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
+  it('promotes a sticky note into a reminder via the per-note action', () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Reply to Sarah by Friday' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Make a reminder from Idea note' }));
+
+    expect(screen.getByText(/Added a reminder from this note/)).toBeInTheDocument();
+
+    const remindersRaw = window.localStorage.getItem('ceo-os-reminders');
+    expect(remindersRaw).toBeTruthy();
+    const reminders = JSON.parse(remindersRaw);
+    expect(reminders).toHaveLength(1);
+    expect(reminders[0].text).toBe('Reply to Sarah by Friday');
+    expect(reminders[0].isDone).toBe(false);
+
+    // The original sticky note stays — the audit copy says "the sticky stays here".
+    expect(screen.getByDisplayValue('Reply to Sarah by Friday')).toBeInTheDocument();
+  });
+
   it('pauses autosave confidence copy when a sticky note cannot be saved', () => {
     const originalSetItem = window.localStorage.setItem;
     window.localStorage.setItem = vi.fn(() => {
