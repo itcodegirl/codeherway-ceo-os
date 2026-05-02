@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react';
+import { useIsMountedRef } from './useIsMountedRef';
 
 /**
  * Shared per-record cross-page promotion guard.
@@ -39,6 +40,7 @@ export function usePromotionAction({
   resolveText = (record) => record?.text || '',
 }) {
   const inFlightIdsRef = useRef(new Set());
+  const isMountedRef = useIsMountedRef();
 
   return useCallback(async (record) => {
     const id = getRecordId(record);
@@ -54,10 +56,15 @@ export function usePromotionAction({
       return false;
     }
 
+    // Toast a "needs text" hint synchronously, but only if we're still mounted
+    // (a parent could have unmounted between the click handler firing and us
+    // checking).
     if (typeof emptyTextMessage === 'string') {
       const text = String(resolveText(record) || '').trim();
       if (!text) {
-        onShowToast?.(emptyTextMessage);
+        if (isMountedRef.current) {
+          onShowToast?.(emptyTextMessage);
+        }
         return false;
       }
     }
@@ -65,12 +72,15 @@ export function usePromotionAction({
     inFlightIdsRef.current.add(id);
     try {
       await run(record);
-      if (successMessage) {
+      // Skip the success toast if the parent unmounted while run() was in
+      // flight — calling showToast captures a setState into a stale closure
+      // that would queue a useless render and start an orphaned setTimeout.
+      if (successMessage && isMountedRef.current) {
         onShowToast?.(successMessage);
       }
       return true;
     } catch {
-      if (failureMessage) {
+      if (failureMessage && isMountedRef.current) {
         onShowToast?.(failureMessage);
       }
       return false;
@@ -81,6 +91,7 @@ export function usePromotionAction({
     emptyTextMessage,
     failureMessage,
     getRecordId,
+    isMountedRef,
     isRecordKnown,
     onShowToast,
     resolveText,

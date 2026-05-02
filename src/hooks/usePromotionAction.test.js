@@ -148,4 +148,66 @@ describe('usePromotionAction', () => {
     });
     expect(outcome).toBe(true);
   });
+
+  it('does not call the success toast if the component unmounts mid-run', async () => {
+    let resolveRun;
+    const run = vi.fn(() => new Promise((resolve) => {
+      resolveRun = resolve;
+    }));
+    const onShowToast = vi.fn();
+
+    const { result, unmount } = renderHook(() => usePromotionAction({
+      onShowToast,
+      isRecordKnown: () => true,
+      run,
+      successMessage: 'should NOT fire after unmount',
+      failureMessage: 'should NOT fire after unmount either',
+    }));
+
+    let pendingPromise;
+    act(() => {
+      pendingPromise = result.current({ id: 'r-1', text: 'one' });
+    });
+
+    // Simulate the parent unmounting while run() is still pending.
+    unmount();
+
+    await act(async () => {
+      resolveRun();
+      await pendingPromise;
+    });
+
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(onShowToast).not.toHaveBeenCalled();
+  });
+
+  it('does not call the failure toast if the component unmounts mid-run', async () => {
+    let rejectRun;
+    const run = vi.fn(() => new Promise((_, reject) => {
+      rejectRun = reject;
+    }));
+    const onShowToast = vi.fn();
+
+    const { result, unmount } = renderHook(() => usePromotionAction({
+      onShowToast,
+      isRecordKnown: () => true,
+      run,
+      successMessage: 'unused',
+      failureMessage: 'silenced after unmount',
+    }));
+
+    let pendingPromise;
+    act(() => {
+      pendingPromise = result.current({ id: 'r-1', text: 'one' });
+    });
+
+    unmount();
+
+    await act(async () => {
+      rejectRun(new Error('boom'));
+      await pendingPromise.catch(() => {});
+    });
+
+    expect(onShowToast).not.toHaveBeenCalled();
+  });
 });
