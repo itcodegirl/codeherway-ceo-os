@@ -6,7 +6,7 @@ import {
 } from './weeklyData';
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { StaleRecordError } from './staleRecordError';
+import { assertRecordIsFresh } from './staleRecordError';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -664,8 +664,6 @@ export async function updateWeeklyItem({
     return nextItem;
   }
 
-  const expected = Number(expectedUpdatedAt);
-  const hasExpectedTimestamp = Number.isFinite(expected) && expected > 0;
   const stamp = Date.now();
 
   let nextItem = null;
@@ -683,17 +681,11 @@ export async function updateWeeklyItem({
       persisted = current.blockers.find((entry) => String(entry.id) === normalizedItemId) || null;
     }
 
-    if (
-      hasExpectedTimestamp
-      && persisted
-      && Number.isFinite(persisted.updatedAt)
-      && persisted.updatedAt > 0
-      && persisted.updatedAt !== expected
-    ) {
-      throw new StaleRecordError(
-        'This weekly item was changed in another window. Reload to see the latest version before saving.',
-      );
-    }
+    assertRecordIsFresh(
+      persisted,
+      expectedUpdatedAt,
+      'This weekly item was changed in another window. Reload to see the latest version before saving.',
+    );
 
     const itemWithStamp = { ...item, id: normalizedItemId, updatedAt: stamp };
 
