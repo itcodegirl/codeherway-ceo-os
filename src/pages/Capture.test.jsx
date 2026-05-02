@@ -92,6 +92,41 @@ describe('src/pages/Capture', () => {
     expect(noteField).toHaveAccessibleDescription('Capture one thought, task, or idea at a time.');
   });
 
+  it('tracks a sticky note as a new opportunity via the per-note action', async () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Acme partnership intro from Sarah' },
+    });
+    fireEvent.change(screen.getByLabelText('Category'), {
+      target: { value: 'opportunity' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+    fireEvent.click(screen.getByRole('button', {
+      name: 'Track Opportunity note as a new opportunity',
+    }));
+
+    expect(await screen.findByText(/Tracked as a new opportunity/)).toBeInTheDocument();
+
+    const opportunitiesRaw = window.localStorage.getItem('ceo-os-opportunities');
+    expect(opportunitiesRaw).toBeTruthy();
+    const opportunities = JSON.parse(opportunitiesRaw);
+    const tracked = opportunities.find((entry) => entry.name === 'Acme partnership intro from Sarah');
+    expect(tracked).toBeDefined();
+    expect(tracked.priority).toBe('Medium');
+    expect(tracked.stage).toBe('New');
+    expect(tracked.company).toBe('');
+    expect(tracked.nextStep).toBe('');
+
+    // The original sticky note stays so the user can keep the long-form context.
+    expect(screen.getByDisplayValue('Acme partnership intro from Sarah')).toBeInTheDocument();
+  });
+
   it('promotes a sticky note into a reminder via the per-note action', async () => {
     render(
       <MemoryRouter>

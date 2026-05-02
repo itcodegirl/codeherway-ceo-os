@@ -12,6 +12,7 @@ import {
   updateCaptureNote,
 } from '../lib/captureRepository';
 import { createReminder } from '../lib/remindersRepository';
+import { createOpportunity } from '../lib/opportunitiesRepository';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
 import { useToast } from '../hooks/useToast';
 import { usePromotionAction } from '../hooks/usePromotionAction';
@@ -144,6 +145,23 @@ function Capture() {
     },
   });
 
+  const promoteNoteToOpportunity = usePromotionAction({
+    onShowToast: showToast,
+    isRecordKnown: (id) => notes.some((entry) => entry.id === id),
+    emptyTextMessage: 'Add some text to this note before promoting it.',
+    successMessage: 'Tracked as a new opportunity. Open the Opportunities page to fill in company and next step.',
+    failureMessage: 'Unable to track this note as an opportunity right now.',
+    run: async (note) => {
+      await createOpportunity({
+        name: (note.text || '').trim(),
+        company: '',
+        priority: 'Medium',
+        stage: 'New',
+        nextStep: '',
+      });
+    },
+  });
+
   return (
     <section className="capture-page">
       <PageHeader
@@ -252,6 +270,16 @@ function Capture() {
                     ariaLabel={`Make a reminder from ${formatCategoryLabel(note.category)} note`}
                   >
                     Make reminder
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="small"
+                    icon={{ name: 'opportunities', size: 14 }}
+                    onClick={() => promoteNoteToOpportunity(note)}
+                    ariaLabel={`Track ${formatCategoryLabel(note.category)} note as a new opportunity`}
+                  >
+                    Track opportunity
                   </Button>
                   <Button
                     type="button"
