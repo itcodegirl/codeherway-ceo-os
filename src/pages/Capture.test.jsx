@@ -127,6 +127,34 @@ describe('src/pages/Capture', () => {
     expect(screen.getByDisplayValue('Acme partnership intro from Sarah')).toBeInTheDocument();
   });
 
+  it('does not duplicate opportunities when Track opportunity is double-clicked', async () => {
+    render(
+      <MemoryRouter>
+        <Capture />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Conference recap follow-ups' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
+
+    const trackButton = screen.getByRole('button', {
+      name: /Track .* note as a new opportunity/,
+    });
+
+    fireEvent.click(trackButton);
+    fireEvent.click(trackButton);
+    fireEvent.click(trackButton);
+
+    expect(await screen.findByText(/Tracked as a new opportunity/)).toBeInTheDocument();
+
+    const opportunitiesRaw = window.localStorage.getItem('ceo-os-opportunities');
+    const opportunities = JSON.parse(opportunitiesRaw);
+    const matching = opportunities.filter((entry) => entry.name === 'Conference recap follow-ups');
+    expect(matching).toHaveLength(1);
+  });
+
   it('promotes a sticky note into a reminder via the per-note action', async () => {
     render(
       <MemoryRouter>

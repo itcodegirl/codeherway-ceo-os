@@ -27,7 +27,9 @@ const routeBudgets = [
   {
     route: 'WeeklyBrief',
     js: { rawKb: 16, gzipKb: 5 },
-    css: { rawKb: 3, gzipKb: 1.2 },
+    // Raw bumped 3.0 → 3.5 to absorb the light-mode autosave-status-dot
+    // ring overrides; gzip ceiling unchanged.
+    css: { rawKb: 3.5, gzipKb: 1.2 },
   },
   {
     route: 'ChiefOfStaff',
