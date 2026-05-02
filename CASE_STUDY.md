@@ -188,6 +188,69 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 15) Calm-OS audit follow-ups (May 2, 2026, batch five)
+
+A focused six-phase pass on the next set of audit follow-ups, plus
+defensive hardening on the cross-page promotion verbs introduced in
+batches four:
+
+- **Hardened both promotion handlers** (`Capture`, `Dashboard`)
+  - The Capture sticky → Reminder and Reminder → Weekly Priority
+    handlers shipped in earlier batches without an in-flight guard or
+    a stale-id check. A user could click Promote twice on a slow
+    connection and create two priorities from the same reminder.
+  - Added a per-record `Set` ref of in-flight ids, plus a membership
+    check against the current collection, so promotions for records
+    that were deleted in another tab between render and click can no
+    longer fire spurious creates.
+
+- **Extracted `usePromotionAction` hook** (`src/hooks/usePromotionAction.js`)
+  - Capture and Dashboard shared the same control flow: id guard,
+    in-flight Set, async run, success/failure toast, slot release.
+    Three verbs ahead — Capture → Reminder, Reminder → Priority,
+    Capture → Opportunity — would mean three copies of that flow.
+  - Encoded the flow once. Callers supply `onShowToast`,
+    `isRecordKnown`, `run`, and optional success/failure/empty-text
+    messages; the hook returns a stable callback that handles guard,
+    invocation, and feedback. Six unit tests cover happy path,
+    missing id, unknown id, empty text, rapid double-click rejection
+    with slot release, and failure with retry-after-error.
+
+- **Capture → Opportunity verb** (`Capture.jsx`)
+  - Third cross-page promotion verb, mirrors the existing two. A
+    "Track opportunity" button on every sticky calls `createOpportunity`
+    with the note text as the name; company, priority, stage, and
+    next step are seeded with sensible defaults (`Medium`/`New`/empty)
+    so the user lands on Opportunities ready to fill in the rest.
+  - Toast: *"Tracked as a new opportunity. Open the Opportunities page
+    to fill in company and next step."*
+
+- **Light-mode polish + accessible tap targets**
+  - Bumped Dashboard inline Promote/Remove link buttons from ~17 px
+    tall (`padding: 0`, `font: 0.85rem`) to a 32 px+ tap target with
+    a visible `2px outline-offset: 2px` focus ring. Closer to WCAG's
+    44 × 44 px touch-target recommendation while keeping the muted
+    text-link feel.
+  - Added light-theme overrides for the Weekly autosave status-dot
+    box-shadow rings (idle, saving, saved, error). The defaults use
+    rgba white at 0.04 and brand-cyan at 0.18; both wash out on a
+    light-paper surface, so the overrides swap to ink-on-paper halos
+    so the pulse animation remains legible in light mode.
+
+### Tests added in this batch
+- 6 cases in `usePromotionAction.test.js` — full hook contract.
+- 1 case in `Dashboard.test.jsx` — Promote double-click guard.
+- 1 case in `Capture.test.jsx` — Track-opportunity success path.
+- 1 case in `Capture.test.jsx` — Track-opportunity double-click guard.
+
+### Budget note
+Weekly Brief CSS raw budget bumped from 3.0 kB → 3.5 kB to absorb the
+light-mode autosave-status-dot ring overrides. Gzip ceiling unchanged
+at 1.2 kB (current ship: 0.91 kB).
+
+Lint, typecheck, the full Vitest suite (389 tests), production build,
+and route-budget checks all pass on this branch.
+
 ## 14) Calm-OS audit follow-ups (May 2, 2026, batch four)
 
 A focused six-phase pass on the next set of audit follow-ups, paired with two
