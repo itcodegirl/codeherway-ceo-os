@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OpportunityCrudPage from './OpportunityCrudPage';
 
 vi.mock('../../lib/opportunitiesRepository', () => ({
+  OPPORTUNITIES_UPDATED_EVENT: 'ceo-os:opportunities-updated',
   createOpportunity: vi.fn(),
   deleteOpportunity: vi.fn(),
   getOpportunitiesSource: vi.fn(),

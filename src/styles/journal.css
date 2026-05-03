@@ -57,3 +57,12 @@
 		width: 100%;
 	}
 }
+
+/* Light-theme retuning. The default border mixes 24% accent into the
+ * translucent ink-blue border, which on a light surface reads slightly
+ * too saturated against the calm prompt background. Drop the accent
+ * weight so the prompt cards feel like calm paper, not active inputs. */
+:root[data-theme="light"] .journal-prompts__item {
+	border-color: var(--border);
+	background: rgba(255, 255, 255, 0.85);
+}

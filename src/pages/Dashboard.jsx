@@ -10,12 +10,14 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
+import { usePromotionAction } from '../hooks/usePromotionAction';
 import {
   createReminder,
   deleteReminder,
   getReminderProgress,
   toggleReminder,
 } from '../lib/remindersRepository';
+import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
   buildMainFocus,
@@ -248,6 +250,25 @@ function Dashboard() {
     }
   };
 
+  const handlePromoteReminderToPriority = usePromotionAction({
+    onShowToast: showToast,
+    isRecordKnown: (id) => reminders.some((item) => item.id === id),
+    emptyTextMessage: 'Add reminder text before promoting it.',
+    successMessage: "Added to this week's priorities. The reminder stays here.",
+    failureMessage: 'Unable to promote this reminder right now.',
+    run: async (reminder) => {
+      await createWeeklyItem({
+        itemType: 'priority',
+        item: {
+          title: (reminder.text || '').trim(),
+          owner: 'You',
+          status: 'In Progress',
+        },
+      });
+      await refreshWeeklyBrief({ silent: true });
+    },
+  });
+
   const dashboardDemoNote = isLocalDashboardDemoMode
     ? SOURCE_NOTICE_SAMPLE_DATA
     : '';
@@ -338,6 +359,7 @@ function Dashboard() {
           suggestions={suggestions}
           onToggleReminder={handleToggleReminder}
           onDeleteReminder={handleDeleteReminder}
+          onPromoteReminder={handlePromoteReminderToPriority}
         />
 
         <article className="focus-panel" aria-label="Momentum panel">

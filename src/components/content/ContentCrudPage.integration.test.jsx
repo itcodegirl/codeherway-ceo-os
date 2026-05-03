@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ContentCrudPage from './ContentCrudPage';
 
 vi.mock('../../lib/contentRepository', () => ({
+  CONTENT_ITEMS_UPDATED_EVENT: 'ceo-os:content-items-updated',
   createContentItem: vi.fn(),
   deleteContentItem: vi.fn(),
   getContentSource: vi.fn(),

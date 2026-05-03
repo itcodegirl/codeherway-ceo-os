@@ -24,6 +24,7 @@ export function useCrudPage(config) {
     createItem,
     updateItem,
     deleteItem,
+    updatedEventName,
     mapItemToFormValues,
     mapFormValuesToPayload,
     getDeleteLabel,
@@ -67,6 +68,7 @@ export function useCrudPage(config) {
   const [formValues, setFormValues] = useState(defaultFormValuesResolved);
   const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [refreshToken, setRefreshToken] = useState(0);
   const selectedItem = selectedItemState;
   const isSavingRef = useRef(false);
   const resetSavingRef = useCallback(() => {
@@ -121,15 +123,24 @@ export function useCrudPage(config) {
 
   useEffect(() => {
     let isActive = true;
+    // refreshToken === 0 is the first mount (cold load); any positive value
+    // is a refresh triggered by refreshItems(). Refreshes already have items
+    // on screen, so we keep the loading state quiet and avoid a skeleton
+    // flash whenever the repository fires its UPDATED_EVENT after a write.
+    const isInitialLoad = refreshToken === 0;
 
     const load = async () => {
-      setIsLoading(true);
+      if (isInitialLoad) {
+        setIsLoading(true);
+      }
       setLoadError('');
       if (typeof listItemsFn !== 'function') {
         if (isActive) {
           setItems([]);
           setLoadError(loadErrorMessage);
-          setIsLoading(false);
+          if (isInitialLoad) {
+            setIsLoading(false);
+          }
         }
         return;
       }
@@ -157,7 +168,7 @@ export function useCrudPage(config) {
           console.error(`Failed to load ${logPrefix}`, error);
         }
       } finally {
-        if (isActive) {
+        if (isActive && isInitialLoad) {
           setIsLoading(false);
         }
       }
@@ -168,7 +179,34 @@ export function useCrudPage(config) {
     return () => {
       isActive = false;
     };
-  }, [listItemsFn, loadErrorMessage, logPrefix]);
+  }, [listItemsFn, loadErrorMessage, logPrefix, refreshToken]);
+
+  const refreshItems = useCallback(() => {
+    setRefreshToken((current) => current + 1);
+  }, []);
+
+  // When the repository advertises an updated-event name, subscribe so that
+  // writes from other surfaces (cross-page promotions, other tabs) silently
+  // refresh this page's list without forcing the user to reload. We
+  // intentionally ignore detail.source so events fired by both local and
+  // supabase paths trigger a refetch.
+  useEffect(() => {
+    if (typeof updatedEventName !== 'string' || !updatedEventName) {
+      return undefined;
+    }
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleUpdate = () => {
+      refreshItems();
+    };
+
+    window.addEventListener(updatedEventName, handleUpdate);
+    return () => {
+      window.removeEventListener(updatedEventName, handleUpdate);
+    };
+  }, [refreshItems, updatedEventName]);
 
   const resetForm = useCallback(() => {
     setFormValues(defaultFormValuesResolved);
@@ -277,8 +315,13 @@ export function useCrudPage(config) {
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
+      const isStale = isStaleRecordError(error);
       if (isMountedRef.current) {
-        setFormError(isStaleRecordError(error) ? STALE_RECORD_FORM_MESSAGE : saveErrorMessage);
+        setFormError(isStale ? STALE_RECORD_FORM_MESSAGE : saveErrorMessage);
+      }
+      if (isStale) {
+        // Pull the latest snapshot so closing the modal shows the up-to-date row.
+        refreshItems();
       }
       if (import.meta.env.DEV) {
         console.error(`Failed to save ${logPrefix}`, error);
@@ -295,6 +338,7 @@ export function useCrudPage(config) {
     isMountedRef,
     logPrefix,
     mapFormValuesToPayloadFn,
+    refreshItems,
     saveErrorMessage,
     resetForm,
     selectedItem,
@@ -331,5 +375,6 @@ export function useCrudPage(config) {
     handleCloseDeleteConfirm,
     handleConfirmDeleteSelected,
     deletePrompt,
+    refreshItems,
   };
 }

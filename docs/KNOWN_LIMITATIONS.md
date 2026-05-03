@@ -16,21 +16,31 @@ Use this as the honest interview framing for CodeHerWay CEO OS. The project is s
 
 The May 2026 calm-OS audit pass closed several gaps in this branch:
 
-- ✅ **Light theme.** A `:root[data-theme="light"]` overlay and a System / Dark / Light picker in Settings, persisted locally.
+- ✅ **Light theme.** A `:root[data-theme="light"]` overlay and a System / Dark / Light picker in Settings, persisted locally. Raw-rgba surfaces in `system.css` and `chief-of-staff.css` are retuned in light mode.
 - ✅ **Online/offline awareness.** A three-state sync pill (Synced / Local only / Offline) backed by `useOnlineStatus`.
-- ✅ **Optimistic locking for local CRUD on Opportunities and Content OS.** `updatedAt` stamping plus `StaleRecordError` rejection prevents two-tab data loss in the local-first path.
-- ✅ **Chief of Staff dedup against existing rows** — exact-match dedup against existing opportunities/content/priorities is already in place at every acceptance branch (re-verified in code review).
+- ✅ **Optimistic locking for local CRUD on Opportunities, Content OS, and Weekly Brief items.** `updatedAt` stamping plus `StaleRecordError` rejection prevents two-tab data loss across all three local-first surfaces.
+- ✅ **Chief of Staff dedup against existing rows** — exact-match dedup against existing opportunities/content/priorities runs at every acceptance branch (re-verified in code review).
+- ✅ **Cross-page promotion verbs.** Four verbs share the same `usePromotionAction` hook: Capture sticky → Dashboard reminder, Capture sticky → Opportunity, Capture sticky → Content draft, and pending reminder → weekly priority. All reuse the existing repositories, leave the source record in place, confirm via toast, and reject rapid double-clicks via a per-record in-flight guard.
+- ✅ **Cross-tab list refresh.** `useCrudPage` subscribes to its repository's `*_UPDATED_EVENT` so writes from other surfaces (cross-page promotions, other tabs) silently re-fetch the current page's list without a manual reload, and refreshes keep `isLoading` false so the page never flashes a skeleton during in-page CRUD writes.
+- ✅ **Composer rehydration on Capture.** Draft text and last-used category persist through `usePersistentState`; long brain-dumps survive reloads, route changes, and accidental navigation. The category stays selected after a successful save for rapid-fire batches; invalid stored values fall back safely.
+- ✅ **Offline write queue infrastructure.** `offlineWriteQueue` ships with enqueue/drain/remove/clear primitives, FIFO-trimmed at 200 entries, stop-on-first-failure semantics, attempt counters, and an `OFFLINE_QUEUE_UPDATED_EVENT`. The topbar `SyncStatusPill` renders a `+N` badge when the queue is non-empty. Repository wiring is the open follow-up.
+- ✅ **Unmount-safe promotion toasts.** `usePromotionAction` no longer fires success or failure toasts after the host component has unmounted, preventing stale-closure setState and orphaned dismiss timeouts.
+- ✅ **Shared `readUpdatedAtMs` helper.** Three repositories used to inline the same timestamp parser for the optimistic-locking protocol; extracted into one helper alongside `assertRecordIsFresh`.
+- ✅ **Chief notes-limit warning token.** `.chief-notes-meta--limit` no longer hardcodes a soft-pink color that fades on light paper; uses the semantic `--danger-text` token so the warning reads in both themes.
+- ✅ **Accessibility automation.** `@axe-core/playwright` scans every primary route with a wcag2a/wcag2aa/best-practice rule set; test fails on serious or critical violations and reports lighter findings to the test output for review.
+- ✅ **Stale-write recovery refresh.** When a save is rejected as stale, the items list re-fetches under the open modal so closing it reveals the up-to-date row instead of hiding the conflict. Non-stale errors do NOT trigger a refetch (covered by an explicit test).
+- ✅ **Shared optimistic-locking helper.** Three repositories shared the same locking guard; extracted into `assertRecordIsFresh` with full back-compat semantics.
+- ✅ **Light-mode polish on Focus Home, the corruption banner, and the weekly status dot.** Diagonal accent stripe softened; corruption banner amber strengthened; autosave status-dot box-shadow rings retuned with ink-on-paper halos so the pulse remains legible.
+- ✅ **Tap-target hygiene on Dashboard inline link buttons.** Promote/Remove now ship at 32 px+ with a visible focus ring instead of 17 px tall.
 
 ## Open audit follow-ups
 
 These items remain intentionally outside the current scope and are good candidates for the next iteration:
 
-- **Per-record writes for Weekly Brief.** Weekly Brief still uses whole-collection rewrites; the same `updatedAt`/`StaleRecordError` pattern used for Opportunities and Content OS should be applied there too.
 - **Server-side optimistic locking.** Local-first stale-write detection is in place, but Supabase-backed updates do not yet use ETags or a version column. A schema migration plus repository-side check would extend the protection across devices.
-- **Offline write replay.** Local writes survive offline, but they do not replay upstream when connectivity returns. An `offlineWriteQueue` keyed in localStorage (mirroring the pattern in `appErrorTelemetry`) would harden this.
-- **Cross-page promotion.** A Capture sticky cannot become a Reminder, and a Reminder cannot become a Weekly Priority. The audit recommends adding per-item "Promote to…" verbs that reuse existing repositories.
+- **Offline write replay — repository wiring.** The queue infrastructure (`offlineWriteQueue` + sync-pill `+N` indicator) is in place. The remaining work is to hook `createOpportunity` / `createContentItem` / etc. into the queue on Supabase failure and call `drainOfflineQueue` on the `online` event. Deferred until a Supabase staging environment is available to validate end-to-end.
 - **Fuzzy dedup in Chief of Staff acceptance.** Exact-match dedup is in place; titles like "Q3 launch" vs "Q3 Launch Plan" still pass through. A similarity heuristic would help, but it has to balance recall against false positives that could block legitimate distinct items.
-- **Accessibility automation.** Manual a11y is good (skip link, focus rings, focus trap, reduced-motion); axe-core in Playwright would add automated coverage.
+- **Light-mode polish across the remaining page-specific surfaces.** Focus Home, the corruption banner, the weekly autosave dot, the journal prompts, and the Chief notes-limit warning are tuned; production demos may still surface a few minor surface tweaks.
 
 ## Best Portfolio Framing
 

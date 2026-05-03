@@ -475,4 +475,184 @@ describe('useCrudPage', () => {
     expect(result.current.formError).not.toBe('Generic save error.');
     expect(result.current.isFormOpen).toBe(true);
   });
+
+  it('does NOT refresh the items list when an update fails with a non-stale error', async () => {
+    const listItems = vi.fn(() => Promise.resolve([
+      { id: '1', name: 'Original', updatedAt: 1700000000000 },
+    ]));
+    const updateItem = vi.fn(() => Promise.reject(new Error('network down')));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: '2', name: 'B' }),
+      updateFn: updateItem,
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapItemToFormValues: (item) => ({ name: item.name }),
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      result.current.setSelectedItem({ id: '1', name: 'Original', updatedAt: 1700000000000 });
+    });
+    await waitFor(() => expect(result.current.selectedItem?.id).toBe('1'));
+
+    act(() => {
+      result.current.handleOpenEditModal();
+      result.current.handleFormChange('name', 'Local edit');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    // Non-stale errors should NOT trigger a refetch — only stale-record errors do.
+    expect(listItems).toHaveBeenCalledTimes(1);
+    expect(result.current.formError).toBeTruthy();
+    expect(result.current.formError).not.toContain('changed in another window');
+  });
+
+  it('refreshes the items list when an update fails with StaleRecordError', async () => {
+    const listItems = vi.fn();
+    listItems
+      .mockResolvedValueOnce([{ id: '1', name: 'Original', updatedAt: 1700000000000 }])
+      .mockResolvedValueOnce([{ id: '1', name: 'From other tab', updatedAt: 1700000999999 }]);
+    const updateItem = vi.fn(() => Promise.reject(new StaleRecordError()));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: '2', name: 'B' }),
+      updateFn: updateItem,
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapItemToFormValues: (item) => ({ name: item.name }),
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      result.current.setSelectedItem({ id: '1', name: 'Original', updatedAt: 1700000000000 });
+    });
+    await waitFor(() => expect(result.current.selectedItem?.id).toBe('1'));
+
+    act(() => {
+      result.current.handleOpenEditModal();
+      result.current.handleFormChange('name', 'Local edit');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    // Stale-record path should trigger a fresh list fetch.
+    await waitFor(() => expect(listItems).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(result.current.items.find((item) => item.id === '1')?.name).toBe('From other tab'),
+    );
+  });
+
+  it('keeps isLoading false during event-driven refreshes so the page does not flash a skeleton', async () => {
+    const listItems = vi.fn();
+    listItems
+      .mockResolvedValueOnce([{ id: '1', name: 'First' }])
+      .mockImplementationOnce(() => new Promise((resolve) => {
+        setTimeout(() => resolve([
+          { id: '1', name: 'First' },
+          { id: '2', name: 'Refreshed' },
+        ]), 25);
+      }));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: 'x' }),
+      updateFn: () => Promise.resolve({ id: 'x' }),
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+      updatedEventName: 'ceo-os:silent-refresh-test',
+    }));
+
+    // First mount: isLoading flips to false once items arrive.
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:silent-refresh-test'));
+    });
+
+    // While the refetch is in flight, isLoading must stay false (no flash).
+    expect(result.current.isLoading).toBe(false);
+
+    await waitFor(() =>
+      expect(result.current.items.some((item) => item.id === '2')).toBe(true),
+    );
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('refreshes items when the configured updatedEventName is dispatched', async () => {
+    const listItems = vi.fn();
+    listItems
+      .mockResolvedValueOnce([{ id: '1', name: 'Initial' }])
+      .mockResolvedValueOnce([
+        { id: '1', name: 'Initial' },
+        { id: '2', name: 'Promoted from another surface' },
+      ]);
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      updateFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+      updatedEventName: 'ceo-os:test-updated',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:test-updated', {
+        detail: { source: 'local', type: 'create' },
+      }));
+    });
+
+    await waitFor(() => expect(listItems).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(result.current.items.some((item) => item.id === '2')).toBe(true),
+    );
+  });
+
+  it('does not subscribe to any event when updatedEventName is omitted', async () => {
+    const listItems = vi.fn(() => Promise.resolve([{ id: '1', name: 'Initial' }]));
+
+    const { result } = renderHook(() => useCrudPage({
+      listFn: listItems,
+      createFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      updateFn: () => Promise.resolve({ id: 'x', name: 'x' }),
+      deleteFn: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      mapFormValuesToPayload: (values) => values,
+      validatePayload: () => '',
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(listItems).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:test-updated', { detail: {} }));
+    });
+
+    // No subscription, so the event must not trigger a refetch.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(listItems).toHaveBeenCalledTimes(1);
+  });
 });

@@ -10,6 +10,7 @@ function RemindersPanel({
   suggestions,
   onToggleReminder,
   onDeleteReminder,
+  onPromoteReminder,
 }) {
   return (
     <article
@@ -70,14 +71,26 @@ function RemindersPanel({
               />
               <span>{item.text}</span>
             </label>
-            <button
-              type="button"
-              className="focus-reminder-list__delete"
-              aria-label={`Delete reminder ${item.text}`}
-              onClick={() => onDeleteReminder(item.id)}
-            >
-              Remove
-            </button>
+            <div className="focus-reminder-list__actions">
+              {typeof onPromoteReminder === 'function' && !item.isDone ? (
+                <button
+                  type="button"
+                  className="focus-reminder-list__promote"
+                  aria-label={`Promote reminder ${item.text} to a weekly priority`}
+                  onClick={() => onPromoteReminder(item)}
+                >
+                  Promote
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="focus-reminder-list__delete"
+                aria-label={`Delete reminder ${item.text}`}
+                onClick={() => onDeleteReminder(item.id)}
+              >
+                Remove
+              </button>
+            </div>
           </li>
         )) : (
           <li className="focus-reminder-list__item focus-reminder-list__item--empty">

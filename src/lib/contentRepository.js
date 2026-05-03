@@ -2,19 +2,18 @@ import { contentItems as mockContentItems } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { StaleRecordError } from './staleRecordError';
+import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
 
 function normalizeContentItem(item) {
-  const rawUpdatedAt = Number(item.updatedAt ?? item.updated_at);
   return {
     id: String(item.id),
     title: item.title || '',
     platform: item.platform || '',
     status: item.status || 'Drafting',
-    updatedAt: Number.isFinite(rawUpdatedAt) ? rawUpdatedAt : 0,
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -157,19 +156,11 @@ export async function updateContentItem(id, payload, options = {}) {
   const current = readLocalContentItems();
   const persisted = current.find((item) => String(item.id) === String(id));
 
-  const expected = Number(options.expectedUpdatedAt);
-  if (
-    Number.isFinite(expected)
-    && expected > 0
-    && persisted
-    && Number.isFinite(persisted.updatedAt)
-    && persisted.updatedAt > 0
-    && persisted.updatedAt !== expected
-  ) {
-    throw new StaleRecordError(
-      'This content item was changed in another window. Reload to see the latest version before saving.',
-    );
-  }
+  assertRecordIsFresh(
+    persisted,
+    options.expectedUpdatedAt,
+    'This content item was changed in another window. Reload to see the latest version before saving.',
+  );
 
   const normalizedPayload = normalizeContentItem({
     id,

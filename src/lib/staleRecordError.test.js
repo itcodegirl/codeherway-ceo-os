@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   STALE_RECORD_ERROR_CODE,
   StaleRecordError,
+  assertRecordIsFresh,
   isStaleRecordError,
+  readUpdatedAtMs,
 } from './staleRecordError';
 
 describe('StaleRecordError', () => {
@@ -26,5 +28,68 @@ describe('StaleRecordError', () => {
     expect(isStaleRecordError(new Error('something else'))).toBe(false);
     expect(isStaleRecordError(undefined)).toBe(false);
     expect(isStaleRecordError(null)).toBe(false);
+  });
+});
+
+describe('assertRecordIsFresh', () => {
+  it('throws StaleRecordError with the supplied message when timestamps drift', () => {
+    expect(() => assertRecordIsFresh(
+      { updatedAt: 1700000000000 },
+      1699999999999,
+      'Custom stale message.',
+    )).toThrowError('Custom stale message.');
+  });
+
+  it('uses a default message when none is supplied', () => {
+    let thrown;
+    try {
+      assertRecordIsFresh({ updatedAt: 1700000000000 }, 1699999999999);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(StaleRecordError);
+    expect(thrown.message).toContain('changed in another window');
+  });
+
+  it('passes when the timestamps match exactly', () => {
+    expect(() => assertRecordIsFresh(
+      { updatedAt: 1700000000000 },
+      1700000000000,
+    )).not.toThrow();
+  });
+
+  it('skips the check when expectedUpdatedAt is missing or non-positive', () => {
+    expect(() => assertRecordIsFresh({ updatedAt: 1700000000000 }, undefined)).not.toThrow();
+    expect(() => assertRecordIsFresh({ updatedAt: 1700000000000 }, 0)).not.toThrow();
+    expect(() => assertRecordIsFresh({ updatedAt: 1700000000000 }, -5)).not.toThrow();
+    expect(() => assertRecordIsFresh({ updatedAt: 1700000000000 }, 'NaN')).not.toThrow();
+  });
+
+  it('skips the check when the persisted record has no positive timestamp (legacy data)', () => {
+    expect(() => assertRecordIsFresh({ updatedAt: 0 }, 1700000000000)).not.toThrow();
+    expect(() => assertRecordIsFresh({}, 1700000000000)).not.toThrow();
+    expect(() => assertRecordIsFresh(null, 1700000000000)).not.toThrow();
+  });
+});
+
+describe('readUpdatedAtMs', () => {
+  it('reads a numeric updatedAt value', () => {
+    expect(readUpdatedAtMs({ updatedAt: 1700000000000 })).toBe(1700000000000);
+  });
+
+  it('falls back to updated_at (snake_case) for Supabase row payloads', () => {
+    expect(readUpdatedAtMs({ updated_at: 1700000111111 })).toBe(1700000111111);
+  });
+
+  it('prefers updatedAt over updated_at when both are present', () => {
+    expect(readUpdatedAtMs({ updatedAt: 100, updated_at: 200 })).toBe(100);
+  });
+
+  it('returns 0 for missing, non-finite, null, or undefined inputs', () => {
+    expect(readUpdatedAtMs({})).toBe(0);
+    expect(readUpdatedAtMs({ updatedAt: 'never' })).toBe(0);
+    expect(readUpdatedAtMs({ updatedAt: NaN })).toBe(0);
+    expect(readUpdatedAtMs(null)).toBe(0);
+    expect(readUpdatedAtMs(undefined)).toBe(0);
   });
 });

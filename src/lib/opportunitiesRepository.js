@@ -2,13 +2,12 @@ import { opportunities as mockOpportunities } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { StaleRecordError } from './staleRecordError';
+import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
 
 function normalizeOpportunity(item) {
-  const rawUpdatedAt = Number(item.updatedAt ?? item.updated_at);
   return {
     id: String(item.id),
     name: item.name || '',
@@ -16,7 +15,7 @@ function normalizeOpportunity(item) {
     priority: item.priority || 'Low',
     stage: item.stage || 'New',
     nextStep: item.nextStep || item.next_step || '',
-    updatedAt: Number.isFinite(rawUpdatedAt) ? rawUpdatedAt : 0,
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -165,19 +164,11 @@ export async function updateOpportunity(id, payload, options = {}) {
   const current = readLocalOpportunities();
   const persisted = current.find((item) => String(item.id) === String(id));
 
-  const expected = Number(options.expectedUpdatedAt);
-  if (
-    Number.isFinite(expected)
-    && expected > 0
-    && persisted
-    && Number.isFinite(persisted.updatedAt)
-    && persisted.updatedAt > 0
-    && persisted.updatedAt !== expected
-  ) {
-    throw new StaleRecordError(
-      'This opportunity was changed in another window. Reload to see the latest version before saving.',
-    );
-  }
+  assertRecordIsFresh(
+    persisted,
+    options.expectedUpdatedAt,
+    'This opportunity was changed in another window. Reload to see the latest version before saving.',
+  );
 
   const normalizedPayload = normalizeOpportunity({
     id,

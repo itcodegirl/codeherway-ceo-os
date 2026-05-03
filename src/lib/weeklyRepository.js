@@ -6,6 +6,7 @@ import {
 } from './weeklyData';
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
+import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -70,6 +71,7 @@ function normalizePriorityItem(item) {
     title: item?.title || '',
     owner: item?.owner || 'Team Member',
     status: item?.status || 'Planned',
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -78,6 +80,7 @@ function normalizeWinItem(item) {
     id: String(item?.id || buildCreateId()),
     text: item?.text || '',
     category: item?.category || 'Execution',
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -86,6 +89,7 @@ function normalizeBlockerItem(item) {
     id: String(item?.id || buildCreateId()),
     text: item?.text || '',
     severity: item?.severity || 'warning',
+    updatedAt: readUpdatedAtMs(item),
   };
 }
 
@@ -565,11 +569,12 @@ export async function createWeeklyItem({
     return nextItem;
   }
 
+  const itemWithStamp = { ...item, updatedAt: Date.now() };
   const normalizedItem = normalizedType === WEEKLY_ITEM_TYPES.priority
-    ? normalizePriorityItem(item)
+    ? normalizePriorityItem(itemWithStamp)
     : normalizedType === WEEKLY_ITEM_TYPES.win
-      ? normalizeWinItem(item)
-      : normalizeBlockerItem(item);
+      ? normalizeWinItem(itemWithStamp)
+      : normalizeBlockerItem(itemWithStamp);
 
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
     const next = {
@@ -605,6 +610,7 @@ export async function updateWeeklyItem({
   item,
   sortOrder = 0,
   emitEvent = true,
+  expectedUpdatedAt,
 }) {
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
@@ -653,18 +659,37 @@ export async function updateWeeklyItem({
     return nextItem;
   }
 
+  const stamp = Date.now();
+
   let nextItem = null;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
     const next = {
       ...current,
     };
 
+    let persisted = null;
+    if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
+      persisted = current.priorities.find((entry) => String(entry.id) === normalizedItemId) || null;
+    } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
+      persisted = current.wins.find((entry) => String(entry.id) === normalizedItemId) || null;
+    } else {
+      persisted = current.blockers.find((entry) => String(entry.id) === normalizedItemId) || null;
+    }
+
+    assertRecordIsFresh(
+      persisted,
+      expectedUpdatedAt,
+      'This weekly item was changed in another window. Reload to see the latest version before saving.',
+    );
+
+    const itemWithStamp = { ...item, id: normalizedItemId, updatedAt: stamp };
+
     if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
       next.priorities = current.priorities.map((currentItem) => {
         if (String(currentItem.id) !== normalizedItemId) {
           return currentItem;
         }
-        nextItem = normalizePriorityItem({ ...item, id: normalizedItemId });
+        nextItem = normalizePriorityItem(itemWithStamp);
         return nextItem;
       });
     } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
@@ -672,7 +697,7 @@ export async function updateWeeklyItem({
         if (String(currentItem.id) !== normalizedItemId) {
           return currentItem;
         }
-        nextItem = normalizeWinItem({ ...item, id: normalizedItemId });
+        nextItem = normalizeWinItem(itemWithStamp);
         return nextItem;
       });
     } else {
@@ -680,7 +705,7 @@ export async function updateWeeklyItem({
         if (String(currentItem.id) !== normalizedItemId) {
           return currentItem;
         }
-        nextItem = normalizeBlockerItem({ ...item, id: normalizedItemId });
+        nextItem = normalizeBlockerItem(itemWithStamp);
         return nextItem;
       });
     }

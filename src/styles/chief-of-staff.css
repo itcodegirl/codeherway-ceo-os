@@ -118,7 +118,9 @@
 }
 
 .chief-notes-meta--limit {
-  color: #f8a2b4;
+  /* Use the semantic danger-text token so the limit warning reads in both
+   * themes; the previous hardcoded #f8a2b4 (soft pink) fades on light paper. */
+  color: var(--danger-text);
   opacity: 1;
 }
 
@@ -205,5 +207,21 @@
   .chief-item button {
     width: 100%;
   }
+}
+
+/* Light-theme retuning for the Chief fallback semantic surfaces. */
+:root[data-theme="light"] .chief-source-badge--fallback {
+  background: rgba(177, 69, 69, 0.08);
+  border-color: rgba(177, 69, 69, 0.4);
+  color: var(--danger-text);
+}
+
+:root[data-theme="light"] .chief-output-warning {
+  background: rgba(177, 69, 69, 0.06);
+  border-color: rgba(177, 69, 69, 0.32);
+}
+
+:root[data-theme="light"] .chief-output-warning strong {
+  color: var(--danger-text);
 }
 

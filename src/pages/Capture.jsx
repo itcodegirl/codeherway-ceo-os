@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
+import Toast from '../components/ui/Toast';
+import StickyNoteCard from '../components/capture/StickyNoteCard';
+import { usePersistentState } from '../hooks/usePersistentState';
 import {
   CAPTURE_CATEGORY_OPTIONS,
   CAPTURE_NOTES_UPDATED_EVENT,
@@ -10,6 +14,8 @@ import {
   updateCaptureNote,
 } from '../lib/captureRepository';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
+import { useToast } from '../hooks/useToast';
+import { useCaptureNotePromotions } from '../hooks/useCaptureNotePromotions';
 import '../styles/capture.css';
 
 function formatCategoryLabel(category) {
@@ -37,10 +43,21 @@ function formatRelativeDate(value) {
 
 function Capture() {
   const [notes, setNotes] = useState(() => listCaptureNotes());
-  const [draftText, setDraftText] = useState('');
-  const [draftCategory, setDraftCategory] = useState(CAPTURE_CATEGORY_OPTIONS[0]);
+  // Composer state survives reloads + navigation so a long brain-dump in
+  // progress is never lost. The category remembers the last choice so the
+  // user does not have to reselect it for every note.
+  const [draftText, setDraftText] = usePersistentState('ceo-os-capture-draft-text', '');
+  const [storedCategory, setStoredCategory] = usePersistentState(
+    'ceo-os-capture-draft-category',
+    CAPTURE_CATEGORY_OPTIONS[0],
+  );
+  const draftCategory = CAPTURE_CATEGORY_OPTIONS.includes(storedCategory)
+    ? storedCategory
+    : CAPTURE_CATEGORY_OPTIONS[0];
+  const setDraftCategory = setStoredCategory;
   const [errorMessage, setErrorMessage] = useState('');
   const composerTextareaRef = useRef(null);
+  const { toastMessage, isToastVisible, showToast } = useToast();
 
   useEffect(() => {
     const handleCaptureUpdate = () => {
@@ -101,7 +118,8 @@ function Capture() {
         category: draftCategory,
       });
       setDraftText('');
-      setDraftCategory(CAPTURE_CATEGORY_OPTIONS[0]);
+      // Keep draftCategory as the last-used selection so the user does not
+      // have to reselect it for the next note.
       setErrorMessage('');
     } catch {
       setErrorMessage('Unable to save this note right now.');
@@ -126,6 +144,12 @@ function Capture() {
       setErrorMessage('Unable to delete this note right now.');
     }
   };
+
+  const {
+    promoteToReminder: promoteNoteToReminder,
+    promoteToOpportunity: promoteNoteToOpportunity,
+    promoteToContentDraft: promoteNoteToContentDraft,
+  } = useCaptureNotePromotions({ notes, showToast });
 
   return (
     <section className="capture-page">
@@ -189,66 +213,28 @@ function Capture() {
         {sortedNotes.length ? (
           <div className="sticky-wall">
             {sortedNotes.map((note) => (
-              <article key={note.id} className="sticky-note">
-                <header className="sticky-note__meta">
-                  <span className="sticky-note__tag">
-                    {formatCategoryLabel(note.category)}
-                  </span>
-                  <span className="helper-text">{formatRelativeDate(note.updatedAt)}</span>
-                </header>
-                <label htmlFor={`capture-note-${note.id}`} className="sr-only">
-                  Edit note
-                </label>
-                <textarea
-                  id={`capture-note-${note.id}`}
-                  value={note.text}
-                  rows={4}
-                  onChange={(event) => updateNote(note.id, {
-                    text: event.target.value,
-                    category: note.category,
-                  })}
-                />
-                <div className="sticky-note__controls">
-                  <label htmlFor={`capture-category-${note.id}`} className="sr-only">
-                    Edit note category
-                  </label>
-                  <select
-                    id={`capture-category-${note.id}`}
-                    value={note.category}
-                    onChange={(event) => updateNote(note.id, {
-                      text: note.text,
-                      category: event.target.value,
-                    })}
-                  >
-                    {CAPTURE_CATEGORY_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {formatCategoryLabel(option)}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="small"
-                    icon={{ name: 'delete' }}
-                    onClick={() => removeNote(note.id)}
-                    ariaLabel={`Delete ${formatCategoryLabel(note.category)} note`}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </article>
+              <StickyNoteCard
+                key={note.id}
+                note={note}
+                categoryOptions={CAPTURE_CATEGORY_OPTIONS}
+                formatCategoryLabel={formatCategoryLabel}
+                formatRelativeDate={formatRelativeDate}
+                onEdit={updateNote}
+                onPromoteToReminder={promoteNoteToReminder}
+                onPromoteToOpportunity={promoteNoteToOpportunity}
+                onPromoteToContentDraft={promoteNoteToContentDraft}
+                onDelete={removeNote}
+              />
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <p className="empty-state__title">No sticky notes yet</p>
-            <p className="empty-state__description">
-              Start with one idea or one tiny task to clear mental load.
-            </p>
-          </div>
+          <EmptyState
+            title="No sticky notes yet"
+            description="Start with one idea or one tiny task to clear mental load."
+          />
         )}
       </section>
+      <Toast className="toast--capture" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }

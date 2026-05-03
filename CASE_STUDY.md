@@ -188,6 +188,321 @@ npm run test:e2e
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
 
+## 18) Calm-OS audit follow-ups (May 2, 2026, batch eight)
+
+A focused six-phase pass that ships the long-pending offline-write queue
+infrastructure plus several smaller correctness wins:
+
+- **Unmount-safe promotion toasts** (`usePromotionAction`)
+  - The hook awaited an async run, then called `onShowToast`. If the
+    parent unmounted while run was pending, the toast still fired
+    through a stale closure. Added `useIsMountedRef` and gated all
+    three toast callsites (success, failure, empty-text) on
+    `isMountedRef.current`. Two new tests prove no toast fires
+    after unmount on either resolve or reject.
+
+- **Capture promotions consolidated** (`useCaptureNotePromotions`)
+  - Three near-identical `usePromotionAction` blocks on `Capture.jsx`
+    (~45 lines of repeated config) collapsed into one
+    `useCaptureNotePromotions({ notes, showToast })` hook returning
+    `{ promoteToReminder, promoteToOpportunity, promoteToContentDraft }`.
+    Page composition reads as intent. 5 new tests cover the hook end
+    to end.
+
+- **Offline write queue** (`offlineWriteQueue`, `useOfflineWriteQueueSize`,
+  `SyncStatusPill`)
+  - Long-pending audit item. `src/lib/offlineWriteQueue.js` exports
+    `enqueueOfflineWrite`, `getOfflineQueue`, `removeOfflineWrite`,
+    `clearOfflineQueue`, and `drainOfflineQueue(handlerByKind)`. Backed
+    by localStorage, FIFO-trimmed at 200 entries, emits
+    `ceo-os:offline-queue-updated`, stops on first failure, bumps
+    attempts on the failed entry, leaves unknown-kind entries in place
+    for forward compat.
+  - `useOfflineWriteQueueSize` subscribes to the event plus the storage
+    event so other tabs propagate. The `SyncStatusPill` renders a
+    `+N` badge with singular/plural aria-label when the queue is
+    non-empty.
+  - Repository wiring is deferred until a Supabase staging environment
+    is available. The intended contract is locked in by an executable
+    integration-shape test (FIFO replay, stop-on-failure preserves
+    later entries, multi-kind routing).
+
+- **Storage corruption banner mobile stack**
+  - Added a `max-width: 540px` breakpoint that switches the banner to
+    a vertical stack with a full-width Dismiss button so the body and
+    action don't squeeze each other on small phones.
+
+### Tests added in this batch
+- 2 cases in `usePromotionAction.test.js` — unmount during resolve, unmount during reject.
+- 5 cases in `useCaptureNotePromotions.test.js` — full hook contract.
+- 11 cases in `offlineWriteQueue.test.js` — module behaviors.
+- 4 cases in `useOfflineWriteQueue.test.js` — hook subscription.
+- 3 cases in `SyncStatusPill.test.jsx` — pending pill rendering.
+- 3 cases in `offlineWriteQueue.integration.test.js` — replay order, stop-on-failure preservation, multi-kind routing.
+
+Lint, typecheck, the full Vitest suite (434 tests), production build,
+and route-budget checks all pass on this branch.
+
+## 17) Calm-OS audit follow-ups (May 2, 2026, batch seven)
+
+A focused six-phase pass surfacing two real bugs introduced by recent
+batches and adding genuine product polish:
+
+- **Silent refresh in `useCrudPage`** (`src/hooks/useCrudPage.js`)
+  - Batch six wired `useCrudPage` to listen for the repository's
+    `*_UPDATED_EVENT` so cross-tab writes refresh the open list. But
+    the load effect always called `setIsLoading(true)`, so every CRUD
+    write inside the page also briefly flashed the loading skeleton —
+    the repository fires its event synchronously after a successful
+    write.
+  - Treat `refreshToken === 0` as the cold-load path (toggles
+    `isLoading` as before) and any positive value as a refresh that
+    should keep existing items on screen. Both stale-record refreshes
+    and event-driven refreshes now update the list in place.
+
+- **Shared `readUpdatedAtMs` helper** (`src/lib/staleRecordError.js`)
+  - Three repositories had inline parsers for the optimistic-locking
+    timestamp:
+    `Number(item.updatedAt ?? item.updated_at) → finite ? raw : 0`,
+    plus weeklyRepository wrapped its copy in a private function.
+    Extracted into one helper next to `assertRecordIsFresh` and
+    consumed by all three repos.
+
+- **Composer persistence on Capture** (`src/pages/Capture.jsx`)
+  - Replaced the local `useState` for draft text and draft category
+    with `usePersistentState` so a long brain-dump survives reloads,
+    route changes, and accidental navigation.
+  - After a successful save, only the text resets; the category stays
+    selected so the user can rapid-fire several stickies in the same
+    category without reselecting.
+  - Defensive normalization: an invalid stored category value (legacy
+    or hand-edited) falls back to the first valid option.
+
+- **Chief notes-limit warning token** (`src/styles/chief-of-staff.css`)
+  - `.chief-notes-meta--limit` hardcoded `color: #f8a2b4` (soft pink),
+    which fades to nearly invisible against a light-mode warm-paper
+    background. Replaced with `var(--danger-text)` so the warning
+    carries clear meaning in both themes.
+
+### Tests added in this batch
+- 1 case in `useCrudPage.test.js` — event-driven refresh keeps
+  `isLoading` false; no skeleton flash.
+- 4 cases in `staleRecordError.test.js` — `readUpdatedAtMs` covering
+  camelCase, snake_case, mixed-precedence, and missing/non-finite paths.
+- 4 cases in `Capture.test.jsx` — composer rehydration on mount,
+  invalid-category fallback, persistence across remount, and
+  category-stays-after-save behavior.
+
+Lint, typecheck, the full Vitest suite (407 tests), production build,
+and route-budget checks all pass on this branch.
+
+## 16) Calm-OS audit follow-ups (May 2, 2026, batch six)
+
+A focused six-phase pass that closes the cross-page promotion roadmap
+and adds cross-tab list refresh:
+
+- **Cross-tab list refresh in `useCrudPage`** (`src/hooks/useCrudPage.js`)
+  - Cross-page promotion verbs fired createOpportunity / createContentItem
+    from outside the CRUD page itself. The repository emitted its
+    `*_UPDATED_EVENT` but `useCrudPage` never listened — so an open
+    Opportunities or Content OS page (in another tab, or even the same
+    tab right after promoting from Capture) showed stale data until reload.
+  - Added an optional `updatedEventName` config; the hook subscribes to
+    that window event and silently bumps the existing `refreshToken` so
+    the list refetches. Cleans up on unmount or event-name change.
+  - Wired `OPPORTUNITIES_UPDATED_EVENT` and `CONTENT_ITEMS_UPDATED_EVENT`
+    through their respective CRUD pages, plus updated four test mocks
+    to expose the new exports.
+
+- **Extracted `StickyNoteCard` component** (`src/components/capture/StickyNoteCard.jsx`)
+  - Capture.jsx had grown to 310 lines as the per-note action surface
+    accumulated four buttons. The mapped `<article>` block was 70 lines
+    on its own.
+  - Moved the entire sticky-note DOM (meta header, textarea, controls,
+    promotion buttons) into a focused component. Promotion buttons
+    render only when their handler is supplied so future verbs can be
+    added without touching the markup.
+  - Capture.jsx is now composition-only over the sticky list (310 → 253
+    lines); same DOM shape, no behavior change.
+
+- **Capture → Content draft promotion** (`Capture.jsx`)
+  - Fourth and final cross-page verb. "Draft as content" button on every
+    sticky calls `createContentItem` with the note text as the title;
+    platform is empty and status is `Drafting` so the user lands on
+    Content OS ready to fill in platform and publish status.
+  - Toast: *"Drafted on Content OS. Open the Content page to set
+    platform and publish status."* The original sticky stays.
+
+- **Mobile sticky controls + journal light polish** (capture.css, journal.css)
+  - With four promotion buttons + a category select, a vertical stack
+    pushed each sticky to ~360 px tall on mobile. Switched to a CSS
+    grid with the select spanning the full row and the four buttons
+    in a 2×2 grid below, keeping every action above the fold.
+  - Added a `:root[data-theme="light"]` override for
+    `.journal-prompts__item`. The default border mixes 24% accent into
+    the translucent ink-blue border, which read slightly too saturated
+    on a light surface for reflective writing. Dropped to plain
+    `var(--border)` and lightened the surface to
+    `rgba(255, 255, 255, 0.85)` so the prompts feel like calm paper.
+
+### Tests added in this batch
+- 2 cases in `useCrudPage.test.js` — `updatedEventName` triggers
+  refetch; missing config means no event subscription (back-compat).
+- 5 cases in `StickyNoteCard.test.jsx` — the component contract
+  (always-on Delete, opt-in promotion buttons, edit and delete
+  forwarding).
+- 1 case in `Capture.test.jsx` — Draft-as-content success path.
+- 1 case in `Capture.test.jsx` — Draft-as-content double-click guard.
+
+Lint, typecheck, the full Vitest suite (398 tests), production build,
+and route-budget checks all pass on this branch.
+
+## 15) Calm-OS audit follow-ups (May 2, 2026, batch five)
+
+A focused six-phase pass on the next set of audit follow-ups, plus
+defensive hardening on the cross-page promotion verbs introduced in
+batches four:
+
+- **Hardened both promotion handlers** (`Capture`, `Dashboard`)
+  - The Capture sticky → Reminder and Reminder → Weekly Priority
+    handlers shipped in earlier batches without an in-flight guard or
+    a stale-id check. A user could click Promote twice on a slow
+    connection and create two priorities from the same reminder.
+  - Added a per-record `Set` ref of in-flight ids, plus a membership
+    check against the current collection, so promotions for records
+    that were deleted in another tab between render and click can no
+    longer fire spurious creates.
+
+- **Extracted `usePromotionAction` hook** (`src/hooks/usePromotionAction.js`)
+  - Capture and Dashboard shared the same control flow: id guard,
+    in-flight Set, async run, success/failure toast, slot release.
+    Three verbs ahead — Capture → Reminder, Reminder → Priority,
+    Capture → Opportunity — would mean three copies of that flow.
+  - Encoded the flow once. Callers supply `onShowToast`,
+    `isRecordKnown`, `run`, and optional success/failure/empty-text
+    messages; the hook returns a stable callback that handles guard,
+    invocation, and feedback. Six unit tests cover happy path,
+    missing id, unknown id, empty text, rapid double-click rejection
+    with slot release, and failure with retry-after-error.
+
+- **Capture → Opportunity verb** (`Capture.jsx`)
+  - Third cross-page promotion verb, mirrors the existing two. A
+    "Track opportunity" button on every sticky calls `createOpportunity`
+    with the note text as the name; company, priority, stage, and
+    next step are seeded with sensible defaults (`Medium`/`New`/empty)
+    so the user lands on Opportunities ready to fill in the rest.
+  - Toast: *"Tracked as a new opportunity. Open the Opportunities page
+    to fill in company and next step."*
+
+- **Light-mode polish + accessible tap targets**
+  - Bumped Dashboard inline Promote/Remove link buttons from ~17 px
+    tall (`padding: 0`, `font: 0.85rem`) to a 32 px+ tap target with
+    a visible `2px outline-offset: 2px` focus ring. Closer to WCAG's
+    44 × 44 px touch-target recommendation while keeping the muted
+    text-link feel.
+  - Added light-theme overrides for the Weekly autosave status-dot
+    box-shadow rings (idle, saving, saved, error). The defaults use
+    rgba white at 0.04 and brand-cyan at 0.18; both wash out on a
+    light-paper surface, so the overrides swap to ink-on-paper halos
+    so the pulse animation remains legible in light mode.
+
+### Tests added in this batch
+- 6 cases in `usePromotionAction.test.js` — full hook contract.
+- 1 case in `Dashboard.test.jsx` — Promote double-click guard.
+- 1 case in `Capture.test.jsx` — Track-opportunity success path.
+- 1 case in `Capture.test.jsx` — Track-opportunity double-click guard.
+
+### Budget note
+Weekly Brief CSS raw budget bumped from 3.0 kB → 3.5 kB to absorb the
+light-mode autosave-status-dot ring overrides. Gzip ceiling unchanged
+at 1.2 kB (current ship: 0.91 kB).
+
+Lint, typecheck, the full Vitest suite (389 tests), production build,
+and route-budget checks all pass on this branch.
+
+## 14) Calm-OS audit follow-ups (May 2, 2026, batch four)
+
+A focused six-phase pass on the next set of audit follow-ups, paired with two
+quality additions that fell out of recent work:
+
+- **Stale-write recovery now refreshes the list** (`useCrudPage`)
+  - After Phases 9–11 added `StaleRecordError` rejection on save, the form
+    modal stayed open with the friendly *"changed in another window"*
+    message — but the items list behind it still showed the old snapshot.
+  - Added a `refreshToken` state and a `refreshItems` callback. On
+    stale-record errors only, `useCrudPage` bumps the token to re-fetch
+    the list while keeping the modal open. Non-stale errors do not
+    trigger a refetch (covered by an explicit test) so transient network
+    failures don't spam the API.
+
+- **Shared `assertRecordIsFresh` helper** (`staleRecordError.js`)
+  - Three repositories carried the same shape of optimistic-locking guard
+    inside their local update paths. About 30 lines of duplication.
+  - Extracted a single `assertRecordIsFresh(persistedRecord,
+    expectedUpdatedAt, message)` helper encoding the same back-compat
+    semantics: skip when `expectedUpdatedAt` is missing/non-positive,
+    skip when persisted has no positive timestamp (legacy data), throw
+    on real mismatch. Opportunities, Content OS, and Weekly items all
+    consume the helper now.
+
+- **Reminder → Weekly Priority promotion** (`Dashboard`, `RemindersPanel`)
+  - Mirrors the Capture sticky → Reminder verb: each pending reminder
+    exposes a "Promote" button that calls `createWeeklyItem` with
+    `itemType: 'priority'`, refreshes the weekly brief silently, and
+    shows a calm toast: *"Added to this week's priorities. The reminder
+    stays here."*
+  - Original reminder stays so the user can choose whether to keep it
+    as a daily nudge or remove it manually.
+
+- **Light-mode polish + empty-state consistency**
+  - Toned down the diagonal accent stripe behind the Focus Home grid in
+    light mode; reset focus-panel borders so overwhelmed/focused chips
+    don't bleed warning colors into a calm-paper surface.
+  - Strengthened the storage-corruption banner contrast in light mode.
+  - Replaced Capture's inline `<div className="empty-state">` with the
+    shared `<EmptyState />` component to match the pattern used by
+    Opportunities and Content OS.
+
+### Tests added in this batch
+- 1 case in `useCrudPage.test.js` — stale-record error triggers `refreshItems`.
+- 1 case in `useCrudPage.test.js` — non-stale errors do NOT trigger a refetch.
+- 5 cases in `staleRecordError.test.js` — helper throw/default/exact-match/skip paths.
+- 1 case in `Dashboard.test.jsx` — promotion creates a weekly priority, fires `refreshWeeklyBrief({ silent: true })`, shows toast, leaves the reminder visible.
+
+### Budget note
+Dashboard CSS raw budget bumped from 4.0 kB → 5.0 kB to absorb the
+Reminder → Priority promote button styles and the Focus Home light-theme
+overrides. Gzip ceiling unchanged at 1.5 kB (current ship: 1.32 kB).
+
+Lint, typecheck, the full Vitest suite (380 tests), production build, and route-budget checks all pass on this branch.
+
+## 13) Calm-OS audit follow-ups (May 2, 2026, batch three)
+
+Closing the next four items from the audit's remaining-risks list:
+
+- **Weekly Brief stale-write rejection** (`weeklyRepository`, `useWeeklyBrief`)
+  - Extended the Phase 9-10 pattern to weekly priorities, wins, and blockers. `createWeeklyItem` stamps `updatedAt`; `updateWeeklyItem` accepts `expectedUpdatedAt` and the local path throws `StaleRecordError` when the persisted timestamp drifts.
+  - `useWeeklyBrief.persistCollectionDiff` threads each previous record's `updatedAt` through, and the recovery handler shows a friendly *"changed in another window"* message instead of the generic copy when a stale conflict is detected.
+
+- **Cross-page promotion: Capture → Reminder** (`Capture.jsx`)
+  - Each sticky note now has a "Make reminder" action next to Delete. It calls `createReminder({ text })` on the existing reminders repository so the new reminder shows up immediately on Focus Home through the same `REMINDERS_UPDATED_EVENT` path other surfaces listen to.
+  - The original sticky stays so the user can decide whether to keep the long-form context or delete it manually.
+
+- **Light-mode visual sweep** (`system.css`, `chief-of-staff.css`)
+  - System.css and chief-of-staff.css use raw `rgba()` for the brand-specific glow geometry (radial body backgrounds, card top-shimmer, focus panels, focus chips, signal nodes, sticky notes, fallback warning surfaces). On dark these read fine; on light they either disappear or read as smudges.
+  - Added focused `:root[data-theme="light"]` override blocks at the bottom of each file that retune those surfaces for proper contrast and warmth without touching the dark theme.
+
+- **axe-core a11y scaffolding** (`e2e/a11y-sweep.spec.js`)
+  - Added `@axe-core/playwright` and a Playwright spec that scans every primary route with `wcag2a`/`wcag2aa`/`best-practice` rules.
+  - Test fails only on `serious` or `critical` impacts so the suite stays a reliable guardrail without flaking on cosmetic minor issues; lighter findings are reported via `console.info` for review.
+
+### Tests added in this batch
+- 3 new cases in `weeklyRepository.test.js` — stamped on create, stale rejection across two simulated tabs, back-compat without `expectedUpdatedAt`.
+- 1 new case in `Capture.test.jsx` — promotion writes a reminder to localStorage and the sticky stays.
+- 9 new Playwright cases in `e2e/a11y-sweep.spec.js` — one axe scan per primary route.
+
+Lint, typecheck, the full Vitest suite (372 tests), production build, and route-budget checks all pass on this branch. The Playwright a11y sweep parses cleanly and registers all 9 cases — exercising it requires browsers installed via `npx playwright install`.
+
 ## 12) Calm-OS audit follow-ups (May 2, 2026, batch two)
 
 Closing the highest-value items from the audit's "remaining risks" list:

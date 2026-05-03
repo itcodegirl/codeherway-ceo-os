@@ -17,3 +17,45 @@ export function isStaleRecordError(error) {
   return Boolean(error)
     && (error?.code === STALE_RECORD_ERROR_CODE || error?.name === 'StaleRecordError');
 }
+
+/**
+ * Parses an `updatedAt` value off a record. Accepts both camelCase
+ * (`updatedAt`) and snake_case (`updated_at`) so repositories can normalize
+ * payloads from local storage and Supabase rows through a single helper.
+ * Returns 0 for missing or non-finite values, which the optimistic-locking
+ * check treats as legacy data and safely skips.
+ */
+export function readUpdatedAtMs(record) {
+  const raw = Number(record?.updatedAt ?? record?.updated_at);
+  return Number.isFinite(raw) ? raw : 0;
+}
+
+/**
+ * Asserts that a persisted record's updatedAt has not drifted from what the
+ * caller expected. Used by the local-first repositories (opportunities,
+ * content, weekly items) to reject two-tab conflicts before mutating.
+ *
+ * - If `expectedUpdatedAt` is missing or non-positive, the check is skipped.
+ *   This keeps the legacy contract for callers that don't track timestamps.
+ * - If the persisted record has no positive updatedAt yet (legacy data), the
+ *   check is also skipped so old payloads keep saving cleanly.
+ * - Otherwise, a mismatch throws a StaleRecordError with the supplied message.
+ */
+export function assertRecordIsFresh(persistedRecord, expectedUpdatedAt, message) {
+  const expected = Number(expectedUpdatedAt);
+  if (!Number.isFinite(expected) || expected <= 0) {
+    return;
+  }
+  if (!persistedRecord) {
+    return;
+  }
+  const persistedAt = Number(persistedRecord.updatedAt);
+  if (!Number.isFinite(persistedAt) || persistedAt <= 0) {
+    return;
+  }
+  if (persistedAt !== expected) {
+    throw new StaleRecordError(
+      message || 'This record was changed in another window. Reload to see the latest version before saving.',
+    );
+  }
+}
