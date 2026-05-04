@@ -4,6 +4,7 @@ import {
   createCaptureNote,
   deleteCaptureNote,
   listCaptureNotes,
+  markCaptureNotePromoted,
   updateCaptureNote,
 } from './captureRepository';
 
@@ -95,5 +96,27 @@ describe('src/lib/captureRepository', () => {
 
     expect(updateListener).not.toHaveBeenCalled();
     expect(listCaptureNotes()).toEqual([created]);
+  });
+
+  it('marks notes promoted with target + timestamp and emits an update event', () => {
+    const note = createCaptureNote({ text: 'Talk to Sarah', category: 'task' });
+    const promoteListener = vi.fn();
+    window.addEventListener(CAPTURE_NOTES_UPDATED_EVENT, promoteListener);
+
+    try {
+      const updated = markCaptureNotePromoted(note.id, 'reminder');
+      expect(updated.promotedTo).toBe('reminder');
+      expect(updated.promotedAt).toBeTruthy();
+      expect(promoteListener).toHaveBeenCalled();
+      const persisted = listCaptureNotes()[0];
+      expect(persisted.promotedTo).toBe('reminder');
+    } finally {
+      window.removeEventListener(CAPTURE_NOTES_UPDATED_EVENT, promoteListener);
+    }
+  });
+
+  it('rejects unknown promotion targets', () => {
+    const note = createCaptureNote({ text: 'Talk to Sarah', category: 'task' });
+    expect(() => markCaptureNotePromoted(note.id, 'something-else')).toThrow();
   });
 });

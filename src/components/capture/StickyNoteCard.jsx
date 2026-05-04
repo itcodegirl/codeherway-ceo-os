@@ -19,11 +19,20 @@ function StickyNoteCard({
   onDelete,
 }) {
   const categoryLabel = formatCategoryLabel(note.category);
+  const promotedTo = typeof note.promotedTo === 'string' ? note.promotedTo : '';
+  const promotedLabel = promotedTo
+    ? `Promoted to ${promotedTo === 'content' ? 'content draft' : promotedTo}`
+    : '';
 
   return (
-    <article className="sticky-note">
+    <article className={promotedTo ? 'sticky-note sticky-note--promoted' : 'sticky-note'}>
       <header className="sticky-note__meta">
         <span className="sticky-note__tag">{categoryLabel}</span>
+        {promotedLabel ? (
+          <span className="sticky-note__promoted-tag" aria-label={promotedLabel}>
+            {promotedLabel}
+          </span>
+        ) : null}
         <span className="helper-text">{formatRelativeDate(note.updatedAt)}</span>
       </header>
       <label htmlFor={`capture-note-${note.id}`} className="sr-only">

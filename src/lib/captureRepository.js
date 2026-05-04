@@ -32,13 +32,24 @@ function normalizeDate(value) {
   return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
 }
 
+const VALID_PROMOTION_TARGETS = new Set(['reminder', 'opportunity', 'content']);
+
+function normalizePromotedTo(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim().toLowerCase();
+  return VALID_PROMOTION_TARGETS.has(trimmed) ? trimmed : '';
+}
+
 function normalizeCaptureNote(note) {
+  const promotedTo = normalizePromotedTo(note?.promotedTo);
   return {
     id: String(note?.id || buildCreateId()),
     text: normalizeText(note?.text),
     category: normalizeCategory(note?.category),
     createdAt: normalizeDate(note?.createdAt),
     updatedAt: normalizeDate(note?.updatedAt || note?.createdAt),
+    promotedTo,
+    promotedAt: promotedTo ? normalizeDate(note?.promotedAt) : '',
   };
 }
 
@@ -146,6 +157,39 @@ export function updateCaptureNote(id, payload) {
 
   writeStorage(next);
   emitCaptureNotesUpdated({ type: 'update', id: normalizedId });
+  return next.find((note) => note.id === normalizedId) || null;
+}
+
+export function markCaptureNotePromoted(id, target) {
+  const normalizedId = String(id || '');
+  if (!normalizedId) {
+    throw new Error('Capture note id is required');
+  }
+  const normalizedTarget = normalizePromotedTo(target);
+  if (!normalizedTarget) {
+    throw new Error('Capture note promotion target is invalid');
+  }
+
+  const current = readStorage();
+  let didUpdate = false;
+  const next = current.map((note) => {
+    if (note.id !== normalizedId) {
+      return note;
+    }
+    didUpdate = true;
+    return normalizeCaptureNote({
+      ...note,
+      promotedTo: normalizedTarget,
+      promotedAt: new Date().toISOString(),
+    });
+  });
+
+  if (!didUpdate) {
+    throw new Error('Capture note not found');
+  }
+
+  writeStorage(next);
+  emitCaptureNotesUpdated({ type: 'promote', id: normalizedId, promotedTo: normalizedTarget });
   return next.find((note) => note.id === normalizedId) || null;
 }
 

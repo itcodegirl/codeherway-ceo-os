@@ -91,3 +91,36 @@
 		width: 100%;
 	}
 }
+
+.capture-wall__toggle-promoted {
+	background: transparent;
+	border: 1px solid var(--border);
+	color: var(--text-muted);
+	padding: 0.3rem 0.7rem;
+	border-radius: var(--radius-action, 12px);
+	font-size: 0.78rem;
+	cursor: pointer;
+	margin-bottom: 0.5rem;
+	align-self: flex-start;
+}
+
+.capture-wall__toggle-promoted:hover,
+.capture-wall__toggle-promoted:focus-visible {
+	color: var(--text);
+	border-color: var(--border-accent);
+}
+
+.sticky-note--promoted {
+	opacity: 0.78;
+}
+
+.sticky-note__promoted-tag {
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	color: var(--accent-soft-strong);
+	background: var(--bg-accent-soft);
+}
