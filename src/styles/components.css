@@ -65,6 +65,33 @@
   cursor: not-allowed;
 }
 
+.action-button--loading {
+  cursor: progress;
+}
+
+.action-button__spinner {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 999px;
+  animation: action-button-spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes action-button-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-button__spinner {
+    animation: none;
+    border-top-color: color-mix(in srgb, currentColor 60%, transparent);
+  }
+}
+
 .crm-table__row--button {
   text-align: left;
   border: 1px solid var(--border);
