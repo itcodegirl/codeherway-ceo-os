@@ -335,21 +335,58 @@
 	}
 }
 
-.sync-status-pill__pending {
+.save-status-pill {
 	display: inline-flex;
 	align-items: center;
-	margin-left: 0.3rem;
-	padding: 0 0.4rem;
-	border-radius: 999px;
-	font-size: 0.68rem;
-	font-weight: 700;
-	background: var(--bg-accent-soft);
-	color: var(--accent-soft-strong);
+	gap: 0.4rem;
+	padding: 0.22rem 0.6rem 0.22rem 0.5rem;
+	font-size: 0.74rem;
+	font-weight: 600;
 	letter-spacing: 0.02em;
+	color: var(--text-meta);
+	background: var(--surface-input);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	white-space: nowrap;
+	transition: background-color var(--duration-base, 200ms) var(--easing-standard, ease),
+		color var(--duration-base, 200ms) var(--easing-standard, ease),
+		border-color var(--duration-base, 200ms) var(--easing-standard, ease);
 }
 
-.sync-status-pill--has-pending {
-	border-color: var(--border-accent);
+.save-status-pill__dot {
+	display: inline-block;
+	width: 0.45rem;
+	height: 0.45rem;
+	border-radius: 999px;
+	background: var(--text-meta);
+}
+
+.save-status-pill--saved {
+	color: var(--text);
+	border-color: var(--border-success-soft, var(--border));
+}
+
+.save-status-pill--saved .save-status-pill__dot {
+	background: var(--success);
+	box-shadow: 0 0 0 2px rgba(123, 229, 188, 0.15);
+}
+
+.save-status-pill--failed {
+	color: var(--text);
+	border-color: var(--border-danger-soft, var(--border));
+	background: var(--danger-surface, var(--surface-input));
+}
+
+.save-status-pill--failed .save-status-pill__dot {
+	background: var(--danger);
+	box-shadow: 0 0 0 2px rgba(255, 155, 155, 0.18);
+	animation: sync-status-offline-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.save-status-pill--failed .save-status-pill__dot {
+		animation: none;
+	}
 }
 
 .topbar__meta {
