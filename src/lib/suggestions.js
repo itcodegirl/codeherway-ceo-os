@@ -1,6 +1,23 @@
 import { hasText, normalizeCollection } from './focusSignalUtils';
 import { formatIsoDate } from './utils';
 
+// Severity weights drive triage so the focus surface foregrounds the things
+// that actually need a decision (named blockers, heavy journal entries,
+// in-progress work) over passive observations ("you have an unfinished idea").
+// Higher = surfaces first.
+const SEVERITY_BY_ID = {
+  'blocker-attention': 100,
+  'journal-next-step': 80,
+  'quick-win': 70,
+  'planned-priority': 60,
+  'draft-content': 50,
+  'pending-reminders': 40,
+  'unfinished-idea': 30,
+  default: 0,
+};
+
+const MAX_VISIBLE_SUGGESTIONS = 3;
+
 function isFromYesterdayOrEarlier(isoValue, todayKey) {
   if (!hasText(isoValue)) {
     return false;
@@ -104,13 +121,31 @@ export function buildDeterministicSuggestions({
 
   const deduped = [];
   const seen = new Set();
-  suggestions.forEach((item) => {
+  suggestions.forEach((item, index) => {
     if (seen.has(item.id)) {
       return;
     }
     seen.add(item.id);
-    deduped.push(item);
+    deduped.push({
+      ...item,
+      // Stable secondary key so equal-severity items keep their original order.
+      __order: index,
+    });
   });
 
-  return deduped.slice(0, 5);
+  // Sort by severity (high first), keep insertion order on ties for
+  // deterministic output, then cap the visible list. Strip the internal key
+  // before returning so callers only see the public suggestion shape.
+  return deduped
+    .sort((left, right) => {
+      const leftSeverity = SEVERITY_BY_ID[left.id] ?? 0;
+      const rightSeverity = SEVERITY_BY_ID[right.id] ?? 0;
+      if (leftSeverity !== rightSeverity) {
+        return rightSeverity - leftSeverity;
+      }
+      return left.__order - right.__order;
+    })
+    .slice(0, MAX_VISIBLE_SUGGESTIONS)
+    // eslint-disable-next-line no-unused-vars
+    .map(({ __order, ...rest }) => rest);
 }
