@@ -2,7 +2,7 @@ import { opportunities as mockOpportunities } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
+import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
@@ -17,6 +17,14 @@ function normalizeOpportunity(item) {
     nextStep: item.nextStep || item.next_step || '',
     updatedAt: readUpdatedAtMs(item),
   };
+}
+
+function expectedUpdatedAtToIso(expectedUpdatedAt) {
+  const expected = Number(expectedUpdatedAt);
+  if (!Number.isFinite(expected) || expected <= 0) {
+    return null;
+  }
+  return new Date(expected).toISOString();
 }
 
 function getSeededLocalItems() {
@@ -144,16 +152,33 @@ export async function updateOpportunity(id, payload, options = {}) {
   if (supabaseClient) {
     const normalizedPayload = normalizeOpportunity({ id, ...payload });
     const userId = await supabase.requireSupabaseUserId();
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('opportunities')
       .update(formatForSupabase(normalizedPayload))
       .eq('id', id)
-      .eq('user_id', userId)
-      .select('id, name, company, priority, stage, next_step')
-      .single();
+      .eq('user_id', userId);
+
+    const expectedIso = expectedUpdatedAtToIso(options.expectedUpdatedAt);
+    if (expectedIso) {
+      // Optimistic locking: only update if the row's updated_at still matches
+      // what the client opened the editor with. PostgREST returns the matched
+      // row in `data`; if no row matched, data is null and we treat it as a
+      // stale-record conflict (same UX as the local-only path).
+      query = query.eq('updated_at', expectedIso);
+    }
+
+    const { data, error } = await query
+      .select('id, name, company, priority, stage, next_step, updated_at')
+      .maybeSingle();
 
     if (error) {
       throw error;
+    }
+
+    if (!data) {
+      throw new StaleRecordError(
+        'This opportunity was changed in another window. Reload to see the latest version before saving.',
+      );
     }
 
     notifyOpportunitiesUpdated({ source: 'supabase', type: 'update' });

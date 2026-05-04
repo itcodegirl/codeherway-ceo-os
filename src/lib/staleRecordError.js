@@ -22,12 +22,29 @@ export function isStaleRecordError(error) {
  * Parses an `updatedAt` value off a record. Accepts both camelCase
  * (`updatedAt`) and snake_case (`updated_at`) so repositories can normalize
  * payloads from local storage and Supabase rows through a single helper.
- * Returns 0 for missing or non-finite values, which the optimistic-locking
- * check treats as legacy data and safely skips.
+ *
+ * Numeric epoch ms values (local-only path) and ISO date strings (Supabase
+ * timestamptz columns return strings) both resolve to ms; missing / unparseable
+ * values return 0 so the optimistic-locking check treats them as legacy data
+ * and safely skips.
  */
 export function readUpdatedAtMs(record) {
-  const raw = Number(record?.updatedAt ?? record?.updated_at);
-  return Number.isFinite(raw) ? raw : 0;
+  const raw = record?.updatedAt ?? record?.updated_at;
+  if (raw === null || raw === undefined || raw === '') {
+    return 0;
+  }
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) ? raw : 0;
+  }
+  if (typeof raw === 'string') {
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && String(numeric) === raw.trim()) {
+      return numeric;
+    }
+    const parsed = Date.parse(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
 }
 
 /**

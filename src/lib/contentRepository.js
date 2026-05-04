@@ -2,7 +2,15 @@ import { contentItems as mockContentItems } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
+import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
+
+function expectedUpdatedAtToIso(expectedUpdatedAt) {
+  const expected = Number(expectedUpdatedAt);
+  if (!Number.isFinite(expected) || expected <= 0) {
+    return null;
+  }
+  return new Date(expected).toISOString();
+}
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
@@ -132,7 +140,7 @@ export async function updateContentItem(id, payload, options = {}) {
   if (supabaseClient) {
     const normalizedPayload = normalizeContentItem({ id, ...payload });
     const userId = await supabase.requireSupabaseUserId();
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('content_items')
       .update({
         title: normalizedPayload.title,
@@ -140,12 +148,26 @@ export async function updateContentItem(id, payload, options = {}) {
         status: normalizedPayload.status,
       })
       .eq('id', id)
-      .eq('user_id', userId)
-      .select('id, title, platform, status')
-      .single();
+      .eq('user_id', userId);
+
+    const expectedIso = expectedUpdatedAtToIso(options.expectedUpdatedAt);
+    if (expectedIso) {
+      // Optimistic locking — see opportunitiesRepository for the rationale.
+      query = query.eq('updated_at', expectedIso);
+    }
+
+    const { data, error } = await query
+      .select('id, title, platform, status, updated_at')
+      .maybeSingle();
 
     if (error) {
       throw error;
+    }
+
+    if (!data) {
+      throw new StaleRecordError(
+        'This content item was changed in another window. Reload to see the latest version before saving.',
+      );
     }
 
     notifyContentItemsUpdated({ source: 'supabase', type: 'update' });
