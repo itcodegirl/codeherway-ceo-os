@@ -5,6 +5,7 @@ import Topbar from '../components/ui/Topbar';
 import SystemPulse from '../components/ui/SystemPulse';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import StorageCorruptionBanner from '../components/ui/StorageCorruptionBanner';
+import LocalOnlyNotice from '../components/ui/LocalOnlyNotice';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useThemePreference } from '../hooks/useThemePreference';
@@ -62,6 +63,7 @@ function AppLayout() {
       <div className="app-main">
         <Topbar pageTitle={currentPageTitle} />
         <StorageCorruptionBanner />
+        <LocalOnlyNotice />
         {showSystemPulse ? <SystemPulse /> : null}
         <main className="app-content" id="main-content" tabIndex="-1" ref={mainRef}>
           <ErrorBoundary
