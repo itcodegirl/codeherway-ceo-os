@@ -20,10 +20,10 @@ function buildSupabaseClientStub({ rowsByExpectedAt }) {
   const captured = { eqs: [] };
   return {
     captured,
-    from(_table) {
+    from() {
       const filters = {};
       const builder = {
-        update(_payload) {
+        update() {
           return builder;
         },
         eq(column, value) {
@@ -31,7 +31,7 @@ function buildSupabaseClientStub({ rowsByExpectedAt }) {
           captured.eqs.push([column, value]);
           return builder;
         },
-        select(_cols) {
+        select() {
           return builder;
         },
         async maybeSingle() {

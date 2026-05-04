@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 
 const DISMISS_KEY = 'ceo-os-local-only-notice-dismissed-v1';
@@ -32,15 +32,12 @@ function markDismissed() {
  */
 function LocalOnlyNotice() {
   const { source } = useWorkspaceSettings();
+  // The dismissed flag lives in localStorage, so we read it once on mount.
+  // Subsequent dismissals flow through setDismissed inside handleDismiss,
+  // which avoids the cascading-render lint rule. If the source flips from
+  // supabase to local mid-session we re-derive dismissed at render time so
+  // the freshly-relevant notice respects any prior dismissal.
   const [dismissed, setDismissed] = useState(() => isDismissed());
-
-  useEffect(() => {
-    if (source !== 'local') {
-      return undefined;
-    }
-    setDismissed(isDismissed());
-    return undefined;
-  }, [source]);
 
   if (source !== 'local' || dismissed) {
     return null;
