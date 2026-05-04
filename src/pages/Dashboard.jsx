@@ -17,6 +17,7 @@ import {
   deleteReminder,
   getReminderProgress,
   toggleReminder,
+  updateReminderText,
 } from '../lib/remindersRepository';
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
@@ -251,6 +252,26 @@ function Dashboard() {
     }
   };
 
+  const handleEditReminder = (id, nextText) => {
+    if (!reminders.some((item) => item.id === id)) {
+      return false;
+    }
+    const trimmed = typeof nextText === 'string' ? nextText.trim() : '';
+    if (!trimmed) {
+      showToast('Reminder text cannot be empty.');
+      return false;
+    }
+    try {
+      updateReminderText(id, trimmed);
+      return true;
+    } catch (error) {
+      if (!isReminderNotFoundError(error)) {
+        showToast('Unable to update reminder right now.');
+      }
+      return false;
+    }
+  };
+
   const handlePromoteReminderToPriority = usePromotionAction({
     onShowToast: showToast,
     isRecordKnown: (id) => reminders.some((item) => item.id === id),
@@ -387,6 +408,7 @@ function Dashboard() {
             onToggleReminder={handleToggleReminder}
             onDeleteReminder={handleDeleteReminder}
             onPromoteReminder={handlePromoteReminderToPriority}
+            onEditReminder={handleEditReminder}
           />
         </ErrorBoundary>
 

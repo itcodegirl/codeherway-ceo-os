@@ -212,6 +212,11 @@ describe('src/pages/Dashboard', () => {
 
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByText('1 of 1 reminders complete (100%)')).toBeInTheDocument();
+
+    // Completed reminders auto-hide so the list does not pile up. The user
+    // can still bring them back via the toggle.
+    expect(screen.queryByText('Send recap email')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /show 1 completed/i }));
     expect(screen.getByText('Send recap email')).toBeInTheDocument();
 
     act(() => {

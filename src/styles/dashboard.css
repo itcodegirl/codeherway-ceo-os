@@ -213,7 +213,9 @@
 }
 
 .focus-reminder-list__delete,
-.focus-reminder-list__promote {
+.focus-reminder-list__promote,
+.focus-reminder-list__edit-button,
+.focus-reminder-list__toggle-completed {
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
@@ -229,15 +231,36 @@
 }
 
 .focus-reminder-list__delete:hover,
-.focus-reminder-list__promote:hover {
+.focus-reminder-list__promote:hover,
+.focus-reminder-list__edit-button:hover,
+.focus-reminder-list__toggle-completed:hover {
 	color: var(--text);
 }
 
 .focus-reminder-list__delete:focus-visible,
-.focus-reminder-list__promote:focus-visible {
+.focus-reminder-list__promote:focus-visible,
+.focus-reminder-list__edit-button:focus-visible,
+.focus-reminder-list__toggle-completed:focus-visible {
 	color: var(--text);
 	outline: 2px solid var(--focus-ring);
 	outline-offset: 2px;
+}
+
+.focus-reminder-list__toggle-completed {
+	margin: 0.4rem 0 0.6rem;
+	display: inline-flex;
+	font-size: 0.78rem;
+}
+
+.focus-reminder-list__edit {
+	flex: 1;
+	background: var(--surface-input);
+	border: 1px solid var(--border-accent);
+	color: var(--text);
+	padding: 0.35rem 0.5rem;
+	border-radius: 0.45rem;
+	font-size: 0.92rem;
+	min-width: 0;
 }
 
 .focus-reminder-list__promote {

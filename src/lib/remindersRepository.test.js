@@ -5,6 +5,7 @@ import {
   getReminderProgress,
   listReminders,
   toggleReminder,
+  updateReminderText,
 } from './remindersRepository';
 
 describe('src/lib/remindersRepository', () => {
@@ -72,5 +73,25 @@ describe('src/lib/remindersRepository', () => {
       pending: 1,
       completionRate: 50,
     });
+  });
+
+  it('renames a reminder in place via updateReminderText', () => {
+    const reminder = createReminder({ text: 'Email Sarah' });
+    const updated = updateReminderText(reminder.id, '   Send Sarah a Slack message   ');
+    expect(updated.text).toBe('Send Sarah a Slack message');
+
+    const persisted = listReminders();
+    expect(persisted).toHaveLength(1);
+    expect(persisted[0].text).toBe('Send Sarah a Slack message');
+  });
+
+  it('rejects empty rename text', () => {
+    const reminder = createReminder({ text: 'Email Sarah' });
+    expect(() => updateReminderText(reminder.id, '   ')).toThrow('Reminder text is required');
+    expect(listReminders()[0].text).toBe('Email Sarah');
+  });
+
+  it('rejects renames for missing reminders', () => {
+    expect(() => updateReminderText('missing-id', 'anything')).toThrow('Reminder not found');
   });
 });

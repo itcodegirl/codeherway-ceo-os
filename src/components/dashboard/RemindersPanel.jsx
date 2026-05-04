@@ -1,4 +1,115 @@
+import { useState } from 'react';
 import Button from '../ui/Button';
+
+function ReminderRow({
+  item,
+  onToggleReminder,
+  onPromoteReminder,
+  onDeleteReminder,
+  onEditReminder,
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(item.text);
+
+  const startEdit = () => {
+    setDraft(item.text);
+    setIsEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setDraft(item.text);
+    setIsEditing(false);
+  };
+
+  const saveEdit = () => {
+    const next = typeof draft === 'string' ? draft.trim() : '';
+    if (!next || next === item.text) {
+      cancelEdit();
+      return;
+    }
+    if (typeof onEditReminder === 'function') {
+      const ok = onEditReminder(item.id, next);
+      if (ok === false) {
+        return;
+      }
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveEdit();
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelEdit();
+    }
+  };
+
+  const className = item.isDone
+    ? 'focus-reminder-list__item focus-reminder-list__item--done'
+    : 'focus-reminder-list__item';
+
+  return (
+    <li className={className}>
+      <label>
+        <input
+          type="checkbox"
+          checked={item.isDone}
+          onChange={(event) => onToggleReminder(item.id, event.target.checked)}
+        />
+        {isEditing ? (
+          <input
+            type="text"
+            className="focus-reminder-list__edit"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={saveEdit}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            aria-label={`Edit reminder ${item.text}`}
+          />
+        ) : (
+          <span>{item.text}</span>
+        )}
+      </label>
+      <div className="focus-reminder-list__actions">
+        {!isEditing && typeof onEditReminder === 'function' && !item.isDone ? (
+          <button
+            type="button"
+            className="focus-reminder-list__edit-button"
+            aria-label={`Edit reminder ${item.text}`}
+            onClick={startEdit}
+          >
+            Edit
+          </button>
+        ) : null}
+        {!isEditing && typeof onPromoteReminder === 'function' && !item.isDone ? (
+          <button
+            type="button"
+            className="focus-reminder-list__promote"
+            aria-label={`Promote reminder ${item.text} to a weekly priority`}
+            onClick={() => onPromoteReminder(item)}
+          >
+            Promote
+          </button>
+        ) : null}
+        {!isEditing ? (
+          <button
+            type="button"
+            className="focus-reminder-list__delete"
+            aria-label={`Delete reminder ${item.text}`}
+            onClick={() => onDeleteReminder(item.id)}
+          >
+            Remove
+          </button>
+        ) : null}
+      </div>
+    </li>
+  );
+}
 
 function RemindersPanel({
   reminderDraft,
@@ -11,7 +122,17 @@ function RemindersPanel({
   onToggleReminder,
   onDeleteReminder,
   onPromoteReminder,
+  onEditReminder,
 }) {
+  // Keep completed reminders hidden by default so the list doesn't grow into
+  // a backlog of finished work. Users can opt-in to seeing them.
+  const [showCompleted, setShowCompleted] = useState(false);
+  const completedCount = visibleReminders.filter((item) => item.isDone).length;
+  const filteredReminders = showCompleted
+    ? visibleReminders
+    : visibleReminders.filter((item) => !item.isDone);
+  const hasItems = filteredReminders.length > 0;
+
   return (
     <article
       className="focus-panel"
@@ -55,43 +176,29 @@ function RemindersPanel({
           : 'No reminder progress yet.'}
       </p>
 
+      {completedCount > 0 ? (
+        <button
+          type="button"
+          className="focus-reminder-list__toggle-completed"
+          aria-pressed={showCompleted}
+          onClick={() => setShowCompleted((prev) => !prev)}
+        >
+          {showCompleted
+            ? `Hide ${completedCount} completed`
+            : `Show ${completedCount} completed`}
+        </button>
+      ) : null}
+
       <ul className="focus-reminder-list">
-        {visibleReminders.length ? visibleReminders.map((item) => (
-          <li
+        {hasItems ? filteredReminders.map((item) => (
+          <ReminderRow
             key={item.id}
-            className={item.isDone
-              ? 'focus-reminder-list__item focus-reminder-list__item--done'
-              : 'focus-reminder-list__item'}
-          >
-            <label>
-              <input
-                type="checkbox"
-                checked={item.isDone}
-                onChange={(event) => onToggleReminder(item.id, event.target.checked)}
-              />
-              <span>{item.text}</span>
-            </label>
-            <div className="focus-reminder-list__actions">
-              {typeof onPromoteReminder === 'function' && !item.isDone ? (
-                <button
-                  type="button"
-                  className="focus-reminder-list__promote"
-                  aria-label={`Promote reminder ${item.text} to a weekly priority`}
-                  onClick={() => onPromoteReminder(item)}
-                >
-                  Promote
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className="focus-reminder-list__delete"
-                aria-label={`Delete reminder ${item.text}`}
-                onClick={() => onDeleteReminder(item.id)}
-              >
-                Remove
-              </button>
-            </div>
-          </li>
+            item={item}
+            onToggleReminder={onToggleReminder}
+            onPromoteReminder={onPromoteReminder}
+            onDeleteReminder={onDeleteReminder}
+            onEditReminder={onEditReminder}
+          />
         )) : (
           <li className="focus-reminder-list__item focus-reminder-list__item--empty">
             <span>No reminders yet. Add one small commitment.</span>
