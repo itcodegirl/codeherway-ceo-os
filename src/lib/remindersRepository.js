@@ -126,6 +126,34 @@ export function toggleReminder(id, isDone) {
   return updatedReminder;
 }
 
+export function updateReminderText(id, text) {
+  const normalizedId = String(id || '');
+  if (!normalizedId) {
+    throw new Error('Reminder id is required');
+  }
+  const trimmed = typeof text === 'string' ? text.trim() : '';
+  if (!trimmed) {
+    throw new Error('Reminder text is required');
+  }
+
+  const current = readStorage();
+  let updatedReminder = null;
+  const next = current.map((reminder) => {
+    if (reminder.id !== normalizedId) {
+      return reminder;
+    }
+    updatedReminder = { ...reminder, text: trimmed };
+    return updatedReminder;
+  });
+  if (!updatedReminder) {
+    throw new Error('Reminder not found');
+  }
+
+  writeStorage(next);
+  emitReminderUpdated({ type: 'update', id: normalizedId });
+  return updatedReminder;
+}
+
 export function deleteReminder(id) {
   const normalizedId = String(id || '');
   if (!normalizedId) {

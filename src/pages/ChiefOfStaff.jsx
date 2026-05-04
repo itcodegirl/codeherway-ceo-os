@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useCallback, useMemo } from "react";
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
 import Button from "../components/ui/Button";
 import SourceStatusNotice from "../components/ui/SourceStatusNotice";
@@ -69,7 +69,10 @@ export default function ChiefOfStaff() {
   } = useChiefOfStaff();
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
-  const result = toPanelResult(latestResponse);
+  // Memoize the parsed/normalized panel result so the structured payload
+  // tree (often several KB) is not rebuilt on every notes keystroke. Keyed
+  // on the response identity which only changes after a successful save.
+  const result = useMemo(() => toPanelResult(latestResponse), [latestResponse]);
   const notesLength = typeof notes === "string" ? notes.length : 0;
   const notesLimitReached = notesLength >= MAX_NOTES_LENGTH;
 
@@ -81,6 +84,22 @@ export default function ChiefOfStaff() {
     : notes.trim()
       ? "Your notes stay editable. Review every recommendation before using it."
       : "Add a few founder notes to generate an action plan.";
+
+  // Stable callback references so ChiefOutputPanel children don't re-render
+  // on every parent paint.
+  const onAcceptPriority = useCallback((item) => acceptStructuredItem("priorities", item), [acceptStructuredItem]);
+  const onAcceptOpportunity = useCallback((item) => acceptStructuredItem("opportunities", item), [acceptStructuredItem]);
+  const onAcceptContent = useCallback((item) => acceptStructuredItem("contentItems", item), [acceptStructuredItem]);
+  const onAcceptTask = useCallback((item) => acceptStructuredItem("tasks", item), [acceptStructuredItem]);
+  const onAcceptAll = useCallback(() => acceptAllStructured(result?.structured), [acceptAllStructured, result]);
+  const isPriorityAccepted = useCallback((item) => isStructuredItemAccepted("priorities", item), [isStructuredItemAccepted]);
+  const isPriorityAccepting = useCallback((item) => isStructuredItemAccepting("priorities", item), [isStructuredItemAccepting]);
+  const isOpportunityAccepted = useCallback((item) => isStructuredItemAccepted("opportunities", item), [isStructuredItemAccepted]);
+  const isOpportunityAccepting = useCallback((item) => isStructuredItemAccepting("opportunities", item), [isStructuredItemAccepting]);
+  const isContentAccepted = useCallback((item) => isStructuredItemAccepted("contentItems", item), [isStructuredItemAccepted]);
+  const isContentAccepting = useCallback((item) => isStructuredItemAccepting("contentItems", item), [isStructuredItemAccepting]);
+  const isTaskAccepted = useCallback((item) => isStructuredItemAccepted("tasks", item), [isStructuredItemAccepted]);
+  const isTaskAccepting = useCallback((item) => isStructuredItemAccepting("tasks", item), [isStructuredItemAccepting]);
 
   return (
     <section className="chief-page-grid">
@@ -179,34 +198,20 @@ export default function ChiefOfStaff() {
         <ChiefOutputPanel
           isGenerating={isGenerating}
           result={result}
-          onAcceptPriority={(item) => acceptStructuredItem("priorities", item)}
-          onAcceptOpportunity={(item) =>
-            acceptStructuredItem("opportunities", item)
-          }
-          onAcceptContent={(item) => acceptStructuredItem("contentItems", item)}
-          onAcceptTask={(item) => acceptStructuredItem("tasks", item)}
-          onAcceptAll={() => acceptAllStructured(result?.structured)}
+          onAcceptPriority={onAcceptPriority}
+          onAcceptOpportunity={onAcceptOpportunity}
+          onAcceptContent={onAcceptContent}
+          onAcceptTask={onAcceptTask}
+          onAcceptAll={onAcceptAll}
           isAcceptingAll={isAcceptingAll}
-          isPriorityAccepted={(item) =>
-            isStructuredItemAccepted("priorities", item)
-          }
-          isPriorityAccepting={(item) =>
-            isStructuredItemAccepting("priorities", item)
-          }
-          isOpportunityAccepted={(item) =>
-            isStructuredItemAccepted("opportunities", item)
-          }
-          isOpportunityAccepting={(item) =>
-            isStructuredItemAccepting("opportunities", item)
-          }
-          isContentAccepted={(item) =>
-            isStructuredItemAccepted("contentItems", item)
-          }
-          isContentAccepting={(item) =>
-            isStructuredItemAccepting("contentItems", item)
-          }
-          isTaskAccepted={(item) => isStructuredItemAccepted("tasks", item)}
-          isTaskAccepting={(item) => isStructuredItemAccepting("tasks", item)}
+          isPriorityAccepted={isPriorityAccepted}
+          isPriorityAccepting={isPriorityAccepting}
+          isOpportunityAccepted={isOpportunityAccepted}
+          isOpportunityAccepting={isOpportunityAccepting}
+          isContentAccepted={isContentAccepted}
+          isContentAccepting={isContentAccepting}
+          isTaskAccepted={isTaskAccepted}
+          isTaskAccepting={isTaskAccepting}
         />
       </div>
     </section>

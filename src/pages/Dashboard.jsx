@@ -3,6 +3,7 @@ import Button from '../components/ui/Button';
 import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
+import ErrorBoundary from '../components/ui/ErrorBoundary';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
 import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
@@ -16,6 +17,7 @@ import {
   deleteReminder,
   getReminderProgress,
   toggleReminder,
+  updateReminderText,
 } from '../lib/remindersRepository';
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
@@ -250,6 +252,26 @@ function Dashboard() {
     }
   };
 
+  const handleEditReminder = (id, nextText) => {
+    if (!reminders.some((item) => item.id === id)) {
+      return false;
+    }
+    const trimmed = typeof nextText === 'string' ? nextText.trim() : '';
+    if (!trimmed) {
+      showToast('Reminder text cannot be empty.');
+      return false;
+    }
+    try {
+      updateReminderText(id, trimmed);
+      return true;
+    } catch (error) {
+      if (!isReminderNotFoundError(error)) {
+        showToast('Unable to update reminder right now.');
+      }
+      return false;
+    }
+  };
+
   const handlePromoteReminderToPriority = usePromotionAction({
     onShowToast: showToast,
     isRecordKnown: (id) => reminders.some((item) => item.id === id),
@@ -308,6 +330,14 @@ function Dashboard() {
       />
 
       <div className="focus-home__grid">
+        <ErrorBoundary
+          name="Dashboard / Today focus"
+          fallback={(
+            <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
+              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
+            </article>
+          )}
+        >
         <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
           <div className="focus-panel__header">
             <h2>Today's Main Focus</h2>
@@ -336,7 +366,16 @@ function Dashboard() {
           ) : null}
           {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
         </article>
+        </ErrorBoundary>
 
+        <ErrorBoundary
+          name="Dashboard / Blockers"
+          fallback={(
+            <article className="focus-panel" aria-label="Blockers panel">
+              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
+            </article>
+          )}
+        >
         <article className="focus-panel" aria-label="Blockers panel">
           <div className="focus-panel__header">
             <h2>Blockers</h2>
@@ -348,20 +387,39 @@ function Dashboard() {
             ))}
           </ul>
         </article>
+        </ErrorBoundary>
 
-        <RemindersPanel
-          reminderDraft={reminderDraft}
-          onReminderDraftChange={setReminderDraft}
-          isAddingReminder={isAddingReminder}
-          onAddReminderSubmit={handleAddReminder}
-          reminderProgress={reminderProgress}
-          visibleReminders={visibleReminders}
-          suggestions={suggestions}
-          onToggleReminder={handleToggleReminder}
-          onDeleteReminder={handleDeleteReminder}
-          onPromoteReminder={handlePromoteReminderToPriority}
-        />
+        <ErrorBoundary
+          name="Dashboard / Reminders"
+          fallback={(
+            <article className="focus-panel" aria-label="Reminders panel">
+              <p className="calm-copy">Reminders couldn’t load. Refresh the page to retry.</p>
+            </article>
+          )}
+        >
+          <RemindersPanel
+            reminderDraft={reminderDraft}
+            onReminderDraftChange={setReminderDraft}
+            isAddingReminder={isAddingReminder}
+            onAddReminderSubmit={handleAddReminder}
+            reminderProgress={reminderProgress}
+            visibleReminders={visibleReminders}
+            suggestions={suggestions}
+            onToggleReminder={handleToggleReminder}
+            onDeleteReminder={handleDeleteReminder}
+            onPromoteReminder={handlePromoteReminderToPriority}
+            onEditReminder={handleEditReminder}
+          />
+        </ErrorBoundary>
 
+        <ErrorBoundary
+          name="Dashboard / Momentum"
+          fallback={(
+            <article className="focus-panel" aria-label="Momentum panel">
+              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
+            </article>
+          )}
+        >
         <article className="focus-panel" aria-label="Momentum panel">
           <div className="focus-panel__header">
             <h2>Quick Win</h2>
@@ -373,7 +431,16 @@ function Dashboard() {
           </p>
           <p className="calm-copy">{momentum.text}</p>
         </article>
+        </ErrorBoundary>
 
+        <ErrorBoundary
+          name="Dashboard / Reset"
+          fallback={(
+            <article className="focus-panel focus-panel--reset" aria-label="Reset panel">
+              <p className="calm-copy">Reset steps couldn’t load. Refresh the page to retry.</p>
+            </article>
+          )}
+        >
         <article className="focus-panel focus-panel--reset" aria-live="polite">
           <div className="focus-panel__header">
             <h2>I'm Overwhelmed Reset</h2>
@@ -390,6 +457,7 @@ function Dashboard() {
             ))}
           </ol>
         </article>
+        </ErrorBoundary>
       </div>
 
       <Toast className="toast--dashboard" isVisible={isToastVisible} message={toastMessage} />

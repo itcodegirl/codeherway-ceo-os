@@ -65,6 +65,33 @@
   cursor: not-allowed;
 }
 
+.action-button--loading {
+  cursor: progress;
+}
+
+.action-button__spinner {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 999px;
+  animation: action-button-spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes action-button-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-button__spinner {
+    animation: none;
+    border-top-color: color-mix(in srgb, currentColor 60%, transparent);
+  }
+}
+
 .crm-table__row--button {
   text-align: left;
   border: 1px solid var(--border);
@@ -683,6 +710,91 @@ textarea:focus-visible,
   border-color: var(--border-accent);
 }
 
+.storage-corruption-banner__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.storage-corruption-banner__list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.storage-corruption-banner__item {
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-action, 12px);
+  padding: 0.55rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.storage-corruption-banner__item--empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.storage-corruption-banner__item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.storage-corruption-banner__item-time {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.storage-corruption-banner__item-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.storage-corruption-banner__action {
+  background: transparent;
+  border: 1px solid var(--border-accent);
+  color: var(--text);
+  border-radius: var(--radius-action, 12px);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.storage-corruption-banner__action:hover,
+.storage-corruption-banner__action:focus-visible {
+  background: var(--bg-accent-soft);
+}
+
+.storage-corruption-banner__action--ghost {
+  border-color: var(--border);
+}
+
+.storage-corruption-banner__preview {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-action, 12px);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 7rem;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 :root[data-theme="light"] .storage-corruption-banner {
   background: rgba(204, 130, 28, 0.1);
   border-color: rgba(204, 130, 28, 0.4);
@@ -699,6 +811,72 @@ textarea:focus-visible,
   .storage-corruption-banner__dismiss {
     width: 100%;
     justify-content: center;
+    text-align: center;
+  }
+}
+
+.local-only-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin: 0.6rem 1.25rem 0;
+  background: var(--bg-accent-soft);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg, 14px);
+  color: var(--text);
+  box-shadow: var(--shadow-soft);
+}
+
+.local-only-notice__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.local-only-notice__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.local-only-notice__text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.local-only-notice__dismiss {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-action, 12px);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.local-only-notice__dismiss:hover,
+.local-only-notice__dismiss:focus-visible {
+  background: var(--surface-input);
+  border-color: var(--border-accent);
+}
+
+@media (max-width: 540px) {
+  .local-only-notice {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0.5rem 1rem 0;
+    gap: 0.5rem;
+  }
+
+  .local-only-notice__dismiss {
+    width: 100%;
     text-align: center;
   }
 }

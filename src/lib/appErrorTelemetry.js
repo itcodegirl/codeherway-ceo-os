@@ -6,25 +6,52 @@ const MAX_APP_ERROR_EVENTS = 25;
 const MAX_REMOTE_QUEUE_EVENTS = 100;
 const MAX_REMOTE_BATCH_SIZE = 10;
 const MAX_STACK_LINES = 8;
+const MAX_LINE_LENGTH = 240;
 
 let isFlushInFlight = false;
 let flushTimerId = null;
 
 function normalizeText(value) {
-  return typeof value === 'string' ? value.trim() : '';
+  return typeof value === 'string' ? scrubSensitive(value.trim()) : '';
+}
+
+// Strips identifiers that don't belong in remote telemetry: emails, URL query
+// strings, long opaque tokens (uuids, JWTs, base64 blobs), and platform-prefix
+// home-directory paths that often carry the user's name. Pure string in/out
+// so it is safe to compose into normalizeText / normalizeStack.
+function scrubSensitive(line) {
+  if (typeof line !== 'string' || line.length === 0) {
+    return '';
+  }
+  let scrubbed = line;
+  scrubbed = scrubbed.replace(/[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}/g, '<email>');
+  scrubbed = scrubbed.replace(/\?[^\s)]+/g, '?<redacted>');
+  scrubbed = scrubbed.replace(/\/(?:Users|home)\/[^/\s)]+/g, '/<user>');
+  scrubbed = scrubbed.replace(/\b(?:[A-Za-z0-9_-]{32,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/g, '<token>');
+  if (scrubbed.length > MAX_LINE_LENGTH) {
+    scrubbed = `${scrubbed.slice(0, MAX_LINE_LENGTH)}…`;
+  }
+  return scrubbed;
 }
 
 function normalizeStack(stack) {
-  const normalizedStack = normalizeText(stack);
-  if (!normalizedStack) {
+  if (typeof stack !== 'string') {
+    return '';
+  }
+  const trimmed = stack.trim();
+  if (!trimmed) {
     return '';
   }
 
-  return normalizedStack
+  return trimmed
     .split('\n')
     .slice(0, MAX_STACK_LINES)
+    .map((line) => scrubSensitive(line.trim()))
+    .filter((line) => line.length > 0)
     .join('\n');
 }
+
+export const __testables = { scrubSensitive, normalizeStack };
 
 function sanitizeError(error) {
   if (!error || typeof error !== 'object') {

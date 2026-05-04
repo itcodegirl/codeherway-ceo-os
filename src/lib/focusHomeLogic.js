@@ -173,20 +173,26 @@ export function buildQuickWin(wins, opportunities, contentRows) {
   return 'Quick win waiting: close one tiny loop before opening a new one.';
 }
 
+// Momentum is built only from positive completion signals. Naming a blocker
+// or capturing a pending reminder is itself a healthy act and used to be
+// penalised here; users learnt to under-log to keep the number up. Both
+// negative weights are gone, and the bottom-tier copy no longer calls the
+// user's day "fragile". `blockerCount` / `pendingReminderCount` are accepted
+// for backwards-compatibility with existing call sites.
 export function buildMomentumMessage({
   inProgressCount = 0,
-  blockerCount = 0,
   winsCount = 0,
   completedReminderCount = 0,
+  // eslint-disable-next-line no-unused-vars
+  blockerCount = 0,
+  // eslint-disable-next-line no-unused-vars
   pendingReminderCount = 0,
 } = {}) {
   const score = clampScore(
-    45
-      + (inProgressCount * 14)
-      + (winsCount * 10)
-      + (completedReminderCount * 6)
-      - (pendingReminderCount * 4)
-      - (blockerCount * 12),
+    35
+      + (inProgressCount * 12)
+      + (winsCount * 14)
+      + (completedReminderCount * 8),
   );
 
   if (completedReminderCount > 0 && score >= 60) {
@@ -198,5 +204,5 @@ export function buildMomentumMessage({
   if (score >= 55) {
     return { score, text: 'Momentum is building. Keep actions tiny and visibly complete.' };
   }
-  return { score, text: 'Momentum is fragile. Use reset mode and complete one two-minute action.' };
+  return { score, text: 'Momentum is quiet today. One small visible step is enough.' };
 }

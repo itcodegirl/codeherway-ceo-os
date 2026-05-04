@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
+import Toast from '../components/ui/Toast';
 import {
   getJournalEntryByDate,
   getTodayJournalDateKey,
@@ -7,6 +8,8 @@ import {
   JOURNAL_PROMPTS,
   saveJournalEntry,
 } from '../lib/journalRepository';
+import { createReminder } from '../lib/remindersRepository';
+import { useToast } from '../hooks/useToast';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
 import '../styles/journal.css';
 
@@ -31,6 +34,7 @@ function Journal() {
   const [entry, setEntry] = useState(() => getJournalEntryByDate(getTodayJournalDateKey()));
   const [lastSavedAt, setLastSavedAt] = useState(entry.updatedAt);
   const [errorMessage, setErrorMessage] = useState('');
+  const { isToastVisible, toastMessage, showToast } = useToast();
 
   useEffect(() => {
     const handleJournalUpdate = (event) => {
@@ -66,6 +70,23 @@ function Journal() {
     const nextEntry = getJournalEntryByDate(nextDateKey);
     setEntry(nextEntry);
     setLastSavedAt(nextEntry.updatedAt);
+  };
+
+  // Closes the journal-to-action loop the audit flagged: writing a "one next
+  // thing" no longer requires the user to context-switch to Dashboard and
+  // retype the same sentence as a reminder.
+  const handleMakeReminderFromNextThing = () => {
+    const text = (entry.oneNextThing || '').trim();
+    if (!text) {
+      showToast('Write your one next thing first.');
+      return;
+    }
+    try {
+      createReminder({ text });
+      showToast('Reminder created from your journal next-thing.');
+    } catch {
+      showToast('Unable to create a reminder right now.');
+    }
   };
 
   const updateField = (fieldId, value) => {
@@ -123,19 +144,34 @@ function Journal() {
         ) : null}
 
         <div className="journal-prompts">
-          {JOURNAL_PROMPTS.map((prompt) => (
-            <label key={prompt.id} className="journal-prompts__item" htmlFor={`journal-${prompt.id}`}>
-              <span>{prompt.label}</span>
-              <textarea
-                id={`journal-${prompt.id}`}
-                rows={4}
-                value={entry[prompt.id] || ''}
-                onChange={(event) => updateField(prompt.id, event.target.value)}
-              />
-            </label>
-          ))}
+          {JOURNAL_PROMPTS.map((prompt) => {
+            const isNextThingPrompt = prompt.id === 'oneNextThing';
+            const hasNextThingText = isNextThingPrompt && (entry.oneNextThing || '').trim().length > 0;
+            return (
+              <label key={prompt.id} className="journal-prompts__item" htmlFor={`journal-${prompt.id}`}>
+                <span>{prompt.label}</span>
+                <textarea
+                  id={`journal-${prompt.id}`}
+                  rows={4}
+                  value={entry[prompt.id] || ''}
+                  onChange={(event) => updateField(prompt.id, event.target.value)}
+                />
+                {isNextThingPrompt ? (
+                  <button
+                    type="button"
+                    className="journal-prompts__action"
+                    onClick={handleMakeReminderFromNextThing}
+                    disabled={!hasNextThingText}
+                  >
+                    Make a reminder from this
+                  </button>
+                ) : null}
+              </label>
+            );
+          })}
         </div>
       </section>
+      <Toast className="toast--journal" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }

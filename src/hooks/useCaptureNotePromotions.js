@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { createReminder } from '../lib/remindersRepository';
 import { createOpportunity } from '../lib/opportunitiesRepository';
 import { createContentItem } from '../lib/contentRepository';
+import { markCaptureNotePromoted } from '../lib/captureRepository';
 import { usePromotionAction } from './usePromotionAction';
 
 /**
@@ -22,14 +23,27 @@ export function useCaptureNotePromotions({ notes, showToast }) {
     (id) => notes.some((entry) => entry.id === id)
   ), [notes]);
 
+  // Once a note is successfully promoted we stamp it with `promotedTo` so the
+  // capture wall can hide the sticky from its default view. We swallow failures
+  // here — the promotion itself already succeeded; missing the archive flag
+  // would only mean the sticky stays in the default view, which is recoverable.
+  const stampPromoted = (noteId, target) => {
+    try {
+      markCaptureNotePromoted(noteId, target);
+    } catch {
+      // ignore — see comment above
+    }
+  };
+
   const promoteToReminder = usePromotionAction({
     onShowToast: showToast,
     isRecordKnown: isNoteKnown,
     emptyTextMessage: 'Add some text to this note before promoting it.',
-    successMessage: 'Added a reminder from this note. The sticky stays here in case you still need it.',
+    successMessage: 'Added a reminder from this note. The sticky is archived here.',
     failureMessage: 'Unable to create a reminder right now.',
     run: (note) => {
       createReminder({ text: (note.text || '').trim() });
+      stampPromoted(note.id, 'reminder');
     },
   });
 
@@ -37,7 +51,7 @@ export function useCaptureNotePromotions({ notes, showToast }) {
     onShowToast: showToast,
     isRecordKnown: isNoteKnown,
     emptyTextMessage: 'Add some text to this note before promoting it.',
-    successMessage: 'Tracked as a new opportunity. Open the Opportunities page to fill in company and next step.',
+    successMessage: 'Tracked as a new opportunity. Sticky archived; open Opportunities to fill in company and next step.',
     failureMessage: 'Unable to track this note as an opportunity right now.',
     run: async (note) => {
       await createOpportunity({
@@ -47,6 +61,7 @@ export function useCaptureNotePromotions({ notes, showToast }) {
         stage: 'New',
         nextStep: '',
       });
+      stampPromoted(note.id, 'opportunity');
     },
   });
 
@@ -54,7 +69,7 @@ export function useCaptureNotePromotions({ notes, showToast }) {
     onShowToast: showToast,
     isRecordKnown: isNoteKnown,
     emptyTextMessage: 'Add some text to this note before promoting it.',
-    successMessage: 'Drafted on Content OS. Open the Content page to set platform and publish status.',
+    successMessage: 'Drafted on Content OS. Sticky archived; open Content to set platform and publish status.',
     failureMessage: 'Unable to draft this note as content right now.',
     run: async (note) => {
       await createContentItem({
@@ -62,6 +77,7 @@ export function useCaptureNotePromotions({ notes, showToast }) {
         platform: '',
         status: 'Drafting',
       });
+      stampPromoted(note.id, 'content');
     },
   });
 

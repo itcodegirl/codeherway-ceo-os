@@ -194,6 +194,9 @@ describe('src/pages/Capture', () => {
     expect(drafted.status).toBe('Drafting');
     expect(drafted.platform).toBe('');
 
+    // Sticky is auto-archived; reveal it via the toggle.
+    expect(screen.queryByDisplayValue('Q3 launch retrospective post')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /show 1 promoted/i }));
     expect(screen.getByDisplayValue('Q3 launch retrospective post')).toBeInTheDocument();
   });
 
@@ -228,7 +231,9 @@ describe('src/pages/Capture', () => {
     expect(tracked.company).toBe('');
     expect(tracked.nextStep).toBe('');
 
-    // The original sticky note stays so the user can keep the long-form context.
+    // Sticky is auto-archived; reveal it via the toggle.
+    expect(screen.queryByDisplayValue('Acme partnership intro from Sarah')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /show 1 promoted/i }));
     expect(screen.getByDisplayValue('Acme partnership intro from Sarah')).toBeInTheDocument();
   });
 
@@ -311,7 +316,10 @@ describe('src/pages/Capture', () => {
     expect(reminders[0].text).toBe('Reply to Sarah by Friday');
     expect(reminders[0].isDone).toBe(false);
 
-    // The original sticky note stays — the audit copy says "the sticky stays here".
+    // The sticky is auto-archived on promotion: hidden by default, surfaced
+    // again behind the "Show N promoted" toggle so it isn't lost.
+    expect(screen.queryByDisplayValue('Reply to Sarah by Friday')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /show 1 promoted/i }));
     expect(screen.getByDisplayValue('Reply to Sarah by Friday')).toBeInTheDocument();
   });
 

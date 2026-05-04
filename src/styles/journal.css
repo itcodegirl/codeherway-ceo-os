@@ -66,3 +66,26 @@
 	border-color: var(--border);
 	background: rgba(255, 255, 255, 0.85);
 }
+
+.journal-prompts__action {
+	align-self: flex-start;
+	background: transparent;
+	border: 1px solid var(--border-accent);
+	color: var(--accent-soft-strong);
+	padding: 0.35rem 0.7rem;
+	border-radius: var(--radius-action, 12px);
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.journal-prompts__action:hover:not(:disabled),
+.journal-prompts__action:focus-visible:not(:disabled) {
+	background: var(--bg-accent-soft);
+	color: var(--accent);
+}
+
+.journal-prompts__action:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

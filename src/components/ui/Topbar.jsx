@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { formatIsoDate } from '../../lib/utils';
 import SyncStatusPill from './SyncStatusPill';
+import SaveStatusPill from './SaveStatusPill';
 
 const ONE_MINUTE_MS = 60 * 1000;
 
@@ -57,6 +58,7 @@ function Topbar({ pageTitle = 'Focus Home' }) {
       </div>
 
       <div className="topbar__right">
+        <SaveStatusPill />
         <SyncStatusPill />
         <time className="topbar__meta" dateTime={isoDate}>
           {today}

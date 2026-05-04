@@ -56,6 +56,7 @@ function Capture() {
     : CAPTURE_CATEGORY_OPTIONS[0];
   const setDraftCategory = setStoredCategory;
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPromotedNotes, setShowPromotedNotes] = useState(false);
   const composerTextareaRef = useRef(null);
   const { toastMessage, isToastVisible, showToast } = useToast();
 
@@ -75,6 +76,13 @@ function Capture() {
       new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
     ))
   ), [notes]);
+  // Stickies that have already been promoted to a reminder/opportunity/content
+  // draft are hidden by default so the wall stays a brain-dump space rather
+  // than a graveyard. Toggle reveals them with a small "promoted to X" tag.
+  const promotedNotesCount = sortedNotes.filter((note) => Boolean(note.promotedTo)).length;
+  const visibleNotes = showPromotedNotes
+    ? sortedNotes
+    : sortedNotes.filter((note) => !note.promotedTo);
   const captureSaveHelper = buildAutosaveHelperText({
     hasError: Boolean(errorMessage),
     healthyText: 'Auto-saved locally and ready whenever your brain moves fast.',
@@ -210,9 +218,21 @@ function Capture() {
           <h2>Sticky Notes</h2>
           <p className="helper-text" role="status" aria-live="polite">{captureSaveHelper}</p>
         </header>
-        {sortedNotes.length ? (
+        {promotedNotesCount > 0 ? (
+          <button
+            type="button"
+            className="capture-wall__toggle-promoted"
+            aria-pressed={showPromotedNotes}
+            onClick={() => setShowPromotedNotes((prev) => !prev)}
+          >
+            {showPromotedNotes
+              ? `Hide ${promotedNotesCount} promoted`
+              : `Show ${promotedNotesCount} promoted`}
+          </button>
+        ) : null}
+        {visibleNotes.length ? (
           <div className="sticky-wall">
-            {sortedNotes.map((note) => (
+            {visibleNotes.map((note) => (
               <StickyNoteCard
                 key={note.id}
                 note={note}

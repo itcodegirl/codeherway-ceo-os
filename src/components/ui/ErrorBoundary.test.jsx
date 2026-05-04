@@ -26,4 +26,21 @@ describe('src/components/ui/ErrorBoundary', () => {
     expect(onReturnHome).toHaveBeenCalledTimes(1);
     consoleError.mockRestore();
   });
+
+  it('renders a custom fallback when supplied so panel-level boundaries can stay quiet', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(
+      <ErrorBoundary
+        name="Panel"
+        fallback={<p data-testid="panel-fallback">Panel could not load.</p>}
+      >
+        <BrokenView />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByTestId('panel-fallback')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Return to Focus Home' })).toBeNull();
+    consoleError.mockRestore();
+  });
 });

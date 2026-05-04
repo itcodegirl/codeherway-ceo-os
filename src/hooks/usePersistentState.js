@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { resolveNextValue } from '../lib/stateUtils';
 import { preserveCorruptStorageValue } from '../lib/storageCorruption';
+import { notifySaveFailed, notifySaveSucceeded } from '../lib/saveStatusBus';
 
 const PERSISTENT_STATE_EVENT = 'ceo-os:persistent-state';
 
@@ -134,7 +135,9 @@ export function usePersistentState(key, initialValue) {
           detail: { key, value },
         }),
       );
+      notifySaveSucceeded(key);
     } catch (error) {
+      notifySaveFailed(key, error);
       if (import.meta.env.DEV) {
         console.error('localStorage save failed', error);
       }

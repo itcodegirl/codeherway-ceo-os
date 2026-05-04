@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import StorageCorruptionBanner from './StorageCorruptionBanner';
-import { STORAGE_CORRUPTION_EVENT } from '../../lib/storageCorruption';
+import {
+  STORAGE_CORRUPTION_EVENT,
+  preserveCorruptStorageValue,
+} from '../../lib/storageCorruption';
 
 describe('StorageCorruptionBanner', () => {
   afterEach(() => {
@@ -46,5 +49,49 @@ describe('StorageCorruptionBanner', () => {
     fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
 
     expect(screen.queryByTestId('storage-corruption-banner')).not.toBeInTheDocument();
+  });
+
+  it('lets the user expand backups and restore one back into the primary key', () => {
+    const key = 'ceo-os-test-recover';
+    const backupKey = preserveCorruptStorageValue(key, '{"recovered":true}', new Error('parse'));
+
+    render(<StorageCorruptionBanner />);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(STORAGE_CORRUPTION_EVENT, {
+          detail: { key, backupKey, message: 'parse' },
+        }),
+      );
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /recover data/i }));
+    expect(screen.getByText(/"recovered":true/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^restore$/i }));
+
+    expect(window.localStorage.getItem(key)).toBe('{"recovered":true}');
+    expect(screen.getByText(/Backup restored/i)).toBeInTheDocument();
+  });
+
+  it('lets the user discard a preserved backup', () => {
+    const key = 'ceo-os-test-discard-ui';
+    const backupKey = preserveCorruptStorageValue(key, 'gone-soon', new Error('parse'));
+
+    render(<StorageCorruptionBanner />);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(STORAGE_CORRUPTION_EVENT, {
+          detail: { key, backupKey, message: 'parse' },
+        }),
+      );
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /recover data/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^discard$/i }));
+
+    expect(window.localStorage.getItem(backupKey)).toBeNull();
+    expect(screen.getByText(/No preserved backups available/i)).toBeInTheDocument();
   });
 });

@@ -42,6 +42,16 @@ class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
+      // Callers can supply a `fallback` for panel-level boundaries that should
+      // not present the full "Reload App / Return Home" UI. fallback may be a
+      // ReactNode or a function (() => ReactNode) for parity with React's own
+      // fallback prop conventions.
+      if (this.props.fallback !== undefined) {
+        return typeof this.props.fallback === 'function'
+          ? this.props.fallback()
+          : this.props.fallback;
+      }
+
       return (
         <div className="error-boundary" role="alert" aria-live="assertive">
           <h2>Something went wrong in this view.</h2>

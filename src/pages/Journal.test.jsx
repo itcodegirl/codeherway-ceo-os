@@ -38,6 +38,29 @@ describe('src/pages/Journal', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Auto-saved');
   });
 
+  it('promotes the journal next-thing into a reminder via the inline button', () => {
+    render(
+      <MemoryRouter>
+        <Journal />
+      </MemoryRouter>,
+    );
+
+    const nextThingInput = screen.getByLabelText('What is one thing I can do next?');
+    const button = screen.getByRole('button', { name: /make a reminder from this/i });
+    expect(button).toBeDisabled();
+
+    fireEvent.change(nextThingInput, { target: { value: 'Send Sarah the recap' } });
+    expect(button).not.toBeDisabled();
+
+    fireEvent.click(button);
+
+    const remindersRaw = window.localStorage.getItem('ceo-os-reminders');
+    expect(remindersRaw).toBeTruthy();
+    const reminders = JSON.parse(remindersRaw);
+    expect(reminders).toHaveLength(1);
+    expect(reminders[0].text).toBe('Send Sarah the recap');
+  });
+
   it('pauses autosave status when a journal entry cannot be saved', () => {
     const originalSetItem = window.localStorage.setItem;
     window.localStorage.setItem = vi.fn(() => {

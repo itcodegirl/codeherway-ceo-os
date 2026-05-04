@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   STORAGE_CORRUPTION_EVENT,
+  STORAGE_RESTORED_EVENT,
+  discardCorruptBackup,
+  listCorruptBackups,
   preserveCorruptStorageValue,
+  restoreCorruptBackup,
 } from './storageCorruption';
 
 describe('preserveCorruptStorageValue', () => {
@@ -63,5 +67,92 @@ describe('preserveCorruptStorageValue', () => {
   it('returns null and does nothing when the raw value is null', () => {
     const result = preserveCorruptStorageValue('ceo-os-test-null', null, new Error('parse'));
     expect(result).toBeNull();
+  });
+});
+
+describe('listCorruptBackups', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('lists preserved backups newest first with parsed timestamps and raw values', () => {
+    const key = 'ceo-os-test-list';
+    preserveCorruptStorageValue(key, 'first', new Error('a'));
+    preserveCorruptStorageValue(key, 'second', new Error('b'));
+
+    const backups = listCorruptBackups(key);
+    expect(backups).toHaveLength(2);
+    expect(backups[0].value).toBe('second');
+    expect(backups[1].value).toBe('first');
+    backups.forEach((entry) => {
+      expect(typeof entry.backupKey).toBe('string');
+      expect(typeof entry.savedAt).toBe('string');
+      expect(Number.isNaN(Date.parse(entry.savedAt))).toBe(false);
+    });
+  });
+
+  it('returns an empty array when there are no backups', () => {
+    expect(listCorruptBackups('ceo-os-test-empty')).toEqual([]);
+  });
+});
+
+describe('restoreCorruptBackup', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('writes the backup back to the primary key, removes the backup, and dispatches the restored event', () => {
+    const key = 'ceo-os-test-restore';
+    const backupKey = preserveCorruptStorageValue(key, '{"name":"recovered"}', new Error('parse'));
+    expect(backupKey).toBeTruthy();
+
+    const detail = [];
+    const listener = (event) => detail.push(event.detail);
+    window.addEventListener(STORAGE_RESTORED_EVENT, listener);
+
+    try {
+      const ok = restoreCorruptBackup(key, backupKey);
+      expect(ok).toBe(true);
+    } finally {
+      window.removeEventListener(STORAGE_RESTORED_EVENT, listener);
+    }
+
+    expect(window.localStorage.getItem(key)).toBe('{"name":"recovered"}');
+    expect(window.localStorage.getItem(backupKey)).toBeNull();
+    expect(listCorruptBackups(key)).toEqual([]);
+    expect(detail).toHaveLength(1);
+    expect(detail[0]).toMatchObject({ key, backupKey });
+  });
+
+  it('returns false when the backup key is missing', () => {
+    expect(restoreCorruptBackup('ceo-os-test-restore', 'ceo-os-test-restore__corrupt_missing')).toBe(false);
+  });
+});
+
+describe('discardCorruptBackup', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('removes the backup and prunes it from the index', () => {
+    const key = 'ceo-os-test-discard';
+    const backupKey = preserveCorruptStorageValue(key, 'gone', new Error('parse'));
+    expect(backupKey).toBeTruthy();
+
+    expect(discardCorruptBackup(key, backupKey)).toBe(true);
+    expect(window.localStorage.getItem(backupKey)).toBeNull();
+    expect(listCorruptBackups(key)).toEqual([]);
   });
 });

@@ -11,13 +11,8 @@ vi.mock('../../hooks/useOnlineStatus', () => ({
   useOnlineStatus: vi.fn(),
 }));
 
-vi.mock('../../hooks/useOfflineWriteQueue', () => ({
-  useOfflineWriteQueueSize: vi.fn(),
-}));
-
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
-import { useOfflineWriteQueueSize } from '../../hooks/useOfflineWriteQueue';
 
 describe('describeSyncStatus', () => {
   it('returns the offline descriptor regardless of source when offline', () => {
@@ -42,7 +37,6 @@ describe('SyncStatusPill', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useOnlineStatus.mockReturnValue(true);
-    useOfflineWriteQueueSize.mockReturnValue(0);
   });
 
   it('renders the synced state when source is supabase and online', () => {
@@ -70,24 +64,8 @@ describe('SyncStatusPill', () => {
     expect(screen.getByText('Offline')).toBeInTheDocument();
   });
 
-  it('renders +N pending when there are queued writes', () => {
+  it('does not render a pending-writes indicator while the offline queue is unwired', () => {
     useWorkspaceSettings.mockReturnValue({ source: 'supabase' });
-    useOfflineWriteQueueSize.mockReturnValue(3);
-    render(<SyncStatusPill />);
-    expect(screen.getByText('Synced')).toBeInTheDocument();
-    expect(screen.getByLabelText('3 writes waiting to sync')).toHaveTextContent('+3');
-  });
-
-  it('uses singular wording for one pending write', () => {
-    useWorkspaceSettings.mockReturnValue({ source: 'supabase' });
-    useOfflineWriteQueueSize.mockReturnValue(1);
-    render(<SyncStatusPill />);
-    expect(screen.getByLabelText('1 write waiting to sync')).toHaveTextContent('+1');
-  });
-
-  it('hides the pending pill when the queue is empty', () => {
-    useWorkspaceSettings.mockReturnValue({ source: 'supabase' });
-    useOfflineWriteQueueSize.mockReturnValue(0);
     render(<SyncStatusPill />);
     expect(screen.queryByLabelText(/waiting to sync/)).toBeNull();
   });

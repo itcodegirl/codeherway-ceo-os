@@ -10,9 +10,11 @@ const routeBudgets = [
   {
     route: 'Dashboard',
     js: { rawKb: 20, gzipKb: 6.5 },
-    // Raw bumped 4 → 5 to absorb the Reminder → Priority promote button
-    // styles and the light-theme overrides; gzip ceiling unchanged.
-    css: { rawKb: 5, gzipKb: 1.5 },
+    // Raw bumped 5 → 5.5 to absorb the inline-edit input style for
+    // reminders and the "Show N completed" toggle button (audit Phase 4b).
+    // Gzip ceiling unchanged because the new selectors share the existing
+    // hover/focus rule blocks.
+    css: { rawKb: 5.5, gzipKb: 1.5 },
   },
   {
     route: 'Opportunities',
