@@ -114,8 +114,15 @@ describe('focusHomeLogic', () => {
       blockerCount: 5,
       pendingReminderCount: 5,
     })).toMatchObject({
-      score: 0,
-      text: 'Momentum is fragile. Use reset mode and complete one two-minute action.',
+      score: 35,
+      text: 'Momentum is quiet today. One small visible step is enough.',
     });
+
+    // Blockers and pending reminders no longer drag the score down: capturing
+    // them is a healthy act, not a debt. The score should reflect only the
+    // user's positive completion signals.
+    const noWork = buildMomentumMessage({});
+    const onlyBlockers = buildMomentumMessage({ blockerCount: 8, pendingReminderCount: 8 });
+    expect(onlyBlockers.score).toBe(noWork.score);
   });
 });
