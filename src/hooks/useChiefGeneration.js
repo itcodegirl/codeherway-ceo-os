@@ -12,6 +12,11 @@ export function useChiefGeneration({
   setLoadError,
   setResponses,
   trackTelemetry,
+  // Optional. Called with the updated responses array after a successful
+  // save so the parent can re-hydrate acceptance state against the current
+  // target workspaces. Necessary because regenerating notes that touch
+  // already-accepted items must keep those items marked accepted.
+  onAfterResponseSaved,
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -81,7 +86,24 @@ export function useChiefGeneration({
         return;
       }
 
-      setResponses((current) => [savedOutput, ...current]);
+      let updatedResponses = [];
+      setResponses((current) => {
+        updatedResponses = [savedOutput, ...current];
+        return updatedResponses;
+      });
+
+      if (typeof onAfterResponseSaved === 'function') {
+        try {
+          await onAfterResponseSaved(updatedResponses);
+        } catch (hydrationError) {
+          if (import.meta.env.DEV) {
+            console.warn('Chief acceptance hydration failed', hydrationError);
+          }
+        }
+      }
+      if (!isMountedRef.current) {
+        return;
+      }
       if (nextResponse.source === 'proxy') {
         setFeedback(`Created: ${savedOutput.title}. Review and edit before sending.`);
       } else {
@@ -133,6 +155,7 @@ export function useChiefGeneration({
     isMountedRef,
     isGenerating,
     notesText,
+    onAfterResponseSaved,
     setFeedback,
     setLoadError,
     setResponses,

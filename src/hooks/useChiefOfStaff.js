@@ -42,22 +42,6 @@ export function useChiefOfStaff() {
   }, []);
 
   const {
-    isGenerating,
-    handleAction,
-  } = useChiefGeneration({
-    isMountedRef,
-    canGenerate: hasNotes,
-    hasNotes,
-    notesText,
-    setFeedback,
-    setLoadError,
-    setResponses,
-    trackTelemetry,
-  });
-
-  const canGenerate = hasNotes && !isGenerating;
-
-  const {
     isAcceptingAll,
     acceptStructuredItem,
     acceptAllStructured,
@@ -73,6 +57,33 @@ export function useChiefOfStaff() {
     trackTelemetry,
     isMountedRef,
   });
+
+  // Run after each successful generation: clear cached signature sets so we
+  // re-read the current opportunities/content/priorities, then hydrate the
+  // acceptance map against the freshly prepended response. Without this
+  // step, regenerating notes that include already-accepted items would
+  // surface those items as un-accepted again.
+  const handleResponseSaved = useCallback(async (nextResponses) => {
+    resetAcceptanceCaches();
+    await hydrateAcceptedStructuredItems(nextResponses);
+  }, [hydrateAcceptedStructuredItems, resetAcceptanceCaches]);
+
+  const {
+    isGenerating,
+    handleAction,
+  } = useChiefGeneration({
+    isMountedRef,
+    canGenerate: hasNotes,
+    hasNotes,
+    notesText,
+    setFeedback,
+    setLoadError,
+    setResponses,
+    trackTelemetry,
+    onAfterResponseSaved: handleResponseSaved,
+  });
+
+  const canGenerate = hasNotes && !isGenerating;
 
   const refreshWorkspace = useCallback(async () => {
     const workspaceResponses = await loadWorkspace();
