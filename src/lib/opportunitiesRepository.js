@@ -3,6 +3,11 @@ import { deleteRecordById, replaceRecordById } from './stateUtils';
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
+import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
+
+export const OPPORTUNITY_QUEUE_KIND_CREATE = 'opportunity:create';
+export const OPPORTUNITY_QUEUE_KIND_UPDATE = 'opportunity:update';
+export const OPPORTUNITY_QUEUE_KIND_DELETE = 'opportunity:delete';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
@@ -114,7 +119,7 @@ export async function listOpportunities() {
   return readLocalOpportunities();
 }
 
-export async function createOpportunity(payload) {
+export async function createOpportunity(payload, options = {}) {
   const normalizedPayload = normalizeOpportunity({
     id: buildCreateId(),
     updatedAt: Date.now(),
@@ -124,19 +129,26 @@ export async function createOpportunity(payload) {
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
   if (supabaseClient) {
-    const userId = await supabase.requireSupabaseUserId();
-    const { data, error } = await supabaseClient
-      .from('opportunities')
-      .insert(formatForSupabase({ ...normalizedPayload, userId }))
-      .select('id, name, company, priority, stage, next_step')
-      .single();
+    const attempt = async () => {
+      const userId = await supabase.requireSupabaseUserId();
+      const { data, error } = await supabaseClient
+        .from('opportunities')
+        .insert(formatForSupabase({ ...normalizedPayload, userId }))
+        .select('id, name, company, priority, stage, next_step')
+        .single();
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    notifyOpportunitiesUpdated({ source: 'supabase', type: 'create' });
-    return normalizeOpportunity(data);
+      notifyOpportunitiesUpdated({ source: 'supabase', type: 'create' });
+      return normalizeOpportunity(data);
+    };
+
+    return tryRemoteOrEnqueue(
+      { kind: OPPORTUNITY_QUEUE_KIND_CREATE, payload, options },
+      attempt,
+    );
   }
 
   const current = readLocalOpportunities();
@@ -150,39 +162,50 @@ export async function updateOpportunity(id, payload, options = {}) {
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
   if (supabaseClient) {
-    const normalizedPayload = normalizeOpportunity({ id, ...payload });
-    const userId = await supabase.requireSupabaseUserId();
-    let query = supabaseClient
-      .from('opportunities')
-      .update(formatForSupabase(normalizedPayload))
-      .eq('id', id)
-      .eq('user_id', userId);
+    const attempt = async () => {
+      const normalizedPayload = normalizeOpportunity({ id, ...payload });
+      const userId = await supabase.requireSupabaseUserId();
+      let query = supabaseClient
+        .from('opportunities')
+        .update(formatForSupabase(normalizedPayload))
+        .eq('id', id)
+        .eq('user_id', userId);
 
-    const expectedIso = expectedUpdatedAtToIso(options.expectedUpdatedAt);
-    if (expectedIso) {
-      // Optimistic locking: only update if the row's updated_at still matches
-      // what the client opened the editor with. PostgREST returns the matched
-      // row in `data`; if no row matched, data is null and we treat it as a
-      // stale-record conflict (same UX as the local-only path).
-      query = query.eq('updated_at', expectedIso);
-    }
+      const expectedIso = expectedUpdatedAtToIso(options.expectedUpdatedAt);
+      if (expectedIso) {
+        // Optimistic locking: only update if the row's updated_at still matches
+        // what the client opened the editor with. PostgREST returns the matched
+        // row in `data`; if no row matched, data is null and we treat it as a
+        // stale-record conflict (same UX as the local-only path).
+        query = query.eq('updated_at', expectedIso);
+      }
 
-    const { data, error } = await query
-      .select('id, name, company, priority, stage, next_step, updated_at')
-      .maybeSingle();
+      const { data, error } = await query
+        .select('id, name, company, priority, stage, next_step, updated_at')
+        .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    if (!data) {
-      throw new StaleRecordError(
-        'This opportunity was changed in another window. Reload to see the latest version before saving.',
-      );
-    }
+      if (!data) {
+        throw new StaleRecordError(
+          'This opportunity was changed in another window. Reload to see the latest version before saving.',
+        );
+      }
 
-    notifyOpportunitiesUpdated({ source: 'supabase', type: 'update' });
-    return normalizeOpportunity(data);
+      notifyOpportunitiesUpdated({ source: 'supabase', type: 'update' });
+      return normalizeOpportunity(data);
+    };
+
+    return tryRemoteOrEnqueue(
+      {
+        kind: OPPORTUNITY_QUEUE_KIND_UPDATE,
+        payload: { id, payload, expectedUpdatedAt: options.expectedUpdatedAt },
+        options,
+      },
+      attempt,
+    );
   }
 
   // Local-only path enforces optimistic locking via the updatedAt timestamp.
@@ -208,20 +231,27 @@ export async function updateOpportunity(id, payload, options = {}) {
   return normalizedPayload;
 }
 
-export async function deleteOpportunity(id) {
+export async function deleteOpportunity(id, options = {}) {
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
   if (supabaseClient) {
-    const userId = await supabase.requireSupabaseUserId();
-    const { error } = await supabaseClient
-      .from('opportunities')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
-    if (error) {
-      throw error;
-    }
-    notifyOpportunitiesUpdated({ source: 'supabase', type: 'delete' });
+    const attempt = async () => {
+      const userId = await supabase.requireSupabaseUserId();
+      const { error } = await supabaseClient
+        .from('opportunities')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+      if (error) {
+        throw error;
+      }
+      notifyOpportunitiesUpdated({ source: 'supabase', type: 'delete' });
+    };
+
+    await tryRemoteOrEnqueue(
+      { kind: OPPORTUNITY_QUEUE_KIND_DELETE, payload: { id }, options },
+      attempt,
+    );
     return;
   }
 
