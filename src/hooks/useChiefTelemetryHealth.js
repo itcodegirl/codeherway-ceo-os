@@ -106,13 +106,13 @@ export function useChiefTelemetryHealth({ limit = DEFAULT_LIMIT } = {}) {
     isMountedRef.current = true;
 
     const frameId = window.requestAnimationFrame(() => {
-      void refresh();
+      refresh().catch(() => {});
     });
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       const listener = () => {
         if (isMountedRef.current) {
-          void refresh();
+          refresh().catch(() => {});
         }
       };
 

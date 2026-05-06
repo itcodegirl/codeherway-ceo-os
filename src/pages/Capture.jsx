@@ -71,18 +71,36 @@ function Capture() {
     };
   }, []);
 
-  const sortedNotes = useMemo(() => (
-    [...notes].sort((left, right) => (
-      new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-    ))
-  ), [notes]);
+  const sortedNotes = useMemo(() => {
+    // Coerce missing/invalid updatedAt to 0 so older or partially-normalized
+    // notes sort to the bottom rather than producing NaN comparisons (which
+    // give an implementation-defined order and silently corrupt the wall).
+    const toMillis = (value) => {
+      const parsed = new Date(value).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    return [...notes].sort((left, right) => toMillis(right.updatedAt) - toMillis(left.updatedAt));
+  }, [notes]);
   // Stickies that have already been promoted to a reminder/opportunity/content
   // draft are hidden by default so the wall stays a brain-dump space rather
   // than a graveyard. Toggle reveals them with a small "promoted to X" tag.
-  const promotedNotesCount = sortedNotes.filter((note) => Boolean(note.promotedTo)).length;
-  const visibleNotes = showPromotedNotes
-    ? sortedNotes
-    : sortedNotes.filter((note) => !note.promotedTo);
+  // Combined into a single useMemo so both derived values share one pass and
+  // don't recompute on unrelated renders (composer textarea keystrokes, etc.).
+  const { promotedNotesCount, visibleNotes } = useMemo(() => {
+    let promoted = 0;
+    const visible = [];
+    for (const note of sortedNotes) {
+      if (note.promotedTo) {
+        promoted += 1;
+        if (showPromotedNotes) {
+          visible.push(note);
+        }
+      } else {
+        visible.push(note);
+      }
+    }
+    return { promotedNotesCount: promoted, visibleNotes: visible };
+  }, [sortedNotes, showPromotedNotes]);
   const captureSaveHelper = buildAutosaveHelperText({
     hasError: Boolean(errorMessage),
     healthyText: 'Auto-saved locally and ready whenever your brain moves fast.',

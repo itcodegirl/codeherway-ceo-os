@@ -73,6 +73,7 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Focus Home' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: "Today's Main Focus" })).toBeInTheDocument();
@@ -95,6 +96,7 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     const cta = screen.getByRole('button', { name: 'Tell me what to do next' });
     fireEvent.click(cta);
@@ -126,6 +128,7 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Tell me what to do next' }));
     const nextMovePanel = screen.getByText('Next Smallest Action').closest('.focus-home__next-move');
@@ -159,6 +162,7 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     fireEvent.click(screen.getByRole('button', { name: "I'm overwhelmed" }));
 
@@ -284,6 +288,7 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
     expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
@@ -396,8 +401,33 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     expect(screen.getByText('Loading your focus context...')).toHaveAttribute('role', 'status');
     expect(document.querySelector('.focus-home-page')).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('collapses the main focus panel by default and expands it on disclosure toggle', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    // Panel is collapsed by default — body content not present.
+    expect(screen.queryByText('Next Smallest Action')).not.toBeInTheDocument();
+    const toggle = screen.getByRole('button', { name: 'More detail' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+    // Expand the panel.
+    fireEvent.click(toggle);
+    expect(screen.getByText('Next Smallest Action')).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveAccessibleName('Less detail');
+
+    // Collapse it again.
+    fireEvent.click(toggle);
+    expect(screen.queryByText('Next Smallest Action')).not.toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 });

@@ -144,4 +144,30 @@ describe('useFocusHomeSignals', () => {
       addDocumentListener.mockRestore();
     }
   });
+
+  it('keeps reference identity when a sync event returns shallowly equal data', () => {
+    // listCaptureNotes returns a fresh array each call, but with the same
+    // contents. The hook should detect equality and avoid swapping the
+    // reference — otherwise downstream memos would invalidate on every
+    // focus / visibility / storage event.
+    repositoryState.listCaptureNotes.mockImplementation(() => [{ id: 'note-1', text: 'Idea' }]);
+    repositoryState.listReminders.mockImplementation(() => [{ id: 'r-1', text: 'Follow up' }]);
+    repositoryState.getJournalEntryByDate.mockImplementation(() => ({ oneNextThing: 'Send update' }));
+
+    const { result } = renderHook(() => useFocusHomeSignals());
+
+    const initialCaptureNotes = result.current.captureNotes;
+    const initialJournalEntry = result.current.journalEntry;
+    const initialReminders = result.current.reminders;
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('ceo-os:capture-notes-updated'));
+      window.dispatchEvent(new CustomEvent('ceo-os:journal-entries-updated'));
+      window.dispatchEvent(new CustomEvent('ceo-os:reminders-updated'));
+    });
+
+    expect(result.current.captureNotes).toBe(initialCaptureNotes);
+    expect(result.current.journalEntry).toBe(initialJournalEntry);
+    expect(result.current.reminders).toBe(initialReminders);
+  });
 });

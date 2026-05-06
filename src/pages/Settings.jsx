@@ -87,9 +87,13 @@ function Settings() {
         retryAriaLabel="Retry loading settings"
         retryDisabled={isLoading || isSaving}
       />
-      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading settings.</p> : null}
+      {isLoading ? (
+        <p className="helper-text" role="status" aria-live="polite">
+          Loading settings...
+        </p>
+      ) : null}
 
-      <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving}>
+      <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving || isLoading}>
         <SectionCard
           title="Workspace"
           iconName="settings"
@@ -237,12 +241,20 @@ function Settings() {
         {source === 'supabase'
           ? 'Changes sync to your Supabase profile.'
           : SOURCE_NOTICE_SAMPLE_DATA}
-        {savedAt ? (
-          <span className="settings-saved-indicator">
-            {' '}
-            Last saved <time dateTime={new Date(savedAt).toISOString()}>{new Date(savedAt).toLocaleString()}</time>.
-          </span>
-        ) : null}
+        {Number.isFinite(Number(savedAt)) && Number(savedAt) > 0 ? (() => {
+          const savedDate = new Date(Number(savedAt));
+          // Guard against corrupted timestamps (e.g. legacy storage) — an
+          // invalid Date here would crash the page on toISOString().
+          if (Number.isNaN(savedDate.getTime())) {
+            return null;
+          }
+          return (
+            <span className="settings-saved-indicator">
+              {' '}
+              Last saved <time dateTime={savedDate.toISOString()}>{savedDate.toLocaleString()}</time>.
+            </span>
+          );
+        })() : null}
       </div>
     </section>
   );

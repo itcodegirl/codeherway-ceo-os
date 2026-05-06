@@ -121,19 +121,22 @@ function WeeklyBrief() {
           {
             id: 'weekly-priorities',
             label: 'Active Priorities',
-            value: priorityItems.length,
+            // Show '—' instead of a literal 0 when the load failed — the
+            // user could have priorities we couldn't fetch, and a numeric 0
+            // next to a "couldn't load" notice reads as a contradiction.
+            value: loadError ? '—' : priorityItems.length,
             description: 'Priorities currently scheduled across roles, content, and partnerships.',
           },
           {
             id: 'weekly-wins',
             label: 'Wins This Week',
-            value: winItems.length,
+            value: loadError ? '—' : winItems.length,
             description: 'Progress markers you can cite in a status update.',
           },
           {
             id: 'weekly-blockers',
             label: 'Open Blockers',
-            value: blockerItems.length,
+            value: loadError ? '—' : blockerItems.length,
             description: 'Risks that need active follow-up.',
           },
         ]}

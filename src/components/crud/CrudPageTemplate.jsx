@@ -1,26 +1,12 @@
-import { useEffect, useRef } from 'react';
 import PageHeader from '../ui/PageHeader';
 import SectionCard from '../ui/SectionCard';
 import EmptyState from '../ui/EmptyState';
 
-const LEGACY_PROPS_REMOVAL_TARGET = '2026-09-30';
-
-function hasKeys(value) {
-  return Boolean(value && typeof value === 'object' && Object.keys(value).length > 0);
-}
-
-/**
- * @deprecated Legacy `summary`, `section`, and `modals` props are scheduled for removal on 2026-09-30.
- * Migrate to `slots.summary`, `slots.section`, and `slots.modals`.
- */
 function CrudPageTemplate({
   pageClassName,
   header = {},
   status = {},
   slots = {},
-  summary = {},
-  section = {},
-  modals = {},
 }) {
   const {
     title: pageTitle,
@@ -35,31 +21,10 @@ function CrudPageTemplate({
     loadingAnnouncement,
     isLoading = false,
   } = status;
-  const hasWarnedLegacyProps = useRef(false);
-  const usesLegacyProps = (
-    (!hasKeys(slots.summary) && hasKeys(summary))
-    || (!hasKeys(slots.section) && hasKeys(section))
-    || (!hasKeys(slots.modals) && hasKeys(modals))
-  );
 
-  useEffect(() => {
-    if (!import.meta.env.DEV || import.meta.env.MODE === 'test') {
-      return;
-    }
-
-    if (!usesLegacyProps || hasWarnedLegacyProps.current) {
-      return;
-    }
-
-    console.warn(
-      `[CrudPageTemplate] Legacy props { summary, section, modals } are deprecated and will be removed after ${LEGACY_PROPS_REMOVAL_TARGET}. Please migrate to slots.summary, slots.section, and slots.modals.`,
-    );
-    hasWarnedLegacyProps.current = true;
-  }, [usesLegacyProps]);
-
-  const summarySlot = slots.summary || summary;
-  const sectionSlot = slots.section || section;
-  const modalsSlot = slots.modals || modals;
+  const summarySlot = slots.summary || {};
+  const sectionSlot = slots.section || {};
+  const modalsSlot = slots.modals || {};
 
   const {
     loadingContent: summaryLoadingContent,

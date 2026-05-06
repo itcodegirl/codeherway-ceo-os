@@ -6,6 +6,7 @@ import {
   getTodayJournalDateKey,
 } from '../lib/journalRepository';
 import { REMINDERS_UPDATED_EVENT, listReminders } from '../lib/remindersRepository';
+import { shallowEqualRecordArrays, shallowEqualRecords } from '../lib/stateUtils';
 
 const FOCUS_HOME_SIGNAL_STORAGE_KEYS = new Set([
   'ceo-os-capture-notes',
@@ -18,16 +19,30 @@ export function useFocusHomeSignals() {
   const [journalEntry, setJournalEntry] = useState(() => getJournalEntryByDate(getTodayJournalDateKey()));
   const [reminders, setReminders] = useState(() => listReminders());
 
+  // Reference-stable updaters: skip setState when the next value is
+  // shallowly equal to the current one. Without this, every focus /
+  // visibility / storage event swaps to a fresh array reference, which
+  // invalidates Dashboard's derived memos (nextMoveQueue, suggestions,
+  // mainFocus) on every tab switch even when nothing changed.
   const syncCaptureNotes = useCallback(() => {
-    setCaptureNotes(listCaptureNotes());
+    setCaptureNotes((current) => {
+      const next = listCaptureNotes();
+      return shallowEqualRecordArrays(current, next) ? current : next;
+    });
   }, []);
 
   const syncJournalEntry = useCallback(() => {
-    setJournalEntry(getJournalEntryByDate(getTodayJournalDateKey()));
+    setJournalEntry((current) => {
+      const next = getJournalEntryByDate(getTodayJournalDateKey());
+      return shallowEqualRecords(current, next) ? current : next;
+    });
   }, []);
 
   const syncReminders = useCallback(() => {
-    setReminders(listReminders());
+    setReminders((current) => {
+      const next = listReminders();
+      return shallowEqualRecordArrays(current, next) ? current : next;
+    });
   }, []);
 
   const syncAllSignals = useCallback(() => {

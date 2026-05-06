@@ -6,9 +6,12 @@ import SystemPulse from '../components/ui/SystemPulse';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import StorageCorruptionBanner from '../components/ui/StorageCorruptionBanner';
 import LocalOnlyNotice from '../components/ui/LocalOnlyNotice';
+import Toast from '../components/ui/Toast';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useThemePreference } from '../hooks/useThemePreference';
+import { useToast } from '../hooks/useToast';
+import { useOfflineQueueDrain } from '../hooks/useOfflineQueueDrain';
 import { resolvePageMeta } from '../lib/pageMeta';
 import { resolveTeamName } from '../lib/settings';
 
@@ -17,9 +20,18 @@ function AppLayout() {
   const navigate = useNavigate();
   const mainRef = useRef(null);
   const { settings } = useSettings();
+  const { toastMessage, isToastVisible, showToast } = useToast();
   // Mounted at the shell so the html data-theme attribute is set on every
   // authenticated render and stays in sync with OS preference changes.
   useThemePreference();
+
+  useOfflineQueueDrain({
+    onDrainFailure: (result) => {
+      showToast(
+        `${result.failed} queued write${result.failed === 1 ? '' : 's'} could not sync. Check your connection and try again.`,
+      );
+    },
+  });
 
   const teamName = resolveTeamName(settings?.teamName);
   const appName = `${teamName} CEO OS`;
@@ -76,6 +88,7 @@ function AppLayout() {
           </ErrorBoundary>
         </main>
       </div>
+      <Toast className="toast--shell" isVisible={isToastVisible} message={toastMessage} />
     </div>
   );
 }

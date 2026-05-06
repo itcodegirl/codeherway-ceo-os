@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useIsMountedRef } from './useIsMountedRef';
 import {
   WEEKLY_BRIEF_UPDATED_EVENT,
   createWeeklyItem,
@@ -42,7 +43,7 @@ function normalizeArrayValue(nextValue, fallbackValue) {
 export function useWeeklyBrief() {
   const [weekStart, setWeekStart] = useState(() => getCurrentWeekStart());
   const weekStartRef = useRef(weekStart);
-  const isMountedRef = useRef(true);
+  const isMountedRef = useIsMountedRef();
   const requestIdRef = useRef(0);
   const lastSilentRefreshAtRef = useRef(0);
   const [source, setSource] = useState(resolveWeeklySource());
@@ -57,14 +58,6 @@ export function useWeeklyBrief() {
   useEffect(() => {
     weekStartRef.current = weekStart;
   }, [weekStart]);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   useEffect(() => {
     const msUntilNextMinute = 60 * 1000 - (Date.now() % (60 * 1000));
@@ -139,7 +132,7 @@ export function useWeeklyBrief() {
         setIsLoading(false);
       }
     }
-  }, [weekStart]);
+  }, [isMountedRef, weekStart]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -298,7 +291,7 @@ export function useWeeklyBrief() {
 
       return normalizedValue;
     });
-  }, [recoverAfterPersistenceFailure, weekStart]);
+  }, [isMountedRef, recoverAfterPersistenceFailure, weekStart]);
 
   const setPriorities = useCallback((nextValue) => {
     setPrioritiesState((currentValue) => {

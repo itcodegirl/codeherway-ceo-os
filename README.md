@@ -119,7 +119,7 @@ Driven by a structured product + UX audit of the system, this branch adds:
 - **Settings autosave on blur** — input fields and toggles persist immediately while the explicit `Save Settings` button is preserved as a "save now" affordance.
 - **Motion token system** — `--duration-fast / --duration-base / --duration-deliberate` and `--easing-standard` are exported from `tokens.css` so transitions can converge on a calm rhythm.
 
-Coverage for the above ships in this branch: 434 unit/integration tests, lint, typecheck, build, and route-budget checks all pass. The `@axe-core/playwright` sweep ships as a Playwright spec — exercise it on a machine with browsers installed (`npx playwright install` first).
+Coverage for the above ships in this branch: 491 unit/integration tests, lint, typecheck, build, and route-budget checks all pass. The `@axe-core/playwright` sweep ships as a Playwright spec — exercise it on a machine with browsers installed (`npx playwright install` first).
 
 ## What this repository demonstrates
 
@@ -415,7 +415,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 - Structured behavior is backed by explicit tests in:
   - `src/lib/openai.test.js`
   - `src/hooks/useChiefOfStaff.test.js`
-  - `src/hooks/useDashboardInsights.test.js`
+  - `src/hooks/useDashboardData.test.js`
   - `src/hooks/useWeeklyBrief.test.js`
   - `src/hooks/useWorkspaceSettings.test.js`
   - `src/hooks/useFocusHomeSignals.test.js`
@@ -582,6 +582,29 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `npm run check:route-budgets`
   - `npm run check:route-budgets:trend`
   - `npm run test:e2e` (21 passed)
+- Audit cycle: stability, schema validation, and UX polish (May 5, 2026):
+  - Removed `CrudPageTemplate` legacy flat props; migration doc closed — `slots.*` API only.
+  - Added `useOfflineQueueDrain` hook wired into `AppLayout` shell toast for offline write failure surfacing.
+  - Consolidated `useCrudPage` dual-prop aliases; cleaned test suite to match.
+  - Adopted Valibot schema validation for Opportunity and Content OS payloads.
+  - Made Dashboard "Today's Main Focus" panel collapsible by default (persistent state).
+  - Updated Dashboard CSS route-performance budget to cover disclosure-toggle styles.
+- May 5, 2026 local verification:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
+  - `npm run check:route-budgets`
+- Audit cycle 2: trust, error surfaces, dead code, mobile, and perf (May 5, 2026):
+  - Closed 4 unhandled-error paths (`useOfflineQueueDrain`, `Capture` sort, `Settings` saved-at, `OpsReliability` panel boundaries).
+  - Surfaced `loadError` from `useDashboardData`; replaced misleading "0" stat cards on WeeklyBrief and OpsReliability with `—`.
+  - Deleted 617 lines of dead `useDashboardInsights` code; consolidated 4 hand-rolled `useRef(true)` blocks onto `useIsMountedRef`.
+  - Raised the `.action-button--small` touch-target floor to 36px and made the OpsReliability snapshot table collapse to a stacked-card layout on phones.
+  - Stabilized `useFocusHomeSignals` reference identity, lifted CRUD-page `source` reads out of render, and merged `Capture`/`RemindersPanel` two-pass filters into single-pass memos.
+- May 5, 2026 second local verification:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
+  - `npm run check:route-budgets`
 
 ## Author
 

@@ -213,4 +213,59 @@ describe('useDashboardData', () => {
       addWindowListener.mockRestore();
     }
   });
+
+  it('exposes loadError when one of the list calls rejects', async () => {
+    listOpportunities.mockRejectedValueOnce(new Error('network down'));
+    listContentItems.mockResolvedValue([]);
+
+    const onLoadError = vi.fn();
+    const { result } = renderHook(() => useDashboardData({ onLoadError }));
+
+    await waitFor(() => {
+      expect(result.current.isDataLoading).toBe(false);
+    });
+
+    expect(result.current.loadError).toBe('Unable to load focus data right now.');
+    expect(onLoadError).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears loadError on a subsequent successful load', async () => {
+    listOpportunities
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce([{ id: 'o-1', name: 'Opportunity A' }]);
+    listContentItems.mockResolvedValue([]);
+
+    const { result } = renderHook(() => useDashboardData({}));
+
+    await waitFor(() => {
+      expect(result.current.loadError).toBe('Unable to load focus data right now.');
+    });
+
+    await act(async () => {
+      await result.current.loadDashboardData();
+    });
+
+    expect(result.current.loadError).toBe('');
+    expect(result.current.opportunityItems).toEqual([{ id: 'o-1', name: 'Opportunity A' }]);
+  });
+
+  it('does not let a thrown onLoadError callback escape as an unhandled rejection', async () => {
+    listOpportunities.mockRejectedValueOnce(new Error('load failed'));
+    listContentItems.mockResolvedValue([]);
+
+    const onLoadError = vi.fn(() => {
+      throw new Error('toast threw after unmount');
+    });
+
+    const { result } = renderHook(() => useDashboardData({ onLoadError }));
+
+    await waitFor(() => {
+      expect(result.current.isDataLoading).toBe(false);
+    });
+
+    expect(onLoadError).toHaveBeenCalled();
+    // The hook should still update state with the error message — proving
+    // the throw was caught and didn't abort the catch block.
+    expect(result.current.loadError).toBe('Unable to load focus data right now.');
+  });
 });

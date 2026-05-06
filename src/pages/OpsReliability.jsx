@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import ErrorBoundary from '../components/ui/ErrorBoundary';
 import PageHeader from '../components/ui/PageHeader';
 import SectionCard from '../components/ui/SectionCard';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
@@ -100,18 +101,21 @@ export default function OpsReliability() {
   });
 
   const latestSnapshot = snapshots[0] || null;
+  // Treat any load-blocked state as "value unknown" so cards never render a
+  // misleading 0 / Unknown next to a "couldn't load" SourceStatusNotice.
+  const isValueUnknown = isLoading || Boolean(loadError);
   const statCards = useMemo(() => ([
     {
       id: 'snapshot-count',
       label: 'Snapshots Tracked',
-      value: isLoading ? '--' : snapshots.length,
+      value: isValueUnknown ? '--' : snapshots.length,
       change: latestSnapshot ? `Last capture ${formatDateTime(latestSnapshot.capturedAt)}` : 'No snapshots yet',
       tone: 'neutral',
     },
     {
       id: 'route-trend',
       label: 'Route Trend Health',
-      value: isLoading ? '--' : formatOutcomeLabel(latestSnapshot?.routeTrendOutcome),
+      value: isValueUnknown ? '--' : formatOutcomeLabel(latestSnapshot?.routeTrendOutcome),
       change: latestSnapshot
         ? `Ingest ${formatOutcomeLabel(latestSnapshot.telemetryHealthOutcome)}`
         : 'Awaiting first run',
@@ -120,7 +124,7 @@ export default function OpsReliability() {
     {
       id: 'endpoint-latency',
       label: 'Endpoint p95',
-      value: isLoading ? '--' : formatMilliseconds(latestSnapshot?.telemetryEndpointSloP95Ms),
+      value: isValueUnknown ? '--' : formatMilliseconds(latestSnapshot?.telemetryEndpointSloP95Ms),
       change: latestSnapshot
         ? `Budget ${formatMilliseconds(latestSnapshot.telemetryEndpointSloMaxP95Ms)}`
         : 'No latency sample yet',
@@ -132,7 +136,7 @@ export default function OpsReliability() {
     {
       id: 'endpoint-errors',
       label: 'Endpoint Non-2xx',
-      value: isLoading ? '--' : formatPercent(latestSnapshot?.telemetryEndpointSloNon2xxRatePct),
+      value: isValueUnknown ? '--' : formatPercent(latestSnapshot?.telemetryEndpointSloNon2xxRatePct),
       change: latestSnapshot
         ? `Budget ${formatPercent(latestSnapshot.telemetryEndpointSloMaxNon2xxRatePct)}`
         : 'No error-rate sample yet',
@@ -141,7 +145,7 @@ export default function OpsReliability() {
         latestSnapshot?.telemetryEndpointSloMaxNon2xxRatePct,
       ),
     },
-  ]), [isLoading, latestSnapshot, snapshots.length]);
+  ]), [isValueUnknown, latestSnapshot, snapshots.length]);
 
   return (
     <section className="ops-reliability-page">
@@ -159,65 +163,85 @@ export default function OpsReliability() {
         retryAriaLabel="Retry loading SLO trend snapshots"
       />
 
-      <div className="dashboard-grid dashboard-grid--stats">
-        {statCards.map((item) => (
-          <StatCard
-            key={item.id}
-            label={item.label}
-            value={item.value}
-            change={item.change}
-            tone={item.tone}
-          />
-        ))}
-      </div>
-
-      <SectionCard title="SLO Snapshot Trend" iconName="trend">
-        {isLoading ? (
-          <p className="helper-text">Loading reliability snapshots...</p>
-        ) : snapshots.length ? (
-          <div className="ops-table-wrapper">
-            <table className="ops-table">
-              <caption className="sr-only">Recent SLO snapshot trend entries</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Captured</th>
-                  <th scope="col">Route Trend</th>
-                  <th scope="col">Telemetry Health</th>
-                  <th scope="col">Endpoint SLO</th>
-                  <th scope="col">p95</th>
-                  <th scope="col">Non-2xx</th>
-                </tr>
-              </thead>
-              <tbody>
-                {snapshots.map((snapshot) => (
-                  <tr key={snapshot.runId}>
-                    <td>{formatDateTime(snapshot.capturedAt)}</td>
-                    <td>
-                      <span className={buildStatusTone(snapshot.routeTrendOutcome)}>
-                        {formatOutcomeLabel(snapshot.routeTrendOutcome)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={buildStatusTone(snapshot.telemetryHealthOutcome)}>
-                        {formatOutcomeLabel(snapshot.telemetryHealthOutcome)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={buildStatusTone(snapshot.telemetryEndpointSloOutcome)}>
-                        {formatOutcomeLabel(snapshot.telemetryEndpointSloOutcome)}
-                      </span>
-                    </td>
-                    <td>{formatMilliseconds(snapshot.telemetryEndpointSloP95Ms)}</td>
-                    <td>{formatPercent(snapshot.telemetryEndpointSloNon2xxRatePct)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <ErrorBoundary
+        name="OpsReliability / Stat cards"
+        fallback={(
+          <div className="dashboard-grid dashboard-grid--stats">
+            <p className="helper-text">Stat cards couldn't render. Refresh to retry.</p>
           </div>
-        ) : (
-          <p className="helper-text">No SLO snapshots are available yet.</p>
         )}
-      </SectionCard>
+      >
+        <div className="dashboard-grid dashboard-grid--stats">
+          {statCards.map((item) => (
+            <StatCard
+              key={item.id}
+              label={item.label}
+              value={item.value}
+              change={item.change}
+              tone={item.tone}
+            />
+          ))}
+        </div>
+      </ErrorBoundary>
+
+      <ErrorBoundary
+        name="OpsReliability / Snapshot trend"
+        fallback={(
+          <SectionCard title="SLO Snapshot Trend" iconName="trend">
+            <p className="helper-text">
+              Snapshot trend couldn't render. A row may be malformed — refresh to retry.
+            </p>
+          </SectionCard>
+        )}
+      >
+        <SectionCard title="SLO Snapshot Trend" iconName="trend">
+          {isLoading ? (
+            <p className="helper-text">Loading reliability snapshots...</p>
+          ) : snapshots.length ? (
+            <div className="ops-table-wrapper">
+              <table className="ops-table">
+                <caption className="sr-only">Recent SLO snapshot trend entries</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Captured</th>
+                    <th scope="col">Route Trend</th>
+                    <th scope="col">Telemetry Health</th>
+                    <th scope="col">Endpoint SLO</th>
+                    <th scope="col">p95</th>
+                    <th scope="col">Non-2xx</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {snapshots.map((snapshot) => (
+                    <tr key={snapshot.runId}>
+                      <td data-label="Captured">{formatDateTime(snapshot.capturedAt)}</td>
+                      <td data-label="Route Trend">
+                        <span className={buildStatusTone(snapshot.routeTrendOutcome)}>
+                          {formatOutcomeLabel(snapshot.routeTrendOutcome)}
+                        </span>
+                      </td>
+                      <td data-label="Telemetry Health">
+                        <span className={buildStatusTone(snapshot.telemetryHealthOutcome)}>
+                          {formatOutcomeLabel(snapshot.telemetryHealthOutcome)}
+                        </span>
+                      </td>
+                      <td data-label="Endpoint SLO">
+                        <span className={buildStatusTone(snapshot.telemetryEndpointSloOutcome)}>
+                          {formatOutcomeLabel(snapshot.telemetryEndpointSloOutcome)}
+                        </span>
+                      </td>
+                      <td data-label="p95">{formatMilliseconds(snapshot.telemetryEndpointSloP95Ms)}</td>
+                      <td data-label="Non-2xx">{formatPercent(snapshot.telemetryEndpointSloNon2xxRatePct)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="helper-text">No SLO snapshots are available yet.</p>
+          )}
+        </SectionCard>
+      </ErrorBoundary>
     </section>
   );
 }

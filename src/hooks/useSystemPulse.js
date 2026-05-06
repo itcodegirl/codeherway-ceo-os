@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useIsMountedRef } from './useIsMountedRef';
 import { CAPTURE_NOTES_UPDATED_EVENT, listCaptureNotes } from '../lib/captureRepository';
 import {
   getJournalEntryByDate,
@@ -77,8 +78,13 @@ export function useSystemPulse() {
     items: DEFAULT_PULSE_ITEMS,
     nextMove: 'Syncing command signal...',
   });
-  const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  // Bumping requestIdRef on unmount lets in-flight loads short-circuit
+  // their setState calls (see loadPulse's request-id guard below).
+  const handleUnmount = useCallback(() => {
+    requestIdRef.current += 1;
+  }, []);
+  const isMountedRef = useIsMountedRef(handleUnmount);
 
   const loadPulse = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -137,16 +143,7 @@ export function useSystemPulse() {
         nextMove: 'Unable to refresh command signal right now.',
       });
     }
-  }, []);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-      requestIdRef.current += 1;
-    };
-  }, []);
+  }, [isMountedRef]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {

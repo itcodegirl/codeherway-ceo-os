@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { aiConfig } from '../lib/openai';
 import { emitChiefTelemetry } from '../lib/chiefTelemetry';
 import { useChiefGeneration } from './useChiefGeneration';
 import { useChiefStructuredAcceptance } from './useChiefStructuredAcceptance';
 import { useChiefWorkspace } from './useChiefWorkspace';
+import { useIsMountedRef } from './useIsMountedRef';
 
 function getDefaultFeedback() {
   return aiConfig.hasProxyEndpoint
@@ -17,7 +18,7 @@ function resolveNotes(nextNotes) {
 
 export function useChiefOfStaff() {
   const [feedback, setFeedback] = useState(getDefaultFeedback);
-  const isMountedRef = useRef(true);
+  const isMountedRef = useIsMountedRef();
 
   const {
     notes,
@@ -93,23 +94,14 @@ export function useChiefOfStaff() {
 
     resetAcceptanceState();
     resetAcceptanceCaches();
-    void hydrateAcceptedStructuredItems(workspaceResponses);
-  }, [hydrateAcceptedStructuredItems, loadWorkspace, resetAcceptanceCaches, resetAcceptanceState]);
+    // Hydration is fire-and-forget; .catch keeps an unexpected throw from
+    // becoming an unhandled rejection.
+    hydrateAcceptedStructuredItems(workspaceResponses).catch(() => {});
+  }, [hydrateAcceptedStructuredItems, isMountedRef, loadWorkspace, resetAcceptanceCaches, resetAcceptanceState]);
 
   useEffect(() => {
-    void refreshWorkspace();
+    refreshWorkspace().catch(() => {});
   }, [refreshWorkspace]);
-
-  useEffect(
-    () => {
-      isMountedRef.current = true;
-
-      return () => {
-        isMountedRef.current = false;
-      };
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!notesText || isGenerating) {
@@ -134,7 +126,7 @@ export function useChiefOfStaff() {
     setFeedback(getDefaultFeedback());
     resetAcceptanceState();
     resetAcceptanceCaches();
-  }, [clearWorkspace, resetAcceptanceCaches, resetAcceptanceState]);
+  }, [clearWorkspace, isMountedRef, resetAcceptanceCaches, resetAcceptanceState]);
 
   return useMemo(
     () => ({

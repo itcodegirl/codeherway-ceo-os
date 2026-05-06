@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import CrudPageTemplate from '../crud/CrudPageTemplate';
 import ContentTable from './ContentTable';
 import ContentItemModal from './ContentItemModal';
@@ -16,6 +16,7 @@ import {
   updateContentItem,
 } from '../../lib/contentRepository';
 import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
+import { validateContentPayload } from '../../lib/contentPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/crm-table.css';
@@ -41,14 +42,6 @@ function mapContentFormValuesToPayload(formValues) {
     platform: formValues.platform.trim(),
     status: formValues.status,
   };
-}
-
-function validateContentPayload(payload) {
-  if (!payload.title || !payload.platform) {
-    return 'Title and platform are required.';
-  }
-
-  return '';
 }
 
 function ContentCrudPage() {
@@ -92,7 +85,10 @@ function ContentCrudPage() {
     logPrefix: 'content items',
   });
 
-  const source = getContentSource();
+  // Source is a runtime config check that doesn't change during a session.
+  // Reading it from a useState initializer avoids hitting the resolver on
+  // every render (modal open, form keystroke, list refresh, etc.).
+  const [source] = useState(() => getContentSource());
 
   const statusCounts = useMemo(
     () =>

@@ -55,6 +55,35 @@
 	grid-column: 1 / -1;
 }
 
+.focus-panel--collapsed .focus-panel__header {
+	margin-bottom: 0;
+}
+
+.focus-panel__disclosure-toggle {
+	margin-left: auto;
+	padding: 0.2rem 0.55rem;
+	background: transparent;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-soft-strong);
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s;
+}
+
+.focus-panel__disclosure-toggle:hover {
+	background: color-mix(in srgb, var(--surface-hover) 80%, transparent 20%);
+	color: var(--text);
+}
+
+.focus-panel__disclosure-toggle:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
 .focus-home__main-focus {
 	margin: 0;
 	font-size: clamp(1.25rem, 2.3vw, 1.65rem);

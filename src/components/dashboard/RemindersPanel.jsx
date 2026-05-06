@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Button from '../ui/Button';
 
 function ReminderRow({
@@ -127,10 +127,24 @@ function RemindersPanel({
   // Keep completed reminders hidden by default so the list doesn't grow into
   // a backlog of finished work. Users can opt-in to seeing them.
   const [showCompleted, setShowCompleted] = useState(false);
-  const completedCount = visibleReminders.filter((item) => item.isDone).length;
-  const filteredReminders = showCompleted
-    ? visibleReminders
-    : visibleReminders.filter((item) => !item.isDone);
+  // Single pass over visibleReminders for both derived values. Dashboard
+  // re-renders frequently (focus mode, next-move clicks, debounced reminder
+  // adds) so keeping this O(n) once instead of twice avoids waste.
+  const { completedCount, filteredReminders } = useMemo(() => {
+    let completed = 0;
+    const filtered = [];
+    for (const item of visibleReminders) {
+      if (item.isDone) {
+        completed += 1;
+        if (showCompleted) {
+          filtered.push(item);
+        }
+      } else {
+        filtered.push(item);
+      }
+    }
+    return { completedCount: completed, filteredReminders: filtered };
+  }, [visibleReminders, showCompleted]);
   const hasItems = filteredReminders.length > 0;
 
   return (

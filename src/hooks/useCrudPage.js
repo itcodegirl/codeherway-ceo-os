@@ -12,11 +12,6 @@ function isValidCrudItem(value) {
 
 export function useCrudPage(config) {
   const {
-    listFn,
-    createFn,
-    updateFn,
-    deleteFn,
-    defaultForm,
     defaultFormValues,
     validate,
     validatePayload,
@@ -32,20 +27,14 @@ export function useCrudPage(config) {
     logPrefix = 'items',
   } = config || {};
 
-  const listItemsFn = useMemo(() => listFn || listItems, [listFn, listItems]);
-  const createItemFn = useMemo(() => createFn || createItem, [createFn, createItem]);
-  const updateItemFn = useMemo(() => updateFn || updateItem, [updateFn, updateItem]);
-  const deleteItemFn = useMemo(() => deleteFn || deleteItem, [deleteFn, deleteItem]);
-  const mapItemToFormValuesFn = mapItemToFormValues;
-  const mapFormValuesToPayloadFn = mapFormValuesToPayload;
   const validatePayloadFn = useMemo(() => (
     typeof (validate ?? validatePayload) === 'function'
       ? validate ?? validatePayload
       : () => ''
   ), [validate, validatePayload]);
   const defaultFormValuesResolved = useMemo(
-    () => defaultFormValues ?? defaultForm ?? {},
-    [defaultFormValues, defaultForm],
+    () => defaultFormValues ?? {},
+    [defaultFormValues],
   );
   const loadErrorMessage = messages.load || 'Unable to load items right now.';
   const saveErrorMessage = messages.save || 'Unable to save item right now.';
@@ -92,10 +81,10 @@ export function useCrudPage(config) {
 
       try {
         setLoadError('');
-        if (typeof deleteItemFn !== 'function') {
+        if (typeof deleteItem !== 'function') {
           throw new Error('Delete operation is not configured.');
         }
-        await deleteItemFn(itemToDelete.id);
+        await deleteItem(itemToDelete.id);
         if (!isMountedRef.current) {
           return;
         }
@@ -134,7 +123,7 @@ export function useCrudPage(config) {
         setIsLoading(true);
       }
       setLoadError('');
-      if (typeof listItemsFn !== 'function') {
+      if (typeof listItems !== 'function') {
         if (isActive) {
           setItems([]);
           setLoadError(loadErrorMessage);
@@ -145,7 +134,7 @@ export function useCrudPage(config) {
         return;
       }
       try {
-        const nextItems = await listItemsFn();
+        const nextItems = await listItems();
         if (!Array.isArray(nextItems)) {
           if (isActive) {
             setItems([]);
@@ -179,7 +168,7 @@ export function useCrudPage(config) {
     return () => {
       isActive = false;
     };
-  }, [listItemsFn, loadErrorMessage, logPrefix, refreshToken]);
+  }, [listItems, loadErrorMessage, logPrefix, refreshToken]);
 
   const refreshItems = useCallback(() => {
     setRefreshToken((current) => current + 1);
@@ -220,15 +209,15 @@ export function useCrudPage(config) {
   }, [resetForm, setSelectedItem]);
 
   const handleOpenEditModal = useCallback(() => {
-    if (!selectedItem || !mapItemToFormValuesFn) {
+    if (!selectedItem || !mapItemToFormValues) {
       return;
     }
 
-    setFormValues(mapItemToFormValuesFn(selectedItem));
+    setFormValues(mapItemToFormValues(selectedItem));
     setFormError('');
     closeDeleteConfirm();
     setIsFormOpen(true);
-  }, [closeDeleteConfirm, mapItemToFormValuesFn, selectedItem]);
+  }, [closeDeleteConfirm, mapItemToFormValues, selectedItem]);
 
   const handleCloseFormModal = useCallback(() => {
     if (isSaving) {
@@ -264,7 +253,7 @@ export function useCrudPage(config) {
       return;
     }
 
-    const payload = mapFormValuesToPayloadFn ? mapFormValuesToPayloadFn(formValues) : formValues;
+    const payload = mapFormValuesToPayload ? mapFormValuesToPayload(formValues) : formValues;
     const validationError = validatePayloadFn(payload);
 
     if (validationError) {
@@ -272,11 +261,11 @@ export function useCrudPage(config) {
       return;
     }
 
-    if (selectedItem && typeof updateItemFn !== 'function') {
+    if (selectedItem && typeof updateItem !== 'function') {
       setFormError(saveErrorMessage);
       return;
     }
-    if (!selectedItem && typeof createItemFn !== 'function') {
+    if (!selectedItem && typeof createItem !== 'function') {
       setFormError(saveErrorMessage);
       return;
     }
@@ -290,8 +279,8 @@ export function useCrudPage(config) {
       if (selectedItem) {
         const expectedUpdatedAt = Number(selectedItem.updatedAt);
         const updated = Number.isFinite(expectedUpdatedAt) && expectedUpdatedAt > 0
-          ? await updateItemFn(selectedItem.id, payload, { expectedUpdatedAt })
-          : await updateItemFn(selectedItem.id, payload);
+          ? await updateItem(selectedItem.id, payload, { expectedUpdatedAt })
+          : await updateItem(selectedItem.id, payload);
         if (!isMountedRef.current) {
           return;
         }
@@ -302,7 +291,7 @@ export function useCrudPage(config) {
           current.map((item) => (item.id === updated.id ? updated : item)));
         setSelectedItemState(updated);
       } else {
-        const created = await createItemFn(payload);
+        const created = await createItem(payload);
         if (!isMountedRef.current) {
           return;
         }
@@ -333,16 +322,16 @@ export function useCrudPage(config) {
       }
     }
   }, [
-    createItemFn,
+    createItem,
     formValues,
     isMountedRef,
     logPrefix,
-    mapFormValuesToPayloadFn,
+    mapFormValuesToPayload,
     refreshItems,
     saveErrorMessage,
     resetForm,
     selectedItem,
-    updateItemFn,
+    updateItem,
     validatePayloadFn,
   ]);
 

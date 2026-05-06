@@ -10,6 +10,7 @@ import {
   listContentItems,
 } from '../lib/contentRepository';
 import { shallowEqualRecordArrays } from '../lib/stateUtils';
+import { useIsMountedRef } from './useIsMountedRef';
 
 const SILENT_REFRESH_COALESCE_MS = 400;
 
@@ -19,7 +20,8 @@ export function useDashboardData({ onLoadError }) {
   const [opportunityItems, setOpportunityItems] = useState([]);
   const [contentRows, setContentRows] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const isMountedRef = useRef(true);
+  const [loadError, setLoadError] = useState('');
+  const isMountedRef = useIsMountedRef();
   const onLoadErrorRef = useRef(onLoadError);
   const requestIdRef = useRef(0);
   const lastSilentRefreshAtRef = useRef(0);
@@ -53,32 +55,34 @@ export function useDashboardData({ onLoadError }) {
         setContentRows((current) => (
           shallowEqualRecordArrays(current, nextContentRows) ? current : nextContentRows
         ));
+        setLoadError('');
       } catch (error) {
         if (!isMountedRef.current || requestId !== requestIdRef.current) {
           return;
         }
 
-        onLoadErrorRef.current?.(error);
+        setLoadError('Unable to load focus data right now.');
+        // Wrap consumer callback so a thrown showToast (e.g. fired after
+        // unmount) doesn't escape as an unhandled rejection.
+        try {
+          onLoadErrorRef.current?.(error);
+        } catch (callbackError) {
+          if (import.meta.env.DEV) {
+            console.error('useDashboardData onLoadError callback threw', callbackError);
+          }
+        }
       } finally {
         if (!silent && isMountedRef.current && requestId === requestIdRef.current) {
           setIsDataLoading(false);
         }
       }
     },
-    [],
+    [isMountedRef],
   );
 
   useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
-      loadDashboardData();
+      loadDashboardData().catch(() => {});
     });
 
     return () => {
@@ -94,7 +98,7 @@ export function useDashboardData({ onLoadError }) {
       }
 
       lastSilentRefreshAtRef.current = now;
-      loadDashboardData({ silent: true });
+      loadDashboardData({ silent: true }).catch(() => {});
     };
 
     const handleStorageChange = (event) => {
@@ -132,6 +136,7 @@ export function useDashboardData({ onLoadError }) {
     opportunityItems,
     contentRows,
     isDataLoading,
+    loadError,
     loadDashboardData,
   };
 }
