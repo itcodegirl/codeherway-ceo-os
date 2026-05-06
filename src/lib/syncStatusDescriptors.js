@@ -23,9 +23,18 @@ const OFFLINE_DESCRIPTOR = {
   description: 'No network connection detected. Changes save locally and will be available when you reload.',
 };
 
-export function describeSyncStatus(source, isOnline) {
+const ERROR_DESCRIPTOR = {
+  label: 'Sync error',
+  tone: 'error',
+  description: 'Workspace settings failed to load. Showing the last available snapshot — click to retry.',
+};
+
+export function describeSyncStatus(source, isOnline, hasLoadError = false) {
   if (!isOnline) {
     return OFFLINE_DESCRIPTOR;
+  }
+  if (hasLoadError) {
+    return ERROR_DESCRIPTOR;
   }
   return SOURCE_DESCRIPTORS[source] || SOURCE_DESCRIPTORS.local;
 }
