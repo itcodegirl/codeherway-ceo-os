@@ -324,6 +324,31 @@
 	animation: sync-status-offline-pulse 1.6s ease-in-out infinite;
 }
 
+.sync-status-pill--error {
+	color: var(--text);
+	border-color: var(--border-danger-soft, var(--border));
+}
+
+.sync-status-pill--error .sync-status-pill__dot {
+	background: var(--danger);
+	box-shadow: 0 0 0 2px rgba(255, 155, 155, 0.18);
+}
+
+button.sync-status-pill--retry {
+	cursor: pointer;
+	font: inherit;
+}
+
+button.sync-status-pill--retry:hover,
+button.sync-status-pill--retry:focus-visible {
+	border-color: var(--danger);
+}
+
+button.sync-status-pill--retry:focus-visible {
+	outline: 2px solid var(--focus-ring, var(--accent));
+	outline-offset: 2px;
+}
+
 @keyframes sync-status-offline-pulse {
 	0%, 100% { opacity: 1; }
 	50% { opacity: 0.55; }

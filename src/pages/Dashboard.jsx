@@ -12,12 +12,10 @@ import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import { usePromotionAction } from '../hooks/usePromotionAction';
+import { useReminderActions } from '../hooks/useReminderActions';
 import {
   createReminder,
-  deleteReminder,
   getReminderProgress,
-  toggleReminder,
-  updateReminderText,
 } from '../lib/remindersRepository';
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
@@ -33,10 +31,6 @@ import '../styles/dashboard.css';
 
 const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
 const FOCUS_TOOLS_DRAWER_ID = 'focus-tools-drawer';
-
-function isReminderNotFoundError(error) {
-  return error instanceof Error && error.message === 'Reminder not found';
-}
 
 function Dashboard() {
   const {
@@ -239,57 +233,11 @@ function Dashboard() {
     }
   };
 
-  const handleToggleReminder = (id, isDone) => {
-    if (!reminders.some((item) => item.id === id)) {
-      return;
-    }
-
-    try {
-      toggleReminder(id, isDone);
-    } catch (error) {
-      if (!isReminderNotFoundError(error)) {
-        showToast('Unable to update reminder right now.');
-      }
-    }
-  };
-
-  const handleDeleteReminder = (id) => {
-    if (!reminders.some((item) => item.id === id)) {
-      return;
-    }
-
-    try {
-      deleteReminder(id);
-    } catch (error) {
-      if (!isReminderNotFoundError(error)) {
-        showToast('Unable to delete reminder right now.');
-      }
-    }
-  };
-
-  const handleEditReminder = (id, nextText) => {
-    if (!reminders.some((item) => item.id === id)) {
-      return false;
-    }
-    const trimmed = typeof nextText === 'string' ? nextText.trim() : '';
-    if (!trimmed) {
-      showToast('Reminder text cannot be empty.');
-      return false;
-    }
-    try {
-      updateReminderText(id, trimmed);
-      return true;
-    } catch (error) {
-      if (!isReminderNotFoundError(error)) {
-        showToast('Unable to update reminder right now.');
-      }
-      return false;
-    }
-  };
+  const reminderActions = useReminderActions({ reminders, showToast });
 
   const handlePromoteReminderToPriority = usePromotionAction({
     onShowToast: showToast,
-    isRecordKnown: (id) => reminders.some((item) => item.id === id),
+    isRecordKnown: reminderActions.isReminderKnown,
     emptyTextMessage: 'Add reminder text before promoting it.',
     successMessage: "Added to this week's priorities. The reminder stays here.",
     failureMessage: 'Unable to promote this reminder right now.',
@@ -428,10 +376,10 @@ function Dashboard() {
             reminderProgress={reminderProgress}
             visibleReminders={visibleReminders}
             suggestions={suggestions}
-            onToggleReminder={handleToggleReminder}
-            onDeleteReminder={handleDeleteReminder}
+            onToggleReminder={reminderActions.toggle}
+            onDeleteReminder={reminderActions.remove}
             onPromoteReminder={handlePromoteReminderToPriority}
-            onEditReminder={handleEditReminder}
+            onEditReminder={reminderActions.edit}
           />
         </ErrorBoundary>
       </div>
