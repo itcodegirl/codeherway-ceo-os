@@ -4,6 +4,7 @@ import {
   STORAGE_RESTORED_EVENT,
   discardCorruptBackup,
   listCorruptBackups,
+  parseJsonOrPreserveCorruption,
   preserveCorruptStorageValue,
   restoreCorruptBackup,
 } from './storageCorruption';
@@ -67,6 +68,29 @@ describe('preserveCorruptStorageValue', () => {
   it('returns null and does nothing when the raw value is null', () => {
     const result = preserveCorruptStorageValue('ceo-os-test-null', null, new Error('parse'));
     expect(result).toBeNull();
+  });
+});
+
+describe('parseJsonOrPreserveCorruption', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('returns parsed JSON when readable', () => {
+    expect(parseJsonOrPreserveCorruption('ceo-os-test-parse', '{"ok":true}', {})).toEqual({ ok: true });
+  });
+
+  it('preserves unreadable JSON and returns the fallback', () => {
+    const fallback = { ok: false };
+
+    expect(parseJsonOrPreserveCorruption('ceo-os-test-parse-bad', '{bad', fallback)).toBe(fallback);
+    expect(listCorruptBackups('ceo-os-test-parse-bad')[0]).toMatchObject({
+      value: '{bad',
+    });
   });
 });
 

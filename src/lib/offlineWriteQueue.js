@@ -19,6 +19,8 @@
  * cross-tab semantics.
  */
 
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
+
 export const OFFLINE_QUEUE_STORAGE_KEY = 'ceo-os-offline-write-queue';
 export const OFFLINE_QUEUE_UPDATED_EVENT = 'ceo-os:offline-queue-updated';
 const MAX_QUEUE_LENGTH = 200;
@@ -53,7 +55,7 @@ function readQueue(storage) {
     if (!raw) {
       return [];
     }
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(OFFLINE_QUEUE_STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return [];
     }

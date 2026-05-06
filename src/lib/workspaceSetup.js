@@ -1,3 +1,5 @@
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
+
 export const WORKSPACE_SETUP_STORAGE_KEY = 'ceo-os-workspace-setup';
 export const WORKSPACE_SETUP_UPDATED_EVENT = 'ceo-os:workspace-setup-updated';
 
@@ -40,7 +42,7 @@ export function getWorkspaceSetupChoice() {
       return '';
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(WORKSPACE_SETUP_STORAGE_KEY, raw, null);
     return normalizeMode(parsed?.mode || parsed);
   } catch {
     return '';

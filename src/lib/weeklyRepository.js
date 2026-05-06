@@ -8,6 +8,7 @@ import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { isDemoWorkspaceEnabled } from './workspaceSetup';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -184,7 +185,9 @@ function readLegacyWeekPayload() {
 
   try {
     const rawPriorities = window.localStorage.getItem(LEGACY_PRIORITIES_KEY);
-    const parsedPriorities = rawPriorities ? JSON.parse(rawPriorities) : priorities;
+    const parsedPriorities = rawPriorities
+      ? parseJsonOrPreserveCorruption(LEGACY_PRIORITIES_KEY, rawPriorities, priorities)
+      : priorities;
     priorities = normalizeCollection(WEEKLY_ITEM_TYPES.priority, parsedPriorities);
   } catch {
     priorities = getFallbackPriorities();
@@ -192,7 +195,9 @@ function readLegacyWeekPayload() {
 
   try {
     const rawWins = window.localStorage.getItem(LEGACY_WINS_KEY);
-    const parsedWins = rawWins ? JSON.parse(rawWins) : wins;
+    const parsedWins = rawWins
+      ? parseJsonOrPreserveCorruption(LEGACY_WINS_KEY, rawWins, wins)
+      : wins;
     wins = normalizeCollection(WEEKLY_ITEM_TYPES.win, parsedWins);
   } catch {
     wins = getFallbackWins();
@@ -200,7 +205,9 @@ function readLegacyWeekPayload() {
 
   try {
     const rawBlockers = window.localStorage.getItem(LEGACY_BLOCKERS_KEY);
-    const parsedBlockers = rawBlockers ? JSON.parse(rawBlockers) : blockers;
+    const parsedBlockers = rawBlockers
+      ? parseJsonOrPreserveCorruption(LEGACY_BLOCKERS_KEY, rawBlockers, blockers)
+      : blockers;
     blockers = normalizeCollection(WEEKLY_ITEM_TYPES.blocker, parsedBlockers);
   } catch {
     blockers = getFallbackBlockers();
@@ -234,7 +241,7 @@ function readLocalWeekStore() {
       return {};
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(LOCAL_WEEKLY_BRIEFS_KEY, raw, null);
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
     return {};

@@ -5,6 +5,7 @@ import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime'
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
 import { isDemoWorkspaceEnabled } from './workspaceSetup';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 export const CONTENT_QUEUE_KIND_CREATE = 'content:create';
 export const CONTENT_QUEUE_KIND_UPDATE = 'content:update';
@@ -61,7 +62,7 @@ function readLocalContentItems() {
       return seeded;
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return getSeededLocalItems();
     }

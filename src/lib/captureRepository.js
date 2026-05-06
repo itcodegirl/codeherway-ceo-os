@@ -1,4 +1,5 @@
 import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const STORAGE_KEY = 'ceo-os-capture-notes';
 export const CAPTURE_NOTES_UPDATED_EVENT = 'ceo-os:capture-notes-updated';
@@ -74,7 +75,7 @@ function readStorage() {
       return fallback;
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return getFallbackCaptureNotes();
     }

@@ -1,4 +1,5 @@
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const TELEMETRY_STORAGE_KEY = 'ceo-os-chief-telemetry-events';
 const MAX_LOCAL_EVENTS = 400;
@@ -81,7 +82,7 @@ function readLocalEvents() {
       return [];
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(TELEMETRY_STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return [];
     }
