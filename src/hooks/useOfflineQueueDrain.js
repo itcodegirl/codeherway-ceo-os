@@ -43,6 +43,17 @@ export function useOfflineQueueDrain({ handlerByKind = {}, onDrainFailure } = {}
       if (result.failed > 0 && typeof onDrainFailureRef.current === 'function') {
         onDrainFailureRef.current(result);
       }
+    } catch (error) {
+      // drainOfflineQueue catches per-entry handler failures internally, so a
+      // hard rejection here means storage itself failed (quota, serialization).
+      // Surface it like a per-entry failure and keep this hook from emitting
+      // an unhandled rejection on every reconnect.
+      if (typeof onDrainFailureRef.current === 'function') {
+        onDrainFailureRef.current({ drained: 0, failed: 1, remaining: 0 });
+      }
+      if (import.meta.env.DEV) {
+        console.error('Offline queue drain failed unexpectedly', error);
+      }
     } finally {
       isDrainingRef.current = false;
     }
@@ -53,7 +64,10 @@ export function useOfflineQueueDrain({ handlerByKind = {}, onDrainFailure } = {}
       return undefined;
     }
 
-    runDrain();
+    // runDrain has its own try/catch so this can be a fire-and-forget call,
+    // but we still attach a defensive .catch so a future unhandled path
+    // cannot escape.
+    runDrain().catch(() => {});
     return undefined;
   }, [isOnline, runDrain]);
 }

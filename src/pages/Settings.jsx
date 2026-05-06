@@ -237,12 +237,20 @@ function Settings() {
         {source === 'supabase'
           ? 'Changes sync to your Supabase profile.'
           : SOURCE_NOTICE_SAMPLE_DATA}
-        {savedAt ? (
-          <span className="settings-saved-indicator">
-            {' '}
-            Last saved <time dateTime={new Date(savedAt).toISOString()}>{new Date(savedAt).toLocaleString()}</time>.
-          </span>
-        ) : null}
+        {Number.isFinite(Number(savedAt)) && Number(savedAt) > 0 ? (() => {
+          const savedDate = new Date(Number(savedAt));
+          // Guard against corrupted timestamps (e.g. legacy storage) — an
+          // invalid Date here would crash the page on toISOString().
+          if (Number.isNaN(savedDate.getTime())) {
+            return null;
+          }
+          return (
+            <span className="settings-saved-indicator">
+              {' '}
+              Last saved <time dateTime={savedDate.toISOString()}>{savedDate.toLocaleString()}</time>.
+            </span>
+          );
+        })() : null}
       </div>
     </section>
   );

@@ -71,11 +71,16 @@ function Capture() {
     };
   }, []);
 
-  const sortedNotes = useMemo(() => (
-    [...notes].sort((left, right) => (
-      new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-    ))
-  ), [notes]);
+  const sortedNotes = useMemo(() => {
+    // Coerce missing/invalid updatedAt to 0 so older or partially-normalized
+    // notes sort to the bottom rather than producing NaN comparisons (which
+    // give an implementation-defined order and silently corrupt the wall).
+    const toMillis = (value) => {
+      const parsed = new Date(value).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    return [...notes].sort((left, right) => toMillis(right.updatedAt) - toMillis(left.updatedAt));
+  }, [notes]);
   // Stickies that have already been promoted to a reminder/opportunity/content
   // draft are hidden by default so the wall stays a brain-dump space rather
   // than a graveyard. Toggle reveals them with a small "promoted to X" tag.
