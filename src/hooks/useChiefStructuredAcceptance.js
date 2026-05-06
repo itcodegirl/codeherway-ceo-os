@@ -10,69 +10,132 @@ const ACCEPTANCE_STATUS = {
   FAILED: 'failed',
 };
 
-function resolveStructuredText(item) {
-  if (typeof item === 'string') {
-    return item.trim();
-  }
-
-  if (!item || typeof item !== 'object') {
-    return '';
-  }
-
-  return (
-    item.title
-    || item.name
-    || item.text
-    || item.summary
-    || item.task
-    || ''
-  ).toString().trim();
-}
+const SHARED_TEXT_FIELDS = ['title', 'name', 'text', 'summary', 'task'];
+const NAME_FIRST_TEXT_FIELDS = ['name', 'title', 'text', 'summary', 'task'];
 
 function normalizeComparableValue(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-function buildOpportunitySignature(value) {
-  const normalizedName = normalizeComparableValue(value?.name || value?.title || value?.text || value?.summary || value?.task);
-  const normalizedCompany = normalizeComparableValue(value?.company || value?.organization);
-  return normalizedName ? `${normalizedName}|${normalizedCompany}` : '';
-}
-
-function buildContentSignature(value) {
-  const normalizedTitle = normalizeComparableValue(value?.title || value?.name || value?.text || value?.summary || value?.task);
-  const normalizedPlatform = normalizeComparableValue(value?.platform || value?.channel);
-  return normalizedTitle ? `${normalizedTitle}|${normalizedPlatform}` : '';
-}
-
-function buildPrioritySignature(value) {
-  const normalizedTitle = normalizeComparableValue(value?.title || value?.name || value?.text || value?.summary || value?.task);
-  return normalizedTitle || '';
-}
-
-function createStructuredItemKey(section, item) {
-  const sectionKey = typeof section === 'string' ? section : '';
-  const itemValue = item && typeof item === 'object' ? item : { title: resolveStructuredText(item) };
-
-  if (sectionKey === 'opportunities') {
-    const name = normalizeComparableValue(itemValue.name || itemValue.title || itemValue.text || itemValue.summary || itemValue.task);
-    const company = normalizeComparableValue(itemValue.company || itemValue.organization);
-    return name ? `${sectionKey}:${name}|${company}` : '';
+function pickFirstString(value, fields) {
+  if (!value || typeof value !== 'object') return '';
+  for (const field of fields) {
+    const candidate = value[field];
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim();
+    }
+    if (candidate != null && typeof candidate !== 'object') {
+      const coerced = String(candidate).trim();
+      if (coerced) return coerced;
+    }
   }
-
-  if (sectionKey === 'contentItems') {
-    const title = normalizeComparableValue(itemValue.title || itemValue.name || itemValue.text || itemValue.summary || itemValue.task);
-    const platform = normalizeComparableValue(itemValue.platform || itemValue.channel);
-    return title ? `${sectionKey}:${title}|${platform}` : '';
-  }
-
-  if (sectionKey === 'priorities' || sectionKey === 'tasks') {
-    const title = normalizeComparableValue(itemValue.title || itemValue.name || itemValue.text || itemValue.summary || itemValue.task);
-    const owner = normalizeComparableValue(itemValue.owner || itemValue.assignee);
-    return title ? `${sectionKey}:${title}|${owner}` : '';
-  }
-
   return '';
+}
+
+function pickFirstNormalized(value, fields) {
+  return normalizeComparableValue(pickFirstString(value, fields));
+}
+
+function resolveStructuredText(item) {
+  if (typeof item === 'string') {
+    return item.trim();
+  }
+  return pickFirstString(item, SHARED_TEXT_FIELDS);
+}
+
+function combineParts(primary, secondary) {
+  if (!primary) return '';
+  return secondary ? `${primary}|${secondary}` : `${primary}|`;
+}
+
+/**
+ * Pure-data descriptor table that drives every section the Chief of Staff
+ * structured-output flow accepts. Both the section-keyed dedup keys and the
+ * repository-level signatures are derived from the same primary/secondary
+ * field lists, so adding a new section is a one-entry change instead of a
+ * three-place scatter.
+ */
+const SECTION_DESCRIPTORS = {
+  opportunities: {
+    primaryFields: NAME_FIRST_TEXT_FIELDS,
+    keySecondaryFields: ['company', 'organization'],
+    signatureSecondaryFields: ['company', 'organization'],
+    cacheKey: 'opportunities',
+    missingTextMessage: 'This opportunity entry is missing a name.',
+    missingTextReason: 'missing_name',
+    duplicateMessage: 'That opportunity already exists.',
+    successMessage: 'Added an opportunity from the structured AI output.',
+    save: ({ itemValue, primaryText }) => createOpportunity({
+      name: primaryText,
+      company: itemValue.company || '',
+      priority: itemValue.priority || 'Medium',
+      stage: itemValue.stage || 'New',
+      nextStep: itemValue.nextStep || itemValue.next_step || '',
+    }),
+  },
+  contentItems: {
+    primaryFields: SHARED_TEXT_FIELDS,
+    keySecondaryFields: ['platform', 'channel'],
+    signatureSecondaryFields: ['platform', 'channel'],
+    cacheKey: 'content',
+    missingTextMessage: 'This content entry is missing a title.',
+    missingTextReason: 'missing_title',
+    duplicateMessage: 'That content item already exists.',
+    successMessage: 'Added a content item from the structured AI output.',
+    save: ({ itemValue, primaryText }) => createContentItem({
+      title: primaryText,
+      platform: itemValue.platform || itemValue.channel || '',
+      status: itemValue.status || 'Drafting',
+    }),
+  },
+  priorities: {
+    primaryFields: SHARED_TEXT_FIELDS,
+    keySecondaryFields: ['owner', 'assignee'],
+    signatureSecondaryFields: [],
+    cacheKey: 'weeklyPriorities',
+    missingTextMessage: 'This priority entry is missing a title.',
+    missingTextReason: 'missing_title',
+    duplicateMessage: 'That weekly priority already exists.',
+    successMessage: 'Added a weekly priority from the structured AI output.',
+    save: ({ itemValue, primaryText, ctx }) => createWeeklyItem({
+      weekStart: ctx.currentWeekStart,
+      itemType: 'priority',
+      item: {
+        id: buildCreateId(),
+        title: primaryText,
+        owner: itemValue.owner || 'Team Member',
+        status: itemValue.status || 'Planned',
+      },
+    }),
+  },
+};
+
+// `tasks` shares everything with `priorities` except its section key (which is
+// what gates the in-flight/accepted maps). Reusing the descriptor means the
+// save behavior, signature shape, and copy stay in lock-step automatically.
+SECTION_DESCRIPTORS.tasks = SECTION_DESCRIPTORS.priorities;
+
+function buildItemKey(sectionKey, item) {
+  const descriptor = SECTION_DESCRIPTORS[sectionKey];
+  if (!descriptor) return '';
+  const itemValue = item && typeof item === 'object'
+    ? item
+    : { title: resolveStructuredText(item) };
+  const primary = pickFirstNormalized(itemValue, descriptor.primaryFields);
+  if (!primary) return '';
+  const secondary = pickFirstNormalized(itemValue, descriptor.keySecondaryFields);
+  return `${sectionKey}:${combineParts(primary, secondary)}`;
+}
+
+function buildItemSignature(descriptor, item) {
+  const itemValue = item && typeof item === 'object' ? item : {};
+  const primary = pickFirstNormalized(itemValue, descriptor.primaryFields);
+  if (!primary) return '';
+  if (!descriptor.signatureSecondaryFields.length) {
+    return primary;
+  }
+  const secondary = pickFirstNormalized(itemValue, descriptor.signatureSecondaryFields);
+  return combineParts(primary, secondary);
 }
 
 export function useChiefStructuredAcceptance({
@@ -137,7 +200,7 @@ export function useChiefStructuredAcceptance({
     const items = await listOpportunities();
     const signatures = new Set(
       items
-        .map((entry) => buildOpportunitySignature(entry))
+        .map((entry) => buildItemSignature(SECTION_DESCRIPTORS.opportunities, entry))
         .filter(Boolean),
     );
     opportunitySignaturesRef.current = signatures;
@@ -152,7 +215,7 @@ export function useChiefStructuredAcceptance({
     const items = await listContentItems();
     const signatures = new Set(
       items
-        .map((entry) => buildContentSignature(entry))
+        .map((entry) => buildItemSignature(SECTION_DESCRIPTORS.contentItems, entry))
         .filter(Boolean),
     );
     contentSignaturesRef.current = signatures;
@@ -165,15 +228,32 @@ export function useChiefStructuredAcceptance({
     }
 
     const brief = await getWeeklyBriefByWeek(weekStart);
+    const priorities = Array.isArray(brief.priorities) ? brief.priorities : [];
     const signatures = new Set(
-      (Array.isArray(brief.priorities) ? brief.priorities : [])
-        .map((entry) => buildPrioritySignature(entry))
+      priorities
+        .map((entry) => buildItemSignature(SECTION_DESCRIPTORS.priorities, entry))
         .filter(Boolean),
     );
 
     weeklyPrioritySignaturesByWeekRef.current.set(weekStart, signatures);
     return signatures;
   }, []);
+
+  // Maps a descriptor's cacheKey to the appropriate cached-Set loader. Each
+  // section uses its own loader: opportunities/content read from their
+  // repositories on first call; priorities/tasks share a per-week cache.
+  const loadSignatures = useCallback(async (descriptor) => {
+    if (descriptor.cacheKey === 'opportunities') {
+      return getOpportunitySignatures();
+    }
+    if (descriptor.cacheKey === 'content') {
+      return getContentSignatures();
+    }
+    if (descriptor.cacheKey === 'weeklyPriorities') {
+      return getWeeklyPrioritySignatures(getCurrentWeekStart());
+    }
+    return new Set();
+  }, [getContentSignatures, getOpportunitySignatures, getWeeklyPrioritySignatures]);
 
   const setFeedbackIfAllowed = useCallback((message, suppressFeedback = false) => {
     if (!suppressFeedback && typeof setFeedback === 'function') {
@@ -192,6 +272,11 @@ export function useChiefStructuredAcceptance({
       const opportunitySignatures = await getOpportunitySignatures();
       const contentSignatures = await getContentSignatures();
       const weeklySignatures = await getWeeklyPrioritySignatures(getCurrentWeekStart());
+      const signaturesByCacheKey = {
+        opportunities: opportunitySignatures,
+        content: contentSignatures,
+        weeklyPriorities: weeklySignatures,
+      };
       const accepted = {};
 
       responseEntries.forEach((entry) => {
@@ -200,44 +285,18 @@ export function useChiefStructuredAcceptance({
           return;
         }
 
-        const opportunities = payload.opportunities;
-        if (Array.isArray(opportunities)) {
-          opportunities.forEach((item) => {
-            const key = createStructuredItemKey('opportunities', item);
-            const signature = buildOpportunitySignature(item);
-            if (key && signature && opportunitySignatures.has(signature)) {
+        Object.entries(SECTION_DESCRIPTORS).forEach(([sectionKey, descriptor]) => {
+          const items = Array.isArray(payload[sectionKey]) ? payload[sectionKey] : [];
+          const knownSignatures = signaturesByCacheKey[descriptor.cacheKey];
+          if (!knownSignatures) return;
+
+          items.forEach((item) => {
+            const key = buildItemKey(sectionKey, item);
+            const signature = buildItemSignature(descriptor, item);
+            if (key && signature && knownSignatures.has(signature)) {
               accepted[key] = true;
             }
           });
-        }
-
-        const contentItems = payload.contentItems;
-        if (Array.isArray(contentItems)) {
-          contentItems.forEach((item) => {
-            const key = createStructuredItemKey('contentItems', item);
-            const signature = buildContentSignature(item);
-            if (key && signature && contentSignatures.has(signature)) {
-              accepted[key] = true;
-            }
-          });
-        }
-
-        const priorities = Array.isArray(payload.priorities) ? payload.priorities : [];
-        priorities.forEach((item) => {
-          const key = createStructuredItemKey('priorities', item);
-          const signature = buildPrioritySignature(item);
-          if (key && signature && weeklySignatures.has(signature)) {
-            accepted[key] = true;
-          }
-        });
-
-        const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
-        tasks.forEach((item) => {
-          const key = createStructuredItemKey('tasks', item);
-          const signature = buildPrioritySignature(item);
-          if (key && signature && weeklySignatures.has(signature)) {
-            accepted[key] = true;
-          }
         });
       });
 
@@ -264,8 +323,9 @@ export function useChiefStructuredAcceptance({
   const acceptStructuredItem = useCallback(async (section, item, options = {}) => {
     const { suppressFeedback = false } = options;
     const sectionKey = typeof section === 'string' ? section : '';
+    const descriptor = SECTION_DESCRIPTORS[sectionKey];
     const itemValue = item && typeof item === 'object' ? item : resolveStructuredText(item);
-    const itemKey = createStructuredItemKey(sectionKey, itemValue);
+    const itemKey = buildItemKey(sectionKey, itemValue);
 
     if (!itemKey) {
       setFeedbackIfAllowed('This item is missing required details and cannot be saved yet.', suppressFeedback);
@@ -276,10 +336,19 @@ export function useChiefStructuredAcceptance({
       return ACCEPTANCE_STATUS.SKIPPED;
     }
 
+    if (!descriptor) {
+      setFeedbackIfAllowed('This structured item type is not supported yet.', suppressFeedback);
+      notifyTelemetry('accept_item_skipped', {
+        section: sectionKey || 'unknown',
+        reason: 'unsupported_section',
+      });
+      return ACCEPTANCE_STATUS.SKIPPED;
+    }
+
     if (acceptedStructuredItemMapRef.current[itemKey]) {
       setFeedbackIfAllowed('This structured item was already added.', suppressFeedback);
       notifyTelemetry('accept_item_skipped', {
-        section: sectionKey || 'unknown',
+        section: sectionKey,
         reason: 'already_accepted',
       });
       return ACCEPTANCE_STATUS.SKIPPED;
@@ -287,7 +356,7 @@ export function useChiefStructuredAcceptance({
 
     if (acceptingStructuredItemMapRef.current[itemKey] || acceptingStructuredItemRef.current.has(itemKey)) {
       notifyTelemetry('accept_item_skipped', {
-        section: sectionKey || 'unknown',
+        section: sectionKey,
         reason: 'in_flight',
       });
       return ACCEPTANCE_STATUS.SKIPPED;
@@ -300,155 +369,54 @@ export function useChiefStructuredAcceptance({
     }));
 
     try {
-      if (sectionKey === 'opportunities') {
-        const name = resolveStructuredText(itemValue);
-        if (!name) {
-          setFeedbackIfAllowed('This opportunity entry is missing a name.', suppressFeedback);
-          notifyTelemetry('accept_item_skipped', {
-            section: sectionKey,
-            reason: 'missing_name',
-          });
-          return ACCEPTANCE_STATUS.SKIPPED;
-        }
-
-        const signature = buildOpportunitySignature({
-          name,
-          company: itemValue.company || '',
+      const itemAsObject = typeof itemValue === 'object' && itemValue
+        ? itemValue
+        : { title: resolveStructuredText(itemValue) };
+      const primaryText = pickFirstString(itemAsObject, descriptor.primaryFields);
+      if (!primaryText) {
+        setFeedbackIfAllowed(descriptor.missingTextMessage, suppressFeedback);
+        notifyTelemetry('accept_item_skipped', {
+          section: sectionKey,
+          reason: descriptor.missingTextReason,
         });
-        const existingSignatures = await getOpportunitySignatures();
-        if (signature && existingSignatures.has(signature)) {
-          updateAcceptedStructuredItemMap((current) => ({
-            ...current,
-            [itemKey]: true,
-          }));
-          setFeedbackIfAllowed('That opportunity already exists.', suppressFeedback);
-          notifyTelemetry('accept_item_skipped', {
-            section: sectionKey,
-            reason: 'already_exists',
-          });
-          return ACCEPTANCE_STATUS.SKIPPED;
-        }
+        return ACCEPTANCE_STATUS.SKIPPED;
+      }
 
-        await createOpportunity({
-          name,
-          company: itemValue.company || '',
-          priority: itemValue.priority || 'Medium',
-          stage: itemValue.stage || 'New',
-          nextStep: itemValue.nextStep || itemValue.next_step || '',
-        });
-        if (signature) {
-          existingSignatures.add(signature);
-        }
+      const signatureItem = descriptor.signatureSecondaryFields.length
+        ? itemAsObject
+        : { title: primaryText };
+      const signature = buildItemSignature(descriptor, signatureItem);
+      const existingSignatures = await loadSignatures(descriptor);
+
+      if (signature && existingSignatures.has(signature)) {
         updateAcceptedStructuredItemMap((current) => ({
           ...current,
           [itemKey]: true,
         }));
-        setFeedbackIfAllowed('Added an opportunity from the structured AI output.', suppressFeedback);
-        notifyTelemetry('accept_item_saved', { section: sectionKey });
-        return ACCEPTANCE_STATUS.SAVED;
+        setFeedbackIfAllowed(descriptor.duplicateMessage, suppressFeedback);
+        notifyTelemetry('accept_item_skipped', {
+          section: sectionKey,
+          reason: 'already_exists',
+        });
+        return ACCEPTANCE_STATUS.SKIPPED;
       }
 
-      if (sectionKey === 'contentItems') {
-        const title = resolveStructuredText(itemValue);
-        if (!title) {
-          setFeedbackIfAllowed('This content entry is missing a title.', suppressFeedback);
-          notifyTelemetry('accept_item_skipped', {
-            section: sectionKey,
-            reason: 'missing_title',
-          });
-          return ACCEPTANCE_STATUS.SKIPPED;
-        }
-
-        const signature = buildContentSignature({
-          title,
-          platform: itemValue.platform || itemValue.channel || '',
-        });
-        const existingSignatures = await getContentSignatures();
-        if (signature && existingSignatures.has(signature)) {
-          updateAcceptedStructuredItemMap((current) => ({
-            ...current,
-            [itemKey]: true,
-          }));
-          setFeedbackIfAllowed('That content item already exists.', suppressFeedback);
-          notifyTelemetry('accept_item_skipped', {
-            section: sectionKey,
-            reason: 'already_exists',
-          });
-          return ACCEPTANCE_STATUS.SKIPPED;
-        }
-
-        await createContentItem({
-          title,
-          platform: itemValue.platform || itemValue.channel || '',
-          status: itemValue.status || 'Drafting',
-        });
-        if (signature) {
-          existingSignatures.add(signature);
-        }
-        updateAcceptedStructuredItemMap((current) => ({
-          ...current,
-          [itemKey]: true,
-        }));
-        setFeedbackIfAllowed('Added a content item from the structured AI output.', suppressFeedback);
-        notifyTelemetry('accept_item_saved', { section: sectionKey });
-        return ACCEPTANCE_STATUS.SAVED;
-      }
-
-      if (sectionKey === 'priorities' || sectionKey === 'tasks') {
-        const title = resolveStructuredText(itemValue);
-        if (!title) {
-          setFeedbackIfAllowed('This priority entry is missing a title.', suppressFeedback);
-          notifyTelemetry('accept_item_skipped', {
-            section: sectionKey,
-            reason: 'missing_title',
-          });
-          return ACCEPTANCE_STATUS.SKIPPED;
-        }
-
-        const currentWeekStart = getCurrentWeekStart();
-        const signature = buildPrioritySignature({ title });
-        const existingSignatures = await getWeeklyPrioritySignatures(currentWeekStart);
-        if (signature && existingSignatures.has(signature)) {
-          updateAcceptedStructuredItemMap((current) => ({
-            ...current,
-            [itemKey]: true,
-          }));
-          setFeedbackIfAllowed('That weekly priority already exists.', suppressFeedback);
-          notifyTelemetry('accept_item_skipped', {
-            section: sectionKey,
-            reason: 'already_exists',
-          });
-          return ACCEPTANCE_STATUS.SKIPPED;
-        }
-
-        await createWeeklyItem({
-          weekStart: currentWeekStart,
-          itemType: 'priority',
-          item: {
-            id: buildCreateId(),
-            title,
-            owner: itemValue.owner || 'Team Member',
-            status: itemValue.status || 'Planned',
-          },
-        });
-        if (signature) {
-          existingSignatures.add(signature);
-        }
-        updateAcceptedStructuredItemMap((current) => ({
-          ...current,
-          [itemKey]: true,
-        }));
-        setFeedbackIfAllowed('Added a weekly priority from the structured AI output.', suppressFeedback);
-        notifyTelemetry('accept_item_saved', { section: sectionKey });
-        return ACCEPTANCE_STATUS.SAVED;
-      }
-
-      setFeedbackIfAllowed('This structured item type is not supported yet.', suppressFeedback);
-      notifyTelemetry('accept_item_skipped', {
-        section: sectionKey || 'unknown',
-        reason: 'unsupported_section',
+      await descriptor.save({
+        itemValue: itemAsObject,
+        primaryText,
+        ctx: { currentWeekStart: getCurrentWeekStart() },
       });
-      return ACCEPTANCE_STATUS.SKIPPED;
+
+      if (signature) {
+        existingSignatures.add(signature);
+      }
+      updateAcceptedStructuredItemMap((current) => ({
+        ...current,
+        [itemKey]: true,
+      }));
+      setFeedbackIfAllowed(descriptor.successMessage, suppressFeedback);
+      notifyTelemetry('accept_item_saved', { section: sectionKey });
+      return ACCEPTANCE_STATUS.SAVED;
     } catch (error) {
       if (typeof setLoadError === 'function') {
         setLoadError('Unable to accept this structured AI item right now.');
@@ -476,10 +444,8 @@ export function useChiefStructuredAcceptance({
       }
     }
   }, [
-    getContentSignatures,
-    getOpportunitySignatures,
-    getWeeklyPrioritySignatures,
     isMountedRef,
+    loadSignatures,
     notifyTelemetry,
     setFeedbackIfAllowed,
     setLoadError,
@@ -517,20 +483,13 @@ export function useChiefStructuredAcceptance({
     let failed = 0;
 
     try {
-      const queue = [
-        ...(Array.isArray(effectivePayload.priorities)
-          ? effectivePayload.priorities.map((item) => ({ section: 'priorities', item }))
-          : []),
-        ...(Array.isArray(effectivePayload.opportunities)
-          ? effectivePayload.opportunities.map((item) => ({ section: 'opportunities', item }))
-          : []),
-        ...(Array.isArray(effectivePayload.contentItems)
-          ? effectivePayload.contentItems.map((item) => ({ section: 'contentItems', item }))
-          : []),
-        ...(Array.isArray(effectivePayload.tasks)
-          ? effectivePayload.tasks.map((item) => ({ section: 'tasks', item }))
-          : []),
-      ];
+      // Order matters: priorities first preserves the legacy ordering callers
+      // (and tests) rely on for the "Add all" feedback string.
+      const queueOrder = ['priorities', 'opportunities', 'contentItems', 'tasks'];
+      const queue = queueOrder.flatMap((section) => {
+        const items = effectivePayload[section];
+        return Array.isArray(items) ? items.map((item) => ({ section, item })) : [];
+      });
 
       if (!queue.length) {
         if (typeof setFeedback === 'function') {
@@ -571,7 +530,7 @@ export function useChiefStructuredAcceptance({
 
   const isStructuredItemAccepted = useCallback(
     (section, item) => {
-      const itemKey = createStructuredItemKey(section, item);
+      const itemKey = buildItemKey(section, item);
       return itemKey ? Boolean(acceptedStructuredItemMap[itemKey]) : false;
     },
     [acceptedStructuredItemMap],
@@ -579,7 +538,7 @@ export function useChiefStructuredAcceptance({
 
   const isStructuredItemAccepting = useCallback(
     (section, item) => {
-      const itemKey = createStructuredItemKey(section, item);
+      const itemKey = buildItemKey(section, item);
       return itemKey ? Boolean(acceptingStructuredItemMap[itemKey]) : false;
     },
     [acceptingStructuredItemMap],
