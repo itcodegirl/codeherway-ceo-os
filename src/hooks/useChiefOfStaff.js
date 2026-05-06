@@ -93,11 +93,13 @@ export function useChiefOfStaff() {
 
     resetAcceptanceState();
     resetAcceptanceCaches();
-    void hydrateAcceptedStructuredItems(workspaceResponses);
+    // Hydration is fire-and-forget; .catch keeps an unexpected throw from
+    // becoming an unhandled rejection.
+    hydrateAcceptedStructuredItems(workspaceResponses).catch(() => {});
   }, [hydrateAcceptedStructuredItems, loadWorkspace, resetAcceptanceCaches, resetAcceptanceState]);
 
   useEffect(() => {
-    void refreshWorkspace();
+    refreshWorkspace().catch(() => {});
   }, [refreshWorkspace]);
 
   useEffect(

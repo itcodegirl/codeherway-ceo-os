@@ -101,18 +101,21 @@ export default function OpsReliability() {
   });
 
   const latestSnapshot = snapshots[0] || null;
+  // Treat any load-blocked state as "value unknown" so cards never render a
+  // misleading 0 / Unknown next to a "couldn't load" SourceStatusNotice.
+  const isValueUnknown = isLoading || Boolean(loadError);
   const statCards = useMemo(() => ([
     {
       id: 'snapshot-count',
       label: 'Snapshots Tracked',
-      value: isLoading ? '--' : snapshots.length,
+      value: isValueUnknown ? '--' : snapshots.length,
       change: latestSnapshot ? `Last capture ${formatDateTime(latestSnapshot.capturedAt)}` : 'No snapshots yet',
       tone: 'neutral',
     },
     {
       id: 'route-trend',
       label: 'Route Trend Health',
-      value: isLoading ? '--' : formatOutcomeLabel(latestSnapshot?.routeTrendOutcome),
+      value: isValueUnknown ? '--' : formatOutcomeLabel(latestSnapshot?.routeTrendOutcome),
       change: latestSnapshot
         ? `Ingest ${formatOutcomeLabel(latestSnapshot.telemetryHealthOutcome)}`
         : 'Awaiting first run',
@@ -121,7 +124,7 @@ export default function OpsReliability() {
     {
       id: 'endpoint-latency',
       label: 'Endpoint p95',
-      value: isLoading ? '--' : formatMilliseconds(latestSnapshot?.telemetryEndpointSloP95Ms),
+      value: isValueUnknown ? '--' : formatMilliseconds(latestSnapshot?.telemetryEndpointSloP95Ms),
       change: latestSnapshot
         ? `Budget ${formatMilliseconds(latestSnapshot.telemetryEndpointSloMaxP95Ms)}`
         : 'No latency sample yet',
@@ -133,7 +136,7 @@ export default function OpsReliability() {
     {
       id: 'endpoint-errors',
       label: 'Endpoint Non-2xx',
-      value: isLoading ? '--' : formatPercent(latestSnapshot?.telemetryEndpointSloNon2xxRatePct),
+      value: isValueUnknown ? '--' : formatPercent(latestSnapshot?.telemetryEndpointSloNon2xxRatePct),
       change: latestSnapshot
         ? `Budget ${formatPercent(latestSnapshot.telemetryEndpointSloMaxNon2xxRatePct)}`
         : 'No error-rate sample yet',
@@ -142,7 +145,7 @@ export default function OpsReliability() {
         latestSnapshot?.telemetryEndpointSloMaxNon2xxRatePct,
       ),
     },
-  ]), [isLoading, latestSnapshot, snapshots.length]);
+  ]), [isValueUnknown, latestSnapshot, snapshots.length]);
 
   return (
     <section className="ops-reliability-page">
