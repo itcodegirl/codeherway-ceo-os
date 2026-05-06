@@ -594,6 +594,17 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `npm run build`
   - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
   - `npm run check:route-budgets`
+- Audit cycle 2: trust, error surfaces, dead code, mobile, and perf (May 5, 2026):
+  - Closed 4 unhandled-error paths (`useOfflineQueueDrain`, `Capture` sort, `Settings` saved-at, `OpsReliability` panel boundaries).
+  - Surfaced `loadError` from `useDashboardData`; replaced misleading "0" stat cards on WeeklyBrief and OpsReliability with `—`.
+  - Deleted 617 lines of dead `useDashboardInsights` code; consolidated 4 hand-rolled `useRef(true)` blocks onto `useIsMountedRef`.
+  - Raised the `.action-button--small` touch-target floor to 36px and made the OpsReliability snapshot table collapse to a stacked-card layout on phones.
+  - Stabilized `useFocusHomeSignals` reference identity, lifted CRUD-page `source` reads out of render, and merged `Capture`/`RemindersPanel` two-pass filters into single-pass memos.
+- May 5, 2026 second local verification:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
+  - `npm run check:route-budgets`
 
 ## Author
 
