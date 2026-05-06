@@ -341,13 +341,23 @@ function Dashboard() {
   }, [setIsFocusToolsExpanded]);
 
   const handleStartBlankWorkspace = useCallback(() => {
-    startBlankWorkspace();
-    showToast('Blank local workspace ready. Sample records are cleared from this device.');
+    Promise.resolve(startBlankWorkspace())
+      .then(() => {
+        showToast('Blank local workspace ready. Sample records are cleared from this device.');
+      })
+      .catch(() => {
+        showToast('Unable to update local workspace setup right now.');
+      });
   }, [showToast, startBlankWorkspace]);
 
   const handleLoadDemoWorkspace = useCallback(() => {
-    loadDemoWorkspace();
-    showToast('Demo workspace loaded on this device.');
+    Promise.resolve(loadDemoWorkspace())
+      .then(() => {
+        showToast('Demo workspace loaded on this device.');
+      })
+      .catch(() => {
+        showToast('Unable to load demo workspace right now.');
+      });
   }, [loadDemoWorkspace, showToast]);
 
   return (

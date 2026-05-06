@@ -7,24 +7,22 @@ import {
   hasWorkspaceSetupChoice,
   saveWorkspaceSetupMode,
 } from '../lib/workspaceSetup';
-import {
-  clearLocalOpportunityDemoData,
-  resetLocalOpportunityDemoData,
-} from '../lib/opportunitiesRepository';
-import {
-  clearLocalContentDemoData,
-  resetLocalContentDemoData,
-} from '../lib/contentRepository';
-import {
-  clearLocalWeeklyDemoData,
-  resetLocalWeeklyDemoData,
-} from '../lib/weeklyRepository';
 
 function readWorkspaceSetupState() {
   return {
     mode: getWorkspaceSetupMode(),
     hasChoice: hasWorkspaceSetupChoice(),
   };
+}
+
+async function loadWorkspaceSetupRepositories() {
+  const [opportunities, content, weekly] = await Promise.all([
+    import('../lib/opportunitiesRepository'),
+    import('../lib/contentRepository'),
+    import('../lib/weeklyRepository'),
+  ]);
+
+  return { opportunities, content, weekly };
 }
 
 export function useWorkspaceSetup() {
@@ -49,19 +47,21 @@ export function useWorkspaceSetup() {
     };
   }, [refreshState]);
 
-  const startBlankWorkspace = useCallback(() => {
+  const startBlankWorkspace = useCallback(async () => {
     saveWorkspaceSetupMode(WORKSPACE_SETUP_MODES.blank);
-    clearLocalOpportunityDemoData();
-    clearLocalContentDemoData();
-    clearLocalWeeklyDemoData();
+    const { opportunities, content, weekly } = await loadWorkspaceSetupRepositories();
+    opportunities.clearLocalOpportunityDemoData();
+    content.clearLocalContentDemoData();
+    weekly.clearLocalWeeklyDemoData();
     refreshState();
   }, [refreshState]);
 
-  const loadDemoWorkspace = useCallback(() => {
+  const loadDemoWorkspace = useCallback(async () => {
     saveWorkspaceSetupMode(WORKSPACE_SETUP_MODES.demo);
-    resetLocalOpportunityDemoData();
-    resetLocalContentDemoData();
-    resetLocalWeeklyDemoData();
+    const { opportunities, content, weekly } = await loadWorkspaceSetupRepositories();
+    opportunities.resetLocalOpportunityDemoData();
+    content.resetLocalContentDemoData();
+    weekly.resetLocalWeeklyDemoData();
     refreshState();
   }, [refreshState]);
 

@@ -12,12 +12,17 @@ const routeBudgets = [
     // Raw bumped 20 → 20.5 to cover the useIsMountedRef helper import +
     // exhaustive-deps additions added by the audit Phase 3 refactor;
     // chunk grew by ~10 bytes raw / 10 bytes gzip after that change.
-    js: { rawKb: 20.5, gzipKb: 6.6 },
+    // Bumped 20.5 -> 26.0 / 6.6 -> 8.2 for the production-trust pass:
+    // Focus Home now includes the operating ritual, recommendation rationale,
+    // first-run local setup actions, and collapsed suggestion controls.
+    js: { rawKb: 26.0, gzipKb: 8.2 },
     // Raw bumped 5 → 5.5 (audit Phase 4b reminder inline-edit styles).
     // Bumped 5.5 → 6.1 to absorb the main-focus panel disclosure toggle
     // button styles (audit Phase 4 collapsible panel). Gzip bumped to 1.65
     // to reflect the additional selector blocks.
-    css: { rawKb: 6.1, gzipKb: 1.65 },
+    // Bumped 6.1 -> 9.0 / 1.65 -> 2.1 for the same Focus Home trust
+    // surfaces: ritual strip, first-run setup prompt, and rationale styling.
+    css: { rawKb: 9.0, gzipKb: 2.1 },
   },
   {
     route: 'Opportunities',
@@ -43,7 +48,9 @@ const routeBudgets = [
   },
   {
     route: 'Settings',
-    js: { rawKb: 6, gzipKb: 2.5 },
+    // Bumped 6.0 -> 6.7 for workspace-data setup controls and honest
+    // coming-soon preference copy.
+    js: { rawKb: 6.7, gzipKb: 2.5 },
     css: null,
   },
 ];
