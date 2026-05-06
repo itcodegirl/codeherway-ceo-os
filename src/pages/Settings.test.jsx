@@ -128,4 +128,15 @@ describe('src/pages/Settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear demo data from this device' }));
     expect(clearDemoData).toHaveBeenCalledTimes(1);
   });
+
+  it('labels unwired experience preferences as coming soon instead of active toggles', () => {
+    useSettings.mockReturnValue(createSettingsState());
+
+    renderSettings();
+
+    expect(screen.getByLabelText('Weekly digest reminders (coming soon)')).toBeDisabled();
+    expect(screen.getByText('Email delivery is not wired yet, so this stays unavailable until reminders can actually send.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Keyboard shortcuts (coming soon)')).toBeDisabled();
+    expect(screen.getByText('Shortcuts will return once every command has tested keyboard behavior.')).toBeInTheDocument();
+  });
 });

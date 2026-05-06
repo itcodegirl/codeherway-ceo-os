@@ -84,6 +84,11 @@
 	line-height: 1.7;
 }
 
+.weekly-impact-copy {
+	margin-top: 0.7rem;
+	color: var(--text-soft-strong);
+}
+
 .weekly-form {
 	display: flex;
 	flex-direction: column;

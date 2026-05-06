@@ -90,4 +90,24 @@ describe('src/pages/WeeklyBrief', () => {
       vi.useRealTimers();
     }
   });
+
+  it('connects saved priorities and blockers back to Focus Home recommendations', () => {
+    useWeeklyBrief.mockReturnValue(createWeeklyState());
+
+    renderWeeklyBrief();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add weekly priority' }));
+    fireEvent.change(screen.getByLabelText('Priority'), {
+      target: { value: 'Confirm scholarship partner' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add weekly blocker' }));
+    fireEvent.change(screen.getByLabelText('Blocker'), {
+      target: { value: 'Waiting on curriculum review' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    expect(screen.getAllByText('This will influence your Focus Home recommendations.')).toHaveLength(2);
+  });
 });

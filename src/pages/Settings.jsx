@@ -35,6 +35,8 @@ function Settings() {
   const autoSaveToggleId = useId();
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
+  const emailDigestComingSoonId = useId();
+  const shortcutsComingSoonId = useId();
   const themeRadiogroupId = useId();
   const { preference: themePreference, setThemePreference } = useThemePreference();
   const {
@@ -251,23 +253,31 @@ function Settings() {
             <input
               id={emailDigestToggleId}
               type="checkbox"
-              checked={settings.emailDigest}
-              disabled={isSaving}
-              onChange={(e) => handleToggle('emailDigest', e.target.checked)}
+              checked={false}
+              disabled
+              aria-describedby={emailDigestComingSoonId}
+              readOnly
             />
-            <span>Send weekly digest reminders</span>
+            <span>Weekly digest reminders (coming soon)</span>
           </label>
+          <p id={emailDigestComingSoonId} className="helper-text helper-text--offset">
+            Email delivery is not wired yet, so this stays unavailable until reminders can actually send.
+          </p>
 
           <label className="settings-toggle" htmlFor={shortcutsToggleId}>
             <input
               id={shortcutsToggleId}
               type="checkbox"
-              checked={settings.keyboardShortcuts}
-              disabled={isSaving}
-              onChange={(e) => handleToggle('keyboardShortcuts', e.target.checked)}
+              checked={false}
+              disabled
+              aria-describedby={shortcutsComingSoonId}
+              readOnly
             />
-            <span>Enable keyboard shortcuts</span>
+            <span>Keyboard shortcuts (coming soon)</span>
           </label>
+          <p id={shortcutsComingSoonId} className="helper-text helper-text--offset">
+            Shortcuts will return once every command has tested keyboard behavior.
+          </p>
         </SectionCard>
 
         <div className="settings-actions">
