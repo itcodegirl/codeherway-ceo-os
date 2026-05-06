@@ -415,7 +415,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 - Structured behavior is backed by explicit tests in:
   - `src/lib/openai.test.js`
   - `src/hooks/useChiefOfStaff.test.js`
-  - `src/hooks/useDashboardInsights.test.js`
+  - `src/hooks/useDashboardData.test.js`
   - `src/hooks/useWeeklyBrief.test.js`
   - `src/hooks/useWorkspaceSettings.test.js`
   - `src/hooks/useFocusHomeSignals.test.js`

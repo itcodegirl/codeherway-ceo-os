@@ -10,6 +10,7 @@ import {
   listContentItems,
 } from '../lib/contentRepository';
 import { shallowEqualRecordArrays } from '../lib/stateUtils';
+import { useIsMountedRef } from './useIsMountedRef';
 
 const SILENT_REFRESH_COALESCE_MS = 400;
 
@@ -20,7 +21,7 @@ export function useDashboardData({ onLoadError }) {
   const [contentRows, setContentRows] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const isMountedRef = useRef(true);
+  const isMountedRef = useIsMountedRef();
   const onLoadErrorRef = useRef(onLoadError);
   const requestIdRef = useRef(0);
   const lastSilentRefreshAtRef = useRef(0);
@@ -76,16 +77,8 @@ export function useDashboardData({ onLoadError }) {
         }
       }
     },
-    [],
+    [isMountedRef],
   );
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
