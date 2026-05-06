@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { validateContentPayload } from './contentPayloadSchema';
+import {
+  parseContentPayload,
+  validateContentPayload,
+} from './contentPayloadSchema';
 
 const VALID = {
   title: 'Founder Weekly',
@@ -33,5 +36,32 @@ describe('validateContentPayload', () => {
     for (const status of ['Drafting', 'Editing', 'Scheduled']) {
       expect(validateContentPayload({ ...VALID, status })).toBe('');
     }
+  });
+});
+
+describe('parseContentPayload', () => {
+  it('returns the trimmed payload and no error for valid input', () => {
+    const { payload, error } = parseContentPayload({
+      title: '  Founder Weekly  ',
+      platform: ' LinkedIn ',
+      status: 'Drafting',
+    });
+
+    expect(error).toBe('');
+    expect(payload).toEqual({
+      title: 'Founder Weekly',
+      platform: 'LinkedIn',
+      status: 'Drafting',
+    });
+  });
+
+  it('returns an error and null payload when a required field is whitespace-only', () => {
+    const { payload, error } = parseContentPayload({
+      ...VALID,
+      title: '   ',
+    });
+
+    expect(payload).toBeNull();
+    expect(error).toContain('Title');
   });
 });
