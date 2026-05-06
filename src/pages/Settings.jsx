@@ -87,9 +87,13 @@ function Settings() {
         retryAriaLabel="Retry loading settings"
         retryDisabled={isLoading || isSaving}
       />
-      {isLoading ? <p className="sr-only" role="status" aria-live="polite">Loading settings.</p> : null}
+      {isLoading ? (
+        <p className="helper-text" role="status" aria-live="polite">
+          Loading settings...
+        </p>
+      ) : null}
 
-      <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving}>
+      <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving || isLoading}>
         <SectionCard
           title="Workspace"
           iconName="settings"

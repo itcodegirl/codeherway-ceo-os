@@ -48,7 +48,11 @@
 }
 
 .action-button--small {
-  height: 2rem;
+  /* min-height (not fixed height) so the small variant still meets the
+   * 36px touch-target floor on phones — the 32px floor was just below
+   * what mobile UX guidelines call comfortable and made every sticky
+   * note action and modal close button hard to tap accurately. */
+  min-height: 2.25rem;
   font-size: 0.84rem;
   padding: 0 0.85rem;
 }

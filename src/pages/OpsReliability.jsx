@@ -214,24 +214,24 @@ export default function OpsReliability() {
                 <tbody>
                   {snapshots.map((snapshot) => (
                     <tr key={snapshot.runId}>
-                      <td>{formatDateTime(snapshot.capturedAt)}</td>
-                      <td>
+                      <td data-label="Captured">{formatDateTime(snapshot.capturedAt)}</td>
+                      <td data-label="Route Trend">
                         <span className={buildStatusTone(snapshot.routeTrendOutcome)}>
                           {formatOutcomeLabel(snapshot.routeTrendOutcome)}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Telemetry Health">
                         <span className={buildStatusTone(snapshot.telemetryHealthOutcome)}>
                           {formatOutcomeLabel(snapshot.telemetryHealthOutcome)}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Endpoint SLO">
                         <span className={buildStatusTone(snapshot.telemetryEndpointSloOutcome)}>
                           {formatOutcomeLabel(snapshot.telemetryEndpointSloOutcome)}
                         </span>
                       </td>
-                      <td>{formatMilliseconds(snapshot.telemetryEndpointSloP95Ms)}</td>
-                      <td>{formatPercent(snapshot.telemetryEndpointSloNon2xxRatePct)}</td>
+                      <td data-label="p95">{formatMilliseconds(snapshot.telemetryEndpointSloP95Ms)}</td>
+                      <td data-label="Non-2xx">{formatPercent(snapshot.telemetryEndpointSloNon2xxRatePct)}</td>
                     </tr>
                   ))}
                 </tbody>

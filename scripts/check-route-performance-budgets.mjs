@@ -9,7 +9,10 @@ const defaultBaselinePath = path.resolve(process.cwd(), 'scripts', 'route-perfor
 const routeBudgets = [
   {
     route: 'Dashboard',
-    js: { rawKb: 20, gzipKb: 6.5 },
+    // Raw bumped 20 → 20.5 to cover the useIsMountedRef helper import +
+    // exhaustive-deps additions added by the audit Phase 3 refactor;
+    // chunk grew by ~10 bytes raw / 10 bytes gzip after that change.
+    js: { rawKb: 20.5, gzipKb: 6.6 },
     // Raw bumped 5 → 5.5 (audit Phase 4b reminder inline-edit styles).
     // Bumped 5.5 → 6.1 to absorb the main-focus panel disclosure toggle
     // button styles (audit Phase 4 collapsible panel). Gzip bumped to 1.65
