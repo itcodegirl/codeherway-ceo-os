@@ -7,7 +7,12 @@ vi.mock('../hooks/useSettings', () => ({
   useSettings: vi.fn(),
 }));
 
+vi.mock('../hooks/useWorkspaceSetup', () => ({
+  useWorkspaceSetup: vi.fn(),
+}));
+
 import { useSettings } from '../hooks/useSettings';
+import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 
 function createSettingsState(overrides = {}) {
   return {
@@ -43,6 +48,13 @@ function renderSettings() {
 describe('src/pages/Settings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useWorkspaceSetup.mockReturnValue({
+      hasChoice: true,
+      isDemoMode: true,
+      startBlankWorkspace: vi.fn(),
+      loadDemoWorkspace: vi.fn(),
+      clearDemoData: vi.fn(),
+    });
   });
 
   it('announces saving state through form busy state and button name', () => {
@@ -94,5 +106,26 @@ describe('src/pages/Settings', () => {
 
     expect(updateSetting).toHaveBeenCalledWith('teamName', 'CodeHerWay Studio');
     expect(saveSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows explicit local data setup actions and coming-soon paths', () => {
+    const clearDemoData = vi.fn();
+    useSettings.mockReturnValue(createSettingsState());
+    useWorkspaceSetup.mockReturnValue({
+      hasChoice: true,
+      isDemoMode: true,
+      startBlankWorkspace: vi.fn(),
+      loadDemoWorkspace: vi.fn(),
+      clearDemoData,
+    });
+
+    renderSettings();
+
+    expect(screen.getByText('Demo workspace is active on this device.')).toBeInTheDocument();
+    expect(screen.getByText('Import from local backup: coming soon')).toBeInTheDocument();
+    expect(screen.getByText('Connect Supabase account: setup required')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear demo data from this device' }));
+    expect(clearDemoData).toHaveBeenCalledTimes(1);
   });
 });

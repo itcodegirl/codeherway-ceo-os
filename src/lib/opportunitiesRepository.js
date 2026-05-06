@@ -4,6 +4,7 @@ import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } fr
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
+import { isDemoWorkspaceEnabled } from './workspaceSetup';
 
 export const OPPORTUNITY_QUEUE_KIND_CREATE = 'opportunity:create';
 export const OPPORTUNITY_QUEUE_KIND_UPDATE = 'opportunity:update';
@@ -11,6 +12,7 @@ export const OPPORTUNITY_QUEUE_KIND_DELETE = 'opportunity:delete';
 
 const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
+const DEMO_OPPORTUNITY_IDS = new Set(mockOpportunities.map((item) => String(item.id)));
 
 function normalizeOpportunity(item) {
   return {
@@ -33,6 +35,14 @@ function expectedUpdatedAtToIso(expectedUpdatedAt) {
 }
 
 function getSeededLocalItems() {
+  if (!isDemoWorkspaceEnabled()) {
+    return [];
+  }
+
+  return getDemoLocalItems();
+}
+
+function getDemoLocalItems() {
   return mockOpportunities.map((item) => normalizeOpportunity(item));
 }
 
@@ -261,4 +271,19 @@ export async function deleteOpportunity(id, options = {}) {
   });
   writeLocalOpportunities(next);
   notifyOpportunitiesUpdated({ source: 'local', type: 'delete' });
+}
+
+export function clearLocalOpportunityDemoData() {
+  const current = readLocalOpportunities();
+  const next = current.filter((item) => !DEMO_OPPORTUNITY_IDS.has(String(item.id)));
+  writeLocalOpportunities(next);
+  notifyOpportunitiesUpdated({ source: 'local', type: 'clear_demo' });
+  return next;
+}
+
+export function resetLocalOpportunityDemoData() {
+  const seeded = getDemoLocalItems();
+  writeLocalOpportunities(seeded);
+  notifyOpportunitiesUpdated({ source: 'local', type: 'load_demo' });
+  return seeded;
 }

@@ -10,11 +10,14 @@ import {
   listContentItems,
 } from '../lib/contentRepository';
 import { shallowEqualRecordArrays } from '../lib/stateUtils';
+import { isDemoWorkspaceEnabled } from '../lib/workspaceSetup';
 import { useIsMountedRef } from './useIsMountedRef';
 
 const SILENT_REFRESH_COALESCE_MS = 400;
 
-export const isLocalDashboardDemoMode = getOpportunitiesSource() === 'local' && getContentSource() === 'local';
+export const isLocalDashboardDemoMode = getOpportunitiesSource() === 'local'
+  && getContentSource() === 'local'
+  && isDemoWorkspaceEnabled();
 
 export function useDashboardData({ onLoadError }) {
   const [opportunityItems, setOpportunityItems] = useState([]);

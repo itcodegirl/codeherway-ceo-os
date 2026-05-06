@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   WEEKLY_BRIEF_UPDATED_EVENT,
+  clearLocalWeeklyDemoData,
   createWeeklyItem,
   deleteWeeklyItem,
   getWeeklyBriefByWeek,
   saveWeeklyBriefReviewNotes,
   updateWeeklyItem,
 } from './weeklyRepository';
+import { saveWorkspaceSetupMode } from './workspaceSetup';
 
 const weekStart = '2026-04-20';
 
@@ -204,5 +206,36 @@ describe('src/lib/weeklyRepository', () => {
     });
 
     expect(updated.text).toBe('Updated without timestamp');
+  });
+
+  it('does not auto-seed demo weekly items after the workspace starts blank', async () => {
+    saveWorkspaceSetupMode('blank');
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+
+    expect(brief.priorities).toEqual([]);
+    expect(brief.wins).toEqual([]);
+    expect(brief.blockers).toEqual([]);
+  });
+
+  it('clears known demo weekly items without deleting user-created records', async () => {
+    await createWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      item: {
+        id: 'real-priority',
+        title: 'Real weekly priority',
+        owner: 'Jenna',
+        status: 'In Progress',
+      },
+      emitEvent: false,
+    });
+
+    clearLocalWeeklyDemoData(weekStart);
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+    expect(brief.priorities).toEqual([
+      expect.objectContaining({ id: 'real-priority', title: 'Real weekly priority' }),
+    ]);
   });
 });

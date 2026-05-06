@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CONTENT_ITEMS_UPDATED_EVENT,
+  clearLocalContentDemoData,
   createContentItem,
   deleteContentItem,
   listContentItems,
   updateContentItem,
 } from './contentRepository';
+import { saveWorkspaceSetupMode } from './workspaceSetup';
 
 describe('src/lib/contentRepository', () => {
   beforeEach(() => {
@@ -109,5 +111,25 @@ describe('src/lib/contentRepository', () => {
     const persisted = items.find((item) => item.id === created.id);
     expect(persisted.title).toBe('Tab B saved first');
     expect(updateListener).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-seed demo content after the workspace starts blank', async () => {
+    saveWorkspaceSetupMode('blank');
+
+    await expect(listContentItems()).resolves.toEqual([]);
+  });
+
+  it('clears known demo content without deleting user-created records', async () => {
+    const created = await createContentItem({
+      title: 'Real founder note',
+      platform: 'Newsletter',
+      status: 'Drafting',
+    });
+
+    clearLocalContentDemoData();
+
+    const items = await listContentItems();
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ id: created.id, title: 'Real founder note' });
   });
 });

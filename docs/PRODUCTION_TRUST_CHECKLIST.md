@@ -27,7 +27,7 @@ UX, repository behavior, and authenticated regression coverage.
 
 ## Launch Readiness
 
-- Demo/sample data can be skipped, loaded intentionally, or cleared.
+- Demo/sample setup stays covered in regression when data-source copy changes.
 - Export/import backup path is available before encouraging local-first production use.
 - Known limitations are linked from README and release notes.
 - Screenshots and walkthrough media are refreshed after trust-message or Focus Home changes.

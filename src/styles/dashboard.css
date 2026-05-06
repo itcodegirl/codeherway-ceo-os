@@ -51,6 +51,44 @@
 	border-block: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
 }
 
+.focus-home__setup {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.85rem 0.95rem;
+	border-radius: var(--radius-card);
+	border: 1px solid var(--border-warning-soft);
+	background: color-mix(in srgb, var(--surface-card) 76%, rgba(212, 162, 74, 0.14) 24%);
+}
+
+.focus-home__setup h2 {
+	margin: 0;
+	font-size: 0.98rem;
+	font-weight: 700;
+}
+
+.focus-home__setup .helper-text {
+	margin: 0.25rem 0 0;
+}
+
+.focus-home__setup-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.55rem;
+}
+
+.focus-home__setup-unavailable {
+	padding: 0.42rem 0.58rem;
+	border-radius: 999px;
+	border: 1px dashed var(--border);
+	color: var(--text-muted);
+	font-size: 0.78rem;
+	line-height: 1.2;
+}
+
 .focus-home__ritual-header {
 	display: flex;
 	align-items: baseline;
@@ -424,6 +462,15 @@
 }
 
 @media (max-width: 980px) {
+	.focus-home__setup {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.focus-home__setup-actions {
+		justify-content: flex-start;
+	}
+
 	.focus-home__grid,
 	.focus-home__drawer-grid {
 		grid-template-columns: 1fr;

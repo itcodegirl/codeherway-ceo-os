@@ -6,12 +6,13 @@ import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
-import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import { usePromotionAction } from '../hooks/usePromotionAction';
+import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import {
   createReminder,
   deleteReminder,
@@ -59,6 +60,12 @@ function Dashboard() {
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
   const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
+  const {
+    hasChoice: hasWorkspaceSetupChoice,
+    isDemoMode,
+    startBlankWorkspace,
+    loadDemoWorkspace,
+  } = useWorkspaceSetup();
   const [reminderDraft, setReminderDraft] = useState('');
   const [isAddingReminder, setIsAddingReminder] = useState(false);
   const nextMoveCursorRef = useRef(0);
@@ -315,9 +322,10 @@ function Dashboard() {
     },
   });
 
-  const dashboardDemoNote = isLocalDashboardDemoMode
+  const dashboardDemoNote = weeklySource === 'local' && isDemoMode
     ? SOURCE_NOTICE_SAMPLE_DATA
     : '';
+  const showFirstRunSetup = weeklySource === 'local' && !hasWorkspaceSetupChoice;
 
   const isFocusDataLoading = isDataLoading || isWeeklyLoading;
 
@@ -331,6 +339,16 @@ function Dashboard() {
   const toggleFocusTools = useCallback(() => {
     setIsFocusToolsExpanded((current) => !current);
   }, [setIsFocusToolsExpanded]);
+
+  const handleStartBlankWorkspace = useCallback(() => {
+    startBlankWorkspace();
+    showToast('Blank local workspace ready. Sample records are cleared from this device.');
+  }, [showToast, startBlankWorkspace]);
+
+  const handleLoadDemoWorkspace = useCallback(() => {
+    loadDemoWorkspace();
+    showToast('Demo workspace loaded on this device.');
+  }, [loadDemoWorkspace, showToast]);
 
   return (
     <section
@@ -349,6 +367,27 @@ function Dashboard() {
         onRetry={refreshWeeklyBrief}
         retryAriaLabel="Retry loading focus command center data"
       />
+
+      {showFirstRunSetup ? (
+        <section className="focus-home__setup" aria-label="Choose local workspace setup">
+          <div>
+            <h2>Choose how this device starts</h2>
+            <p className="helper-text">
+              You are seeing local sample records. Start blank for real use, or keep the demo workspace for review.
+            </p>
+          </div>
+          <div className="focus-home__setup-actions">
+            <Button type="button" onClick={handleStartBlankWorkspace} icon={{ name: 'check', size: 14 }}>
+              Start blank
+            </Button>
+            <Button type="button" variant="ghost" onClick={handleLoadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
+              Load demo workspace
+            </Button>
+            <span className="focus-home__setup-unavailable">Import backup: coming soon</span>
+            <span className="focus-home__setup-unavailable">Connect Supabase: setup required</span>
+          </div>
+        </section>
+      ) : null}
 
       <section className="focus-home__ritual" aria-label="Daily operating rhythm">
         <div className="focus-home__ritual-header">

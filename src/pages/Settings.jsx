@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
 import { useThemePreference } from '../hooks/useThemePreference';
+import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { SOURCE_NOTICE_SAMPLE_DATA } from '../lib/uiCopy';
 import '../styles/forms.css';
 
@@ -36,6 +37,13 @@ function Settings() {
   const shortcutsToggleId = useId();
   const themeRadiogroupId = useId();
   const { preference: themePreference, setThemePreference } = useThemePreference();
+  const {
+    hasChoice: hasWorkspaceSetupChoice,
+    isDemoMode,
+    startBlankWorkspace,
+    loadDemoWorkspace,
+    clearDemoData,
+  } = useWorkspaceSetup();
   const canSave = timezoneIsValid && !isSaving;
   const saveButtonLabel = isSaving
     ? 'Saving settings'
@@ -185,6 +193,43 @@ function Settings() {
               Stored in this browser. Changes apply immediately.
             </p>
           </fieldset>
+        </SectionCard>
+
+        <SectionCard
+          title="Workspace Data"
+          iconName="section"
+        >
+          <div className="settings-workspace-setup">
+            <p className="helper-text">
+              {hasWorkspaceSetupChoice
+                ? isDemoMode
+                  ? 'Demo workspace is active on this device.'
+                  : 'Blank local workspace is active on this device.'
+                : 'No setup choice has been saved yet. Demo records are shown for review until you choose.'}
+            </p>
+            <div className="settings-workspace-setup__actions">
+              <Button type="button" size="small" onClick={startBlankWorkspace} icon={{ name: 'check', size: 14 }}>
+                Start blank
+              </Button>
+              <Button type="button" size="small" variant="ghost" onClick={loadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
+                Load demo workspace
+              </Button>
+              <Button
+                type="button"
+                size="small"
+                variant="ghost"
+                onClick={clearDemoData}
+                disabled={!isDemoMode}
+                ariaLabel={isDemoMode ? 'Clear demo data from this device' : 'Clear demo data unavailable'}
+              >
+                Clear demo data
+              </Button>
+            </div>
+            <div className="settings-workspace-setup__unavailable" aria-label="Unavailable setup paths">
+              <span>Import from local backup: coming soon</span>
+              <span>Connect Supabase account: setup required</span>
+            </div>
+          </div>
         </SectionCard>
 
         <SectionCard
