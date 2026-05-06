@@ -44,6 +44,67 @@
 	z-index: -1;
 }
 
+.focus-home__ritual {
+	display: grid;
+	gap: 0.7rem;
+	padding: 0.85rem 0;
+	border-block: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
+}
+
+.focus-home__ritual-header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.8rem;
+}
+
+.focus-home__ritual-header h2 {
+	margin: 0;
+	font-size: 0.94rem;
+	font-weight: 700;
+}
+
+.focus-home__ritual-header .helper-text {
+	margin: 0;
+}
+
+.focus-home__ritual-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.65rem;
+}
+
+.focus-home__ritual-item {
+	display: grid;
+	gap: 0.3rem;
+	min-width: 0;
+	padding: 0.62rem 0.68rem;
+	border-radius: 0.75rem;
+	border: 1px solid var(--border);
+	background: color-mix(in srgb, var(--surface-card) 84%, transparent 16%);
+}
+
+.focus-home__ritual-item--active {
+	border-color: color-mix(in srgb, var(--border-accent) 78%, var(--border) 22%);
+	background: color-mix(in srgb, var(--surface-card) 72%, rgba(29, 106, 171, 0.2) 28%);
+}
+
+.focus-home__ritual-label {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--text-soft-strong);
+}
+
+.focus-home__ritual-action {
+	font-size: 0.87rem;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
 .focus-panel h2 {
 	margin: 0;
 	font-size: 1rem;
@@ -71,6 +132,14 @@
 .focus-home__next-move-text {
 	margin: 0;
 	font-size: 1.02rem;
+	line-height: 1.4;
+	overflow-wrap: anywhere;
+}
+
+.focus-home__next-move-reason {
+	margin: 0;
+	color: var(--text-soft-strong);
+	font-size: 0.9rem;
 	line-height: 1.4;
 	overflow-wrap: anywhere;
 }
@@ -321,6 +390,11 @@
 	font-size: 0.78rem;
 }
 
+.focus-reminder-list__toggle-suggestions {
+	margin: 0.2rem 0 0;
+	width: fit-content;
+}
+
 .focus-reminder-list__edit {
 	flex: 1;
 	background: var(--surface-input);
@@ -354,9 +428,22 @@
 	.focus-home__drawer-grid {
 		grid-template-columns: 1fr;
 	}
+
+	.focus-home__ritual-list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
 @media (max-width: 640px) {
+	.focus-home__ritual-header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.focus-home__ritual-list {
+		grid-template-columns: 1fr;
+	}
+
 	.focus-home__actions {
 		flex-direction: column;
 		align-items: stretch;

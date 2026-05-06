@@ -79,7 +79,12 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Next Smallest Action' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Blockers' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Operating rhythm' })).toBeInTheDocument();
+    expect(screen.getByText('Choose one main focus, one blocker, and one reminder to protect.')).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
+    expect(screen.getByText('Recommended because: this priority is blocked and needs one clear unblock message.')).toBeInTheDocument();
+    expect(screen.queryByText('This blocker may need attention.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show suggestions' }));
     expect(screen.getByText('This blocker may need attention.')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Add a quick reminder')).toHaveAccessibleDescription(
       'Keep it small enough to finish today. No reminder progress yet.',
@@ -314,7 +319,7 @@ describe('src/pages/Dashboard', () => {
 
     // Quick-win calm copy lives in the drawer.
     fireEvent.click(screen.getByRole('button', { name: 'Show focus tools' }));
-    expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
+    expect(screen.getByText('Quick win waiting: close one tiny loop before opening a new one.')).toBeInTheDocument();
   });
 
   it('promotes a pending reminder into a weekly priority via the per-item action', async () => {

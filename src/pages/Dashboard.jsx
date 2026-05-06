@@ -22,9 +22,10 @@ import {
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
+  buildOperatingRitual,
   buildMainFocus,
   buildMomentumMessage,
-  buildNextMoveQueue,
+  buildNextMoveRecommendations,
   buildQuickWin,
   resolveFocusMode,
 } from '../lib/focusHomeLogic';
@@ -94,7 +95,9 @@ function Dashboard() {
     return activeMode.support;
   }, [focusMode]);
 
-  const nextMoveQueue = useMemo(() => buildNextMoveQueue({
+  const operatingRitual = useMemo(() => buildOperatingRitual(), []);
+
+  const nextMoveRecommendations = useMemo(() => buildNextMoveRecommendations({
     priorities: weeklyPriorities,
     blockers: weeklyBlockers,
     opportunities: opportunityItems,
@@ -109,6 +112,10 @@ function Dashboard() {
     weeklyBlockers,
     weeklyPriorities,
   ]);
+  const nextMoveQueue = useMemo(
+    () => nextMoveRecommendations.map((item) => item.text),
+    [nextMoveRecommendations],
+  );
 
   const mainFocus = useMemo(
     () => buildMainFocus(weeklyPriorities, opportunityItems, contentRows),
@@ -176,6 +183,8 @@ function Dashboard() {
 
   const activeNextMove = nextMove && nextMoveQueue.includes(nextMove) ? nextMove : '';
   const displayedNextMove = activeNextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
+  const displayedNextMoveReason = nextMoveRecommendations.find((item) => item.text === displayedNextMove)?.reason
+    || 'Recommended because: one tiny visible action is the calmest way to restart momentum.';
 
   useEffect(() => () => {
     if (addReminderReleaseTimerRef.current !== null) {
@@ -341,6 +350,28 @@ function Dashboard() {
         retryAriaLabel="Retry loading focus command center data"
       />
 
+      <section className="focus-home__ritual" aria-label="Daily operating rhythm">
+        <div className="focus-home__ritual-header">
+          <h2>Operating rhythm</h2>
+          <p className="helper-text">Use the current checkpoint first, then keep moving.</p>
+        </div>
+        <ol className="focus-home__ritual-list">
+          {operatingRitual.map((step) => (
+            <li
+              key={step.id}
+              className={step.isActive ? 'focus-home__ritual-item focus-home__ritual-item--active' : 'focus-home__ritual-item'}
+              aria-current={step.isActive ? 'step' : undefined}
+            >
+              <span className="focus-home__ritual-label">
+                {step.label}
+                {step.isActive ? ' now' : ''}
+              </span>
+              <span className="focus-home__ritual-action">{step.action}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <div className="focus-home__grid">
         <ErrorBoundary
           name="Dashboard / Today focus"
@@ -380,6 +411,7 @@ function Dashboard() {
               <span className="signal-node" aria-hidden="true" />
             </div>
             <p className="focus-home__next-move-text">{displayedNextMove}</p>
+            <p className="focus-home__next-move-reason">{displayedNextMoveReason}</p>
             <div className="focus-home__actions">
               <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
                 Tell me what to do next

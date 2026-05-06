@@ -3,6 +3,8 @@ import {
   buildMainFocus,
   buildMomentumMessage,
   buildNextMoveQueue,
+  buildNextMoveRecommendations,
+  buildOperatingRitual,
   buildQuickWin,
   resolveFocusMode,
 } from './focusHomeLogic';
@@ -66,7 +68,7 @@ describe('focusHomeLogic', () => {
   });
 
   it('builds a stable next-move queue from the highest-friction work signals', () => {
-    const queue = buildNextMoveQueue({
+    const input = {
       priorities: [
         { title: 'Partner launch', status: 'Blocked' },
         { title: 'Customer update', status: 'In Progress' },
@@ -79,7 +81,8 @@ describe('focusHomeLogic', () => {
         { text: 'Send sponsor recap', isDone: false, createdAt: '2026-04-28T12:00:00.000Z' },
       ],
       journalEntry: { feelsHeavy: 'Launch ambiguity', oneNextThing: '' },
-    });
+    };
+    const queue = buildNextMoveQueue(input);
 
     expect(queue).toEqual([
       'Send one unblock message for "Partner launch".',
@@ -91,6 +94,20 @@ describe('focusHomeLogic', () => {
       'Turn today\'s heavy journal note into one tiny next action.',
       'Set a 15-minute timer and complete one tiny action without switching tabs.',
     ]);
+
+    expect(buildNextMoveRecommendations(input)[0]).toMatchObject({
+      text: 'Send one unblock message for "Partner launch".',
+      reason: 'Recommended because: this priority is blocked and needs one clear unblock message.',
+    });
+  });
+
+  it('marks the current operating ritual by time of day', () => {
+    expect(buildOperatingRitual(new Date('2026-05-06T08:00:00')).find((item) => item.isActive))
+      .toMatchObject({ id: 'morning' });
+    expect(buildOperatingRitual(new Date('2026-05-06T13:00:00')).find((item) => item.isActive))
+      .toMatchObject({ id: 'midday' });
+    expect(buildOperatingRitual(new Date('2026-05-06T18:00:00')).find((item) => item.isActive))
+      .toMatchObject({ id: 'evening' });
   });
 
   it('keeps quick wins and momentum scoring deterministic with missing inputs', () => {
