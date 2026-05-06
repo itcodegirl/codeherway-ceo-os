@@ -16,6 +16,7 @@ import {
   updateContentItem,
 } from '../../lib/contentRepository';
 import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
+import { validateContentPayload } from '../../lib/contentPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/crm-table.css';
@@ -41,14 +42,6 @@ function mapContentFormValuesToPayload(formValues) {
     platform: formValues.platform.trim(),
     status: formValues.status,
   };
-}
-
-function validateContentPayload(payload) {
-  if (!payload.title || !payload.platform) {
-    return 'Title and platform are required.';
-  }
-
-  return '';
 }
 
 function ContentCrudPage() {

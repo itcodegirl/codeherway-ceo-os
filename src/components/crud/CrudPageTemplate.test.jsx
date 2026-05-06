@@ -21,13 +21,15 @@ describe('CrudPageTemplate', () => {
           sourceNoteClassName: 'content-source-note',
           isLoading: false,
         }}
-        summary={{
-          content: <p>Summary content</p>,
-        }}
-        section={{
-          title: 'Publishing Workflow',
-          iconName: 'content',
-          content: <p>Section body</p>,
+        slots={{
+          summary: {
+            content: <p>Summary content</p>,
+          },
+          section: {
+            title: 'Publishing Workflow',
+            iconName: 'content',
+            content: <p>Section body</p>,
+          },
         }}
       />,
     );
@@ -50,14 +52,16 @@ describe('CrudPageTemplate', () => {
           isLoading: true,
           loadingAnnouncement: 'Loading opportunities data.',
         }}
-        summary={{
-          loadingContent: <p>Loading summary</p>,
-          content: <p>Loaded summary</p>,
-        }}
-        section={{
-          title: 'Pipeline Overview',
-          loadingContent: <p>Loading section</p>,
-          content: <p>Loaded section</p>,
+        slots={{
+          summary: {
+            loadingContent: <p>Loading summary</p>,
+            content: <p>Loaded summary</p>,
+          },
+          section: {
+            title: 'Pipeline Overview',
+            loadingContent: <p>Loading section</p>,
+            content: <p>Loaded section</p>,
+          },
         }}
       />,
     );
@@ -80,18 +84,20 @@ describe('CrudPageTemplate', () => {
         status={{
           isLoading: false,
         }}
-        summary={{
-          content: <p>Summary content</p>,
-        }}
-        section={{
-          title: 'Publishing Workflow',
-          isEmpty: true,
-          emptyState: {
-            title: 'No content items yet',
-            description: 'Add your first draft to begin tracking your publishing pipeline.',
-            action: <button type="button">Add Content</button>,
+        slots={{
+          summary: {
+            content: <p>Summary content</p>,
           },
-          content: <p>Loaded section</p>,
+          section: {
+            title: 'Publishing Workflow',
+            isEmpty: true,
+            emptyState: {
+              title: 'No content items yet',
+              description: 'Add your first draft to begin tracking your publishing pipeline.',
+              action: <button type="button">Add Content</button>,
+            },
+            content: <p>Loaded section</p>,
+          },
         }}
       />,
     );

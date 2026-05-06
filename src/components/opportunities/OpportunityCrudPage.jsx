@@ -16,6 +16,7 @@ import {
   updateOpportunity,
 } from '../../lib/opportunitiesRepository';
 import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
+import { validateOpportunityPayload } from '../../lib/opportunityPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/crm-table.css';
@@ -47,14 +48,6 @@ function mapOpportunityFormValuesToPayload(formValues) {
     stage: formValues.stage,
     nextStep: formValues.nextStep.trim(),
   };
-}
-
-function validateOpportunityPayload(payload) {
-  if (!payload.name || !payload.company || !payload.nextStep) {
-    return 'Name, company, and next step are required.';
-  }
-
-  return '';
 }
 
 function OpportunityCrudPage() {

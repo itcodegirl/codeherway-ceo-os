@@ -2,6 +2,16 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-05 - Audit cycle: stability, schema validation, and UX polish
+
+- Removed legacy flat props (`summary`, `section`, `modals`) from `CrudPageTemplate` — only the `slots.*` API is supported. All tests updated, migration doc closed.
+- Added `useOfflineQueueDrain` hook and wired it into `AppLayout` to auto-drain the offline write queue on reconnect and surface failures via shell toast.
+- Consolidated `useCrudPage` dual-prop aliases — the hook now accepts a single canonical set of prop names without backwards-compat fallbacks.
+- Adopted Valibot schema validation for Opportunity and Content OS form payloads, replacing inline boolean guards with typed, per-field error messages.
+- Made the Dashboard "Today's Main Focus" panel collapsible by default (persistent via `localStorage`) so SystemPulse covers the first-glance need without the full panel dominating the fold.
+- Updated Dashboard CSS budget in route-performance budgets to cover the new disclosure-toggle styles.
+- Added 19 new unit tests: `useOfflineQueueDrain`, `opportunityPayloadSchema`, `contentPayloadSchema`, and Dashboard collapsible-panel behavior (105 test files, 491 tests total).
+
 ## 2026-05-01 - State recovery, shell sync, and QA hardening
 
 - `3d03dec` - Reset transient Focus Home route errors when returning home keeps the same path.

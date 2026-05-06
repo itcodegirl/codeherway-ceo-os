@@ -10,11 +10,11 @@ const routeBudgets = [
   {
     route: 'Dashboard',
     js: { rawKb: 20, gzipKb: 6.5 },
-    // Raw bumped 5 → 5.5 to absorb the inline-edit input style for
-    // reminders and the "Show N completed" toggle button (audit Phase 4b).
-    // Gzip ceiling unchanged because the new selectors share the existing
-    // hover/focus rule blocks.
-    css: { rawKb: 5.5, gzipKb: 1.5 },
+    // Raw bumped 5 → 5.5 (audit Phase 4b reminder inline-edit styles).
+    // Bumped 5.5 → 6.1 to absorb the main-focus panel disclosure toggle
+    // button styles (audit Phase 4 collapsible panel). Gzip bumped to 1.65
+    // to reflect the additional selector blocks.
+    css: { rawKb: 6.1, gzipKb: 1.65 },
   },
   {
     route: 'Opportunities',

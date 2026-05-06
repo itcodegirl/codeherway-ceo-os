@@ -17,10 +17,10 @@ describe('useCrudPage', () => {
     const deleteItem = vi.fn((id) => Promise.resolve({ id }));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: createItem,
-      updateFn: updateItem,
-      deleteFn: deleteItem,
+      listItems,
+      createItem,
+      updateItem,
+      deleteItem,
       defaultFormValues: { name: '', status: '' },
       mapItemToFormValues: (item) => ({ name: item.name, status: item.status || '' }),
       mapFormValuesToPayload: (values) => values,
@@ -97,10 +97,10 @@ describe('useCrudPage', () => {
     const listItems = vi.fn(() => Promise.reject(new Error('load failed')));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '1' }),
-      updateFn: () => Promise.resolve({ id: '1' }),
-      deleteFn: () => Promise.resolve({ id: '1' }),
+      listItems,
+      createItem: () => Promise.resolve({ id: '1' }),
+      updateItem: () => Promise.resolve({ id: '1' }),
+      deleteItem: () => Promise.resolve({ id: '1' }),
       defaultFormValues: {},
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -118,10 +118,10 @@ describe('useCrudPage', () => {
     const listItems = vi.fn(() => Promise.resolve({ id: 'not-an-array' }));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '1' }),
-      updateFn: () => Promise.resolve({ id: '1' }),
-      deleteFn: () => Promise.resolve({ id: '1' }),
+      listItems,
+      createItem: () => Promise.resolve({ id: '1' }),
+      updateItem: () => Promise.resolve({ id: '1' }),
+      deleteItem: () => Promise.resolve({ id: '1' }),
       defaultFormValues: {},
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -140,9 +140,9 @@ describe('useCrudPage', () => {
 
   it('handles missing list function as a recoverable load error', async () => {
     const { result } = renderHook(() => useCrudPage({
-      createFn: () => Promise.resolve({ id: '1' }),
-      updateFn: () => Promise.resolve({ id: '1' }),
-      deleteFn: () => Promise.resolve({ id: '1' }),
+      createItem: () => Promise.resolve({ id: '1' }),
+      updateItem: () => Promise.resolve({ id: '1' }),
+      deleteItem: () => Promise.resolve({ id: '1' }),
       defaultFormValues: {},
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -163,10 +163,10 @@ describe('useCrudPage', () => {
     const deleteItem = vi.fn(() => Promise.resolve({ id: '1' }));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: createItem,
-      updateFn: updateItem,
-      deleteFn: deleteItem,
+      listItems,
+      createItem,
+      updateItem,
+      deleteItem,
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -194,10 +194,10 @@ describe('useCrudPage', () => {
     const createItem = vi.fn(() => Promise.reject(new Error('create failed')));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: createItem,
-      updateFn: () => Promise.resolve({ id: '1', name: 'Valid' }),
-      deleteFn: () => Promise.resolve({ id: '1' }),
+      listItems,
+      createItem,
+      updateItem: () => Promise.resolve({ id: '1', name: 'Valid' }),
+      deleteItem: () => Promise.resolve({ id: '1' }),
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -233,10 +233,10 @@ describe('useCrudPage', () => {
     }));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: createItem,
-      updateFn: () => Promise.resolve({ id: '1' }),
-      deleteFn: () => Promise.resolve({ id: '1' }),
+      listItems,
+      createItem,
+      updateItem: () => Promise.resolve({ id: '1' }),
+      deleteItem: () => Promise.resolve({ id: '1' }),
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -272,10 +272,10 @@ describe('useCrudPage', () => {
     const updateItem = vi.fn(() => Promise.reject(new Error('update failed')));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '2', name: 'Opportunity B', status: 'Draft' }),
-      updateFn: updateItem,
-      deleteFn: () => Promise.resolve({ id: '1' }),
+      listItems,
+      createItem: () => Promise.resolve({ id: '2', name: 'Opportunity B', status: 'Draft' }),
+      updateItem,
+      deleteItem: () => Promise.resolve({ id: '1' }),
       defaultFormValues: { name: '', status: '' },
       mapItemToFormValues: (item) => ({ name: item.name, status: item.status }),
       mapFormValuesToPayload: (values) => values,
@@ -318,10 +318,10 @@ describe('useCrudPage', () => {
     const deleteItem = vi.fn(() => Promise.reject(new Error('delete failed')));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
-      updateFn: () => Promise.resolve({ id: '1', name: 'Opportunity A' }),
-      deleteFn: deleteItem,
+      listItems,
+      createItem: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
+      updateItem: () => Promise.resolve({ id: '1', name: 'Opportunity A' }),
+      deleteItem,
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -368,10 +368,10 @@ describe('useCrudPage', () => {
     const updateItem = vi.fn();
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: createItem,
-      updateFn: updateItem,
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem,
+      updateItem,
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: (payload) => (!payload.name ? 'Name is required.' : ''),
@@ -401,10 +401,10 @@ describe('useCrudPage', () => {
     const updateItem = vi.fn((id, payload) => Promise.resolve({ id, ...payload, updatedAt: 1700000111111 }));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
-      updateFn: updateItem,
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
+      updateItem,
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapItemToFormValues: (item) => ({ name: item.name }),
       mapFormValuesToPayload: (values) => values,
@@ -442,10 +442,10 @@ describe('useCrudPage', () => {
     const updateItem = vi.fn(() => Promise.reject(new StaleRecordError()));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
-      updateFn: updateItem,
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: '2', name: 'Opportunity B' }),
+      updateItem,
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapItemToFormValues: (item) => ({ name: item.name }),
       mapFormValuesToPayload: (values) => values,
@@ -483,10 +483,10 @@ describe('useCrudPage', () => {
     const updateItem = vi.fn(() => Promise.reject(new Error('network down')));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '2', name: 'B' }),
-      updateFn: updateItem,
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: '2', name: 'B' }),
+      updateItem,
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapItemToFormValues: (item) => ({ name: item.name }),
       mapFormValuesToPayload: (values) => values,
@@ -524,10 +524,10 @@ describe('useCrudPage', () => {
     const updateItem = vi.fn(() => Promise.reject(new StaleRecordError()));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: '2', name: 'B' }),
-      updateFn: updateItem,
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: '2', name: 'B' }),
+      updateItem,
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapItemToFormValues: (item) => ({ name: item.name }),
       mapFormValuesToPayload: (values) => values,
@@ -570,10 +570,10 @@ describe('useCrudPage', () => {
       }));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: 'x' }),
-      updateFn: () => Promise.resolve({ id: 'x' }),
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: 'x' }),
+      updateItem: () => Promise.resolve({ id: 'x' }),
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -606,10 +606,10 @@ describe('useCrudPage', () => {
       ]);
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: 'x', name: 'x' }),
-      updateFn: () => Promise.resolve({ id: 'x', name: 'x' }),
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: 'x', name: 'x' }),
+      updateItem: () => Promise.resolve({ id: 'x', name: 'x' }),
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',
@@ -635,10 +635,10 @@ describe('useCrudPage', () => {
     const listItems = vi.fn(() => Promise.resolve([{ id: '1', name: 'Initial' }]));
 
     const { result } = renderHook(() => useCrudPage({
-      listFn: listItems,
-      createFn: () => Promise.resolve({ id: 'x', name: 'x' }),
-      updateFn: () => Promise.resolve({ id: 'x', name: 'x' }),
-      deleteFn: () => Promise.resolve(),
+      listItems,
+      createItem: () => Promise.resolve({ id: 'x', name: 'x' }),
+      updateItem: () => Promise.resolve({ id: 'x', name: 'x' }),
+      deleteItem: () => Promise.resolve(),
       defaultFormValues: { name: '' },
       mapFormValuesToPayload: (values) => values,
       validatePayload: () => '',

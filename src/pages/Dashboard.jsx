@@ -44,6 +44,7 @@ function Dashboard() {
     showToast,
   } = useToast();
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
+  const [isMainFocusExpanded, setIsMainFocusExpanded] = usePersistentState('ceo-os-main-focus-expanded', false);
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
   const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
@@ -338,33 +339,46 @@ function Dashboard() {
             </article>
           )}
         >
-        <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
+        <article className={`focus-panel focus-panel--main${isMainFocusExpanded ? '' : ' focus-panel--collapsed'}`} aria-label="Today focus panel">
           <div className="focus-panel__header">
             <h2>Today's Main Focus</h2>
+            <button
+              type="button"
+              className="focus-panel__disclosure-toggle"
+              aria-expanded={isMainFocusExpanded}
+              aria-controls="main-focus-body"
+              onClick={() => setIsMainFocusExpanded((prev) => !prev)}
+            >
+              {isMainFocusExpanded ? 'Less detail' : 'More detail'}
+            </button>
             <span className="signal-node" aria-hidden="true" />
           </div>
-          <p className="focus-home__main-focus">{mainFocus.title}</p>
-          <p className="calm-copy">{mainFocus.context}</p>
-          <div className="focus-home__actions">
-            <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
-              Tell me what to do next
-            </Button>
-            <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
-              I'm overwhelmed
-            </Button>
-          </div>
+          {isMainFocusExpanded && (
+            <div id="main-focus-body">
+              <p className="focus-home__main-focus">{mainFocus.title}</p>
+              <p className="calm-copy">{mainFocus.context}</p>
+              <div className="focus-home__actions">
+                <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
+                  Tell me what to do next
+                </Button>
+                <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
+                  I'm overwhelmed
+                </Button>
+              </div>
 
-          <div className="focus-home__next-move">
-            <p className="focus-home__subheading">Next Smallest Action</p>
-            <p>{displayedNextMove}</p>
-          </div>
+              <div className="focus-home__next-move">
+                <p className="focus-home__subheading">Next Smallest Action</p>
+                <p>{displayedNextMove}</p>
+              </div>
 
-          {isFocusDataLoading ? (
-            <p className="helper-text" role="status" aria-live="polite">
-              Loading your focus context...
-            </p>
-          ) : null}
-          {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
+              {isFocusDataLoading ? (
+                <p className="helper-text" role="status" aria-live="polite">
+                  Loading your focus context...
+                </p>
+              ) : null}
+              {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
+            </div>
+          )}
         </article>
         </ErrorBoundary>
 
