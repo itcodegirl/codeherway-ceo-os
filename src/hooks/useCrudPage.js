@@ -15,6 +15,7 @@ export function useCrudPage(config) {
     defaultFormValues,
     validate,
     validatePayload,
+    parsePayload,
     listItems,
     createItem,
     updateItem,
@@ -253,8 +254,19 @@ export function useCrudPage(config) {
       return;
     }
 
-    const payload = mapFormValuesToPayload ? mapFormValuesToPayload(formValues) : formValues;
-    const validationError = validatePayloadFn(payload);
+    let payload;
+    let validationError = '';
+    if (typeof parsePayload === 'function') {
+      // Single-step parse + normalize via valibot schema. The schema's
+      // transformed output is the payload sent to the repository, so the
+      // page no longer needs a sibling mapFormValuesToPayload helper.
+      const parsed = parsePayload(formValues);
+      payload = parsed?.payload;
+      validationError = parsed?.error || '';
+    } else {
+      payload = mapFormValuesToPayload ? mapFormValuesToPayload(formValues) : formValues;
+      validationError = validatePayloadFn(payload);
+    }
 
     if (validationError) {
       setFormError(validationError);
@@ -327,6 +339,7 @@ export function useCrudPage(config) {
     isMountedRef,
     logPrefix,
     mapFormValuesToPayload,
+    parsePayload,
     refreshItems,
     saveErrorMessage,
     resetForm,

@@ -16,7 +16,7 @@ import {
   updateOpportunity,
 } from '../../lib/opportunitiesRepository';
 import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
-import { validateOpportunityPayload } from '../../lib/opportunityPayloadSchema';
+import { parseOpportunityPayload } from '../../lib/opportunityPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/crm-table.css';
@@ -37,16 +37,6 @@ function mapOpportunityToFormValues(item) {
     priority: item.priority || 'Medium',
     stage: item.stage || 'New',
     nextStep: item.nextStep || '',
-  };
-}
-
-function mapOpportunityFormValuesToPayload(formValues) {
-  return {
-    name: formValues.name.trim(),
-    company: formValues.company.trim(),
-    priority: formValues.priority,
-    stage: formValues.stage,
-    nextStep: formValues.nextStep.trim(),
   };
 }
 
@@ -80,8 +70,7 @@ function OpportunityCrudPage() {
     deleteItem: deleteOpportunity,
     updatedEventName: OPPORTUNITIES_UPDATED_EVENT,
     mapItemToFormValues: mapOpportunityToFormValues,
-    mapFormValuesToPayload: mapOpportunityFormValuesToPayload,
-    validatePayload: validateOpportunityPayload,
+    parsePayload: parseOpportunityPayload,
     getDeleteLabel: (item) => item.name,
     messages: {
       load: 'Unable to load opportunities right now.',

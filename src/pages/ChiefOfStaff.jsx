@@ -3,6 +3,7 @@ import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
 import Button from "../components/ui/Button";
 import SourceStatusNotice from "../components/ui/SourceStatusNotice";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
+import { useMetaMode } from "../hooks/useMetaMode";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import { buildSourceNotice } from "../lib/uiCopy";
 import "../styles/chief-of-staff.css";
@@ -67,6 +68,7 @@ export default function ChiefOfStaff() {
     clearWorkspace,
     refreshWorkspace
   } = useChiefOfStaff();
+  const isMetaMode = useMetaMode();
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
   // Memoize the parsed/normalized panel result so the structured payload
@@ -178,19 +180,21 @@ export default function ChiefOfStaff() {
             {isGenerating ? "Generating recommendations from your notes..." : feedbackMessage}
           </p>
 
-          <Suspense
-            fallback={(
-              <div className="chief-card" aria-live="polite">
-                <div className="chief-section-header">
-                  <h4>Decision Engine Health</h4>
-                  <span className="chief-count-badge">--</span>
+          {isMetaMode ? (
+            <Suspense
+              fallback={(
+                <div className="chief-card" aria-live="polite">
+                  <div className="chief-section-header">
+                    <h4>Decision Engine Health</h4>
+                    <span className="chief-count-badge">--</span>
+                  </div>
+                  <p className="chief-helper-text">Loading telemetry diagnostics...</p>
                 </div>
-                <p className="chief-helper-text">Loading telemetry diagnostics...</p>
-              </div>
-            )}
-          >
-            <ChiefTelemetryDiagnosticsPanel />
-          </Suspense>
+              )}
+            >
+              <ChiefTelemetryDiagnosticsPanel />
+            </Suspense>
+          ) : null}
         </div>
       </div>
 

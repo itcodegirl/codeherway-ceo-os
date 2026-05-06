@@ -14,6 +14,41 @@ import { useToast } from '../hooks/useToast';
 import { useOfflineQueueDrain } from '../hooks/useOfflineQueueDrain';
 import { resolvePageMeta } from '../lib/pageMeta';
 import { resolveTeamName } from '../lib/settings';
+import {
+  OPPORTUNITY_QUEUE_KIND_CREATE,
+  OPPORTUNITY_QUEUE_KIND_DELETE,
+  OPPORTUNITY_QUEUE_KIND_UPDATE,
+  createOpportunity,
+  deleteOpportunity,
+  updateOpportunity,
+} from '../lib/opportunitiesRepository';
+import {
+  CONTENT_QUEUE_KIND_CREATE,
+  CONTENT_QUEUE_KIND_DELETE,
+  CONTENT_QUEUE_KIND_UPDATE,
+  createContentItem,
+  deleteContentItem,
+  updateContentItem,
+} from '../lib/contentRepository';
+
+// Replay handlers for the offline write queue. The `skipQueue: true` option
+// ensures a failed replay doesn't enqueue itself a second time — the
+// drainOfflineQueue contract already keeps the entry in place when replay
+// rejects, and a new attempt fires on the next reconnect.
+const OFFLINE_QUEUE_HANDLERS = {
+  [OPPORTUNITY_QUEUE_KIND_CREATE]: (payload) =>
+    createOpportunity(payload, { skipQueue: true }),
+  [OPPORTUNITY_QUEUE_KIND_UPDATE]: ({ id, payload, expectedUpdatedAt } = {}) =>
+    updateOpportunity(id, payload, { skipQueue: true, expectedUpdatedAt }),
+  [OPPORTUNITY_QUEUE_KIND_DELETE]: ({ id } = {}) =>
+    deleteOpportunity(id, { skipQueue: true }),
+  [CONTENT_QUEUE_KIND_CREATE]: (payload) =>
+    createContentItem(payload, { skipQueue: true }),
+  [CONTENT_QUEUE_KIND_UPDATE]: ({ id, payload, expectedUpdatedAt } = {}) =>
+    updateContentItem(id, payload, { skipQueue: true, expectedUpdatedAt }),
+  [CONTENT_QUEUE_KIND_DELETE]: ({ id } = {}) =>
+    deleteContentItem(id, { skipQueue: true }),
+};
 
 function AppLayout() {
   const location = useLocation();
@@ -26,6 +61,7 @@ function AppLayout() {
   useThemePreference();
 
   useOfflineQueueDrain({
+    handlerByKind: OFFLINE_QUEUE_HANDLERS,
     onDrainFailure: (result) => {
       showToast(
         `${result.failed} queued write${result.failed === 1 ? '' : 's'} could not sync. Check your connection and try again.`,

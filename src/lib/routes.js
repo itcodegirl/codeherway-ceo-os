@@ -69,6 +69,7 @@ export const APP_ROUTES = [
     icon: 'trend',
     group: 'account',
     description: 'Review route-size and telemetry ingest SLO trends with run-over-run reliability context.',
+    meta: true,
   },
   {
     id: 'settings',
@@ -86,11 +87,20 @@ export const NAV_ITEMS = APP_ROUTES.map(({ label, path, icon }) => ({
   icon,
 }));
 
-export function buildNavGroups(routes = APP_ROUTES) {
+// Routes flagged `meta: true` are admin / ops surfaces that we keep out of the
+// default sidebar so a first-time portfolio reviewer sees only product
+// surfaces. They are revealed via the `?meta=1` query flag (see
+// `src/hooks/useMetaMode.js`) without being deleted from the codebase.
+export function filterRoutesByMetaMode(routes, isMetaMode) {
+  return routes.filter((route) => isMetaMode || !route.meta);
+}
+
+export function buildNavGroups(routes = APP_ROUTES, { isMetaMode = false } = {}) {
+  const visibleRoutes = filterRoutesByMetaMode(routes, isMetaMode);
   return NAV_GROUP_DEFINITIONS
     .map((group) => ({
       ...group,
-      items: routes
+      items: visibleRoutes
         .filter((route) => route.group === group.id)
         .map(({ label, path, icon }) => ({ label, path, icon })),
     }))

@@ -16,7 +16,7 @@ import {
   updateContentItem,
 } from '../../lib/contentRepository';
 import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
-import { validateContentPayload } from '../../lib/contentPayloadSchema';
+import { parseContentPayload } from '../../lib/contentPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
 import '../../styles/crm-table.css';
@@ -33,14 +33,6 @@ function mapContentItemToFormValues(item) {
     title: item.title || '',
     platform: item.platform || '',
     status: item.status || 'Drafting',
-  };
-}
-
-function mapContentFormValuesToPayload(formValues) {
-  return {
-    title: formValues.title.trim(),
-    platform: formValues.platform.trim(),
-    status: formValues.status,
   };
 }
 
@@ -74,8 +66,7 @@ function ContentCrudPage() {
     deleteItem: deleteContentItem,
     updatedEventName: CONTENT_ITEMS_UPDATED_EVENT,
     mapItemToFormValues: mapContentItemToFormValues,
-    mapFormValuesToPayload: mapContentFormValuesToPayload,
-    validatePayload: validateContentPayload,
+    parsePayload: parseContentPayload,
     getDeleteLabel: (item) => item.title,
     messages: {
       load: 'Unable to load content items right now.',

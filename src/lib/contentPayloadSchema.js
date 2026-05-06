@@ -1,10 +1,15 @@
 import * as v from 'valibot';
-import { createSchemaValidator } from './schemaValidator';
+import {
+  createPayloadParser,
+  createSchemaValidator,
+  requiredTrimmedString,
+} from './schemaValidator';
 
 export const contentPayloadSchema = v.object({
-  title: v.pipe(v.string(), v.minLength(1, 'Title is required.')),
-  platform: v.pipe(v.string(), v.minLength(1, 'Platform is required.')),
+  title: requiredTrimmedString('Title is required.'),
+  platform: requiredTrimmedString('Platform is required.'),
   status: v.picklist(['Drafting', 'Editing', 'Scheduled']),
 });
 
 export const validateContentPayload = createSchemaValidator(contentPayloadSchema);
+export const parseContentPayload = createPayloadParser(contentPayloadSchema);
