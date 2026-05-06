@@ -55,33 +55,10 @@
 	grid-column: 1 / -1;
 }
 
-.focus-panel--collapsed .focus-panel__header {
-	margin-bottom: 0;
-}
-
-.focus-panel__disclosure-toggle {
-	margin-left: auto;
-	padding: 0.2rem 0.55rem;
-	background: transparent;
-	border: 1px solid var(--border);
-	border-radius: 999px;
-	font-size: 0.72rem;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-	color: var(--text-soft-strong);
-	cursor: pointer;
-	transition: background 0.15s, color 0.15s;
-}
-
-.focus-panel__disclosure-toggle:hover {
-	background: color-mix(in srgb, var(--surface-hover) 80%, transparent 20%);
-	color: var(--text);
-}
-
-.focus-panel__disclosure-toggle:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
+.focus-panel--next-move {
+	grid-column: 1 / -1;
+	border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
+	background: color-mix(in srgb, var(--surface-card) 72%, rgba(29, 106, 171, 0.24) 28%);
 }
 
 .focus-home__main-focus {
@@ -89,6 +66,69 @@
 	font-size: clamp(1.25rem, 2.3vw, 1.65rem);
 	line-height: 1.28;
 	font-weight: 600;
+}
+
+.focus-home__next-move-text {
+	margin: 0;
+	font-size: 1.02rem;
+	line-height: 1.4;
+	overflow-wrap: anywhere;
+}
+
+/*
+ * Focus tools drawer — collapsed by default. The audit reduced the top
+ * fold to "1 focus + 3 blockers + 1 next move + reminders"; the drawer
+ * holds focus-mode chips, quick-win/momentum readouts, and the reset
+ * steps. The drawer auto-opens when the user clicks "I'm overwhelmed" so
+ * emergency support is one click away.
+ */
+.focus-home__drawer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+}
+
+.focus-home__drawer-toggle {
+	align-self: flex-start;
+	padding: 0.45rem 0.95rem;
+	background: transparent;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	color: var(--text-soft-strong);
+	font-size: 0.82rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	transition: background var(--duration-fast, 120ms) var(--easing-standard, ease),
+		color var(--duration-fast, 120ms) var(--easing-standard, ease);
+	min-height: 2.25rem;
+}
+
+.focus-home__drawer-toggle:hover {
+	background: var(--surface-overlay-1);
+	color: var(--text);
+}
+
+.focus-home__drawer-toggle:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
+}
+
+.focus-home__drawer--open .focus-home__drawer-toggle {
+	background: var(--surface-overlay-2);
+	color: var(--text);
+}
+
+.focus-home__drawer-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-page-section-gap);
+}
+
+.focus-home__drawer-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: clamp(0.9rem, 2vw, 1.35rem);
 }
 
 .focus-home__actions {
@@ -310,7 +350,8 @@
 }
 
 @media (max-width: 980px) {
-	.focus-home__grid {
+	.focus-home__grid,
+	.focus-home__drawer-grid {
 		grid-template-columns: 1fr;
 	}
 }
