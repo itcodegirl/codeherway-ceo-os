@@ -362,6 +362,54 @@ describe('useCrudPage', () => {
     expect(result.current.items).toEqual([{ id: '1', name: 'Opportunity A' }]);
   });
 
+  it('uses parsePayload as the single source for normalization + validation when provided', async () => {
+    const listItems = vi.fn(() => Promise.resolve([]));
+    const createItem = vi.fn((payload) => Promise.resolve({ id: '2', ...payload }));
+
+    const parsePayload = vi.fn((values) => {
+      const trimmed = values.name.trim();
+      if (!trimmed) {
+        return { payload: null, error: 'Name is required.' };
+      }
+      return { payload: { name: trimmed }, error: '' };
+    });
+
+    const { result } = renderHook(() => useCrudPage({
+      listItems,
+      createItem,
+      updateItem: vi.fn(),
+      deleteItem: () => Promise.resolve(),
+      defaultFormValues: { name: '' },
+      parsePayload,
+    }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Whitespace-only -> error from parsePayload, no createItem call.
+    act(() => {
+      result.current.handleOpenCreateModal();
+      result.current.handleFormChange('name', '   ');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    expect(result.current.formError).toBe('Name is required.');
+    expect(createItem).not.toHaveBeenCalled();
+
+    // Surrounding whitespace -> trimmed payload reaches createItem.
+    act(() => {
+      result.current.handleFormChange('name', '  Opportunity B  ');
+    });
+
+    await act(async () => {
+      await result.current.handleFormSubmit(createSubmitEvent());
+    });
+
+    expect(createItem).toHaveBeenCalledWith({ name: 'Opportunity B' });
+  });
+
   it('blocks submit when validation fails', async () => {
     const listItems = vi.fn(() => Promise.resolve([]));
     const createItem = vi.fn();

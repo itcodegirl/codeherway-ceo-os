@@ -11,8 +11,13 @@ vi.mock('../../hooks/useOnlineStatus', () => ({
   useOnlineStatus: vi.fn(),
 }));
 
+vi.mock('../../hooks/useOfflineWriteQueue', () => ({
+  useOfflineWriteQueueSize: vi.fn(),
+}));
+
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { useOfflineWriteQueueSize } from '../../hooks/useOfflineWriteQueue';
 
 function workspaceSettingsValue(overrides = {}) {
   return {
@@ -55,6 +60,7 @@ describe('SyncStatusPill', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useOnlineStatus.mockReturnValue(true);
+    useOfflineWriteQueueSize.mockReturnValue(0);
   });
 
   it('renders the synced state when source is supabase and online', () => {
@@ -82,10 +88,27 @@ describe('SyncStatusPill', () => {
     expect(screen.getByText('Offline')).toBeInTheDocument();
   });
 
-  it('does not render a pending-writes indicator while the offline queue is unwired', () => {
+  it('does not show a pending suffix when the queue is empty', () => {
     useWorkspaceSettings.mockReturnValue(workspaceSettingsValue({ source: 'supabase' }));
+    useOfflineWriteQueueSize.mockReturnValue(0);
     render(<SyncStatusPill />);
-    expect(screen.queryByLabelText(/waiting to sync/)).toBeNull();
+    expect(screen.queryByText(/pending/i)).toBeNull();
+  });
+
+  it('shows "+N pending" when the offline queue has entries and the workspace is supabase-backed', () => {
+    useWorkspaceSettings.mockReturnValue({ source: 'supabase' });
+    useOfflineWriteQueueSize.mockReturnValue(3);
+    render(<SyncStatusPill />);
+    expect(screen.getByText(/Synced/)).toBeInTheDocument();
+    expect(screen.getByText(/\+3 pending/)).toBeInTheDocument();
+  });
+
+  it('does NOT show pending suffix in local-only mode (queue has nowhere to drain)', () => {
+    useWorkspaceSettings.mockReturnValue({ source: 'local' });
+    useOfflineWriteQueueSize.mockReturnValue(2);
+    render(<SyncStatusPill />);
+    expect(screen.getByText('Local only')).toBeInTheDocument();
+    expect(screen.queryByText(/pending/i)).toBeNull();
   });
 
   it('renders a retry button when loadError is present and online', () => {

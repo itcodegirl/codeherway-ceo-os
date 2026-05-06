@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { validateOpportunityPayload } from './opportunityPayloadSchema';
+import {
+  parseOpportunityPayload,
+  validateOpportunityPayload,
+} from './opportunityPayloadSchema';
 
 const VALID = {
   name: 'Acme Expansion',
@@ -52,5 +55,36 @@ describe('validateOpportunityPayload', () => {
     for (const stage of ['New', 'In Progress', 'Awaiting Reply']) {
       expect(validateOpportunityPayload({ ...VALID, stage })).toBe('');
     }
+  });
+});
+
+describe('parseOpportunityPayload', () => {
+  it('returns the trimmed payload and no error for valid input', () => {
+    const { payload, error } = parseOpportunityPayload({
+      name: '  Acme Expansion  ',
+      company: ' Acme Corp ',
+      priority: 'High',
+      stage: 'New',
+      nextStep: '  Send intro email\n',
+    });
+
+    expect(error).toBe('');
+    expect(payload).toEqual({
+      name: 'Acme Expansion',
+      company: 'Acme Corp',
+      priority: 'High',
+      stage: 'New',
+      nextStep: 'Send intro email',
+    });
+  });
+
+  it('returns an error and null payload when a required field is whitespace-only', () => {
+    const { payload, error } = parseOpportunityPayload({
+      ...VALID,
+      name: '   ',
+    });
+
+    expect(payload).toBeNull();
+    expect(error).toContain('Name');
   });
 });

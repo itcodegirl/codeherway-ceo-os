@@ -2,7 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import { APP_ROUTES, toNestedRoutePath } from './lib/routes';
+import { useMetaMode } from './hooks/useMetaMode';
+import { APP_ROUTES, filterRoutesByMetaMode, toNestedRoutePath } from './lib/routes';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Capture = lazy(() => import('./pages/Capture'));
@@ -27,6 +28,9 @@ const ROUTE_COMPONENTS = {
 };
 
 function App() {
+  const isMetaMode = useMetaMode();
+  const visibleRoutes = filterRoutesByMetaMode(APP_ROUTES, isMetaMode);
+
   return (
     <ErrorBoundary name="App shell">
       <Suspense
@@ -38,7 +42,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<AppLayout />}>
-            {APP_ROUTES.map((route) => {
+            {visibleRoutes.map((route) => {
               const RouteComponent = ROUTE_COMPONENTS[route.id];
               if (!RouteComponent) {
                 return null;

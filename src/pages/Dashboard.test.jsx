@@ -67,26 +67,35 @@ describe('src/pages/Dashboard', () => {
     });
   });
 
-  it('renders focus command center core sections with supportive copy', () => {
+  it('renders the reduced top-fold (focus, blockers, next move, reminders) on first paint', () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Focus Home' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: "Today's Main Focus" })).toBeInTheDocument();
-    expect(screen.getByText('Next Smallest Action')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Next Smallest Action' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Blockers' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Quick Win' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: "I'm Overwhelmed Reset" })).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
     expect(screen.getByText('This blocker may need attention.')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Add a quick reminder')).toHaveAccessibleDescription(
       'Keep it small enough to finish today. No reminder progress yet.',
     );
+
+    // Focus tools (Quick Win, Reset, focus-mode chips) are tucked into the
+    // collapsed drawer to keep the top fold calm.
+    expect(screen.queryByRole('heading', { level: 2, name: 'Quick Win' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: "I'm Overwhelmed Reset" })).not.toBeInTheDocument();
+
+    const drawerToggle = screen.getByRole('button', { name: 'Show focus tools' });
+    expect(drawerToggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(drawerToggle);
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Quick Win' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: "I'm Overwhelmed Reset" })).toBeInTheDocument();
     expect(screen.getByText(/You are in execution mode|Clarify one outcome|Look at what worked|You are not behind/i)).toBeInTheDocument();
   });
 
@@ -96,12 +105,11 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     const cta = screen.getByRole('button', { name: 'Tell me what to do next' });
     fireEvent.click(cta);
 
-    const nextMovePanel = screen.getByText('Next Smallest Action').closest('.focus-home__next-move');
+    const nextMovePanel = screen.getByRole('heading', { name: 'Next Smallest Action' }).closest('.focus-panel');
     expect(nextMovePanel).toHaveTextContent(/Spend 20 focused minutes|Send one unblock message|Draft a concise follow-up/i);
   });
 
@@ -128,10 +136,9 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Tell me what to do next' }));
-    const nextMovePanel = screen.getByText('Next Smallest Action').closest('.focus-home__next-move');
+    const nextMovePanel = screen.getByRole('heading', { name: 'Next Smallest Action' }).closest('.focus-panel');
     expect(nextMovePanel).toHaveTextContent('Send one unblock message for "Blocked Launch".');
 
     useWeeklyBrief.mockReturnValue({
@@ -156,26 +163,37 @@ describe('src/pages/Dashboard', () => {
     expect(nextMovePanel).not.toHaveTextContent('Blocked Launch');
   });
 
-  it('switches to overwhelmed mode and opens reset guidance', () => {
+  it('switches to overwhelmed mode, auto-opens the focus tools drawer, and shows reset guidance', () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
+
+    // Drawer is collapsed by default.
+    expect(screen.getByRole('button', { name: 'Show focus tools' })).toHaveAttribute('aria-expanded', 'false');
 
     fireEvent.click(screen.getByRole('button', { name: "I'm overwhelmed" }));
 
+    // The "I'm overwhelmed" button is on the top fold (so users can reach it
+    // in one click) but the reset *steps* live in the drawer to keep the
+    // top fold calm. The button auto-opens the drawer so the steps are
+    // available without a second click.
+    expect(screen.getByRole('button', { name: 'Hide focus tools' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Reset mode is open. You only need one completed step right now.')).toBeInTheDocument();
     expect(screen.getByText(/Pause for 60 seconds/i)).toBeInTheDocument();
   });
 
-  it('supports keyboard mode switching across support-state radios', () => {
+  it('supports keyboard mode switching across support-state radios (in the focus tools drawer)', () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
+
+    // Focus-mode chips were moved off the top fold and into the drawer to
+    // keep first-paint clean. Open the drawer first.
+    fireEvent.click(screen.getByRole('button', { name: 'Show focus tools' }));
 
     const planningChip = screen.getByRole('radio', { name: 'Planning' });
     expect(planningChip).toHaveAttribute('aria-checked', 'true');
@@ -288,12 +306,14 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
     expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
     expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
+
+    // Quick-win calm copy lives in the drawer.
+    fireEvent.click(screen.getByRole('button', { name: 'Show focus tools' }));
     expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
   });
 
@@ -401,33 +421,28 @@ describe('src/pages/Dashboard', () => {
         <Dashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More detail' }));
 
     expect(screen.getByText('Loading your focus context...')).toHaveAttribute('role', 'status');
     expect(document.querySelector('.focus-home-page')).toHaveAttribute('aria-busy', 'true');
   });
 
-  it('collapses the main focus panel by default and expands it on disclosure toggle', () => {
+  it('keeps the focus tools drawer collapsed by default and toggles via the disclosure button', () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
 
-    // Panel is collapsed by default — body content not present.
-    expect(screen.queryByText('Next Smallest Action')).not.toBeInTheDocument();
-    const toggle = screen.getByRole('button', { name: 'More detail' });
+    // Drawer body is hidden until the user opens it.
+    expect(screen.queryByRole('heading', { level: 2, name: 'Quick Win' })).not.toBeInTheDocument();
+    const toggle = screen.getByRole('button', { name: 'Show focus tools' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
-    // Expand the panel.
     fireEvent.click(toggle);
-    expect(screen.getByText('Next Smallest Action')).toBeInTheDocument();
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(toggle).toHaveAccessibleName('Less detail');
+    expect(screen.getByRole('heading', { level: 2, name: 'Quick Win' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide focus tools' })).toHaveAttribute('aria-expanded', 'true');
 
-    // Collapse it again.
-    fireEvent.click(toggle);
-    expect(screen.queryByText('Next Smallest Action')).not.toBeInTheDocument();
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide focus tools' }));
+    expect(screen.queryByRole('heading', { level: 2, name: 'Quick Win' })).not.toBeInTheDocument();
   });
 });

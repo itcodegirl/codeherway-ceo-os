@@ -30,6 +30,7 @@ import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
 const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
+const FOCUS_TOOLS_DRAWER_ID = 'focus-tools-drawer';
 
 function Dashboard() {
   const {
@@ -38,7 +39,16 @@ function Dashboard() {
     showToast,
   } = useToast();
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
-  const [isMainFocusExpanded, setIsMainFocusExpanded] = usePersistentState('ceo-os-main-focus-expanded', false);
+  // Audit follow-up: the top fold now shows only "1 focus + 3 blockers + 1
+  // next move + reminders". Focus-mode chips, quick-win + momentum, and the
+  // overwhelmed-reset steps are kept in a collapsed drawer the user can
+  // open. The drawer auto-opens whenever the user reaches for it (e.g.
+  // clicks the "I'm overwhelmed" button) so we do not gate emergency
+  // affordances behind a click.
+  const [isFocusToolsExpanded, setIsFocusToolsExpanded] = usePersistentState(
+    'ceo-os-focus-tools-expanded',
+    false,
+  );
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
   const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
@@ -191,6 +201,10 @@ function Dashboard() {
     setFocusMode('overwhelmed');
     setIsResetOpen(true);
     setNextMove(nextMoveQueue[0] || 'Do one two-minute task, then reassess.');
+    // The reset steps live in the focus-tools drawer to keep the top fold
+    // calm. Auto-open the drawer here so the user reaches the steps in one
+    // click instead of two.
+    setIsFocusToolsExpanded(true);
     showToast('Reset mode enabled. Start small and skip perfection today.');
   };
 
@@ -253,6 +267,9 @@ function Dashboard() {
   ], [displayedNextMove]);
 
   const modeClassName = resolveFocusMode(focusMode).id;
+  const toggleFocusTools = useCallback(() => {
+    setIsFocusToolsExpanded((current) => !current);
+  }, [setIsFocusToolsExpanded]);
 
   return (
     <section
@@ -272,12 +289,6 @@ function Dashboard() {
         retryAriaLabel="Retry loading focus command center data"
       />
 
-      <FocusModeChips
-        focusMode={focusMode}
-        onFocusModeChange={setFocusMode}
-        supportCopy={supportCopy}
-      />
-
       <div className="focus-home__grid">
         <ErrorBoundary
           name="Dashboard / Today focus"
@@ -287,47 +298,45 @@ function Dashboard() {
             </article>
           )}
         >
-        <article className={`focus-panel focus-panel--main${isMainFocusExpanded ? '' : ' focus-panel--collapsed'}`} aria-label="Today focus panel">
-          <div className="focus-panel__header">
-            <h2>Today's Main Focus</h2>
-            <button
-              type="button"
-              className="focus-panel__disclosure-toggle"
-              aria-expanded={isMainFocusExpanded}
-              aria-controls="main-focus-body"
-              onClick={() => setIsMainFocusExpanded((prev) => !prev)}
-            >
-              {isMainFocusExpanded ? 'Less detail' : 'More detail'}
-            </button>
-            <span className="signal-node" aria-hidden="true" />
-          </div>
-          {isMainFocusExpanded && (
-            <div id="main-focus-body">
-              <p className="focus-home__main-focus">{mainFocus.title}</p>
-              <p className="calm-copy">{mainFocus.context}</p>
-              <div className="focus-home__actions">
-                <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
-                  Tell me what to do next
-                </Button>
-                <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
-                  I'm overwhelmed
-                </Button>
-              </div>
-
-              <div className="focus-home__next-move">
-                <p className="focus-home__subheading">Next Smallest Action</p>
-                <p>{displayedNextMove}</p>
-              </div>
-
-              {isFocusDataLoading ? (
-                <p className="helper-text" role="status" aria-live="polite">
-                  Loading your focus context...
-                </p>
-              ) : null}
-              {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
+          <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
+            <div className="focus-panel__header">
+              <h2>Today's Main Focus</h2>
+              <span className="signal-node" aria-hidden="true" />
             </div>
+            <p className="focus-home__main-focus">{mainFocus.title}</p>
+            <p className="calm-copy">{mainFocus.context}</p>
+            {isFocusDataLoading ? (
+              <p className="helper-text" role="status" aria-live="polite">
+                Loading your focus context...
+              </p>
+            ) : null}
+            {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
+          </article>
+        </ErrorBoundary>
+
+        <ErrorBoundary
+          name="Dashboard / Next move"
+          fallback={(
+            <article className="focus-panel" aria-label="Next move panel">
+              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
+            </article>
           )}
-        </article>
+        >
+          <article className="focus-panel focus-panel--next-move" aria-label="Next move panel">
+            <div className="focus-panel__header">
+              <h2>Next Smallest Action</h2>
+              <span className="signal-node" aria-hidden="true" />
+            </div>
+            <p className="focus-home__next-move-text">{displayedNextMove}</p>
+            <div className="focus-home__actions">
+              <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
+                Tell me what to do next
+              </Button>
+              <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
+                I'm overwhelmed
+              </Button>
+            </div>
+          </article>
         </ErrorBoundary>
 
         <ErrorBoundary
@@ -338,17 +347,17 @@ function Dashboard() {
             </article>
           )}
         >
-        <article className="focus-panel" aria-label="Blockers panel">
-          <div className="focus-panel__header">
-            <h2>Blockers</h2>
-            <span className="signal-node" aria-hidden="true" />
-          </div>
-          <ul className="focus-list">
-            {blockerItems.map((item, index) => (
-              <li key={`blocker-${index + 1}`}>{item}</li>
-            ))}
-          </ul>
-        </article>
+          <article className="focus-panel" aria-label="Blockers panel">
+            <div className="focus-panel__header">
+              <h2>Blockers</h2>
+              <span className="signal-node" aria-hidden="true" />
+            </div>
+            <ul className="focus-list">
+              {blockerItems.map((item, index) => (
+                <li key={`blocker-${index + 1}`}>{item}</li>
+              ))}
+            </ul>
+          </article>
         </ErrorBoundary>
 
         <ErrorBoundary
@@ -373,54 +382,89 @@ function Dashboard() {
             onEditReminder={reminderActions.edit}
           />
         </ErrorBoundary>
-
-        <ErrorBoundary
-          name="Dashboard / Momentum"
-          fallback={(
-            <article className="focus-panel" aria-label="Momentum panel">
-              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-            </article>
-          )}
-        >
-        <article className="focus-panel" aria-label="Momentum panel">
-          <div className="focus-panel__header">
-            <h2>Quick Win</h2>
-            <span className="signal-node" aria-hidden="true" />
-          </div>
-          <p className="focus-home__quick-win">{quickWin}</p>
-          <p className="focus-home__momentum-score">
-            Momentum: <strong>{momentum.score}%</strong>
-          </p>
-          <p className="calm-copy">{momentum.text}</p>
-        </article>
-        </ErrorBoundary>
-
-        <ErrorBoundary
-          name="Dashboard / Reset"
-          fallback={(
-            <article className="focus-panel focus-panel--reset" aria-label="Reset panel">
-              <p className="calm-copy">Reset steps couldn’t load. Refresh the page to retry.</p>
-            </article>
-          )}
-        >
-        <article className="focus-panel focus-panel--reset" aria-live="polite">
-          <div className="focus-panel__header">
-            <h2>I'm Overwhelmed Reset</h2>
-            <span className="signal-node" aria-hidden="true" />
-          </div>
-          <p className="supportive-copy">
-            {isResetOpen
-              ? 'Reset mode is open. You only need one completed step right now.'
-              : 'Use this reset anytime pressure spikes. No guilt, just the next tiny move.'}
-          </p>
-          <ol className="focus-list focus-list--ordered">
-            {resetSteps.map((step, index) => (
-              <li key={`reset-${index + 1}`}>{step}</li>
-            ))}
-          </ol>
-        </article>
-        </ErrorBoundary>
       </div>
+
+      {/*
+       * Focus tools drawer — kept off the top fold to reduce cognitive load.
+       * Holds the focus-mode chips, quick-win/momentum readouts, and the
+       * overwhelmed-reset steps. Auto-opened when the user clicks
+       * "I'm overwhelmed" so emergency support is one click away.
+       */}
+      <section
+        className={`focus-home__drawer${isFocusToolsExpanded ? ' focus-home__drawer--open' : ''}`}
+        aria-label="Focus tools"
+      >
+        <button
+          type="button"
+          className="focus-home__drawer-toggle"
+          aria-expanded={isFocusToolsExpanded}
+          aria-controls={FOCUS_TOOLS_DRAWER_ID}
+          onClick={toggleFocusTools}
+        >
+          {isFocusToolsExpanded ? 'Hide focus tools' : 'Show focus tools'}
+        </button>
+
+        <div
+          id={FOCUS_TOOLS_DRAWER_ID}
+          className="focus-home__drawer-body"
+          hidden={!isFocusToolsExpanded}
+        >
+          <FocusModeChips
+            focusMode={focusMode}
+            onFocusModeChange={setFocusMode}
+            supportCopy={supportCopy}
+          />
+
+          <div className="focus-home__drawer-grid">
+            <ErrorBoundary
+              name="Dashboard / Momentum"
+              fallback={(
+                <article className="focus-panel" aria-label="Momentum panel">
+                  <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
+                </article>
+              )}
+            >
+              <article className="focus-panel" aria-label="Momentum panel">
+                <div className="focus-panel__header">
+                  <h2>Quick Win</h2>
+                  <span className="signal-node" aria-hidden="true" />
+                </div>
+                <p className="focus-home__quick-win">{quickWin}</p>
+                <p className="focus-home__momentum-score">
+                  Momentum: <strong>{momentum.score}%</strong>
+                </p>
+                <p className="calm-copy">{momentum.text}</p>
+              </article>
+            </ErrorBoundary>
+
+            <ErrorBoundary
+              name="Dashboard / Reset"
+              fallback={(
+                <article className="focus-panel focus-panel--reset" aria-label="Reset panel">
+                  <p className="calm-copy">Reset steps couldn’t load. Refresh the page to retry.</p>
+                </article>
+              )}
+            >
+              <article className="focus-panel focus-panel--reset" aria-live="polite">
+                <div className="focus-panel__header">
+                  <h2>I'm Overwhelmed Reset</h2>
+                  <span className="signal-node" aria-hidden="true" />
+                </div>
+                <p className="supportive-copy">
+                  {isResetOpen
+                    ? 'Reset mode is open. You only need one completed step right now.'
+                    : 'Use this reset anytime pressure spikes. No guilt, just the next tiny move.'}
+                </p>
+                <ol className="focus-list focus-list--ordered">
+                  {resetSteps.map((step, index) => (
+                    <li key={`reset-${index + 1}`}>{step}</li>
+                  ))}
+                </ol>
+              </article>
+            </ErrorBoundary>
+          </div>
+        </div>
+      </section>
 
       <Toast className="toast--dashboard" isVisible={isToastVisible} message={toastMessage} />
     </section>
@@ -428,4 +472,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
