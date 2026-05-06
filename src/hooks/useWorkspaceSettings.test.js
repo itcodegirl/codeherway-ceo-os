@@ -98,6 +98,41 @@ describe('useWorkspaceSettings', () => {
     expect(result.current.source).toBe('supabase');
   });
 
+  it('exposes loadError when loadSettings rejects and clears it on a successful refresh', async () => {
+    repositoryState.loadSettings
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay',
+          timezone: 'America/Chicago',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'supabase',
+      });
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const { result } = renderHook(() => useWorkspaceSettings());
+
+      await waitFor(() => {
+        expect(result.current.loadError).toBe('Unable to load workspace settings right now.');
+      });
+
+      await act(async () => {
+        await result.current.refreshWorkspaceSettings();
+      });
+
+      expect(result.current.loadError).toBe('');
+      expect(result.current.source).toBe('supabase');
+      expect(result.current.teamName).toBe('CodeHerWay');
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
   it('refreshes on focus, visibility, and relevant storage updates without replacing unchanged settings', async () => {
     const addWindowListener = vi.spyOn(window, 'addEventListener');
     const addDocumentListener = vi.spyOn(document, 'addEventListener');

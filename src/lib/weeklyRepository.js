@@ -7,7 +7,6 @@ import {
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
-import { isDemoWorkspaceEnabled } from './workspaceSetup';
 import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
@@ -27,6 +26,106 @@ const DEMO_PRIORITY_IDS = new Set(defaultPriorities.map((item) => String(item.id
 const DEMO_WIN_IDS = new Set(defaultWins.map((item) => String(item.id)));
 const DEMO_BLOCKER_IDS = new Set(defaultBlockers.map((item) => String(item.id)));
 
+/**
+ * Single source of truth for the three item types in a weekly brief. Each
+ * descriptor declares: which payload collection the item belongs to, the
+ * field-by-field shape used during normalization (with defaults), and the
+ * Supabase row <-> domain object mapping. The normalize/fallback/create/
+ * update/delete code paths all consult this table instead of branching on
+ * type so there is one place to add a new field or type.
+ */
+const ITEM_DESCRIPTORS = {
+  [WEEKLY_ITEM_TYPES.priority]: {
+    type: WEEKLY_ITEM_TYPES.priority,
+    collectionKey: 'priorities',
+    legacyStorageKey: LEGACY_PRIORITIES_KEY,
+    fallbackSource: defaultPriorities,
+    fields: { title: '', owner: 'Team Member', status: 'Planned' },
+    fromSupabaseRow: (row) => ({
+      id: row.id,
+      title: row.title,
+      owner: row.owner,
+      status: row.status,
+    }),
+    toSupabaseFields: (normalized) => ({
+      title: normalized.title,
+      description: '',
+      owner: normalized.owner,
+      status: normalized.status,
+      category: '',
+      severity: '',
+    }),
+  },
+  [WEEKLY_ITEM_TYPES.win]: {
+    type: WEEKLY_ITEM_TYPES.win,
+    collectionKey: 'wins',
+    legacyStorageKey: LEGACY_WINS_KEY,
+    fallbackSource: defaultWins,
+    fields: { text: '', category: 'Execution' },
+    fromSupabaseRow: (row) => ({
+      id: row.id,
+      text: row.description || row.title,
+      category: row.category,
+    }),
+    toSupabaseFields: (normalized) => ({
+      title: '',
+      description: normalized.text,
+      owner: '',
+      status: '',
+      category: normalized.category,
+      severity: '',
+    }),
+  },
+  [WEEKLY_ITEM_TYPES.blocker]: {
+    type: WEEKLY_ITEM_TYPES.blocker,
+    collectionKey: 'blockers',
+    legacyStorageKey: LEGACY_BLOCKERS_KEY,
+    fallbackSource: defaultBlockers,
+    fields: { text: '', severity: 'warning' },
+    fromSupabaseRow: (row) => ({
+      id: row.id,
+      text: row.description || row.title,
+      severity: row.severity,
+    }),
+    toSupabaseFields: (normalized) => ({
+      title: '',
+      description: normalized.text,
+      owner: '',
+      status: '',
+      category: '',
+      severity: normalized.severity,
+    }),
+  },
+};
+
+const ITEM_DESCRIPTOR_LIST = [
+  ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.priority],
+  ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.win],
+  ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.blocker],
+];
+
+function getDescriptor(type) {
+  return ITEM_DESCRIPTORS[type] || ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.blocker];
+}
+
+function resolveItemType(itemType) {
+  if (itemType === WEEKLY_ITEM_TYPES.win) return WEEKLY_ITEM_TYPES.win;
+  if (itemType === WEEKLY_ITEM_TYPES.blocker) return WEEKLY_ITEM_TYPES.blocker;
+  return WEEKLY_ITEM_TYPES.priority;
+}
+
+function normalizeItem(type, item, { includeUpdatedAt = true } = {}) {
+  const descriptor = getDescriptor(type);
+  const normalized = { id: String(item?.id || buildCreateId()) };
+  for (const [field, defaultValue] of Object.entries(descriptor.fields)) {
+    normalized[field] = item?.[field] || defaultValue;
+  }
+  if (includeUpdatedAt) {
+    normalized.updatedAt = readUpdatedAtMs(item);
+  }
+  return normalized;
+}
+
 function isUuid(value) {
   return typeof value === 'string'
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -45,12 +144,9 @@ export function getCurrentWeekStart() {
   return resolveCurrentWeekStart();
 }
 
-function getFallbackPriorities() {
-  if (!isDemoWorkspaceEnabled()) {
-    return [];
-  }
-
-  return getDemoPriorities();
+function getFallbackCollection(type) {
+  const descriptor = getDescriptor(type);
+  return descriptor.fallbackSource.map((item) => normalizeItem(type, item, { includeUpdatedAt: false }));
 }
 
 function getDemoPriorities() {
@@ -62,28 +158,12 @@ function getDemoPriorities() {
   }));
 }
 
-function getFallbackWins() {
-  if (!isDemoWorkspaceEnabled()) {
-    return [];
-  }
-
-  return getDemoWins();
-}
-
 function getDemoWins() {
   return defaultWins.map((item) => ({
     id: String(item.id || buildCreateId()),
     text: item.text || '',
     category: item.category || 'Execution',
   }));
-}
-
-function getFallbackBlockers() {
-  if (!isDemoWorkspaceEnabled()) {
-    return [];
-  }
-
-  return getDemoBlockers();
 }
 
 function getDemoBlockers() {
@@ -94,53 +174,31 @@ function getDemoBlockers() {
   }));
 }
 
-function normalizePriorityItem(item) {
-  return {
-    id: String(item?.id || buildCreateId()),
-    title: item?.title || '',
-    owner: item?.owner || 'Team Member',
-    status: item?.status || 'Planned',
-    updatedAt: readUpdatedAtMs(item),
-  };
-}
-
-function normalizeWinItem(item) {
-  return {
-    id: String(item?.id || buildCreateId()),
-    text: item?.text || '',
-    category: item?.category || 'Execution',
-    updatedAt: readUpdatedAtMs(item),
-  };
-}
-
-function normalizeBlockerItem(item) {
-  return {
-    id: String(item?.id || buildCreateId()),
-    text: item?.text || '',
-    severity: item?.severity || 'warning',
-    updatedAt: readUpdatedAtMs(item),
-  };
-}
-
 function normalizeCollection(type, items) {
   const source = Array.isArray(items) ? items : [];
-  if (type === WEEKLY_ITEM_TYPES.priority) {
-    return source.map(normalizePriorityItem);
-  }
+  return source.map((item) => normalizeItem(type, item));
+}
 
-  if (type === WEEKLY_ITEM_TYPES.win) {
-    return source.map(normalizeWinItem);
-  }
+function buildEmptyCollections() {
+  return {
+    priorities: [],
+    wins: [],
+    blockers: [],
+  };
+}
 
-  return source.map(normalizeBlockerItem);
+function buildFallbackCollections() {
+  return {
+    priorities: getFallbackCollection(WEEKLY_ITEM_TYPES.priority),
+    wins: getFallbackCollection(WEEKLY_ITEM_TYPES.win),
+    blockers: getFallbackCollection(WEEKLY_ITEM_TYPES.blocker),
+  };
 }
 
 function createDefaultWeekPayload() {
   return {
     reviewNotes: DEFAULT_REVIEW_NOTES,
-    priorities: getFallbackPriorities(),
-    wins: getFallbackWins(),
-    blockers: getFallbackBlockers(),
+    ...buildFallbackCollections(),
   };
 }
 
@@ -173,61 +231,36 @@ export function emitWeeklyBriefUpdated(detail = {}) {
   notifyWeeklyUpdated(detail);
 }
 
+function readLegacyCollection(descriptor) {
+  try {
+    const raw = window.localStorage.getItem(descriptor.legacyStorageKey);
+    const parsed = raw
+      ? parseJsonOrPreserveCorruption(descriptor.legacyStorageKey, raw, null)
+      : null;
+    return normalizeCollection(descriptor.type, parsed ?? getFallbackCollection(descriptor.type));
+  } catch {
+    return getFallbackCollection(descriptor.type);
+  }
+}
+
 function readLegacyWeekPayload() {
   if (typeof window === 'undefined') {
     return createDefaultWeekPayload();
   }
 
-  let priorities = getFallbackPriorities();
-  let wins = getFallbackWins();
-  let blockers = getFallbackBlockers();
   let reviewNotes = DEFAULT_REVIEW_NOTES;
-
-  try {
-    const rawPriorities = window.localStorage.getItem(LEGACY_PRIORITIES_KEY);
-    const parsedPriorities = rawPriorities
-      ? parseJsonOrPreserveCorruption(LEGACY_PRIORITIES_KEY, rawPriorities, priorities)
-      : priorities;
-    priorities = normalizeCollection(WEEKLY_ITEM_TYPES.priority, parsedPriorities);
-  } catch {
-    priorities = getFallbackPriorities();
-  }
-
-  try {
-    const rawWins = window.localStorage.getItem(LEGACY_WINS_KEY);
-    const parsedWins = rawWins
-      ? parseJsonOrPreserveCorruption(LEGACY_WINS_KEY, rawWins, wins)
-      : wins;
-    wins = normalizeCollection(WEEKLY_ITEM_TYPES.win, parsedWins);
-  } catch {
-    wins = getFallbackWins();
-  }
-
-  try {
-    const rawBlockers = window.localStorage.getItem(LEGACY_BLOCKERS_KEY);
-    const parsedBlockers = rawBlockers
-      ? parseJsonOrPreserveCorruption(LEGACY_BLOCKERS_KEY, rawBlockers, blockers)
-      : blockers;
-    blockers = normalizeCollection(WEEKLY_ITEM_TYPES.blocker, parsedBlockers);
-  } catch {
-    blockers = getFallbackBlockers();
-  }
-
   try {
     const rawReviewNotes = window.localStorage.getItem(LEGACY_REVIEW_NOTES_KEY);
-    reviewNotes = typeof rawReviewNotes === 'string'
-      ? rawReviewNotes
-      : DEFAULT_REVIEW_NOTES;
+    reviewNotes = typeof rawReviewNotes === 'string' ? rawReviewNotes : DEFAULT_REVIEW_NOTES;
   } catch {
     reviewNotes = DEFAULT_REVIEW_NOTES;
   }
 
-  return {
-    reviewNotes,
-    priorities,
-    wins,
-    blockers,
-  };
+  const payload = { reviewNotes };
+  ITEM_DESCRIPTOR_LIST.forEach((descriptor) => {
+    payload[descriptor.collectionKey] = readLegacyCollection(descriptor);
+  });
+  return payload;
 }
 
 function readLocalWeekStore() {
@@ -256,6 +289,19 @@ function writeLocalWeekStore(store) {
   );
 }
 
+function buildWeekPayload(reviewNotes, source) {
+  const payload = {
+    reviewNotes: typeof reviewNotes === 'string' ? reviewNotes : DEFAULT_REVIEW_NOTES,
+  };
+  ITEM_DESCRIPTOR_LIST.forEach((descriptor) => {
+    payload[descriptor.collectionKey] = normalizeCollection(
+      descriptor.type,
+      source ? source[descriptor.collectionKey] : [],
+    );
+  });
+  return payload;
+}
+
 function removeLegacyWeeklyKeys() {
   if (typeof window === 'undefined') {
     return;
@@ -272,14 +318,7 @@ function resolveLocalWeekPayload(weekStart) {
   const weekRecord = store[weekStart];
 
   if (weekRecord && typeof weekRecord === 'object') {
-    return {
-      reviewNotes: typeof weekRecord.reviewNotes === 'string'
-        ? weekRecord.reviewNotes
-        : DEFAULT_REVIEW_NOTES,
-      priorities: normalizeCollection(WEEKLY_ITEM_TYPES.priority, weekRecord.priorities),
-      wins: normalizeCollection(WEEKLY_ITEM_TYPES.win, weekRecord.wins),
-      blockers: normalizeCollection(WEEKLY_ITEM_TYPES.blocker, weekRecord.blockers),
-    };
+    return buildWeekPayload(weekRecord.reviewNotes, weekRecord);
   }
 
   if (weekStart === getCurrentWeekStart()) {
@@ -288,9 +327,7 @@ function resolveLocalWeekPayload(weekStart) {
 
   return {
     reviewNotes: DEFAULT_REVIEW_NOTES,
-    priorities: [],
-    wins: [],
-    blockers: [],
+    ...buildEmptyCollections(),
   };
 }
 
@@ -299,76 +336,15 @@ function updateLocalWeekPayload(weekStart, updater) {
   const current = resolveLocalWeekPayload(weekStart);
   const next = updater(current);
 
-  store[weekStart] = {
-    reviewNotes: typeof next.reviewNotes === 'string' ? next.reviewNotes : DEFAULT_REVIEW_NOTES,
-    priorities: normalizeCollection(WEEKLY_ITEM_TYPES.priority, next.priorities),
-    wins: normalizeCollection(WEEKLY_ITEM_TYPES.win, next.wins),
-    blockers: normalizeCollection(WEEKLY_ITEM_TYPES.blocker, next.blockers),
-  };
+  store[weekStart] = buildWeekPayload(next.reviewNotes, next);
 
   writeLocalWeekStore(store);
   return store[weekStart];
 }
 
 function mapItemFromSupabaseRow(row) {
-  if (row.item_type === WEEKLY_ITEM_TYPES.priority) {
-    return normalizePriorityItem({
-      id: row.id,
-      title: row.title,
-      owner: row.owner,
-      status: row.status,
-    });
-  }
-
-  if (row.item_type === WEEKLY_ITEM_TYPES.win) {
-    return normalizeWinItem({
-      id: row.id,
-      text: row.description || row.title,
-      category: row.category,
-    });
-  }
-
-  return normalizeBlockerItem({
-    id: row.id,
-    text: row.description || row.title,
-    severity: row.severity,
-  });
-}
-
-function mapItemToSupabaseFields(type, item) {
-  if (type === WEEKLY_ITEM_TYPES.priority) {
-    const normalized = normalizePriorityItem(item);
-    return {
-      title: normalized.title,
-      description: '',
-      owner: normalized.owner,
-      status: normalized.status,
-      category: '',
-      severity: '',
-    };
-  }
-
-  if (type === WEEKLY_ITEM_TYPES.win) {
-    const normalized = normalizeWinItem(item);
-    return {
-      title: '',
-      description: normalized.text,
-      owner: '',
-      status: '',
-      category: normalized.category,
-      severity: '',
-    };
-  }
-
-  const normalized = normalizeBlockerItem(item);
-  return {
-    title: '',
-    description: normalized.text,
-    owner: '',
-    status: '',
-    category: '',
-    severity: normalized.severity,
-  };
+  const descriptor = getDescriptor(row.item_type);
+  return normalizeItem(descriptor.type, descriptor.fromSupabaseRow(row));
 }
 
 async function getSupabaseBriefRow({
@@ -431,30 +407,14 @@ async function listSupabaseWeeklyItems({
   }
 
   const rows = Array.isArray(data) ? data : [];
-  const priorities = [];
-  const wins = [];
-  const blockers = [];
+  const collections = buildEmptyCollections();
 
   rows.forEach((row) => {
-    const normalized = mapItemFromSupabaseRow(row);
-    if (row.item_type === WEEKLY_ITEM_TYPES.priority) {
-      priorities.push(normalized);
-      return;
-    }
-
-    if (row.item_type === WEEKLY_ITEM_TYPES.win) {
-      wins.push(normalized);
-      return;
-    }
-
-    blockers.push(normalized);
+    const descriptor = getDescriptor(row.item_type);
+    collections[descriptor.collectionKey].push(mapItemFromSupabaseRow(row));
   });
 
-  return {
-    priorities,
-    wins,
-    blockers,
-  };
+  return collections;
 }
 
 export async function getWeeklyBriefByWeek(weekStart = getCurrentWeekStart()) {
@@ -476,9 +436,7 @@ export async function getWeeklyBriefByWeek(weekStart = getCurrentWeekStart()) {
       return {
         weekStart: normalizedWeekStart,
         reviewNotes: DEFAULT_REVIEW_NOTES,
-        priorities: [],
-        wins: [],
-        blockers: [],
+        ...buildEmptyCollections(),
         source: 'supabase',
       };
     }
@@ -574,11 +532,8 @@ export async function createWeeklyItem({
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
     : getCurrentWeekStart();
-  const normalizedType = itemType === WEEKLY_ITEM_TYPES.win
-    ? WEEKLY_ITEM_TYPES.win
-    : itemType === WEEKLY_ITEM_TYPES.blocker
-      ? WEEKLY_ITEM_TYPES.blocker
-      : WEEKLY_ITEM_TYPES.priority;
+  const normalizedType = resolveItemType(itemType);
+  const descriptor = getDescriptor(normalizedType);
 
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
@@ -589,11 +544,7 @@ export async function createWeeklyItem({
       weekStart: normalizedWeekStart,
       createIfMissing: true,
     });
-    const normalizedItem = normalizedType === WEEKLY_ITEM_TYPES.priority
-      ? normalizePriorityItem(item)
-      : normalizedType === WEEKLY_ITEM_TYPES.win
-        ? normalizeWinItem(item)
-        : normalizeBlockerItem(item);
+    const normalizedItem = normalizeItem(normalizedType, item);
 
     const { data, error } = await supabaseClient
       .from('weekly_brief_items')
@@ -603,7 +554,7 @@ export async function createWeeklyItem({
         user_id: userId,
         item_type: normalizedType,
         sort_order: sortOrder,
-        ...mapItemToSupabaseFields(normalizedType, normalizedItem),
+        ...descriptor.toSupabaseFields(normalizedItem),
       })
       .select('id, item_type, title, description, owner, status, category, severity, sort_order')
       .single();
@@ -625,27 +576,12 @@ export async function createWeeklyItem({
   }
 
   const itemWithStamp = { ...item, updatedAt: Date.now() };
-  const normalizedItem = normalizedType === WEEKLY_ITEM_TYPES.priority
-    ? normalizePriorityItem(itemWithStamp)
-    : normalizedType === WEEKLY_ITEM_TYPES.win
-      ? normalizeWinItem(itemWithStamp)
-      : normalizeBlockerItem(itemWithStamp);
+  const normalizedItem = normalizeItem(normalizedType, itemWithStamp);
 
-  updateLocalWeekPayload(normalizedWeekStart, (current) => {
-    const next = {
-      ...current,
-    };
-
-    if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
-      next.priorities = [...current.priorities, normalizedItem];
-    } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
-      next.wins = [...current.wins, normalizedItem];
-    } else {
-      next.blockers = [...current.blockers, normalizedItem];
-    }
-
-    return next;
-  });
+  updateLocalWeekPayload(normalizedWeekStart, (current) => ({
+    ...current,
+    [descriptor.collectionKey]: [...current[descriptor.collectionKey], normalizedItem],
+  }));
 
   if (emitEvent) {
     notifyWeeklyUpdated({
@@ -670,28 +606,21 @@ export async function updateWeeklyItem({
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
     : getCurrentWeekStart();
-  const normalizedType = itemType === WEEKLY_ITEM_TYPES.win
-    ? WEEKLY_ITEM_TYPES.win
-    : itemType === WEEKLY_ITEM_TYPES.blocker
-      ? WEEKLY_ITEM_TYPES.blocker
-      : WEEKLY_ITEM_TYPES.priority;
+  const normalizedType = resolveItemType(itemType);
+  const descriptor = getDescriptor(normalizedType);
   const normalizedItemId = String(itemId || '');
 
   const supabase = await getSupabaseRuntime();
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
   if (supabaseClient) {
     const userId = await supabase.requireSupabaseUserId();
-    const normalizedItem = normalizedType === WEEKLY_ITEM_TYPES.priority
-      ? normalizePriorityItem({ ...item, id: normalizedItemId })
-      : normalizedType === WEEKLY_ITEM_TYPES.win
-        ? normalizeWinItem({ ...item, id: normalizedItemId })
-        : normalizeBlockerItem({ ...item, id: normalizedItemId });
+    const normalizedItem = normalizeItem(normalizedType, { ...item, id: normalizedItemId });
 
     const { data, error } = await supabaseClient
       .from('weekly_brief_items')
       .update({
         sort_order: sortOrder,
-        ...mapItemToSupabaseFields(normalizedType, normalizedItem),
+        ...descriptor.toSupabaseFields(normalizedItem),
       })
       .eq('id', normalizedItemId)
       .eq('user_id', userId)
@@ -718,18 +647,9 @@ export async function updateWeeklyItem({
 
   let nextItem = null;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
-    const next = {
-      ...current,
-    };
-
-    let persisted = null;
-    if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
-      persisted = current.priorities.find((entry) => String(entry.id) === normalizedItemId) || null;
-    } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
-      persisted = current.wins.find((entry) => String(entry.id) === normalizedItemId) || null;
-    } else {
-      persisted = current.blockers.find((entry) => String(entry.id) === normalizedItemId) || null;
-    }
+    const persisted = current[descriptor.collectionKey].find(
+      (entry) => String(entry.id) === normalizedItemId,
+    ) || null;
 
     assertRecordIsFresh(
       persisted,
@@ -738,38 +658,22 @@ export async function updateWeeklyItem({
     );
 
     const itemWithStamp = { ...item, id: normalizedItemId, updatedAt: stamp };
-
-    if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
-      next.priorities = current.priorities.map((currentItem) => {
-        if (String(currentItem.id) !== normalizedItemId) {
-          return currentItem;
-        }
-        nextItem = normalizePriorityItem(itemWithStamp);
-        return nextItem;
-      });
-    } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
-      next.wins = current.wins.map((currentItem) => {
-        if (String(currentItem.id) !== normalizedItemId) {
-          return currentItem;
-        }
-        nextItem = normalizeWinItem(itemWithStamp);
-        return nextItem;
-      });
-    } else {
-      next.blockers = current.blockers.map((currentItem) => {
-        if (String(currentItem.id) !== normalizedItemId) {
-          return currentItem;
-        }
-        nextItem = normalizeBlockerItem(itemWithStamp);
-        return nextItem;
-      });
-    }
+    const updatedCollection = current[descriptor.collectionKey].map((currentItem) => {
+      if (String(currentItem.id) !== normalizedItemId) {
+        return currentItem;
+      }
+      nextItem = normalizeItem(normalizedType, itemWithStamp);
+      return nextItem;
+    });
 
     if (!nextItem) {
       throw new Error('Weekly item not found');
     }
 
-    return next;
+    return {
+      ...current,
+      [descriptor.collectionKey]: updatedCollection,
+    };
   });
 
   if (emitEvent) {
@@ -792,11 +696,8 @@ export async function deleteWeeklyItem({
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
     : getCurrentWeekStart();
-  const normalizedType = itemType === WEEKLY_ITEM_TYPES.win
-    ? WEEKLY_ITEM_TYPES.win
-    : itemType === WEEKLY_ITEM_TYPES.blocker
-      ? WEEKLY_ITEM_TYPES.blocker
-      : WEEKLY_ITEM_TYPES.priority;
+  const normalizedType = resolveItemType(itemType);
+  const descriptor = getDescriptor(normalizedType);
   const normalizedItemId = String(itemId || '');
 
   const supabase = await getSupabaseRuntime();
@@ -826,26 +727,16 @@ export async function deleteWeeklyItem({
 
   let didDelete = false;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
-    const next = {
-      ...current,
-    };
-
-    if (normalizedType === WEEKLY_ITEM_TYPES.priority) {
-      didDelete = current.priorities.some((item) => String(item.id) === normalizedItemId);
-      next.priorities = current.priorities.filter((item) => String(item.id) !== normalizedItemId);
-    } else if (normalizedType === WEEKLY_ITEM_TYPES.win) {
-      didDelete = current.wins.some((item) => String(item.id) === normalizedItemId);
-      next.wins = current.wins.filter((item) => String(item.id) !== normalizedItemId);
-    } else {
-      didDelete = current.blockers.some((item) => String(item.id) === normalizedItemId);
-      next.blockers = current.blockers.filter((item) => String(item.id) !== normalizedItemId);
-    }
-
+    const collection = current[descriptor.collectionKey];
+    didDelete = collection.some((entry) => String(entry.id) === normalizedItemId);
     if (!didDelete) {
       throw new Error('Weekly item not found');
     }
 
-    return next;
+    return {
+      ...current,
+      [descriptor.collectionKey]: collection.filter((entry) => String(entry.id) !== normalizedItemId),
+    };
   });
 
   if (emitEvent) {

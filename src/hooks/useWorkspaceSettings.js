@@ -8,10 +8,12 @@ const SETTINGS_STORAGE_KEYS = new Set([
   'ceo-os-settings-saved-at',
 ]);
 const SILENT_REFRESH_COALESCE_MS = 400;
+const LOAD_ERROR_MESSAGE = 'Unable to load workspace settings right now.';
 
 export function useWorkspaceSettings() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [source, setSource] = useState(getSettingsSource());
+  const [loadError, setLoadError] = useState('');
   const requestIdRef = useRef(0);
   const lastRefreshAtRef = useRef(0);
 
@@ -32,7 +34,13 @@ export function useWorkspaceSettings() {
         shallowEqualRecords(current, nextSettings) ? current : nextSettings
       ));
       setSource((current) => (current === nextSource ? current : nextSource));
+      setLoadError((current) => (current === '' ? current : ''));
     } catch (error) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setLoadError(LOAD_ERROR_MESSAGE);
       if (import.meta.env.DEV) {
         console.error('Failed to load workspace settings', error);
       }
@@ -96,8 +104,9 @@ export function useWorkspaceSettings() {
   return useMemo(() => ({
     settings,
     source,
+    loadError,
     teamName: resolveTeamName(settings?.teamName),
     timezone: resolveTimeZone(settings?.timezone),
     refreshWorkspaceSettings,
-  }), [refreshWorkspaceSettings, settings, source]);
+  }), [refreshWorkspaceSettings, settings, source, loadError]);
 }
