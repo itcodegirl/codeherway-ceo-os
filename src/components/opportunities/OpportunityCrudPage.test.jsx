@@ -73,7 +73,7 @@ describe('OpportunityCrudPage', () => {
     expect(screen.getByRole('heading', { name: 'Opportunities' })).toBeInTheDocument();
     expect(screen.getByText('Loading opportunities data.')).toBeInTheDocument();
     expect(screen.getByRole('table', { name: 'Opportunity pipeline' })).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Local sample data is active. Connect workspace data to replace sample records.')).toBeInTheDocument();
+    expect(screen.getByText('Local sample data is active on this device. It is not synced to an account.')).toBeInTheDocument();
   });
 
   it('renders empty and error state content when there are no opportunities', () => {

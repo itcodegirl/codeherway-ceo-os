@@ -1,6 +1,6 @@
 export const SOURCE_LABEL_SUPABASE = 'Live workspace sync is enabled.';
 export const SOURCE_NOTICE_SUPABASE = `Data source: ${SOURCE_LABEL_SUPABASE}`;
-export const SOURCE_NOTICE_SAMPLE_DATA = 'Local sample data is active. Connect workspace data to replace sample records.';
+export const SOURCE_NOTICE_SAMPLE_DATA = 'Local sample data is active on this device. It is not synced to an account.';
 export const AUTOSAVE_PAUSED_COPY = 'Autosave is paused until this workspace saves successfully again.';
 
 export function buildSourceNotice(source, options = {}) {

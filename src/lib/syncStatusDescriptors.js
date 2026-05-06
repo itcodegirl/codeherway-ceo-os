@@ -8,19 +8,19 @@ const SOURCE_DESCRIPTORS = {
   supabase: {
     label: 'Synced',
     tone: 'ok',
-    description: 'Workspace is syncing to Supabase.',
+    description: 'Supported workspace data syncs to Supabase.',
   },
   local: {
     label: 'Local only',
     tone: 'local',
-    description: 'Changes save to this browser. Connect a workspace to sync across devices.',
+    description: 'Changes save to this browser only. Connect a workspace to sync supported data across devices.',
   },
 };
 
 const OFFLINE_DESCRIPTOR = {
   label: 'Offline',
   tone: 'offline',
-  description: 'No network connection detected. Changes save locally and will be available when you reload.',
+  description: 'No network connection detected. Local-only work stays on this device until the network returns.',
 };
 
 export function describeSyncStatus(source, isOnline) {

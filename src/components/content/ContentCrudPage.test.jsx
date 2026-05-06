@@ -71,7 +71,7 @@ describe('ContentCrudPage', () => {
     expect(screen.getByRole('heading', { name: 'Content OS' })).toBeInTheDocument();
     expect(screen.getByText('Loading content board data.')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Publishing workflow cards' })).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Local sample data is active. Connect workspace data to replace sample records.')).toBeInTheDocument();
+    expect(screen.getByText('Local sample data is active on this device. It is not synced to an account.')).toBeInTheDocument();
   });
 
   it('renders empty and error state content when there are no items', () => {
