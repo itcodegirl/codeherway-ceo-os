@@ -84,10 +84,23 @@ function Capture() {
   // Stickies that have already been promoted to a reminder/opportunity/content
   // draft are hidden by default so the wall stays a brain-dump space rather
   // than a graveyard. Toggle reveals them with a small "promoted to X" tag.
-  const promotedNotesCount = sortedNotes.filter((note) => Boolean(note.promotedTo)).length;
-  const visibleNotes = showPromotedNotes
-    ? sortedNotes
-    : sortedNotes.filter((note) => !note.promotedTo);
+  // Combined into a single useMemo so both derived values share one pass and
+  // don't recompute on unrelated renders (composer textarea keystrokes, etc.).
+  const { promotedNotesCount, visibleNotes } = useMemo(() => {
+    let promoted = 0;
+    const visible = [];
+    for (const note of sortedNotes) {
+      if (note.promotedTo) {
+        promoted += 1;
+        if (showPromotedNotes) {
+          visible.push(note);
+        }
+      } else {
+        visible.push(note);
+      }
+    }
+    return { promotedNotesCount: promoted, visibleNotes: visible };
+  }, [sortedNotes, showPromotedNotes]);
   const captureSaveHelper = buildAutosaveHelperText({
     hasError: Boolean(errorMessage),
     healthyText: 'Auto-saved locally and ready whenever your brain moves fast.',

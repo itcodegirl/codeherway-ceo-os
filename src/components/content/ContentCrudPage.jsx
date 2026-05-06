@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import CrudPageTemplate from '../crud/CrudPageTemplate';
 import ContentTable from './ContentTable';
 import ContentItemModal from './ContentItemModal';
@@ -85,7 +85,10 @@ function ContentCrudPage() {
     logPrefix: 'content items',
   });
 
-  const source = getContentSource();
+  // Source is a runtime config check that doesn't change during a session.
+  // Reading it from a useState initializer avoids hitting the resolver on
+  // every render (modal open, form keystroke, list refresh, etc.).
+  const [source] = useState(() => getContentSource());
 
   const statusCounts = useMemo(
     () =>

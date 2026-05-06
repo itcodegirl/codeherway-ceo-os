@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import CrudPageTemplate from '../crud/CrudPageTemplate';
 import OpportunityTable from './OpportunityTable';
 import OpportunityItemModal from './OpportunityItemModal';
@@ -91,7 +91,10 @@ function OpportunityCrudPage() {
     logPrefix: 'opportunities',
   });
 
-  const source = getOpportunitiesSource();
+  // Source is a runtime config check that doesn't change during a session.
+  // Reading it from a useState initializer avoids hitting the resolver on
+  // every render (modal open, form keystroke, list refresh, etc.).
+  const [source] = useState(() => getOpportunitiesSource());
 
   const metrics = useMemo(() => {
     return opportunityItems.reduce(
