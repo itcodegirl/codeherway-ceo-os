@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
-import { NAV_GROUPS } from '../../lib/routes';
+import { useMetaMode } from '../../hooks/useMetaMode';
+import { buildNavGroups } from '../../lib/routes';
 
 function subscribeToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery?.addEventListener === 'function') {
@@ -21,6 +22,8 @@ function subscribeToMediaQuery(mediaQuery, listener) {
 function Sidebar() {
   const location = useLocation();
   const { teamName } = useWorkspaceSettings();
+  const isMetaMode = useMetaMode();
+  const navGroups = useMemo(() => buildNavGroups(undefined, { isMetaMode }), [isMetaMode]);
   const [mobileMenuOpenKey, setMobileMenuOpenKey] = useState('');
   const menuToggleRef = useRef(null);
   const navRef = useRef(null);
@@ -124,7 +127,7 @@ function Sidebar() {
         aria-hidden={isCompactViewport && !isMobileMenuOpen ? 'true' : undefined}
         aria-label="Main navigation"
       >
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <div key={group.id} className={`sidebar__group sidebar__group--${group.id}`}>
             <p className="sidebar__group-label" id={`sidebar-group-${group.id}`}>
               {group.label}

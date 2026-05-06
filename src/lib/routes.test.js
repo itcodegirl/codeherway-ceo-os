@@ -4,6 +4,7 @@ import {
   NAV_GROUPS,
   NAV_ITEMS,
   buildNavGroups,
+  filterRoutesByMetaMode,
   toNestedRoutePath,
 } from './routes';
 import { buildPageMetaByRoute } from './pageMeta';
@@ -42,7 +43,7 @@ describe('src/lib/routes', () => {
   });
 
   it('groups navigation items by their assigned group, in declared order', () => {
-    const groups = buildNavGroups();
+    const groups = buildNavGroups(undefined, { isMetaMode: true });
     const groupIds = groups.map((group) => group.id);
     expect(groupIds).toEqual(['today', 'this-week', 'workspace', 'account']);
 
@@ -54,9 +55,27 @@ describe('src/lib/routes', () => {
     expect(todayGroup.items[0].path).toBe('/');
   });
 
-  it('exposes a stable NAV_GROUPS export covering every route', () => {
+  it('hides meta-flagged routes from default sidebar nav and exposes them in meta mode', () => {
+    const defaultGroups = buildNavGroups();
+    const defaultPaths = defaultGroups.flatMap((group) => group.items.map((item) => item.path));
+    expect(defaultPaths).not.toContain('/ops-reliability');
+
+    const metaGroups = buildNavGroups(undefined, { isMetaMode: true });
+    const metaPaths = metaGroups.flatMap((group) => group.items.map((item) => item.path));
+    expect(metaPaths).toContain('/ops-reliability');
+  });
+
+  it('filterRoutesByMetaMode hides meta-flagged routes by default and exposes them in meta mode', () => {
+    const defaultIds = filterRoutesByMetaMode(APP_ROUTES, false).map((route) => route.id);
+    expect(defaultIds).not.toContain('ops-reliability');
+
+    const metaIds = filterRoutesByMetaMode(APP_ROUTES, true).map((route) => route.id);
+    expect(metaIds).toContain('ops-reliability');
+  });
+
+  it('exposes a stable NAV_GROUPS export covering non-meta routes', () => {
     const allGroupedPaths = NAV_GROUPS.flatMap((group) => group.items.map((item) => item.path));
-    const allRoutePaths = APP_ROUTES.map((route) => route.path);
-    expect(new Set(allGroupedPaths)).toEqual(new Set(allRoutePaths));
+    const visibleRoutes = APP_ROUTES.filter((route) => !route.meta);
+    expect(new Set(allGroupedPaths)).toEqual(new Set(visibleRoutes.map((route) => route.path)));
   });
 });
