@@ -32,10 +32,11 @@ function SyncStatusPill() {
   const hasLoadError = Boolean(loadError);
   const descriptor = describeSyncStatus(source, isOnline, hasLoadError);
   // Only advertise the queue when there is somewhere for it to drain.
-  const showPending = pendingCount > 0 && source === 'supabase';
-  const pendingLabel = showPending ? ` · +${pendingCount} pending` : '';
+  const showPending = pendingCount > 0 && source === 'supabase' && isOnline;
+  const label = showPending ? 'Pending sync' : descriptor.label;
+  const pendingLabel = showPending ? ` · ${pendingCount} waiting` : '';
   const pendingTitle = showPending
-    ? ` ${pendingCount} write${pendingCount === 1 ? '' : 's'} are waiting to sync.`
+    ? ` ${pendingCount} supported write${pendingCount === 1 ? ' is' : 's are'} waiting to sync.`
     : '';
   const titleText = hasLoadError && loadError
     ? `${loadError} ${descriptor.description}${pendingTitle}`
@@ -78,7 +79,7 @@ function SyncStatusPill() {
     >
       <span className="sync-status-pill__dot" aria-hidden="true" />
       <span className="sync-status-pill__label">
-        {descriptor.label}
+        {label}
         {pendingLabel}
       </span>
     </span>

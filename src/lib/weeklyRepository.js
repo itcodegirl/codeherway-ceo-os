@@ -7,6 +7,7 @@ import {
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -21,6 +22,9 @@ const WEEKLY_ITEM_TYPES = {
   win: 'win',
   blocker: 'blocker',
 };
+const DEMO_PRIORITY_IDS = new Set(defaultPriorities.map((item) => String(item.id)));
+const DEMO_WIN_IDS = new Set(defaultWins.map((item) => String(item.id)));
+const DEMO_BLOCKER_IDS = new Set(defaultBlockers.map((item) => String(item.id)));
 
 /**
  * Single source of truth for the three item types in a weekly brief. Each
@@ -145,6 +149,31 @@ function getFallbackCollection(type) {
   return descriptor.fallbackSource.map((item) => normalizeItem(type, item, { includeUpdatedAt: false }));
 }
 
+function getDemoPriorities() {
+  return defaultPriorities.map((item) => ({
+    id: String(item.id || buildCreateId()),
+    title: item.title || '',
+    owner: item.owner || 'Team Member',
+    status: item.status || 'Planned',
+  }));
+}
+
+function getDemoWins() {
+  return defaultWins.map((item) => ({
+    id: String(item.id || buildCreateId()),
+    text: item.text || '',
+    category: item.category || 'Execution',
+  }));
+}
+
+function getDemoBlockers() {
+  return defaultBlockers.map((item) => ({
+    id: String(item.id || buildCreateId()),
+    text: item.text || '',
+    severity: item.severity || 'warning',
+  }));
+}
+
 function normalizeCollection(type, items) {
   const source = Array.isArray(items) ? items : [];
   return source.map((item) => normalizeItem(type, item));
@@ -173,6 +202,15 @@ function createDefaultWeekPayload() {
   };
 }
 
+function createDemoWeekPayload() {
+  return {
+    reviewNotes: DEFAULT_REVIEW_NOTES,
+    priorities: getDemoPriorities(),
+    wins: getDemoWins(),
+    blockers: getDemoBlockers(),
+  };
+}
+
 function getWeeklySource() {
   return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
@@ -196,7 +234,9 @@ export function emitWeeklyBriefUpdated(detail = {}) {
 function readLegacyCollection(descriptor) {
   try {
     const raw = window.localStorage.getItem(descriptor.legacyStorageKey);
-    const parsed = raw ? JSON.parse(raw) : null;
+    const parsed = raw
+      ? parseJsonOrPreserveCorruption(descriptor.legacyStorageKey, raw, null)
+      : null;
     return normalizeCollection(descriptor.type, parsed ?? getFallbackCollection(descriptor.type));
   } catch {
     return getFallbackCollection(descriptor.type);
@@ -234,7 +274,7 @@ function readLocalWeekStore() {
       return {};
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(LOCAL_WEEKLY_BRIEFS_KEY, raw, null);
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
     return {};
@@ -260,6 +300,17 @@ function buildWeekPayload(reviewNotes, source) {
     );
   });
   return payload;
+}
+
+function removeLegacyWeeklyKeys() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.removeItem(LEGACY_PRIORITIES_KEY);
+  window.localStorage.removeItem(LEGACY_WINS_KEY);
+  window.localStorage.removeItem(LEGACY_BLOCKERS_KEY);
+  window.localStorage.removeItem(LEGACY_REVIEW_NOTES_KEY);
 }
 
 function resolveLocalWeekPayload(weekStart) {
@@ -696,4 +747,54 @@ export async function deleteWeeklyItem({
       itemType: normalizedType,
     });
   }
+}
+
+export function clearLocalWeeklyDemoData(weekStart = getCurrentWeekStart()) {
+  const normalizedWeekStart = typeof weekStart === 'string' && weekStart
+    ? weekStart
+    : getCurrentWeekStart();
+  const store = readLocalWeekStore();
+  const current = resolveLocalWeekPayload(normalizedWeekStart);
+
+  store[normalizedWeekStart] = {
+    reviewNotes: current.reviewNotes,
+    priorities: normalizeCollection(
+      WEEKLY_ITEM_TYPES.priority,
+      current.priorities.filter((item) => !DEMO_PRIORITY_IDS.has(String(item.id))),
+    ),
+    wins: normalizeCollection(
+      WEEKLY_ITEM_TYPES.win,
+      current.wins.filter((item) => !DEMO_WIN_IDS.has(String(item.id))),
+    ),
+    blockers: normalizeCollection(
+      WEEKLY_ITEM_TYPES.blocker,
+      current.blockers.filter((item) => !DEMO_BLOCKER_IDS.has(String(item.id))),
+    ),
+  };
+
+  writeLocalWeekStore(store);
+  removeLegacyWeeklyKeys();
+  notifyWeeklyUpdated({
+    weekStart: normalizedWeekStart,
+    source: 'local',
+    mutation: 'clear_demo',
+  });
+  return store[normalizedWeekStart];
+}
+
+export function resetLocalWeeklyDemoData(weekStart = getCurrentWeekStart()) {
+  const normalizedWeekStart = typeof weekStart === 'string' && weekStart
+    ? weekStart
+    : getCurrentWeekStart();
+  const store = readLocalWeekStore();
+  store[normalizedWeekStart] = createDemoWeekPayload();
+
+  writeLocalWeekStore(store);
+  removeLegacyWeeklyKeys();
+  notifyWeeklyUpdated({
+    weekStart: normalizedWeekStart,
+    source: 'local',
+    mutation: 'load_demo',
+  });
+  return store[normalizedWeekStart];
 }

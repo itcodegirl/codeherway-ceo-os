@@ -127,6 +127,6 @@ export const dashboardDemoData = {
   focusScore: {
     demoSuffix: 'Local sample',
   },
-  demoNote: 'Local sample data is active. Connect workspace data to replace sample records.',
+  demoNote: 'Local sample data is active on this device. It is not synced to an account.',
 };
 

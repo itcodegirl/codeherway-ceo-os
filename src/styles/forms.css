@@ -119,6 +119,32 @@
   outline-offset: 2px;
 }
 
+.settings-workspace-setup {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-workspace-setup .helper-text {
+  margin: 0;
+}
+
+.settings-workspace-setup__actions,
+.settings-workspace-setup__unavailable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.settings-workspace-setup__unavailable span {
+  padding: 0.42rem 0.58rem;
+  border-radius: 999px;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
 .settings-theme {
   border: none;
   margin: 0;

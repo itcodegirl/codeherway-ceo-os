@@ -127,6 +127,7 @@ function RemindersPanel({
   // Keep completed reminders hidden by default so the list doesn't grow into
   // a backlog of finished work. Users can opt-in to seeing them.
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   // Single pass over visibleReminders for both derived values. Dashboard
   // re-renders frequently (focus mode, next-move clicks, debounced reminder
   // adds) so keeping this O(n) once instead of twice avoids waste.
@@ -220,15 +221,28 @@ function RemindersPanel({
         )}
       </ul>
 
-      <p className="focus-home__subheading">Suggestions</p>
-      <ul className="focus-list" aria-live="polite">
-        {suggestions.map((item) => (
-          <li key={item.id}>
-            <p>{item.text}</p>
-            {item.context ? <p className="helper-text">{item.context}</p> : null}
-          </li>
-        ))}
-      </ul>
+      <button
+        type="button"
+        className="focus-reminder-list__toggle-completed focus-reminder-list__toggle-suggestions"
+        aria-expanded={showSuggestions}
+        onClick={() => setShowSuggestions((prev) => !prev)}
+      >
+        {showSuggestions ? 'Hide suggestions' : 'Show suggestions'}
+      </button>
+
+      {showSuggestions ? (
+        <>
+          <p className="focus-home__subheading">Suggestions</p>
+          <ul className="focus-list" aria-live="polite">
+            {suggestions.map((item) => (
+              <li key={item.id}>
+                <p>{item.text}</p>
+                {item.context ? <p className="helper-text">{item.context}</p> : null}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
     </article>
   );
 }

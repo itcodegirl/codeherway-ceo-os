@@ -21,6 +21,10 @@ vi.mock('../hooks/useWeeklyBrief', () => ({
   useWeeklyBrief: vi.fn(),
 }));
 
+vi.mock('../hooks/useWorkspaceSetup', () => ({
+  useWorkspaceSetup: vi.fn(),
+}));
+
 vi.mock('../lib/weeklyRepository', () => ({
   createWeeklyItem: vi.fn(() => Promise.resolve({ id: 'priority-new', title: 'mock' })),
 }));
@@ -28,6 +32,7 @@ vi.mock('../lib/weeklyRepository', () => ({
 import Dashboard from './Dashboard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
+import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { listReminders } from '../lib/remindersRepository';
 import { createWeeklyItem } from '../lib/weeklyRepository';
 
@@ -37,6 +42,12 @@ describe('src/pages/Dashboard', () => {
     showToastSpy.mockReset();
     createWeeklyItem.mockClear();
     vi.useRealTimers();
+    useWorkspaceSetup.mockReturnValue({
+      hasChoice: true,
+      isDemoMode: true,
+      startBlankWorkspace: vi.fn(),
+      loadDemoWorkspace: vi.fn(),
+    });
 
     useWeeklyBrief.mockReturnValue({
       priorities: [
@@ -79,7 +90,12 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Next Smallest Action' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Blockers' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Operating rhythm' })).toBeInTheDocument();
+    expect(screen.getByText('Choose one main focus, one blocker, and one reminder to protect.')).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
+    expect(screen.getByText('Recommended because: this priority is blocked and needs one clear unblock message.')).toBeInTheDocument();
+    expect(screen.queryByText('This blocker may need attention.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show suggestions' }));
     expect(screen.getByText('This blocker may need attention.')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Add a quick reminder')).toHaveAccessibleDescription(
       'Keep it small enough to finish today. No reminder progress yet.',
@@ -314,7 +330,34 @@ describe('src/pages/Dashboard', () => {
 
     // Quick-win calm copy lives in the drawer.
     fireEvent.click(screen.getByRole('button', { name: 'Show focus tools' }));
-    expect(screen.getByText('You are clear for now. Keep momentum by finishing one tiny action.')).toBeInTheDocument();
+    expect(screen.getByText('Quick win waiting: close one tiny loop before opening a new one.')).toBeInTheDocument();
+  });
+
+  it('offers a first-run local workspace choice before the user commits to demo data', () => {
+    const startBlankWorkspace = vi.fn();
+    const loadDemoWorkspace = vi.fn();
+    useWorkspaceSetup.mockReturnValue({
+      hasChoice: false,
+      isDemoMode: true,
+      startBlankWorkspace,
+      loadDemoWorkspace,
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Choose how this device starts' })).toBeInTheDocument();
+    expect(screen.getByText('Import backup: coming soon')).toBeInTheDocument();
+    expect(screen.getByText('Connect Supabase: setup required')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start blank' }));
+    expect(startBlankWorkspace).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load demo workspace' }));
+    expect(loadDemoWorkspace).toHaveBeenCalledTimes(1);
   });
 
   it('promotes a pending reminder into a weekly priority via the per-item action', async () => {

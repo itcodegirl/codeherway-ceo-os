@@ -1,3 +1,5 @@
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
+
 export const APP_ERROR_TELEMETRY_EVENT = 'ceo-os:app-error';
 
 const APP_ERROR_STORAGE_KEY = 'ceo-os-app-error-events';
@@ -88,7 +90,7 @@ function readStoredArray(storageKey) {
       return [];
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(storageKey, raw, null);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];

@@ -112,6 +112,23 @@ export function preserveCorruptStorageValue(key, rawValue, error) {
   return backupWritten ? backupKey : null;
 }
 
+function resolveFallback(fallbackValue) {
+  return typeof fallbackValue === 'function' ? fallbackValue() : fallbackValue;
+}
+
+export function parseJsonOrPreserveCorruption(key, rawValue, fallbackValue) {
+  if (rawValue === null || rawValue === undefined) {
+    return resolveFallback(fallbackValue);
+  }
+
+  try {
+    return JSON.parse(rawValue);
+  } catch (error) {
+    preserveCorruptStorageValue(key, rawValue, error);
+    return resolveFallback(fallbackValue);
+  }
+}
+
 function parseSuffixTimestamp(backupKey, key) {
   const prefix = `${key}${CORRUPT_BACKUP_PREFIX_SUFFIX}`;
   if (!backupKey.startsWith(prefix)) {

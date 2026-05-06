@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
 import { useThemePreference } from '../hooks/useThemePreference';
+import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { SOURCE_NOTICE_SAMPLE_DATA } from '../lib/uiCopy';
 import '../styles/forms.css';
 
@@ -34,8 +35,17 @@ function Settings() {
   const autoSaveToggleId = useId();
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
+  const emailDigestComingSoonId = useId();
+  const shortcutsComingSoonId = useId();
   const themeRadiogroupId = useId();
   const { preference: themePreference, setThemePreference } = useThemePreference();
+  const {
+    hasChoice: hasWorkspaceSetupChoice,
+    isDemoMode,
+    startBlankWorkspace,
+    loadDemoWorkspace,
+    clearDemoData,
+  } = useWorkspaceSetup();
   const canSave = timezoneIsValid && !isSaving;
   const saveButtonLabel = isSaving
     ? 'Saving settings'
@@ -188,6 +198,43 @@ function Settings() {
         </SectionCard>
 
         <SectionCard
+          title="Workspace Data"
+          iconName="section"
+        >
+          <div className="settings-workspace-setup">
+            <p className="helper-text">
+              {hasWorkspaceSetupChoice
+                ? isDemoMode
+                  ? 'Demo workspace is active on this device.'
+                  : 'Blank local workspace is active on this device.'
+                : 'No setup choice has been saved yet. Demo records are shown for review until you choose.'}
+            </p>
+            <div className="settings-workspace-setup__actions">
+              <Button type="button" size="small" onClick={startBlankWorkspace} icon={{ name: 'check', size: 14 }}>
+                Start blank
+              </Button>
+              <Button type="button" size="small" variant="ghost" onClick={loadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
+                Load demo workspace
+              </Button>
+              <Button
+                type="button"
+                size="small"
+                variant="ghost"
+                onClick={clearDemoData}
+                disabled={!isDemoMode}
+                ariaLabel={isDemoMode ? 'Clear demo data from this device' : 'Clear demo data unavailable'}
+              >
+                Clear demo data
+              </Button>
+            </div>
+            <div className="settings-workspace-setup__unavailable" aria-label="Unavailable setup paths">
+              <span>Import from local backup: coming soon</span>
+              <span>Connect Supabase account: setup required</span>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard
           title="Experience"
           iconName="settings"
         >
@@ -206,23 +253,31 @@ function Settings() {
             <input
               id={emailDigestToggleId}
               type="checkbox"
-              checked={settings.emailDigest}
-              disabled={isSaving}
-              onChange={(e) => handleToggle('emailDigest', e.target.checked)}
+              checked={false}
+              disabled
+              aria-describedby={emailDigestComingSoonId}
+              readOnly
             />
-            <span>Send weekly digest reminders</span>
+            <span>Weekly digest reminders (coming soon)</span>
           </label>
+          <p id={emailDigestComingSoonId} className="helper-text helper-text--offset">
+            Email delivery is not wired yet, so this stays unavailable until reminders can actually send.
+          </p>
 
           <label className="settings-toggle" htmlFor={shortcutsToggleId}>
             <input
               id={shortcutsToggleId}
               type="checkbox"
-              checked={settings.keyboardShortcuts}
-              disabled={isSaving}
-              onChange={(e) => handleToggle('keyboardShortcuts', e.target.checked)}
+              checked={false}
+              disabled
+              aria-describedby={shortcutsComingSoonId}
+              readOnly
             />
-            <span>Enable keyboard shortcuts</span>
+            <span>Keyboard shortcuts (coming soon)</span>
           </label>
+          <p id={shortcutsComingSoonId} className="helper-text helper-text--offset">
+            Shortcuts will return once every command has tested keyboard behavior.
+          </p>
         </SectionCard>
 
         <div className="settings-actions">

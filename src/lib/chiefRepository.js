@@ -1,5 +1,6 @@
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const CHIEF_NOTES_STORAGE_KEY = 'ceo-os-chief-notes';
 const CHIEF_RESPONSES_STORAGE_KEY = 'ceo-os-chief-responses';
@@ -52,7 +53,7 @@ function readLocalChiefResponses() {
     if (!raw) {
       return [];
     }
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(CHIEF_RESPONSES_STORAGE_KEY, raw, null);
     return Array.isArray(parsed) ? parsed.map(normalizeChiefResponse) : [];
   } catch {
     return [];

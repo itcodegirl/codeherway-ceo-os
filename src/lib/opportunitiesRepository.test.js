@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   OPPORTUNITIES_UPDATED_EVENT,
+  clearLocalOpportunityDemoData,
   createOpportunity,
   deleteOpportunity,
   listOpportunities,
   updateOpportunity,
 } from './opportunitiesRepository';
 import { StaleRecordError, isStaleRecordError } from './staleRecordError';
+import { saveWorkspaceSetupMode } from './workspaceSetup';
 
 describe('src/lib/opportunitiesRepository', () => {
   beforeEach(() => {
@@ -143,5 +145,27 @@ describe('src/lib/opportunitiesRepository', () => {
     const items = await listOpportunities();
     expect(updateListener).not.toHaveBeenCalled();
     expect(items.some((item) => item.id === created.id && item.name === created.name)).toBe(true);
+  });
+
+  it('does not auto-seed demo opportunities after the workspace starts blank', async () => {
+    saveWorkspaceSetupMode('blank');
+
+    await expect(listOpportunities()).resolves.toEqual([]);
+  });
+
+  it('clears known demo opportunities without deleting user-created records', async () => {
+    const created = await createOpportunity({
+      name: 'Real founder pipeline',
+      company: 'CodeHerWay',
+      priority: 'High',
+      stage: 'In Progress',
+      nextStep: 'Send update',
+    });
+
+    clearLocalOpportunityDemoData();
+
+    const items = await listOpportunities();
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ id: created.id, name: 'Real founder pipeline' });
   });
 });

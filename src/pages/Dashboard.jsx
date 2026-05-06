@@ -6,12 +6,13 @@ import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
-import { isLocalDashboardDemoMode, useDashboardData } from '../hooks/useDashboardData';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
 import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import { usePromotionAction } from '../hooks/usePromotionAction';
+import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { useReminderActions } from '../hooks/useReminderActions';
 import {
   createReminder,
@@ -20,9 +21,10 @@ import {
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
+  buildOperatingRitual,
   buildMainFocus,
   buildMomentumMessage,
-  buildNextMoveQueue,
+  buildNextMoveRecommendations,
   buildQuickWin,
   resolveFocusMode,
 } from '../lib/focusHomeLogic';
@@ -52,6 +54,12 @@ function Dashboard() {
   const [nextMove, setNextMove] = useState('');
   const [isResetOpen, setIsResetOpen] = useState(false);
   const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
+  const {
+    hasChoice: hasWorkspaceSetupChoice,
+    isDemoMode,
+    startBlankWorkspace,
+    loadDemoWorkspace,
+  } = useWorkspaceSetup();
   const [reminderDraft, setReminderDraft] = useState('');
   const [isAddingReminder, setIsAddingReminder] = useState(false);
   const nextMoveCursorRef = useRef(0);
@@ -88,7 +96,9 @@ function Dashboard() {
     return activeMode.support;
   }, [focusMode]);
 
-  const nextMoveQueue = useMemo(() => buildNextMoveQueue({
+  const operatingRitual = useMemo(() => buildOperatingRitual(), []);
+
+  const nextMoveRecommendations = useMemo(() => buildNextMoveRecommendations({
     priorities: weeklyPriorities,
     blockers: weeklyBlockers,
     opportunities: opportunityItems,
@@ -103,6 +113,10 @@ function Dashboard() {
     weeklyBlockers,
     weeklyPriorities,
   ]);
+  const nextMoveQueue = useMemo(
+    () => nextMoveRecommendations.map((item) => item.text),
+    [nextMoveRecommendations],
+  );
 
   const mainFocus = useMemo(
     () => buildMainFocus(weeklyPriorities, opportunityItems, contentRows),
@@ -170,6 +184,8 @@ function Dashboard() {
 
   const activeNextMove = nextMove && nextMoveQueue.includes(nextMove) ? nextMove : '';
   const displayedNextMove = activeNextMove || nextMoveQueue[0] || 'Choose one tiny action and start a 15-minute timer.';
+  const displayedNextMoveReason = nextMoveRecommendations.find((item) => item.text === displayedNextMove)?.reason
+    || 'Recommended because: one tiny visible action is the calmest way to restart momentum.';
 
   useEffect(() => () => {
     if (addReminderReleaseTimerRef.current !== null) {
@@ -254,9 +270,10 @@ function Dashboard() {
     },
   });
 
-  const dashboardDemoNote = isLocalDashboardDemoMode
+  const dashboardDemoNote = weeklySource === 'local' && isDemoMode
     ? SOURCE_NOTICE_SAMPLE_DATA
     : '';
+  const showFirstRunSetup = weeklySource === 'local' && !hasWorkspaceSetupChoice;
 
   const isFocusDataLoading = isDataLoading || isWeeklyLoading;
 
@@ -270,6 +287,26 @@ function Dashboard() {
   const toggleFocusTools = useCallback(() => {
     setIsFocusToolsExpanded((current) => !current);
   }, [setIsFocusToolsExpanded]);
+
+  const handleStartBlankWorkspace = useCallback(() => {
+    Promise.resolve(startBlankWorkspace())
+      .then(() => {
+        showToast('Blank local workspace ready. Sample records are cleared from this device.');
+      })
+      .catch(() => {
+        showToast('Unable to update local workspace setup right now.');
+      });
+  }, [showToast, startBlankWorkspace]);
+
+  const handleLoadDemoWorkspace = useCallback(() => {
+    Promise.resolve(loadDemoWorkspace())
+      .then(() => {
+        showToast('Demo workspace loaded on this device.');
+      })
+      .catch(() => {
+        showToast('Unable to load demo workspace right now.');
+      });
+  }, [loadDemoWorkspace, showToast]);
 
   return (
     <section
@@ -288,6 +325,49 @@ function Dashboard() {
         onRetry={refreshWeeklyBrief}
         retryAriaLabel="Retry loading focus command center data"
       />
+
+      {showFirstRunSetup ? (
+        <section className="focus-home__setup" aria-label="Choose local workspace setup">
+          <div>
+            <h2>Choose how this device starts</h2>
+            <p className="helper-text">
+              You are seeing local sample records. Start blank for real use, or keep the demo workspace for review.
+            </p>
+          </div>
+          <div className="focus-home__setup-actions">
+            <Button type="button" onClick={handleStartBlankWorkspace} icon={{ name: 'check', size: 14 }}>
+              Start blank
+            </Button>
+            <Button type="button" variant="ghost" onClick={handleLoadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
+              Load demo workspace
+            </Button>
+            <span className="focus-home__setup-unavailable">Import backup: coming soon</span>
+            <span className="focus-home__setup-unavailable">Connect Supabase: setup required</span>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="focus-home__ritual" aria-label="Daily operating rhythm">
+        <div className="focus-home__ritual-header">
+          <h2>Operating rhythm</h2>
+          <p className="helper-text">Use the current checkpoint first, then keep moving.</p>
+        </div>
+        <ol className="focus-home__ritual-list">
+          {operatingRitual.map((step) => (
+            <li
+              key={step.id}
+              className={step.isActive ? 'focus-home__ritual-item focus-home__ritual-item--active' : 'focus-home__ritual-item'}
+              aria-current={step.isActive ? 'step' : undefined}
+            >
+              <span className="focus-home__ritual-label">
+                {step.label}
+                {step.isActive ? ' now' : ''}
+              </span>
+              <span className="focus-home__ritual-action">{step.action}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <div className="focus-home__grid">
         <ErrorBoundary
@@ -328,6 +408,7 @@ function Dashboard() {
               <span className="signal-node" aria-hidden="true" />
             </div>
             <p className="focus-home__next-move-text">{displayedNextMove}</p>
+            <p className="focus-home__next-move-reason">{displayedNextMoveReason}</p>
             <div className="focus-home__actions">
               <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
                 Tell me what to do next

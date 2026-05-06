@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import SectionCard from '../ui/SectionCard';
 import ConfirmModal from '../ui/ConfirmModal';
 import WeeklyPriorities from './WeeklyPriorities';
@@ -6,6 +7,11 @@ import { useWeeklySectionEditor } from '../../hooks/useWeeklySectionEditor';
 
 function PrioritiesSection({ items, setItems, defaultItems }) {
   const priorityItems = Array.isArray(items) ? items : defaultItems;
+  const [impactMessage, setImpactMessage] = useState('');
+  const setPriorityItems = useCallback((nextValue) => {
+    setItems(nextValue);
+    setImpactMessage('This will influence your Focus Home recommendations.');
+  }, [setItems]);
   const {
     formValues,
     formError,
@@ -25,7 +31,7 @@ function PrioritiesSection({ items, setItems, defaultItems }) {
   } = useWeeklySectionEditor({
     type: 'priority',
     defaultItems,
-    setItems,
+    setItems: setPriorityItems,
   });
 
   return (
@@ -46,6 +52,7 @@ function PrioritiesSection({ items, setItems, defaultItems }) {
         ) : (
           <p className="helper-text">No priorities yet. Add one to define this week&apos;s focus.</p>
         )}
+        {impactMessage ? <p className="helper-text weekly-impact-copy" role="status">{impactMessage}</p> : null}
       </SectionCard>
 
       <WeeklyEditorModal

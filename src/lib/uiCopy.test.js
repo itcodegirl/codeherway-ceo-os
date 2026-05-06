@@ -13,7 +13,7 @@ describe('src/lib/uiCopy', () => {
     expect(SOURCE_LABEL_SUPABASE).toBe('Live workspace sync is enabled.');
     expect(SOURCE_NOTICE_SUPABASE).toBe('Data source: Live workspace sync is enabled.');
     expect(SOURCE_NOTICE_SAMPLE_DATA)
-      .toBe('Local sample data is active. Connect workspace data to replace sample records.');
+      .toBe('Local sample data is active on this device. It is not synced to an account.');
     expect(AUTOSAVE_PAUSED_COPY).toBe('Autosave is paused until this workspace saves successfully again.');
   });
 
@@ -25,7 +25,7 @@ describe('src/lib/uiCopy', () => {
     expect(buildSourceNotice('supabase', { supabasePrefix: 'Weekly data source: ' }))
       .toBe('Weekly data source: Live workspace sync is enabled.');
     expect(buildSourceNotice('local', { localPrefix: 'Weekly data source: ' }))
-      .toBe('Weekly data source: Local sample data is active. Connect workspace data to replace sample records.');
+      .toBe('Weekly data source: Local sample data is active on this device. It is not synced to an account.');
   });
 
   it('builds autosave helper text from save health', () => {

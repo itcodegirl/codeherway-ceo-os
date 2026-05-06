@@ -1,4 +1,5 @@
 import { formatIsoDate, requireLocalStorageSetItem } from './utils';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const STORAGE_KEY = 'ceo-os-journal-entries';
 export const JOURNAL_ENTRIES_UPDATED_EVENT = 'ceo-os:journal-entries-updated';
@@ -59,7 +60,7 @@ function readStore() {
       return {};
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
     return {};

@@ -1,4 +1,5 @@
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const STORAGE_KEY = 'ceo-os-reminders';
 export const REMINDERS_UPDATED_EVENT = 'ceo-os:reminders-updated';
@@ -30,7 +31,7 @@ function readStorage() {
       return [];
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return [];
     }

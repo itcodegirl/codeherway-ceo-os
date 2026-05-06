@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import SectionCard from '../ui/SectionCard';
 import ConfirmModal from '../ui/ConfirmModal';
 import WeeklyTextList from './WeeklyTextList';
@@ -6,6 +7,11 @@ import { useWeeklySectionEditor } from '../../hooks/useWeeklySectionEditor';
 
 function BlockersSection({ items, setItems, defaultItems }) {
   const blockerItems = Array.isArray(items) ? items : defaultItems;
+  const [impactMessage, setImpactMessage] = useState('');
+  const setBlockerItems = useCallback((nextValue) => {
+    setItems(nextValue);
+    setImpactMessage('This will influence your Focus Home recommendations.');
+  }, [setItems]);
   const {
     formValues,
     formError,
@@ -25,7 +31,7 @@ function BlockersSection({ items, setItems, defaultItems }) {
   } = useWeeklySectionEditor({
     type: 'blocker',
     defaultItems,
-    setItems,
+    setItems: setBlockerItems,
   });
 
   return (
@@ -49,6 +55,7 @@ function BlockersSection({ items, setItems, defaultItems }) {
         ) : (
           <p className="helper-text">No blockers logged. Add blockers to keep risk visible.</p>
         )}
+        {impactMessage ? <p className="helper-text weekly-impact-copy" role="status">{impactMessage}</p> : null}
       </SectionCard>
 
       <WeeklyEditorModal

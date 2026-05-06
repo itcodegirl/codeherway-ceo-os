@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from './settings';
 import { requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 const LOCAL_SETTINGS_KEY = 'ceo-os-settings';
 const LOCAL_SETTINGS_SAVED_AT_KEY = 'ceo-os-settings-saved-at';
@@ -41,7 +42,7 @@ function readLocalSettings() {
       return normalizeSettings(DEFAULT_SETTINGS);
     }
 
-    return normalizeSettings(JSON.parse(raw));
+    return normalizeSettings(parseJsonOrPreserveCorruption(LOCAL_SETTINGS_KEY, raw, DEFAULT_SETTINGS));
   } catch {
     return normalizeSettings(DEFAULT_SETTINGS);
   }

@@ -95,12 +95,22 @@ describe('SyncStatusPill', () => {
     expect(screen.queryByText(/pending/i)).toBeNull();
   });
 
-  it('shows "+N pending" when the offline queue has entries and the workspace is supabase-backed', () => {
+  it('shows pending sync when the offline queue has entries and the workspace is online + supabase-backed', () => {
     useWorkspaceSettings.mockReturnValue({ source: 'supabase' });
     useOfflineWriteQueueSize.mockReturnValue(3);
     render(<SyncStatusPill />);
-    expect(screen.getByText(/Synced/)).toBeInTheDocument();
-    expect(screen.getByText(/\+3 pending/)).toBeInTheDocument();
+    expect(screen.getByText(/Pending sync/)).toBeInTheDocument();
+    expect(screen.getByText(/3 waiting/)).toBeInTheDocument();
+    expect(screen.queryByText(/^Synced$/)).toBeNull();
+  });
+
+  it('does not advertise queued writes while offline because replay cannot drain yet', () => {
+    useWorkspaceSettings.mockReturnValue({ source: 'supabase' });
+    useOnlineStatus.mockReturnValue(false);
+    useOfflineWriteQueueSize.mockReturnValue(2);
+    render(<SyncStatusPill />);
+    expect(screen.getByText('Offline')).toBeInTheDocument();
+    expect(screen.queryByText(/waiting/i)).toBeNull();
   });
 
   it('does NOT show pending suffix in local-only mode (queue has nowhere to drain)', () => {

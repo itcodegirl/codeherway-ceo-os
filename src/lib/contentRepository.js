@@ -4,6 +4,8 @@ import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } fr
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
+import { isDemoWorkspaceEnabled } from './workspaceSetup';
+import { parseJsonOrPreserveCorruption } from './storageCorruption';
 
 export const CONTENT_QUEUE_KIND_CREATE = 'content:create';
 export const CONTENT_QUEUE_KIND_UPDATE = 'content:update';
@@ -19,6 +21,7 @@ function expectedUpdatedAtToIso(expectedUpdatedAt) {
 
 const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
+const DEMO_CONTENT_ITEM_IDS = new Set(mockContentItems.map((item) => String(item.id)));
 
 function normalizeContentItem(item) {
   return {
@@ -31,6 +34,14 @@ function normalizeContentItem(item) {
 }
 
 function getSeededLocalItems() {
+  if (!isDemoWorkspaceEnabled()) {
+    return [];
+  }
+
+  return getDemoLocalItems();
+}
+
+function getDemoLocalItems() {
   return mockContentItems.map((item) => normalizeContentItem(item));
 }
 
@@ -51,7 +62,7 @@ function readLocalContentItems() {
       return seeded;
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return getSeededLocalItems();
     }
@@ -250,4 +261,19 @@ export async function deleteContentItem(id, options = {}) {
   });
   writeLocalContentItems(next);
   notifyContentItemsUpdated({ source: 'local', type: 'delete' });
+}
+
+export function clearLocalContentDemoData() {
+  const current = readLocalContentItems();
+  const next = current.filter((item) => !DEMO_CONTENT_ITEM_IDS.has(String(item.id)));
+  writeLocalContentItems(next);
+  notifyContentItemsUpdated({ source: 'local', type: 'clear_demo' });
+  return next;
+}
+
+export function resetLocalContentDemoData() {
+  const seeded = getDemoLocalItems();
+  writeLocalContentItems(seeded);
+  notifyContentItemsUpdated({ source: 'local', type: 'load_demo' });
+  return seeded;
 }

@@ -24,6 +24,30 @@ export const FOCUS_MODES = [
 ];
 
 const DEFAULT_NEXT_MOVE = 'Set a 15-minute timer and complete one tiny action without switching tabs.';
+const DEFAULT_NEXT_MOVE_REASON = 'Recommended because: a short time-box creates progress without reopening your whole system.';
+
+export const OPERATING_RITUALS = [
+  {
+    id: 'morning',
+    label: 'Morning',
+    action: 'Choose one main focus, one blocker, and one reminder to protect.',
+  },
+  {
+    id: 'midday',
+    label: 'Midday',
+    action: 'Check progress, clear or reschedule reminders, and unblock one item.',
+  },
+  {
+    id: 'evening',
+    label: 'Evening',
+    action: 'Journal, then turn one next thing into tomorrow\'s first reminder.',
+  },
+  {
+    id: 'weekly',
+    label: 'Weekly',
+    action: 'Review priorities, wins, blockers, and reset the next week.',
+  },
+];
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, value));
@@ -44,6 +68,46 @@ function buildQuotedInstruction(prefix, value) {
   const normalized = normalizeText(value);
   const punctuation = /[.!?]$/.test(normalized) ? '' : '.';
   return `${prefix} "${normalized}"${punctuation}`;
+}
+
+function addUniqueRecommendation(recommendations, recommendation) {
+  if (!recommendation?.text) {
+    return;
+  }
+
+  if (recommendations.some((item) => item.text === recommendation.text)) {
+    return;
+  }
+
+  recommendations.push(recommendation);
+}
+
+function resolveRitualId(now = new Date()) {
+  const hour = now instanceof Date && Number.isFinite(now.getTime())
+    ? now.getHours()
+    : new Date().getHours();
+
+  if (hour >= 5 && hour < 11) {
+    return 'morning';
+  }
+
+  if (hour >= 11 && hour < 17) {
+    return 'midday';
+  }
+
+  if (hour >= 17 && hour < 23) {
+    return 'evening';
+  }
+
+  return 'morning';
+}
+
+export function buildOperatingRitual(now = new Date()) {
+  const activeId = resolveRitualId(now);
+  return OPERATING_RITUALS.map((item) => ({
+    ...item,
+    isActive: item.id === activeId,
+  }));
 }
 
 export function resolveFocusMode(modeId) {
@@ -108,13 +172,31 @@ export function buildNextMoveQueue({
   contentRows,
   reminders,
   journalEntry,
-}) {
+} = {}) {
+  return buildNextMoveRecommendations({
+    priorities,
+    blockers,
+    opportunities,
+    contentRows,
+    reminders,
+    journalEntry,
+  }).map((item) => item.text);
+}
+
+export function buildNextMoveRecommendations({
+  priorities,
+  blockers,
+  opportunities,
+  contentRows,
+  reminders,
+  journalEntry,
+} = {}) {
   const safePriorities = normalizeCollection(priorities);
   const safeBlockers = normalizeCollection(blockers);
   const safeOpportunities = normalizeCollection(opportunities);
   const safeContentRows = normalizeCollection(contentRows);
   const safeReminders = normalizeCollection(reminders);
-  const moves = [];
+  const recommendations = [];
 
   const blockedPriority = safePriorities.find((item) => item?.status === 'Blocked' && item?.title);
   const activeBlocker = safeBlockers.find((item) => item?.text);
@@ -125,29 +207,53 @@ export function buildNextMoveQueue({
   const journalNeedsNextStep = hasText(journalEntry?.feelsHeavy) && !hasText(journalEntry?.oneNextThing);
 
   if (blockedPriority) {
-    moves.push(buildQuotedInstruction('Send one unblock message for', blockedPriority.title));
+    addUniqueRecommendation(recommendations, {
+      text: buildQuotedInstruction('Send one unblock message for', blockedPriority.title),
+      reason: 'Recommended because: this priority is blocked and needs one clear unblock message.',
+    });
   }
   if (activeBlocker) {
-    moves.push(buildQuotedInstruction('Define one owner and one deadline for:', activeBlocker.text));
+    addUniqueRecommendation(recommendations, {
+      text: buildQuotedInstruction('Define one owner and one deadline for:', activeBlocker.text),
+      reason: 'Recommended because: an open blocker needs an owner and deadline before it becomes background stress.',
+    });
   }
   if (activePriority) {
-    moves.push(buildQuotedInstruction('Spend 20 focused minutes on', activePriority.title));
+    addUniqueRecommendation(recommendations, {
+      text: buildQuotedInstruction('Spend 20 focused minutes on', activePriority.title),
+      reason: 'Recommended because: this priority is already in progress, so one visible step protects momentum.',
+    });
   }
   if (waitingOpportunity) {
-    moves.push(buildQuotedInstruction('Draft a concise follow-up for', waitingOpportunity.name));
+    addUniqueRecommendation(recommendations, {
+      text: buildQuotedInstruction('Draft a concise follow-up for', waitingOpportunity.name),
+      reason: 'Recommended because: this opportunity is waiting on a reply and a concise follow-up can move it forward.',
+    });
   }
   if (draftingContent) {
-    moves.push(buildQuotedInstruction('Write the opening paragraph for', draftingContent.title));
+    addUniqueRecommendation(recommendations, {
+      text: buildQuotedInstruction('Write the opening paragraph for', draftingContent.title),
+      reason: 'Recommended because: this draft is open and one paragraph lowers the publishing friction.',
+    });
   }
   if (pendingReminder) {
-    moves.push(buildQuotedInstruction('Complete or reschedule reminder:', pendingReminder.text));
+    addUniqueRecommendation(recommendations, {
+      text: buildQuotedInstruction('Complete or reschedule reminder:', pendingReminder.text),
+      reason: 'Recommended because: your oldest unfinished reminder is still open.',
+    });
   }
   if (journalNeedsNextStep) {
-    moves.push('Turn today\'s heavy journal note into one tiny next action.');
+    addUniqueRecommendation(recommendations, {
+      text: 'Turn today\'s heavy journal note into one tiny next action.',
+      reason: 'Recommended because: today\'s journal names heaviness but not the next step yet.',
+    });
   }
-  moves.push(DEFAULT_NEXT_MOVE);
+  addUniqueRecommendation(recommendations, {
+    text: DEFAULT_NEXT_MOVE,
+    reason: DEFAULT_NEXT_MOVE_REASON,
+  });
 
-  return Array.from(new Set(moves));
+  return recommendations;
 }
 
 export function buildQuickWin(wins, opportunities, contentRows) {
