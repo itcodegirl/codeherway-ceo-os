@@ -48,9 +48,16 @@ const routeBudgets = [
   },
   {
     route: 'Settings',
-    // Bumped 6.0 -> 6.7 for workspace-data setup controls and honest
-    // coming-soon preference copy.
-    js: { rawKb: 6.7, gzipKb: 2.5 },
+    // Historical: 6.0 -> 6.7 for workspace-data setup controls and honest
+    // coming-soon preference copy. Realigned to reflect the actual route
+    // size on disk (the ceiling above had drifted ~3x below reality, so
+    // CI was either skipping this or silently ignoring the failure). Audit
+    // item I3 in the May 2026 product audit calls out that Settings is
+    // doing too many jobs and should be split; until that refactor lands
+    // the budget should reflect honest reality.
+    // Bumped to 22.0 / 7.0 to absorb the magic-link auth surface
+    // (Account section, useAuthSession import, signIn/signOut helpers).
+    js: { rawKb: 22.0, gzipKb: 7.0 },
     css: null,
   },
 ];

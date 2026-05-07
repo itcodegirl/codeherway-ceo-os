@@ -14,6 +14,8 @@ const WeeklyBrief = lazy(() => import('./pages/WeeklyBrief'));
 const ChiefOfStaff = lazy(() => import('./pages/ChiefOfStaff'));
 const OpsReliability = lazy(() => import('./pages/OpsReliability'));
 const Settings = lazy(() => import('./pages/Settings'));
+const SignIn = lazy(() => import('./pages/SignIn'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 
 const ROUTE_COMPONENTS = {
   'focus-home': Dashboard,
@@ -41,6 +43,11 @@ function App() {
         }
       >
         <Routes>
+          {/* Auth routes intentionally render outside the app shell so the
+              sign-in surface is uncluttered and not gated behind a session. */}
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+
           <Route path="/" element={<AppLayout />}>
             {visibleRoutes.map((route) => {
               const RouteComponent = ROUTE_COMPONENTS[route.id];
