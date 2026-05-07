@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Journal from './Journal';
 
@@ -10,6 +10,11 @@ function readStoredData(key) {
 describe('src/pages/Journal', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders all daily prompts', () => {
@@ -26,20 +31,44 @@ describe('src/pages/Journal', () => {
     expect(screen.getByLabelText('What would make today feel successful?')).toBeInTheDocument();
   });
 
-  it('auto-saves prompt responses locally', () => {
+  it('debounces and auto-saves prompt responses locally after the debounce window', () => {
     render(
       <MemoryRouter>
         <Journal />
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByLabelText('What is one thing I can do next?'), {
-      target: { value: 'Draft one outreach message' },
+    const nextThing = screen.getByLabelText('What is one thing I can do next?');
+    fireEvent.change(nextThing, { target: { value: 'Draft one outreach message' } });
+
+    // Mid-debounce: nothing has been persisted yet, but the inline status
+    // should advertise the pending save so the user knows their work
+    // is still in flight.
+    expect(window.localStorage.getItem('ceo-os-journal-entries')).toBeNull();
+    expect(screen.getByText('Saving your reflection…')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(700);
     });
 
     const storagePayload = window.localStorage.getItem('ceo-os-journal-entries') || '';
     expect(storagePayload).toContain('Draft one outreach message');
-    expect(screen.getByRole('status')).toHaveTextContent('Auto-saved');
+    expect(screen.getByText('Saved.')).toBeInTheDocument();
+  });
+
+  it('flushes the pending save when the user blurs the field', () => {
+    render(
+      <MemoryRouter>
+        <Journal />
+      </MemoryRouter>,
+    );
+
+    const onMyMind = screen.getByLabelText('What is on my mind?');
+    fireEvent.change(onMyMind, { target: { value: 'Captured immediately on blur' } });
+    fireEvent.blur(onMyMind);
+
+    const storagePayload = window.localStorage.getItem('ceo-os-journal-entries') || '';
+    expect(storagePayload).toContain('Captured immediately on blur');
   });
 
   it('promotes the journal next-thing into a reminder via the inline button', () => {
@@ -80,6 +109,10 @@ describe('src/pages/Journal', () => {
 
       fireEvent.change(screen.getByLabelText('What is on my mind?'), {
         target: { value: 'Unsaved reflection' },
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(700);
       });
 
       expect(screen.getByRole('alert')).toHaveTextContent('Unable to auto-save journal entry right now.');

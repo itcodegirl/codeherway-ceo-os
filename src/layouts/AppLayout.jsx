@@ -6,7 +6,7 @@ import SystemPulse from '../components/ui/SystemPulse';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import StorageCorruptionBanner from '../components/ui/StorageCorruptionBanner';
 import LocalOnlyNotice from '../components/ui/LocalOnlyNotice';
-import Toast from '../components/ui/Toast';
+import ToastProvider from '../components/ui/ToastProvider';
 import { useSettings } from '../hooks/useSettings';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useThemePreference } from '../hooks/useThemePreference';
@@ -50,12 +50,12 @@ const OFFLINE_QUEUE_HANDLERS = {
     deleteContentItem(id, { skipQueue: true }),
 };
 
-function AppLayout() {
+function AppShellInner() {
   const location = useLocation();
   const navigate = useNavigate();
   const mainRef = useRef(null);
   const { settings } = useSettings();
-  const { toastMessage, isToastVisible, showToast } = useToast();
+  const { showToast } = useToast();
   // Mounted at the shell so the html data-theme attribute is set on every
   // authenticated render and stays in sync with OS preference changes.
   useThemePreference();
@@ -124,8 +124,15 @@ function AppLayout() {
           </ErrorBoundary>
         </main>
       </div>
-      <Toast className="toast--shell" isVisible={isToastVisible} message={toastMessage} />
     </div>
+  );
+}
+
+function AppLayout() {
+  return (
+    <ToastProvider>
+      <AppShellInner />
+    </ToastProvider>
   );
 }
 

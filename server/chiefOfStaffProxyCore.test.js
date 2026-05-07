@@ -18,6 +18,9 @@ describe('server/chiefOfStaffProxyCore', () => {
     delete process.env.CHIEF_STAFF_PROXY_TOKEN;
     delete process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE;
     process.env.OPENAI_API_KEY = 'test-key';
+    // Most tests assert behavior other than auth; opt out explicitly
+    // to avoid being intercepted by the new fail-closed default.
+    process.env.CHIEF_STAFF_REQUIRE_TOKEN = 'false';
     globalThis.fetch = vi.fn();
   });
 
@@ -139,6 +142,43 @@ describe('server/chiefOfStaffProxyCore', () => {
     expect(result.status).toBe(401);
     expect(result.body.error_code).toBe('PROXY_AUTH_INVALID');
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('fails closed by default when neither token nor explicit opt-out is configured', async () => {
+    delete process.env.CHIEF_STAFF_PROXY_TOKEN;
+    delete process.env.CHIEF_STAFF_REQUIRE_TOKEN;
+
+    const result = await handleChiefOfStaffProxy({
+      method: 'POST',
+      body: { notes: 'Generate summary', actionKey: 'summarize' },
+      headers: {},
+    });
+
+    expect(result.status).toBe(401);
+    expect(result.body.error_code).toBe('PROXY_AUTH_INVALID');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('applies a non-zero default per-client rate limit when not explicitly configured', async () => {
+    delete process.env.CHIEF_STAFF_RATE_LIMIT_PER_MINUTE;
+    globalThis.fetch.mockResolvedValue(
+      createFetchResponse({ ok: true, status: 200, payload: { output_text: 'ok' } }),
+    );
+
+    const requests = [];
+    // The default is small enough that an 11th call from one client should
+    // be rate-limited within the same test run.
+    for (let i = 0; i < 11; i += 1) {
+      requests.push(await handleChiefOfStaffProxy({
+        method: 'POST',
+        body: { notes: `note ${i}`, actionKey: 'summarize' },
+        headers: { 'x-forwarded-for': '10.0.99.1' },
+      }));
+    }
+
+    const finalResult = requests[requests.length - 1];
+    expect(finalResult.status).toBe(429);
+    expect(finalResult.body.error_code).toBe('RATE_LIMITED');
   });
 
   it('enforces rate limits per client within the configured window', async () => {

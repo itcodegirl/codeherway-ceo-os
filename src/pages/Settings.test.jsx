@@ -88,7 +88,9 @@ describe('src/pages/Settings', () => {
       name: 'Save settings unavailable until timezone is valid',
     })).toBeDisabled();
     expect(screen.getAllByRole('alert')).toHaveLength(1);
-    expect(screen.getByRole('alert')).toHaveTextContent('Timezone is invalid. Example: America/Chicago.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Timezone is invalid. Pick one from the list, for example America/Chicago.',
+    );
   });
 
   it('sends changed workspace fields through the settings hook', () => {

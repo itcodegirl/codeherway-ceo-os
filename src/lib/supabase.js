@@ -25,9 +25,68 @@ async function createSupabaseClient() {
   const { createClient } = await import('@supabase/supabase-js');
   return createClient(supabaseEnv.url, supabaseEnv.anonKey, {
     auth: {
-      persistSession: false,
+      // Persist the session so the magic-link sign-in flow survives reloads
+      // and tab switches. Authenticated repository calls require a session
+      // to satisfy RLS policies based on auth.uid().
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      storageKey: 'ceo-os:auth',
     },
   });
+}
+
+export async function getSupabaseSession() {
+  const supabaseClient = await getSupabaseClient();
+  if (!supabaseClient) {
+    return null;
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) {
+    throw error;
+  }
+  return data?.session || null;
+}
+
+export async function signInWithMagicLink({ email, redirectTo } = {}) {
+  const supabaseClient = await getSupabaseClient();
+  if (!supabaseClient) {
+    const configurationError = new Error('Supabase is not configured.');
+    configurationError.code = 'SUPABASE_NOT_CONFIGURED';
+    throw configurationError;
+  }
+
+  const trimmedEmail = typeof email === 'string' ? email.trim() : '';
+  if (!trimmedEmail) {
+    const validationError = new Error('Email is required to sign in.');
+    validationError.code = 'AUTH_EMAIL_REQUIRED';
+    throw validationError;
+  }
+
+  const options = redirectTo ? { emailRedirectTo: redirectTo } : undefined;
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email: trimmedEmail,
+    options,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return { sentTo: trimmedEmail };
+}
+
+export async function signOut() {
+  const supabaseClient = await getSupabaseClient();
+  if (!supabaseClient) {
+    return;
+  }
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    throw error;
+  }
 }
 
 export async function getSupabaseClient() {

@@ -5,7 +5,7 @@ const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
 const MAX_NOTES_LENGTH = 12000;
 const REQUEST_TIMEOUT_MS = 10000;
-const DEFAULT_RATE_LIMIT_PER_MINUTE = 0;
+const DEFAULT_RATE_LIMIT_PER_MINUTE = 10;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_TRACKED_CLIENTS = 1000;
 
@@ -185,8 +185,12 @@ function hasValidProxyToken(headers) {
   const requestToken = extractRequestToken(headers);
 
   if (!configuredToken) {
-    const requireToken = process.env.CHIEF_STAFF_REQUIRE_TOKEN === 'true';
-    return !requireToken;
+    // Fail closed by default: any environment that did not explicitly opt
+    // out of token auth (e.g. local dev with CHIEF_STAFF_REQUIRE_TOKEN=false)
+    // must configure CHIEF_STAFF_PROXY_TOKEN. This protects production
+    // deployments from accidentally exposing the OpenAI key.
+    const explicitlyDisabled = process.env.CHIEF_STAFF_REQUIRE_TOKEN === 'false';
+    return explicitlyDisabled;
   }
 
   return requestToken === configuredToken;

@@ -10,3 +10,19 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Security headers applied to every response. Tightened CSP allows the SPA
+# bundle, fontsource-shipped fonts, the same-origin Netlify Functions proxy,
+# and Supabase REST + realtime when configured. Adjust the supabase host
+# pattern only if a self-hosted Supabase instance is in use.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"

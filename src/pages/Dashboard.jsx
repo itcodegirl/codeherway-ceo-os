@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
-import Toast from '../components/ui/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
@@ -37,11 +36,7 @@ const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
 const FOCUS_TOOLS_DRAWER_ID = 'focus-tools-drawer';
 
 function Dashboard() {
-  const {
-    toastMessage,
-    isToastVisible,
-    showToast,
-  } = useToast();
+  const { showToast } = useToast();
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
   // Audit follow-up: the top fold now leads with the operating step, one
   // focus, one next move, open loops, blockers, and reminders. Focus-mode
@@ -621,7 +616,6 @@ function Dashboard() {
         </div>
       </section>
 
-      <Toast className="toast--dashboard" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }

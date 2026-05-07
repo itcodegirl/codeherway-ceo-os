@@ -53,7 +53,7 @@ function Topbar({ pageTitle = 'Focus Home' }) {
   return (
     <header className="topbar">
       <div className="topbar__left">
-        <p className="topbar__label">Team: {teamName}</p>
+        <p className="topbar__label topbar__label--desktop">Team: {teamName}</p>
         <p className="topbar__title">{pageTitle}</p>
       </div>
 
@@ -63,8 +63,11 @@ function Topbar({ pageTitle = 'Focus Home' }) {
         <time className="topbar__meta" dateTime={isoDate}>
           {today}
         </time>
-        <p className="topbar__status">Current period: This Week</p>
-        <p className="topbar__status" title={`Date shown in ${timezoneLabel}`}>
+        <p className="topbar__status topbar__status--desktop">Current period: This Week</p>
+        <p
+          className="topbar__status topbar__status--desktop"
+          title={`Date shown in ${timezoneLabel}`}
+        >
           Time zone: {timezoneLabel}
         </p>
       </div>
