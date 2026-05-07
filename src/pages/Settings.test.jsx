@@ -108,6 +108,25 @@ describe('src/pages/Settings', () => {
     expect(saveSettings).toHaveBeenCalledTimes(1);
   });
 
+  it('normalizes the timezone field on blur without saving early', () => {
+    const normalizeTimezone = vi.fn();
+    const saveSettings = vi.fn();
+    useSettings.mockReturnValue(createSettingsState({
+      normalizeTimezone,
+      saveSettings,
+    }));
+
+    renderSettings();
+
+    const timezoneField = screen.getByLabelText('Timezone');
+    fireEvent.blur(timezoneField, {
+      target: { value: 'UTC' },
+    });
+
+    expect(normalizeTimezone).toHaveBeenCalledTimes(1);
+    expect(saveSettings).not.toHaveBeenCalled();
+  });
+
   it('shows explicit local data setup actions and coming-soon paths', () => {
     const clearDemoData = vi.fn();
     useSettings.mockReturnValue(createSettingsState());

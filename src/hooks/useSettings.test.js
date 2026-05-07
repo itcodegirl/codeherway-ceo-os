@@ -94,10 +94,16 @@ describe('useSettings', () => {
     expect(repositoryState.saveSettings).not.toHaveBeenCalled();
   });
 
-  it('ignores duplicate save requests while settings are already saving', async () => {
+  it('queues the latest save request while settings are already saving', async () => {
     const pendingSave = createDeferred();
 
-    repositoryState.saveSettings.mockImplementationOnce(() => pendingSave.promise);
+    repositoryState.saveSettings
+      .mockImplementationOnce(() => pendingSave.promise)
+      .mockImplementation((nextSettings) => Promise.resolve({
+        settings: nextSettings,
+        savedAt: 444,
+        source: 'local',
+      }));
 
     const { result } = renderHook(() => useSettings());
 
@@ -141,7 +147,94 @@ describe('useSettings', () => {
     });
 
     expect(result.current.isSaving).toBe(false);
+    expect(repositoryState.saveSettings).toHaveBeenCalledTimes(2);
+    expect(repositoryState.saveSettings).toHaveBeenLastCalledWith({
+      timezone: 'America/New_York',
+      teamName: 'Duplicate Team',
+      emailDigest: false,
+      keyboardShortcuts: true,
+      autoSave: false,
+    });
+    expect(result.current.settings.teamName).toBe('Duplicate Team');
+    expect(result.current.settings.timezone).toBe('America/New_York');
+  });
+
+  it('keeps newer local edits when an older save resolves', async () => {
+    const pendingSave = createDeferred();
+
+    repositoryState.saveSettings.mockImplementationOnce(() => pendingSave.promise);
+
+    const { result } = renderHook(() => useSettings());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    let savePromise;
+    await act(async () => {
+      savePromise = result.current.saveSettings({
+        timezone: 'America/Chicago',
+        teamName: 'CodeHerWay Leadership',
+        emailDigest: true,
+        keyboardShortcuts: false,
+        autoSave: true,
+      });
+      result.current.updateSetting('timezone', 'UTC');
+    });
+
+    await act(async () => {
+      pendingSave.resolve({
+        settings: {
+          timezone: 'America/Chicago',
+          teamName: 'CodeHerWay Leadership',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        savedAt: 555,
+        source: 'local',
+      });
+      await savePromise;
+    });
+
     expect(result.current.settings.teamName).toBe('CodeHerWay');
+    expect(result.current.settings.timezone).toBe('UTC');
+    expect(result.current.savedAt).toBe(555);
+  });
+
+  it('keeps local edits when an older settings load resolves', async () => {
+    const pendingLoad = createDeferred();
+
+    repositoryState.loadSettings.mockImplementationOnce(() => pendingLoad.promise);
+
+    const { result } = renderHook(() => useSettings());
+
+    await waitFor(() => {
+      expect(repositoryState.loadSettings).toHaveBeenCalledTimes(1);
+    });
+
+    act(() => {
+      result.current.updateSetting('timezone', 'UTC');
+    });
+
+    await act(async () => {
+      pendingLoad.resolve({
+        settings: {
+          timezone: 'America/Chicago',
+          teamName: 'CodeHerWay',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        savedAt: 666,
+        source: 'local',
+      });
+      await Promise.resolve();
+    });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.settings.timezone).toBe('UTC');
+    expect(result.current.savedAt).toBe(666);
   });
 
   it('ignores stale settings loads when a newer refresh resolves first', async () => {

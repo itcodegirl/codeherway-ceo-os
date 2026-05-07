@@ -29,9 +29,12 @@ export function useSettings() {
   const [loadError, setLoadError] = useState('');
   const requestIdRef = useRef(0);
   const isSavingRef = useRef(false);
+  const queuedSettingsRef = useRef(null);
+  const editVersionRef = useRef(0);
   const timezoneIsValid = Boolean(resolveTimeZone(settings.timezone || ''));
   const resetSavingRef = useCallback(() => {
     isSavingRef.current = false;
+    queuedSettingsRef.current = null;
   }, []);
   const isMountedRef = useIsMountedRef(resetSavingRef);
 
@@ -41,6 +44,7 @@ export function useSettings() {
 
     setIsLoading(true);
     setLoadError('');
+    const loadEditVersion = editVersionRef.current;
 
     try {
       const result = await loadSettings();
@@ -48,7 +52,9 @@ export function useSettings() {
         return;
       }
 
-      setSettingsState(result.settings || DEFAULT_SETTINGS);
+      if (loadEditVersion === editVersionRef.current) {
+        setSettingsState(result.settings || DEFAULT_SETTINGS);
+      }
       setSavedAt(result.savedAt || 0);
       setSource(result.source || getSettingsSource());
     } catch (error) {
@@ -78,6 +84,7 @@ export function useSettings() {
   }, [loadCurrentSettings]);
 
   const updateSetting = useCallback((key, value) => {
+    editVersionRef.current += 1;
     setSettingsState((current) => ({
       ...current,
       [key]: resolveSettingValue(key, value),
@@ -85,58 +92,73 @@ export function useSettings() {
   }, []);
 
   const setSettings = useCallback((nextValue) => {
+    editVersionRef.current += 1;
     setSettingsState((current) => resolveNextValue(nextValue, current));
   }, []);
 
   const saveSettings = useCallback(async (nextSettings) => {
+    const initialSettings = nextSettings || settings;
+
     if (isSavingRef.current) {
+      queuedSettingsRef.current = initialSettings;
       return undefined;
     }
-
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
 
     isSavingRef.current = true;
     setIsSaving(true);
     setLoadError('');
-    const resolvedNextSettings = nextSettings || settings;
-    const normalizedTimezone = resolveTimeZone(resolvedNextSettings?.timezone);
-    const normalizedSettings = {
-      ...resolvedNextSettings,
-      timezone: normalizedTimezone || DEFAULT_SETTINGS.timezone,
-      teamName: resolveTeamName(resolvedNextSettings?.teamName),
-      emailDigest: Boolean(resolvedNextSettings?.emailDigest),
-      keyboardShortcuts: Boolean(resolvedNextSettings?.keyboardShortcuts),
-      autoSave: Boolean(resolvedNextSettings?.autoSave),
-    };
-
-    if (!normalizedTimezone) {
-      setLoadError('Timezone is invalid.');
-      setSettingsState((current) => ({
-        ...current,
-        timezone: normalizedSettings.timezone,
-        teamName: normalizedSettings.teamName,
-        emailDigest: normalizedSettings.emailDigest,
-        keyboardShortcuts: normalizedSettings.keyboardShortcuts,
-        autoSave: normalizedSettings.autoSave,
-      }));
-      isSavingRef.current = false;
-      setIsSaving(false);
-      return;
-    }
+    let settingsToSave = initialSettings;
+    let lastResult;
 
     try {
-      const result = await persistSettings(normalizedSettings);
-      if (!isMountedRef.current || requestId !== requestIdRef.current) {
-        return undefined;
+      while (settingsToSave) {
+        queuedSettingsRef.current = null;
+        const requestId = requestIdRef.current + 1;
+        requestIdRef.current = requestId;
+        const saveEditVersion = editVersionRef.current;
+        const normalizedTimezone = resolveTimeZone(settingsToSave?.timezone);
+        const normalizedSettings = {
+          ...settingsToSave,
+          timezone: normalizedTimezone || DEFAULT_SETTINGS.timezone,
+          teamName: resolveTeamName(settingsToSave?.teamName),
+          emailDigest: Boolean(settingsToSave?.emailDigest),
+          keyboardShortcuts: Boolean(settingsToSave?.keyboardShortcuts),
+          autoSave: Boolean(settingsToSave?.autoSave),
+        };
+
+        if (!normalizedTimezone) {
+          setLoadError('Timezone is invalid.');
+          setSettingsState((current) => ({
+            ...current,
+            timezone: normalizedSettings.timezone,
+            teamName: normalizedSettings.teamName,
+            emailDigest: normalizedSettings.emailDigest,
+            keyboardShortcuts: normalizedSettings.keyboardShortcuts,
+            autoSave: normalizedSettings.autoSave,
+          }));
+          settingsToSave = queuedSettingsRef.current;
+          lastResult = undefined;
+          continue;
+        }
+
+        const result = await persistSettings(normalizedSettings);
+        lastResult = result;
+        if (!isMountedRef.current || requestId !== requestIdRef.current) {
+          settingsToSave = queuedSettingsRef.current;
+          continue;
+        }
+
+        if (saveEditVersion === editVersionRef.current) {
+          setSettingsState(result.settings || DEFAULT_SETTINGS);
+        }
+        setSavedAt(result.savedAt || Date.now());
+        setSource(result.source || getSettingsSource());
+        settingsToSave = queuedSettingsRef.current;
       }
 
-      setSettingsState(result.settings || DEFAULT_SETTINGS);
-      setSavedAt(result.savedAt || Date.now());
-      setSource(result.source || getSettingsSource());
-      return result;
+      return lastResult;
     } catch (error) {
-      if (!isMountedRef.current || requestId !== requestIdRef.current) {
+      if (!isMountedRef.current) {
         return undefined;
       }
 
@@ -145,7 +167,7 @@ export function useSettings() {
         console.error('Failed to save settings', error);
       }
     } finally {
-      if (isMountedRef.current && requestId === requestIdRef.current) {
+      if (isMountedRef.current) {
         isSavingRef.current = false;
         setIsSaving(false);
       }
@@ -159,6 +181,7 @@ export function useSettings() {
         return current;
       }
 
+      editVersionRef.current += 1;
       return {
         ...current,
         timezone: resolvedTimezone,

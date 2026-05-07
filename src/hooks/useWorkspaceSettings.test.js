@@ -98,6 +98,70 @@ describe('useWorkspaceSettings', () => {
     expect(result.current.source).toBe('supabase');
   });
 
+  it('does not coalesce consecutive explicit settings-updated events', async () => {
+    const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+
+    repositoryState.loadSettings
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay',
+          timezone: 'America/Chicago',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay Leadership',
+          timezone: 'America/Chicago',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'local',
+      })
+      .mockResolvedValueOnce({
+        settings: {
+          teamName: 'CodeHerWay Leadership',
+          timezone: 'UTC',
+          emailDigest: true,
+          keyboardShortcuts: false,
+          autoSave: true,
+        },
+        source: 'local',
+      });
+
+    try {
+      const { result } = renderHook(() => useWorkspaceSettings());
+
+      await waitFor(() => {
+        expect(result.current.teamName).toBe('CodeHerWay');
+      });
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent(repositoryState.SETTINGS_UPDATED_EVENT));
+      });
+
+      await waitFor(() => {
+        expect(result.current.teamName).toBe('CodeHerWay Leadership');
+      });
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent(repositoryState.SETTINGS_UPDATED_EVENT));
+      });
+
+      await waitFor(() => {
+        expect(result.current.timezone).toBe('UTC');
+      });
+
+      expect(repositoryState.loadSettings).toHaveBeenCalledTimes(3);
+    } finally {
+      dateNowSpy.mockRestore();
+    }
+  });
+
   it('exposes loadError when loadSettings rejects and clears it on a successful refresh', async () => {
     repositoryState.loadSettings
       .mockRejectedValueOnce(new Error('boom'))

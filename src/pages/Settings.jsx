@@ -7,6 +7,7 @@ import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
 import { useThemePreference } from '../hooks/useThemePreference';
 import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
+import { resolveTimeZone } from '../lib/settings';
 import { SOURCE_NOTICE_DEMO_DATA, SOURCE_NOTICE_LOCAL_ONLY, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/forms.css';
 
@@ -46,41 +47,44 @@ function Settings() {
     loadDemoWorkspace,
     clearDemoData,
   } = useWorkspaceSetup();
-  const canSave = timezoneIsValid && !isSaving;
+  const fieldsDisabled = isSaving || isLoading;
+  const canSave = timezoneIsValid && !fieldsDisabled;
   const saveButtonLabel = isSaving
     ? 'Saving settings'
     : timezoneIsValid
       ? 'Save settings'
       : 'Save settings unavailable until timezone is valid';
+  const canPersistSettings = (nextSettings = settings) => Boolean(
+    resolveTimeZone(nextSettings?.timezone),
+  );
 
   const handleChange = (key, value) => {
     updateSetting(key, value);
   };
 
-  const markSave = async () => {
-    if (!canSave) {
+  const markSave = async (nextSettings = settings) => {
+    if (!canPersistSettings(nextSettings)) {
       return;
     }
 
-    await saveSettings(settings);
+    await saveSettings(nextSettings);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    void markSave();
-  };
-
-  const handleBlurSave = () => {
-    if (!canSave) {
-      return;
-    }
-    void saveSettings(settings);
+    const formData = new FormData(event.currentTarget);
+    void markSave({
+      ...settings,
+      teamName: formData.get('teamName'),
+      timezone: formData.get('timezone'),
+    });
   };
 
   const handleToggle = (key, value) => {
     handleChange(key, value);
-    if (canSave) {
-      void saveSettings({ ...settings, [key]: value });
+    const nextSettings = { ...settings, [key]: value };
+    if (canPersistSettings(nextSettings)) {
+      void saveSettings(nextSettings);
     }
   };
 
@@ -120,9 +124,8 @@ function Settings() {
             value={settings.teamName}
             required
             minLength={2}
-            disabled={isSaving}
+            disabled={fieldsDisabled}
             onChange={(e) => handleChange('teamName', e.target.value)}
-            onBlur={handleBlurSave}
           />
 
           <div className="form-field">
@@ -135,7 +138,7 @@ function Settings() {
               value={settings.timezone}
               required
               minLength={2}
-              disabled={isSaving}
+              disabled={fieldsDisabled}
               error={!timezoneIsValid ? 'Timezone is invalid. Example: America/Chicago.' : ''}
               title={
                 timezoneIsValid
@@ -144,7 +147,6 @@ function Settings() {
               }
               onBlur={() => {
                 normalizeTimezone();
-                handleBlurSave();
               }}
               onChange={(e) => handleChange('timezone', e.target.value)}
             />
@@ -245,7 +247,7 @@ function Settings() {
               id={autoSaveToggleId}
               type="checkbox"
               checked={settings.autoSave}
-              disabled={isSaving}
+              disabled={fieldsDisabled}
               onChange={(e) => handleToggle('autoSave', e.target.checked)}
             />
             <span>Enable auto-save for drafts and notes</span>
