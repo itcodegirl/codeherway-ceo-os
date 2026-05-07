@@ -1,7 +1,7 @@
-import { formatIsoDate, requireLocalStorageSetItem } from './utils';
-import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { formatIsoDate } from './utils';
+import { STORAGE_DOMAINS } from './dataSchema';
+import { readVersionedLocalStorage, writeVersionedLocalStorage } from './versionedStorage';
 
-const STORAGE_KEY = 'ceo-os-journal-entries';
 export const JOURNAL_ENTRIES_UPDATED_EVENT = 'ceo-os:journal-entries-updated';
 
 export const JOURNAL_PROMPTS = [
@@ -55,12 +55,7 @@ function readStore() {
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {};
-    }
-
-    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
+    const parsed = readVersionedLocalStorage(STORAGE_DOMAINS.journalEntries, {});
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
     return {};
@@ -68,9 +63,9 @@ function readStore() {
 }
 
 function writeStore(store) {
-  requireLocalStorageSetItem(
-    STORAGE_KEY,
-    JSON.stringify(store),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.journalEntries,
+    store,
     'Failed to persist journal entries to localStorage',
   );
 }

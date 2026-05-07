@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  CURRENT_DATA_SCHEMA_VERSION,
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+} from './dataSchema';
+import {
   CAPTURE_NOTES_UPDATED_EVENT,
   createCaptureNote,
   deleteCaptureNote,
@@ -27,6 +32,58 @@ describe('src/lib/captureRepository', () => {
     expect(notes).toHaveLength(2);
     expect(notes[0].id).toBe(second.id);
     expect(notes[1].id).toBe(first.id);
+  });
+
+  it('persists capture notes in a versioned schema envelope', () => {
+    const created = createCaptureNote({
+      text: 'Protect quick capture',
+      category: 'task',
+    });
+
+    const raw = JSON.parse(window.localStorage.getItem('ceo-os-capture-notes'));
+    expect(raw).toMatchObject({
+      schemaVersion: CURRENT_DATA_SCHEMA_VERSION,
+      domain: STORAGE_DOMAINS.captureNotes,
+      model: 'CaptureNote[]',
+    });
+    expect(raw.data).toEqual([
+      expect.objectContaining({ id: created.id, text: 'Protect quick capture' }),
+    ]);
+  });
+
+  it('continues reading legacy raw capture note arrays', () => {
+    window.localStorage.setItem('ceo-os-capture-notes', JSON.stringify([
+      {
+        id: 'legacy-note',
+        text: 'Legacy quick thought',
+        category: 'idea',
+        createdAt: '2026-05-01T12:00:00.000Z',
+        updatedAt: '2026-05-01T12:00:00.000Z',
+      },
+    ]));
+
+    expect(listCaptureNotes()).toEqual([
+      expect.objectContaining({ id: 'legacy-note', text: 'Legacy quick thought' }),
+    ]);
+  });
+
+  it('reads capture notes from the current schema envelope', () => {
+    window.localStorage.setItem(
+      'ceo-os-capture-notes',
+      JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.captureNotes, [
+        {
+          id: 'versioned-note',
+          text: 'Versioned quick thought',
+          category: 'task',
+          createdAt: '2026-05-01T12:00:00.000Z',
+          updatedAt: '2026-05-01T12:00:00.000Z',
+        },
+      ])),
+    );
+
+    expect(listCaptureNotes()).toEqual([
+      expect.objectContaining({ id: 'versioned-note', text: 'Versioned quick thought' }),
+    ]);
   });
 
   it('updates note text and category', () => {

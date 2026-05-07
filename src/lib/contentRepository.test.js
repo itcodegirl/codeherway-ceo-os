@@ -8,6 +8,11 @@ import {
   updateContentItem,
 } from './contentRepository';
 import { saveWorkspaceSetupMode } from './workspaceSetup';
+import {
+  CURRENT_DATA_SCHEMA_VERSION,
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+} from './dataSchema';
 
 describe('src/lib/contentRepository', () => {
   beforeEach(() => {
@@ -77,6 +82,60 @@ describe('src/lib/contentRepository', () => {
 
     expect(updated.updatedAt).toBeGreaterThan(created.updatedAt);
     expect(updated.title).toBe('Founder note (revised)');
+  });
+
+  it('persists content items in a versioned schema envelope', async () => {
+    saveWorkspaceSetupMode('blank');
+    const created = await createContentItem({
+      title: 'Versioned content',
+      platform: 'Newsletter',
+      status: 'Drafting',
+    });
+
+    const raw = JSON.parse(window.localStorage.getItem('ceo-os-content-items'));
+    expect(raw).toMatchObject({
+      schemaVersion: CURRENT_DATA_SCHEMA_VERSION,
+      domain: STORAGE_DOMAINS.contentItems,
+      model: 'ContentItem[]',
+    });
+    expect(raw.data).toEqual([
+      expect.objectContaining({ id: created.id, title: 'Versioned content' }),
+    ]);
+  });
+
+  it('continues reading legacy raw content arrays', async () => {
+    window.localStorage.setItem('ceo-os-content-items', JSON.stringify([
+      {
+        id: 'legacy-content',
+        title: 'Legacy draft',
+        platform: 'LinkedIn',
+        status: 'Drafting',
+        updatedAt: 1745190000000,
+      },
+    ]));
+
+    await expect(listContentItems()).resolves.toEqual([
+      expect.objectContaining({ id: 'legacy-content', title: 'Legacy draft' }),
+    ]);
+  });
+
+  it('reads content items from the current schema envelope', async () => {
+    window.localStorage.setItem(
+      'ceo-os-content-items',
+      JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.contentItems, [
+        {
+          id: 'versioned-content',
+          title: 'Versioned draft',
+          platform: 'LinkedIn',
+          status: 'Drafting',
+          updatedAt: 1745190000000,
+        },
+      ])),
+    );
+
+    await expect(listContentItems()).resolves.toEqual([
+      expect.objectContaining({ id: 'versioned-content', title: 'Versioned draft' }),
+    ]);
   });
 
   it('rejects a local content update when the expected updatedAt is stale', async () => {

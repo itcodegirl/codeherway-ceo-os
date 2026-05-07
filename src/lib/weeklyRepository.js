@@ -4,17 +4,13 @@ import {
   defaultPriorities,
   defaultWins,
 } from './weeklyData';
-import { buildCreateId, requireLocalStorageSetItem } from './utils';
+import { buildCreateId } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { parseJsonOrPreserveCorruption } from './storageCorruption';
-import {
-  STORAGE_DOMAINS,
-  createVersionedStorageEnvelope,
-  readVersionedStoragePayload,
-} from './dataSchema';
+import { STORAGE_DOMAINS } from './dataSchema';
+import { readVersionedLocalStorage, writeVersionedLocalStorage } from './versionedStorage';
 
-const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
 const LEGACY_WINS_KEY = 'ceo-os-weekly-wins';
 const LEGACY_BLOCKERS_KEY = 'ceo-os-weekly-blockers';
@@ -282,13 +278,7 @@ function readLocalWeekStore() {
   }
 
   try {
-    const raw = window.localStorage.getItem(LOCAL_WEEKLY_BRIEFS_KEY);
-    if (!raw) {
-      return {};
-    }
-
-    const parsed = parseJsonOrPreserveCorruption(LOCAL_WEEKLY_BRIEFS_KEY, raw, null);
-    const { data } = readVersionedStoragePayload(STORAGE_DOMAINS.weeklyBriefs, parsed);
+    const data = readVersionedLocalStorage(STORAGE_DOMAINS.weeklyBriefs, {});
     return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
   } catch {
     return {};
@@ -296,9 +286,9 @@ function readLocalWeekStore() {
 }
 
 function writeLocalWeekStore(store) {
-  requireLocalStorageSetItem(
-    LOCAL_WEEKLY_BRIEFS_KEY,
-    JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.weeklyBriefs, store)),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.weeklyBriefs,
+    store,
     'Failed to persist weekly brief data to localStorage',
   );
 }

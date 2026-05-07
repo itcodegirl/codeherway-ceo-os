@@ -1,7 +1,11 @@
-import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
-import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { buildCreateId } from './utils';
+import { STORAGE_DOMAINS } from './dataSchema';
+import {
+  readVersionedLocalStorage,
+  safeWriteVersionedLocalStorage,
+  writeVersionedLocalStorage,
+} from './versionedStorage';
 
-const STORAGE_KEY = 'ceo-os-capture-notes';
 export const CAPTURE_NOTES_UPDATED_EVENT = 'ceo-os:capture-notes-updated';
 export const CAPTURE_CATEGORY_OPTIONS = ['idea', 'task', 'content', 'opportunity', 'journal'];
 
@@ -64,18 +68,17 @@ function readStorage() {
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+    const parsed = readVersionedLocalStorage(STORAGE_DOMAINS.captureNotes, null);
+    if (!parsed) {
       const fallback = getFallbackCaptureNotes();
-      safeLocalStorageSetItem(
-        STORAGE_KEY,
-        JSON.stringify(fallback),
+      safeWriteVersionedLocalStorage(
+        STORAGE_DOMAINS.captureNotes,
+        fallback,
         'Failed to seed capture notes in localStorage',
       );
       return fallback;
     }
 
-    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return getFallbackCaptureNotes();
     }
@@ -87,9 +90,9 @@ function readStorage() {
 }
 
 function writeStorage(notes) {
-  requireLocalStorageSetItem(
-    STORAGE_KEY,
-    JSON.stringify(notes),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.captureNotes,
+    notes,
     'Failed to persist capture notes to localStorage',
   );
 }

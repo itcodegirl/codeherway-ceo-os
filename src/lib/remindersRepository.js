@@ -1,7 +1,7 @@
-import { buildCreateId, requireLocalStorageSetItem } from './utils';
-import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { buildCreateId } from './utils';
+import { STORAGE_DOMAINS } from './dataSchema';
+import { readVersionedLocalStorage, writeVersionedLocalStorage } from './versionedStorage';
 
-const STORAGE_KEY = 'ceo-os-reminders';
 export const REMINDERS_UPDATED_EVENT = 'ceo-os:reminders-updated';
 
 function normalizeReminder(reminder) {
@@ -26,12 +26,7 @@ function readStorage() {
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
+    const parsed = readVersionedLocalStorage(STORAGE_DOMAINS.reminders, []);
     if (!Array.isArray(parsed)) {
       return [];
     }
@@ -43,9 +38,9 @@ function readStorage() {
 }
 
 function writeStorage(reminders) {
-  requireLocalStorageSetItem(
-    STORAGE_KEY,
-    JSON.stringify(reminders),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.reminders,
+    reminders,
     'Failed to persist reminders to localStorage',
   );
 }
