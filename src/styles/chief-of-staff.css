@@ -92,6 +92,20 @@
   opacity: 0.82;
 }
 
+.chief-acceptance-summary {
+  margin-top: 0.95rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border-chief-soft);
+  background: var(--surface-overlay-1);
+}
+
+.chief-acceptance-summary p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
 .chief-notes-input {
   width: 100%;
   min-height: 240px;

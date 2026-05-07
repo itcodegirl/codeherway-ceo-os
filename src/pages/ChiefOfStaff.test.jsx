@@ -119,6 +119,9 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(screen.getByText("Opportunities")).toBeInTheDocument();
     expect(screen.getByText("Content Ideas")).toBeInTheDocument();
     expect(screen.getByText("Tasks")).toBeInTheDocument();
+    expect(screen.getByText(
+      "Review before adding. Add all will add 1 priority to Weekly Brief, 1 opportunity to Opportunities, 1 content item to Content OS, and 1 task to Weekly Brief. Exact matches are skipped.",
+    )).toBeInTheDocument();
   });
 
   it("labels fallback output and disables add all when no structured actions exist", () => {
