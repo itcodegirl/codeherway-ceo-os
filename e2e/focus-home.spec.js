@@ -13,6 +13,8 @@ test.describe('Focus Home execution flow', () => {
   test('supports keyboard mode switching and reversible reminder completion feedback', async ({ page }) => {
     await resetToSeedState(page);
 
+    await page.getByRole('button', { name: 'Show focus tools' }).click();
+
     const planningMode = page.getByRole('radio', { name: 'Planning' });
     const reflectionMode = page.getByRole('radio', { name: 'Reflection' });
 
@@ -33,6 +35,7 @@ test.describe('Focus Home execution flow', () => {
     await page.getByRole('checkbox', { name: 'Send launch recap' }).click();
 
     await expect(page.getByText('1 of 1 reminders complete (100%)')).toBeVisible();
+    await page.getByRole('button', { name: /show 1 completed/i }).click();
     await expect(page.getByRole('checkbox', { name: 'Send launch recap' })).toBeChecked();
 
     await page.getByRole('checkbox', { name: 'Send launch recap' }).click();

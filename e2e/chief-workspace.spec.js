@@ -19,7 +19,7 @@ test.describe('Chief workspace flow', () => {
     const notesInput = page.getByLabel('Founder notes for chief of staff workspace');
     const buildButton = page.getByRole('button', { name: 'Build Action Plan' });
 
-    await expect(page.getByText('Chief workspace is stored locally on this device right now.')).toBeVisible();
+    await expect(page.getByText('Chief workspace is stored on this device only.')).toBeVisible();
     await expect(page.getByText('Add a few founder notes to generate an action plan.')).toBeVisible();
     await expect(buildButton).toBeDisabled();
 
