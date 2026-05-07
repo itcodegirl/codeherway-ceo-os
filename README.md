@@ -99,6 +99,7 @@ This project is strongest when presented as a local-first productivity system wi
 - Chief of Staff is useful as a structured assistant workflow, but production AI readiness still depends on deployed secrets, proxy auth, observability, and usage controls.
 - Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
 - See [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for the current recruiter-facing limitation list and [docs/PRODUCTION_TRUST_CHECKLIST.md](./docs/PRODUCTION_TRUST_CHECKLIST.md) for the account/sync work that still separates this from a production SaaS.
+- See [docs/FINAL_ROADMAP.md](./docs/FINAL_ROADMAP.md) for the phased path from stabilization to a calmer guided operating system and portfolio case study.
 
 ## Recent calm-OS audit improvements
 
