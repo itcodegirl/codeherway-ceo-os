@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  CURRENT_DATA_SCHEMA_VERSION,
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+} from './dataSchema';
+import {
   WEEKLY_BRIEF_UPDATED_EVENT,
   clearLocalWeeklyDemoData,
   createWeeklyItem,
@@ -116,6 +121,91 @@ describe('src/lib/weeklyRepository', () => {
     expect(updateListener).not.toHaveBeenCalled();
   });
 
+  it('persists weekly brief data in a versioned schema envelope', async () => {
+    await createWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      item: {
+        id: 'priority-versioned',
+        title: 'Keep storage recoverable',
+        owner: 'Jenna',
+        status: 'Planned',
+      },
+      emitEvent: false,
+    });
+
+    const raw = JSON.parse(window.localStorage.getItem('ceo-os-weekly-briefs'));
+
+    expect(raw).toMatchObject({
+      schemaVersion: CURRENT_DATA_SCHEMA_VERSION,
+      domain: STORAGE_DOMAINS.weeklyBriefs,
+      model: 'WeeklyBriefStore',
+    });
+    expect(raw.data[weekStart].priorities).toEqual([
+      expect.objectContaining({
+        id: 'priority-versioned',
+        title: 'Keep storage recoverable',
+      }),
+    ]);
+  });
+
+  it('continues reading legacy weekly brief stores without a schema envelope', async () => {
+    window.localStorage.setItem('ceo-os-weekly-briefs', JSON.stringify({
+      [weekStart]: {
+        reviewNotes: 'Legacy notes',
+        priorities: [
+          {
+            id: 'legacy-priority',
+            title: 'Legacy priority',
+            owner: 'Jenna',
+            status: 'Planned',
+          },
+        ],
+        wins: [],
+        blockers: [],
+      },
+    }));
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+
+    expect(brief.reviewNotes).toBe('Legacy notes');
+    expect(brief.priorities).toEqual([
+      expect.objectContaining({
+        id: 'legacy-priority',
+        title: 'Legacy priority',
+      }),
+    ]);
+  });
+
+  it('reads weekly brief data from the current schema envelope', async () => {
+    window.localStorage.setItem('ceo-os-weekly-briefs', JSON.stringify(
+      createVersionedStorageEnvelope(STORAGE_DOMAINS.weeklyBriefs, {
+        [weekStart]: {
+          reviewNotes: 'Versioned notes',
+          priorities: [],
+          wins: [
+            {
+              id: 'versioned-win',
+              text: 'Added schema guard',
+              category: 'Reliability',
+            },
+          ],
+          blockers: [],
+        },
+      }),
+    ));
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+
+    expect(brief.reviewNotes).toBe('Versioned notes');
+    expect(brief.wins).toEqual([
+      expect.objectContaining({
+        id: 'versioned-win',
+        text: 'Added schema guard',
+      }),
+    ]);
+  });
+
   it('stamps updatedAt on local create and bumps it on local update', async () => {
     const created = await createWeeklyItem({
       weekStart,
@@ -206,6 +296,42 @@ describe('src/lib/weeklyRepository', () => {
     });
 
     expect(updated.text).toBe('Updated without timestamp');
+  });
+
+  it('rejects a local weekly delete when expectedUpdatedAt is stale', async () => {
+    const created = await createWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      item: {
+        id: 'priority-delete-conflict',
+        title: 'Original priority',
+        owner: 'Jenna',
+        status: 'Planned',
+      },
+      emitEvent: false,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    await updateWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      itemId: 'priority-delete-conflict',
+      item: { ...created, title: 'Tab B saved first' },
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    });
+
+    await expect(deleteWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      itemId: 'priority-delete-conflict',
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    })).rejects.toMatchObject({ name: 'StaleRecordError' });
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+    const persisted = brief.priorities.find((entry) => entry.id === 'priority-delete-conflict');
+    expect(persisted.title).toBe('Tab B saved first');
   });
 
   it('does not auto-seed demo weekly items after the workspace starts blank', async () => {

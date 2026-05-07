@@ -32,7 +32,7 @@ test.describe('Performance smoke profile', () => {
     const timings = {};
 
     timings.dashboardInitialLoadMs = await measureDuration(async () => {
-      await page.goto('/');
+      await page.goto('/?meta=1');
       await expect(page.getByRole('heading', { name: 'Focus Home', exact: true })).toBeVisible();
     });
 

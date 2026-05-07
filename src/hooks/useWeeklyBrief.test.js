@@ -123,6 +123,46 @@ describe('useWeeklyBrief', () => {
     expect(result.current.priorities).toEqual([]);
   });
 
+  it('threads expectedUpdatedAt when deleting weekly items with timestamps', async () => {
+    const stampedPriority = {
+      id: 'priority-stamped',
+      title: 'Ship proof',
+      owner: 'Jenna',
+      status: 'Planned',
+      updatedAt: 1777663200000,
+    };
+    getWeeklyBriefByWeek.mockResolvedValue({
+      reviewNotes: DEFAULT_REVIEW_NOTES,
+      priorities: [stampedPriority],
+      wins: [],
+      blockers: [],
+      source: 'supabase',
+    });
+    deleteWeeklyItem.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useWeeklyBrief());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setPriorities([]);
+    });
+
+    await waitFor(() => {
+      expect(deleteWeeklyItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          weekStart: currentWeekStart,
+          itemType: 'priority',
+          itemId: 'priority-stamped',
+          emitEvent: false,
+          expectedUpdatedAt: 1777663200000,
+        }),
+      );
+    });
+  });
+
   it('ignores stale weekly brief responses when a newer refresh finishes later', async () => {
     const firstLoad = createDeferred();
     const secondLoad = createDeferred();

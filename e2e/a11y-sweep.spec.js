@@ -18,11 +18,31 @@ const primaryRoutes = [
   { path: '/content', name: 'Content OS' },
   { path: '/weekly-brief', name: 'Weekly Brief' },
   { path: '/chief-of-staff', name: 'Chief of Staff' },
-  { path: '/ops-reliability', name: 'Ops Reliability' },
+  { path: '/ops-reliability?meta=1', name: 'Ops Reliability' },
   { path: '/settings', name: 'Settings' },
 ];
 
 const BLOCKING_IMPACTS = new Set(['serious', 'critical']);
+
+async function analyzeA11y(page) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'best-practice'])
+        .analyze();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes('Execution context was destroyed') || attempt > 0) {
+        throw error;
+      }
+
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(150);
+    }
+  }
+
+  throw new Error('Unable to complete axe analysis.');
+}
 
 test.describe('A11y sweep with axe-core', () => {
   for (const route of primaryRoutes) {
@@ -30,9 +50,7 @@ test.describe('A11y sweep with axe-core', () => {
       await page.goto(route.path);
       await expect(page.locator('#main-content')).toBeVisible();
 
-      const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'best-practice'])
-        .analyze();
+      const results = await analyzeA11y(page);
 
       const blocking = results.violations.filter((violation) => (
         BLOCKING_IMPACTS.has(violation.impact || '')

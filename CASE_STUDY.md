@@ -85,11 +85,13 @@ The following assets are referenced for portfolio review and should be kept curr
 - Settings persistence rejects failed writes explicitly and prevents duplicate save submissions while a save is already in flight
 - Chief workspace and Weekly Brief persistence use required local-write semantics so failed browser storage cannot look like a successful save
 - Weekly Brief rejects stale local item mutations before writing or emitting update events
+- Weekly Brief Supabase item rows preserve `updated_at` and use expected timestamps for focused update/delete conflict checks
 - Capture rejects stale sticky-note update/delete attempts before writing or emitting update events
 - Opportunities and Content OS reject stale local update/delete attempts through shared record-mutation guards
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
+- Central data-schema registry plus a versioned Weekly Brief storage envelope, with legacy local data still readable
 
 ## 4) Accessibility and UX posture
 
@@ -187,6 +189,28 @@ npm run test:e2e
 - Next-move guidance now prioritizes the oldest pending reminder and avoids awkward punctuation in quoted actions.
 - Focus Home reminder input copy now connects helper and progress context through accessible descriptions.
 - Playwright coverage now includes a 390px mobile navigation flow through Capture and browser-back behavior.
+
+## 19) CEO OS audit follow-up (May 7, 2026)
+
+A focused cloud-readiness pass that stays inside the current scope boundaries:
+
+- **Weekly Brief Supabase timestamp contract**
+- `weekly_brief_items` list/create/update selectors now include `updated_at`, and Supabase rows normalize into positive `updatedAt` values.
+- Supabase item updates apply the caller's expected timestamp as an `updated_at` equality filter before returning the updated row.
+- Timestamped Weekly Brief deletes now reject stale local and Supabase attempts instead of emitting fake progress after another session changed the item.
+- `src/lib/dataSchema.js` now names the primary storage domains and model shapes, and Weekly Brief local storage writes a `{ schemaVersion, domain, model, data }` envelope while reading legacy stores.
+- Dashboard CSS now stays inside the static route budget by removing unused/decorative Focus Home styling instead of weakening the route-budget check.
+
+- **Scope preserved**
+  - This is mocked repository coverage for the Weekly Brief item contract, not a full authenticated Supabase regression across every mutable table.
+  - Account onboarding/recovery, local-to-cloud migration, full offline replay, fuzzy Chief dedup, and export/import backup remain documented next-step work.
+
+### Tests added in this batch
+- 5 cases in `weeklyRepositorySupabase.test.js` — Supabase timestamp load/create/update/delete conflict behavior.
+- 1 case in `weeklyRepository.test.js` — stale local delete rejection by `expectedUpdatedAt`.
+- 3 cases in `weeklyRepository.test.js` — versioned Weekly Brief local storage writes plus legacy/current envelope reads.
+- 4 cases in `dataSchema.test.js` — schema registry, envelope creation, legacy reads, and domain mismatch handling.
+- 1 case in `useWeeklyBrief.test.js` — delete flows thread `expectedUpdatedAt` from loaded Weekly Brief items.
 
 ## 18) Calm-OS audit follow-ups (May 2, 2026, batch eight)
 

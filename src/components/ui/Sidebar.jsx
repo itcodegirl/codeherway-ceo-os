@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import Icon from './Icon';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 import { useMetaMode } from '../../hooks/useMetaMode';
-import { buildNavGroups } from '../../lib/routes';
+import { buildNavGroups, toMetaModePath } from '../../lib/routes';
 
 function subscribeToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery?.addEventListener === 'function') {
@@ -136,7 +136,7 @@ function Sidebar() {
               {group.items.map((item) => (
                 <li key={item.path} className="sidebar__item">
                   <NavLink
-                    to={item.path}
+                    to={isMetaMode ? toMetaModePath(item.path) : item.path}
                     end={item.path === '/'}
                     className={({ isActive }) =>
                       isActive ? 'sidebar__link sidebar__link--active' : 'sidebar__link'

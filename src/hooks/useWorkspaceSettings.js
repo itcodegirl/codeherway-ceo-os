@@ -62,9 +62,9 @@ export function useWorkspaceSettings() {
   }, [refreshWorkspaceSettings]);
 
   useEffect(() => {
-    const requestRefresh = () => {
+    const requestRefresh = ({ force = false } = {}) => {
       const now = Date.now();
-      if (now - lastRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
+      if (!force && now - lastRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
         return;
       }
 
@@ -73,7 +73,7 @@ export function useWorkspaceSettings() {
     };
 
     const handleSettingsUpdated = () => {
-      requestRefresh();
+      requestRefresh({ force: true });
     };
 
     const handleStorageChange = (event) => {

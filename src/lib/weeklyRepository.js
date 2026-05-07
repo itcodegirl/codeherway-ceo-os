@@ -6,8 +6,13 @@ import {
 } from './weeklyData';
 import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
+import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import {
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+  readVersionedStoragePayload,
+} from './dataSchema';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -103,6 +108,14 @@ const ITEM_DESCRIPTOR_LIST = [
   ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.win],
   ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.blocker],
 ];
+
+function expectedUpdatedAtToIso(expectedUpdatedAt) {
+  const expected = Number(expectedUpdatedAt);
+  if (!Number.isFinite(expected) || expected <= 0) {
+    return null;
+  }
+  return new Date(expected).toISOString();
+}
 
 function getDescriptor(type) {
   return ITEM_DESCRIPTORS[type] || ITEM_DESCRIPTORS[WEEKLY_ITEM_TYPES.blocker];
@@ -275,7 +288,8 @@ function readLocalWeekStore() {
     }
 
     const parsed = parseJsonOrPreserveCorruption(LOCAL_WEEKLY_BRIEFS_KEY, raw, null);
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    const { data } = readVersionedStoragePayload(STORAGE_DOMAINS.weeklyBriefs, parsed);
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
   } catch {
     return {};
   }
@@ -284,7 +298,7 @@ function readLocalWeekStore() {
 function writeLocalWeekStore(store) {
   requireLocalStorageSetItem(
     LOCAL_WEEKLY_BRIEFS_KEY,
-    JSON.stringify(store),
+    JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.weeklyBriefs, store)),
     'Failed to persist weekly brief data to localStorage',
   );
 }
@@ -344,7 +358,10 @@ function updateLocalWeekPayload(weekStart, updater) {
 
 function mapItemFromSupabaseRow(row) {
   const descriptor = getDescriptor(row.item_type);
-  return normalizeItem(descriptor.type, descriptor.fromSupabaseRow(row));
+  return normalizeItem(descriptor.type, {
+    ...descriptor.fromSupabaseRow(row),
+    updatedAt: readUpdatedAtMs(row),
+  });
 }
 
 async function getSupabaseBriefRow({
@@ -396,7 +413,7 @@ async function listSupabaseWeeklyItems({
 }) {
   const { data, error } = await supabaseClient
     .from('weekly_brief_items')
-    .select('id, item_type, title, description, owner, status, category, severity, sort_order')
+    .select('id, item_type, title, description, owner, status, category, severity, sort_order, updated_at')
     .eq('brief_id', briefId)
     .eq('user_id', userId)
     .order('sort_order', { ascending: true })
@@ -556,7 +573,7 @@ export async function createWeeklyItem({
         sort_order: sortOrder,
         ...descriptor.toSupabaseFields(normalizedItem),
       })
-      .select('id, item_type, title, description, owner, status, category, severity, sort_order')
+      .select('id, item_type, title, description, owner, status, category, severity, sort_order, updated_at')
       .single();
 
     if (error) {
@@ -616,19 +633,32 @@ export async function updateWeeklyItem({
     const userId = await supabase.requireSupabaseUserId();
     const normalizedItem = normalizeItem(normalizedType, { ...item, id: normalizedItemId });
 
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('weekly_brief_items')
       .update({
         sort_order: sortOrder,
         ...descriptor.toSupabaseFields(normalizedItem),
       })
       .eq('id', normalizedItemId)
-      .eq('user_id', userId)
-      .select('id, item_type, title, description, owner, status, category, severity, sort_order')
-      .single();
+      .eq('user_id', userId);
+
+    const expectedIso = expectedUpdatedAtToIso(expectedUpdatedAt);
+    if (expectedIso) {
+      query = query.eq('updated_at', expectedIso);
+    }
+
+    const { data, error } = await query
+      .select('id, item_type, title, description, owner, status, category, severity, sort_order, updated_at')
+      .maybeSingle();
 
     if (error) {
       throw error;
+    }
+
+    if (!data) {
+      throw new StaleRecordError(
+        'This weekly item was changed in another window. Reload to see the latest version before saving.',
+      );
     }
 
     const nextItem = mapItemFromSupabaseRow(data);
@@ -692,6 +722,7 @@ export async function deleteWeeklyItem({
   itemType,
   itemId,
   emitEvent = true,
+  expectedUpdatedAt,
 }) {
   const normalizedWeekStart = typeof weekStart === 'string' && weekStart
     ? weekStart
@@ -704,14 +735,29 @@ export async function deleteWeeklyItem({
   const supabaseClient = supabase ? await supabase.getSupabaseClient() : null;
   if (supabaseClient) {
     const userId = await supabase.requireSupabaseUserId();
-    const { error } = await supabaseClient
+    let query = supabaseClient
       .from('weekly_brief_items')
       .delete()
       .eq('id', normalizedItemId)
       .eq('user_id', userId);
 
+    const expectedIso = expectedUpdatedAtToIso(expectedUpdatedAt);
+    if (expectedIso) {
+      query = query.eq('updated_at', expectedIso);
+    }
+
+    const { data, error } = await query
+      .select('id')
+      .maybeSingle();
+
     if (error) {
       throw error;
+    }
+
+    if (expectedIso && !data) {
+      throw new StaleRecordError(
+        'This weekly item was changed in another window. Reload to see the latest version before deleting.',
+      );
     }
 
     if (emitEvent) {
@@ -725,13 +771,18 @@ export async function deleteWeeklyItem({
     return;
   }
 
-  let didDelete = false;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
     const collection = current[descriptor.collectionKey];
-    didDelete = collection.some((entry) => String(entry.id) === normalizedItemId);
-    if (!didDelete) {
+    const persisted = collection.find((entry) => String(entry.id) === normalizedItemId) || null;
+    if (!persisted) {
       throw new Error('Weekly item not found');
     }
+
+    assertRecordIsFresh(
+      persisted,
+      expectedUpdatedAt,
+      'This weekly item was changed in another window. Reload to see the latest version before deleting.',
+    );
 
     return {
       ...current,

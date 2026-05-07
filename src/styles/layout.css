@@ -185,10 +185,16 @@
 }
 
 .sidebar__link--active {
-	background: var(--accent);
-	color: var(--text-inverse);
+	background: var(--sidebar-active-bg, var(--accent));
+	color: var(--sidebar-active-text, var(--text-inverse));
 	font-weight: 700;
 	box-shadow: inset 0 0 0 1px var(--border-inner-strong);
+}
+
+.sidebar__group--account .sidebar__link--active,
+.sidebar__link--active .sidebar__link-icon,
+.sidebar__link--active .sidebar__link-label {
+	color: var(--sidebar-active-text, var(--text-inverse));
 }
 
 .sidebar__link--active::before {

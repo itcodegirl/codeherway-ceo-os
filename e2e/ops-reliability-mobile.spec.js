@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 async function resetToSeedState(page) {
-  await page.goto('/');
+  await page.goto('/?meta=1');
   await page.evaluate(() => {
     window.localStorage.clear();
   });
