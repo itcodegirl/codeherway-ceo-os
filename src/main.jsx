@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 
+import '@fontsource-variable/inter';
 import './styles/base.css';
 import './styles/layout.css';
 
