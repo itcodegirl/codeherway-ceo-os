@@ -89,3 +89,23 @@
 	opacity: 0.5;
 	cursor: not-allowed;
 }
+
+.journal-save-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0;
+	font-size: 0.82rem;
+}
+
+.journal-save-status--saving {
+	color: var(--text-soft-strong);
+}
+
+.journal-save-status--saved {
+	color: var(--success);
+}
+
+.journal-save-status--error {
+	color: var(--danger-text);
+}
