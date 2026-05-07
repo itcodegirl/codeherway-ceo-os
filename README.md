@@ -7,7 +7,7 @@ CodeHerWay CEO OS is a React + Vite blueprint-style command center for founder-f
 - Private Journal prompts with local daily autosave
 - Deterministic reminders + suggestion layer (no AI required)
 - Opportunities, Content OS, Weekly Brief, and Chief of Staff workflows
-- Shared System Pulse that keeps Focus, Momentum, Blockers, Ideas, and Reset connected
+- Shared System Pulse that keeps Focus, Momentum, Blockers, Ideas, and Open Loops connected
 
 The project is intentionally local-first by default with a first-class Supabase path for authenticated, account-scoped persistence.
 
