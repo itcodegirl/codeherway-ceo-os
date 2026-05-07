@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Settings from './Settings';
+import { WORKSPACE_BACKUP_FORMAT } from '../lib/workspacePortability';
 
 vi.mock('../hooks/useSettings', () => ({
   useSettings: vi.fn(),
@@ -48,6 +49,7 @@ function renderSettings() {
 describe('src/pages/Settings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     useWorkspaceSetup.mockReturnValue({
       hasChoice: true,
       isDemoMode: true,
@@ -141,11 +143,86 @@ describe('src/pages/Settings', () => {
     renderSettings();
 
     expect(screen.getByText('Demo data is active on this device. It is not synced.')).toBeInTheDocument();
-    expect(screen.getByText('Import from local backup: coming soon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export local workspace backup' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import local workspace backup' })).toBeInTheDocument();
     expect(screen.getByText('Connect Supabase account: setup required')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear demo data from this device' }));
     expect(clearDemoData).toHaveBeenCalledTimes(1);
+  });
+
+  it('summarizes local data health and pending sync calmly', () => {
+    window.localStorage.setItem('ceo-os-capture-notes', JSON.stringify([
+      { id: 'note-1', text: 'First' },
+      { id: 'note-2', text: 'Second' },
+    ]));
+    window.localStorage.setItem('ceo-os-reminders', JSON.stringify([
+      { id: 'reminder-1', text: 'Follow up' },
+    ]));
+    window.localStorage.setItem('ceo-os-offline-write-queue', JSON.stringify([
+      { id: 'q-1', kind: 'content:update' },
+    ]));
+    useSettings.mockReturnValue(createSettingsState());
+
+    renderSettings();
+
+    const dataHealth = screen.getByRole('group', { name: 'Local data health' });
+    expect(dataHealth).toHaveTextContent('3Local records');
+    expect(dataHealth).toHaveTextContent('2Backup stores');
+    expect(dataHealth).toHaveTextContent('1Pending sync');
+    expect(screen.getByText(/Backups cover the local workspace data stored in this browser/)).toBeInTheDocument();
+    expect(screen.getByText(/1 supported write waiting to sync/)).toBeInTheDocument();
+  });
+
+  it('exports a local workspace backup from Settings', () => {
+    window.localStorage.setItem('ceo-os-settings', JSON.stringify({ teamName: 'CodeHerWay' }));
+    const createObjectURL = vi.fn(() => 'blob:ceo-os-backup');
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(window.URL, 'createObjectURL', {
+      value: createObjectURL,
+      configurable: true,
+    });
+    Object.defineProperty(window.URL, 'revokeObjectURL', {
+      value: revokeObjectURL,
+      configurable: true,
+    });
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    useSettings.mockReturnValue(createSettingsState());
+
+    renderSettings();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export local workspace backup' }));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/local stores? exported/)).toBeInTheDocument();
+  });
+
+  it('imports a local workspace backup and refreshes Settings state', async () => {
+    const refreshSettings = vi.fn(async () => {});
+    useSettings.mockReturnValue(createSettingsState({ refreshSettings }));
+
+    renderSettings();
+
+    const backupFile = {
+      text: vi.fn(async () => JSON.stringify({
+        format: WORKSPACE_BACKUP_FORMAT,
+        schemaVersion: 1,
+        keys: {
+          'ceo-os-settings': JSON.stringify({ teamName: 'Imported Team' }),
+        },
+      })),
+    };
+
+    fireEvent.change(screen.getByLabelText('Import local workspace backup file'), {
+      target: { files: [backupFile] },
+    });
+
+    await waitFor(() => {
+      expect(refreshSettings).toHaveBeenCalledTimes(1);
+    });
+    expect(window.localStorage.getItem('ceo-os-settings')).toContain('Imported Team');
+    expect(screen.getByText(/1 local store imported/)).toBeInTheDocument();
   });
 
   it('labels unwired experience preferences as coming soon instead of active toggles', () => {

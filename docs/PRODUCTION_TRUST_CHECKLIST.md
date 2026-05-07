@@ -9,6 +9,7 @@ UX, repository behavior, and authenticated regression coverage.
 - Sign-up, sign-in, sign-out, and auth-expired states are visible and tested.
 - Account recovery flow is documented and verified end to end.
 - Settings and source notices clearly distinguish local-only, demo data, blank local workspace, and synced workspace states.
+- Settings provides local JSON export/import for known local workspace stores, with validation before restore.
 - Local-to-cloud migration lets a user decide what happens to existing local data before connecting Supabase.
 
 ## Sync And Conflict Trust
@@ -28,6 +29,6 @@ UX, repository behavior, and authenticated regression coverage.
 ## Launch Readiness
 
 - Demo/sample setup stays covered in regression when data-source copy changes.
-- Export/import backup path is available before encouraging local-first production use.
+- Local export/import backup remains covered by unit and Settings tests before encouraging local-first production use.
 - Known limitations are linked from README and release notes.
 - Screenshots and walkthrough media are refreshed after trust-message or Focus Home changes.
