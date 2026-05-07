@@ -765,7 +765,6 @@ export async function deleteWeeklyItem({
     return;
   }
 
-  let didDelete = false;
   updateLocalWeekPayload(normalizedWeekStart, (current) => {
     const collection = current[descriptor.collectionKey];
     const persisted = collection.find((entry) => String(entry.id) === normalizedItemId) || null;
@@ -779,7 +778,6 @@ export async function deleteWeeklyItem({
       'This weekly item was changed in another window. Reload to see the latest version before deleting.',
     );
 
-    didDelete = true;
     return {
       ...current,
       [descriptor.collectionKey]: collection.filter((entry) => String(entry.id) !== normalizedItemId),
