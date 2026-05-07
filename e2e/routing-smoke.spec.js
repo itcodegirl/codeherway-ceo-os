@@ -8,7 +8,7 @@ const primaryRoutes = [
   { path: '/content', title: 'Content OS' },
   { path: '/weekly-brief', title: 'Weekly Brief' },
   { path: '/chief-of-staff', title: 'Chief of Staff' },
-  { path: '/ops-reliability', title: 'Ops Reliability' },
+  { path: '/ops-reliability?meta=1', title: 'Ops Reliability' },
   { path: '/settings', title: 'Settings' },
 ];
 

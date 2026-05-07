@@ -11,6 +11,8 @@
   --text-sidebar-hover: #d7e8fa;
   --text-meta: #afc4d8;
   --text-status: #dbe9f7;
+  --sidebar-active-bg: #1769a8;
+  --sidebar-active-text: #ffffff;
 
   --surface-card: linear-gradient(160deg, rgba(15, 32, 56, 0.9), rgba(10, 21, 38, 0.95));
   --surface-sidebar: linear-gradient(180deg, rgba(10, 23, 40, 0.97), rgba(6, 14, 27, 0.98));
@@ -183,6 +185,8 @@
   --text-sidebar-hover: #1c3854;
   --text-meta: #4a607c;
   --text-status: #1f3a5d;
+  --sidebar-active-bg: #1769a8;
+  --sidebar-active-text: #ffffff;
   --bg: #f3f6fb;
 
   --surface-card: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 252, 0.94));

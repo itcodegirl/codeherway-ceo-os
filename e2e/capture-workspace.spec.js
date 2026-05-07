@@ -27,9 +27,9 @@ test.describe('Capture workspace', () => {
 
     const savedNoteField = page.locator('.sticky-note textarea').first();
     await expect(savedNoteField).toHaveValue(noteText);
-    await expect(page.getByRole('status')).toContainText(
+    await expect(page.getByText(
       'Auto-saved locally and ready whenever your brain moves fast.',
-    );
+    )).toBeVisible();
 
     await page.reload();
     await expect(page.locator('.sticky-note textarea').first()).toHaveValue(noteText);

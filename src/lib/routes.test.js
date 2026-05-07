@@ -5,6 +5,7 @@ import {
   NAV_ITEMS,
   buildNavGroups,
   filterRoutesByMetaMode,
+  toMetaModePath,
   toNestedRoutePath,
 } from './routes';
 import { buildPageMetaByRoute } from './pageMeta';
@@ -42,6 +43,13 @@ describe('src/lib/routes', () => {
     expect(toNestedRoutePath('settings')).toBe('settings');
   });
 
+  it('adds the meta mode query flag to navigation paths', () => {
+    expect(toMetaModePath('/')).toBe('/?meta=1');
+    expect(toMetaModePath('/ops-reliability')).toBe('/ops-reliability?meta=1');
+    expect(toMetaModePath('/ops-reliability?view=trend')).toBe('/ops-reliability?view=trend&meta=1');
+    expect(toMetaModePath('/ops-reliability?meta=1')).toBe('/ops-reliability?meta=1');
+  });
+
   it('groups navigation items by their assigned group, in declared order', () => {
     const groups = buildNavGroups(undefined, { isMetaMode: true });
     const groupIds = groups.map((group) => group.id);
@@ -63,6 +71,10 @@ describe('src/lib/routes', () => {
     const metaGroups = buildNavGroups(undefined, { isMetaMode: true });
     const metaPaths = metaGroups.flatMap((group) => group.items.map((item) => item.path));
     expect(metaPaths).toContain('/ops-reliability');
+    expect(metaGroups.flatMap((group) => group.items)).toContainEqual(expect.objectContaining({
+      path: '/ops-reliability',
+      meta: true,
+    }));
   });
 
   it('filterRoutesByMetaMode hides meta-flagged routes by default and exposes them in meta mode', () => {

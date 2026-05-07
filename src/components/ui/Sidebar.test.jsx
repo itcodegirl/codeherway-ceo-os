@@ -67,6 +67,7 @@ function SidebarRouteHarness() {
 describe('src/components/ui/Sidebar', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it('supports compact-menu keyboard close with Escape and restores toggle focus', () => {
@@ -151,5 +152,21 @@ describe('src/components/ui/Sidebar', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Return to focus' }));
     expect(navElement).toHaveAttribute('hidden');
+  });
+
+  it('preserves meta mode in sidebar navigation links', () => {
+    const { matchMedia } = createMatchMediaMock({ matches: false });
+    window.matchMedia = matchMedia;
+
+    render(
+      <MemoryRouter initialEntries={['/?meta=1']}>
+        <Sidebar />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Ops Reliability', exact: true }))
+      .toHaveAttribute('href', '/ops-reliability?meta=1');
+    expect(screen.getByRole('link', { name: 'Opportunities', exact: true }))
+      .toHaveAttribute('href', '/opportunities?meta=1');
   });
 });

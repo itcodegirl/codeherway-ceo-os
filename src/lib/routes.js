@@ -87,6 +87,14 @@ export const NAV_ITEMS = APP_ROUTES.map(({ label, path, icon }) => ({
   icon,
 }));
 
+export function toMetaModePath(path) {
+  const nextPath = path || '/';
+  const [pathname, search = ''] = nextPath.split('?');
+  const params = new URLSearchParams(search);
+  params.set('meta', '1');
+  return `${pathname || '/'}?${params.toString()}`;
+}
+
 // Routes flagged `meta: true` are admin / ops surfaces that we keep out of the
 // default sidebar so a first-time portfolio reviewer sees only product
 // surfaces. They are revealed via the `?meta=1` query flag (see
@@ -102,7 +110,7 @@ export function buildNavGroups(routes = APP_ROUTES, { isMetaMode = false } = {})
       ...group,
       items: visibleRoutes
         .filter((route) => route.group === group.id)
-        .map(({ label, path, icon }) => ({ label, path, icon })),
+        .map(({ label, path, icon, meta }) => ({ label, path, icon, meta: Boolean(meta) })),
     }))
     .filter((group) => group.items.length > 0);
 }
