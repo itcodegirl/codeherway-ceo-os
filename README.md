@@ -115,6 +115,7 @@ Driven by a structured product + UX audit of the system, this branch adds:
 - **Composer rehydration** — the Capture composer persists in-progress draft text and the last-used category through `usePersistentState`, so a long brain-dump survives reloads, route changes, and accidental navigation. Invalid stored category values fall back to the default safely.
 - **Offline write queue for supported Supabase writes** - `src/lib/offlineWriteQueue.js` ships a localStorage-backed queue with FIFO drop, drain-on-handler, stop-on-first-failure, attempt counters, and `OFFLINE_QUEUE_UPDATED_EVENT` notifications. Opportunities and Content OS create/update/delete mutations enqueue on recoverable Supabase/network failure and drain through shell replay handlers. Weekly Brief, Chief workspace, Settings, Capture, Journal, and reminders still present honest local/error states instead of claiming queued replay.
 - **Intentional local setup** - first-run local users can choose **Start blank** or **Load demo workspace** from Focus Home, and Settings includes a visible **Clear demo data** action. Blank mode stops automatic sample seeding for Opportunities, Content OS, and Weekly Brief while preserving user-created local records.
+- **Local data portability** - Settings now shows local record count, backup-ready stores, pending supported sync writes, and last local settings save. Users can export/import a validated local JSON backup for known CEO OS browser storage keys. This is a local backup safety valve, not a Supabase migration.
 - **Expectation-safe controls** - Settings labels unwired email digest and keyboard shortcut preferences as coming soon, and Weekly Brief shows that saved priorities/blockers influence Focus Home recommendations.
 - **Accessibility automation** — `@axe-core/playwright` scans every primary route with the wcag2a/wcag2aa/best-practice rule set; serious/critical violations fail CI, and lighter findings are reported for review.
 - **Debounced reflective autosave** — the Weekly Brief close-of-week reflection now debounces to 600ms and surfaces an explicit `Saving / Saved / Couldn't save` indicator next to the field; errors are routed through toasts and `appErrorTelemetry`.
@@ -375,7 +376,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 | Opportunities | `docs/assets/screenshots/opportunities-pipeline.png` | Pipeline clarity, status flow, action readiness |
 | Weekly Brief | `docs/assets/screenshots/weekly-brief-planning.png` | Priorities, blockers, and weekly operating rhythm |
 | Chief of Staff | `docs/assets/screenshots/chief-of-staff-structured-output.png` | AI output quality, structured acceptance workflow |
-| Settings | `docs/assets/screenshots/settings-workspace-profile.png` | Workspace defaults, persistence source alignment |
+| Settings | `docs/assets/screenshots/settings-workspace-profile.png` | Workspace defaults, persistence source alignment, local backup/data health |
 
 ### Screenshot gallery
 

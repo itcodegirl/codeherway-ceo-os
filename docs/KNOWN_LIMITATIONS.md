@@ -8,7 +8,7 @@ Use this as the honest interview framing for CodeHerWay CEO OS. The project is s
 - Supabase persistence is implemented as an upgrade path, but local-first workflows still need a complete authenticated regression pass against a real Supabase environment.
 - In-session shell settings now stay aligned with the Settings page, but authenticated multi-device and multi-tab settings reconciliation still needs broader QA.
 - Chief of Staff AI generation depends on deployed server secrets and proxy configuration. Without those, the app should be presented through its deterministic fallback and structured-review flow.
-- Local browser storage is intentionally resilient for demos and solo use, but it is this-device-only unless the user is on a Supabase-backed workspace.
+- Local browser storage is intentionally resilient for demos and solo use, and Settings now supports local JSON backup/import. It is still this-device-only unless the user is on a Supabase-backed workspace, and local backup import does not migrate data into Supabase.
 - Screenshots and demo recordings should be refreshed after UI changes, especially Focus Home daily-loop guidance, Open Loops summaries, source-status styling, System Pulse trust cues, and compact mobile navigation.
 - Operational telemetry and route-budget tooling demonstrate production thinking, but alert response workflows are still portfolio evidence rather than a fully staffed production process.
 
@@ -31,6 +31,7 @@ The May 2026 calm-OS audit pass closed several gaps in this branch:
 - **Focus Home daily operating loop.** Focus Home now leads with Start Day / Execute / Capture / Reset / Shutdown, explains the recommended move, and names what is safe to ignore for the current focus block.
 - **Open Loops decision support.** Focus Home and System Pulse now summarize pending reminders, blockers, unprocessed capture notes, waiting opportunities, drafting content, and journal heaviness without dumping a long list.
 - **Chief structured acceptance review summary.** Chief of Staff now shows destination counts before **Add All to System**, while preserving exact-match dedup and individual accepting/accepted states.
+- **Local workspace backup and data health.** Settings now summarizes local record count, backup-ready stores, pending supported sync writes, and local settings save time. Users can export/import a validated local JSON backup for known CEO OS storage keys; unknown keys are ignored and pending sync writes are reported rather than replayed from backups.
 - ✅ **Expectation-safe controls.** Settings keeps unwired email digest and keyboard shortcut preferences disabled with coming-soon copy, while Weekly Brief tells users that saved priorities/blockers influence Focus Home.
 - ✅ **Repository corruption preservation.** Repository JSON reads now share the same corruption-preservation path as `usePersistentState`, so malformed localStorage is backed up and surfaced instead of disappearing silently.
 - **Schema-version foundation.** A central data-schema registry now tracks primary storage domains and model shapes, and Weekly Brief local storage writes a versioned envelope with legacy-read compatibility.
@@ -49,8 +50,9 @@ These items remain intentionally outside the current scope and are good candidat
 
 - **Account product completeness.** Authentication, account recovery, local-to-cloud migration, and multi-device UX need a full product pass before this should be sold as a complete account-based SaaS.
 - **Authenticated conflict coverage beyond the focused repository tests.** Supabase-backed Opportunity, Content OS, and Weekly Brief item rows now carry `updated_at` through their covered paths, but Settings, Chief workspace, and a real authenticated staging pass across mutable tables still need validation.
-- **Schema migrations across all persisted domains.** Weekly Brief has the first versioned envelope. Capture, Journal, Settings, Chief workspace, Opportunities, Content OS, reminders, and offline queue payloads still need the same migration discipline before export/import can be safe.
+- **Schema migrations across all persisted domains.** Weekly Brief has the first versioned envelope, and local backup import validates known storage keys before writing. Capture, Journal, Settings, Chief workspace, Opportunities, Content OS, reminders, and offline queue payloads still need the same migration discipline before future schema-changing imports or local-to-cloud migration can be automated safely.
 - **Offline write replay coverage.** Opportunities and Content OS replay through the queue today. Weekly Brief, Chief workspace, Settings, Capture, Journal, and reminders still use explicit local/error states rather than queued replay.
+- **Local-to-cloud migration.** Local JSON backup/import helps with data portability, but it intentionally does not merge local records into Supabase or resolve conflicts between local and remote workspaces.
 - **Fuzzy dedup in Chief of Staff acceptance.** Exact-match dedup is in place; titles like "Q3 launch" vs "Q3 Launch Plan" still pass through. A similarity heuristic would help, but it has to balance recall against false positives that could block legitimate distinct items.
 - **Light-mode polish across the remaining page-specific surfaces.** Focus Home, the corruption banner, the weekly autosave dot, the journal prompts, and the Chief notes-limit warning are tuned; production demos may still surface a few minor surface tweaks.
 
