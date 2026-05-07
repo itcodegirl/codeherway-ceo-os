@@ -1,9 +1,9 @@
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from './settings';
 import { requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
-import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { STORAGE_DOMAINS } from './dataSchema';
+import { readVersionedLocalStorage, writeVersionedLocalStorage } from './versionedStorage';
 
-const LOCAL_SETTINGS_KEY = 'ceo-os-settings';
 const LOCAL_SETTINGS_SAVED_AT_KEY = 'ceo-os-settings-saved-at';
 export const SETTINGS_UPDATED_EVENT = 'ceo-os:settings-updated';
 
@@ -37,12 +37,10 @@ function readLocalSettings() {
   }
 
   try {
-    const raw = window.localStorage.getItem(LOCAL_SETTINGS_KEY);
-    if (!raw) {
-      return normalizeSettings(DEFAULT_SETTINGS);
-    }
-
-    return normalizeSettings(parseJsonOrPreserveCorruption(LOCAL_SETTINGS_KEY, raw, DEFAULT_SETTINGS));
+    return normalizeSettings(readVersionedLocalStorage(
+      STORAGE_DOMAINS.settings,
+      DEFAULT_SETTINGS,
+    ));
   } catch {
     return normalizeSettings(DEFAULT_SETTINGS);
   }
@@ -63,9 +61,9 @@ function readLocalSavedAt() {
 }
 
 function writeLocalSettings(settings, savedAt = Date.now()) {
-  requireLocalStorageSetItem(
-    LOCAL_SETTINGS_KEY,
-    JSON.stringify(settings),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.settings,
+    settings,
     'Failed to persist settings to localStorage',
   );
   requireLocalStorageSetItem(

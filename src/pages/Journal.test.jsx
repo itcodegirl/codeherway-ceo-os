@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Journal from './Journal';
 
+function readStoredData(key) {
+  return JSON.parse(window.localStorage.getItem(key)).data;
+}
+
 describe('src/pages/Journal', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -56,7 +60,7 @@ describe('src/pages/Journal', () => {
 
     const remindersRaw = window.localStorage.getItem('ceo-os-reminders');
     expect(remindersRaw).toBeTruthy();
-    const reminders = JSON.parse(remindersRaw);
+    const reminders = readStoredData('ceo-os-reminders');
     expect(reminders).toHaveLength(1);
     expect(reminders[0].text).toBe('Send Sarah the recap');
   });

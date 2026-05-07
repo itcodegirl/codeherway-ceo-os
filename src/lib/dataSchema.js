@@ -15,7 +15,7 @@ export const DOMAIN_MODELS = Object.freeze({
   CaptureNote: Object.freeze({
     id: 'string',
     text: 'string',
-    category: 'idea|task|content|opportunity',
+    category: 'idea|task|content|opportunity|journal',
     createdAt: 'number',
     updatedAt: 'number',
   }),
@@ -27,7 +27,7 @@ export const DOMAIN_MODELS = Object.freeze({
     id: 'string',
     title: 'string',
     platform: 'string',
-    status: 'Drafting|Scheduled|Published',
+    status: 'Drafting|Editing|Scheduled',
     updatedAt: 'number',
   }),
   JournalEntry: Object.freeze({

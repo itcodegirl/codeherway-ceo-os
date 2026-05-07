@@ -1,17 +1,21 @@
 import { opportunities as mockOpportunities } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
-import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
+import { buildCreateId } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
 import { isDemoWorkspaceEnabled } from './workspaceSetup';
-import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { STORAGE_DOMAINS } from './dataSchema';
+import {
+  readVersionedLocalStorage,
+  safeWriteVersionedLocalStorage,
+  writeVersionedLocalStorage,
+} from './versionedStorage';
 
 export const OPPORTUNITY_QUEUE_KIND_CREATE = 'opportunity:create';
 export const OPPORTUNITY_QUEUE_KIND_UPDATE = 'opportunity:update';
 export const OPPORTUNITY_QUEUE_KIND_DELETE = 'opportunity:delete';
 
-const STORAGE_KEY = 'ceo-os-opportunities';
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
 const DEMO_OPPORTUNITY_IDS = new Set(mockOpportunities.map((item) => String(item.id)));
 
@@ -53,18 +57,17 @@ function readLocalOpportunities() {
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+    const parsed = readVersionedLocalStorage(STORAGE_DOMAINS.opportunities, null);
+    if (!parsed) {
       const seeded = getSeededLocalItems();
-      safeLocalStorageSetItem(
-        STORAGE_KEY,
-        JSON.stringify(seeded),
+      safeWriteVersionedLocalStorage(
+        STORAGE_DOMAINS.opportunities,
+        seeded,
         'Failed to seed opportunities in localStorage',
       );
       return seeded;
     }
 
-    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return getSeededLocalItems();
     }
@@ -76,9 +79,9 @@ function readLocalOpportunities() {
 }
 
 function writeLocalOpportunities(items) {
-  requireLocalStorageSetItem(
-    STORAGE_KEY,
-    JSON.stringify(items),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.opportunities,
+    items,
     'Failed to persist opportunities to localStorage',
   );
 }

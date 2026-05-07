@@ -1,11 +1,16 @@
 import { contentItems as mockContentItems } from '../data/mockData';
 import { deleteRecordById, replaceRecordById } from './stateUtils';
-import { buildCreateId, requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
+import { buildCreateId } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
 import { isDemoWorkspaceEnabled } from './workspaceSetup';
-import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { STORAGE_DOMAINS } from './dataSchema';
+import {
+  readVersionedLocalStorage,
+  safeWriteVersionedLocalStorage,
+  writeVersionedLocalStorage,
+} from './versionedStorage';
 
 export const CONTENT_QUEUE_KIND_CREATE = 'content:create';
 export const CONTENT_QUEUE_KIND_UPDATE = 'content:update';
@@ -19,7 +24,6 @@ function expectedUpdatedAtToIso(expectedUpdatedAt) {
   return new Date(expected).toISOString();
 }
 
-const STORAGE_KEY = 'ceo-os-content-items';
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
 const DEMO_CONTENT_ITEM_IDS = new Set(mockContentItems.map((item) => String(item.id)));
 
@@ -51,18 +55,17 @@ function readLocalContentItems() {
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+    const parsed = readVersionedLocalStorage(STORAGE_DOMAINS.contentItems, null);
+    if (!parsed) {
       const seeded = getSeededLocalItems();
-      safeLocalStorageSetItem(
-        STORAGE_KEY,
-        JSON.stringify(seeded),
+      safeWriteVersionedLocalStorage(
+        STORAGE_DOMAINS.contentItems,
+        seeded,
         'Failed to seed content items in localStorage',
       );
       return seeded;
     }
 
-    const parsed = parseJsonOrPreserveCorruption(STORAGE_KEY, raw, null);
     if (!Array.isArray(parsed)) {
       return getSeededLocalItems();
     }
@@ -74,9 +77,9 @@ function readLocalContentItems() {
 }
 
 function writeLocalContentItems(items) {
-  requireLocalStorageSetItem(
-    STORAGE_KEY,
-    JSON.stringify(items),
+  writeVersionedLocalStorage(
+    STORAGE_DOMAINS.contentItems,
+    items,
     'Failed to persist content items to localStorage',
   );
 }

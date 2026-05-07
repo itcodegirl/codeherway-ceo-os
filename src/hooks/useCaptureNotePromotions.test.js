@@ -2,6 +2,10 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCaptureNotePromotions } from './useCaptureNotePromotions';
 
+function readStoredData(key) {
+  return JSON.parse(window.localStorage.getItem(key)).data;
+}
+
 describe('useCaptureNotePromotions', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -39,7 +43,7 @@ describe('useCaptureNotePromotions', () => {
     });
 
     expect(outcome).toBe(true);
-    const reminders = JSON.parse(window.localStorage.getItem('ceo-os-reminders'));
+    const reminders = readStoredData('ceo-os-reminders');
     expect(reminders).toHaveLength(1);
     expect(reminders[0].text).toBe('Reach out to Maya');
     expect(showToast).toHaveBeenCalledWith(
@@ -62,7 +66,7 @@ describe('useCaptureNotePromotions', () => {
       });
     });
 
-    const opportunities = JSON.parse(window.localStorage.getItem('ceo-os-opportunities'));
+    const opportunities = readStoredData('ceo-os-opportunities');
     const tracked = opportunities.find((entry) => entry.name === 'Acme partnership');
     expect(tracked).toBeDefined();
     expect(tracked.priority).toBe('Medium');
@@ -88,7 +92,7 @@ describe('useCaptureNotePromotions', () => {
       });
     });
 
-    const contentItems = JSON.parse(window.localStorage.getItem('ceo-os-content-items'));
+    const contentItems = readStoredData('ceo-os-content-items');
     const drafted = contentItems.find((entry) => entry.title === 'Q3 launch recap');
     expect(drafted).toBeDefined();
     expect(drafted.status).toBe('Drafting');

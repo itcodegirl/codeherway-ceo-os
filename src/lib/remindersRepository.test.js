@@ -7,6 +7,11 @@ import {
   toggleReminder,
   updateReminderText,
 } from './remindersRepository';
+import {
+  CURRENT_DATA_SCHEMA_VERSION,
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+} from './dataSchema';
 
 describe('src/lib/remindersRepository', () => {
   beforeEach(() => {
@@ -22,6 +27,53 @@ describe('src/lib/remindersRepository', () => {
       text: 'Send follow-up to Acme',
       isDone: false,
     });
+  });
+
+  it('persists reminders in a versioned schema envelope', () => {
+    const created = createReminder({ text: 'Protect reminder storage' });
+
+    const raw = JSON.parse(window.localStorage.getItem('ceo-os-reminders'));
+    expect(raw).toMatchObject({
+      schemaVersion: CURRENT_DATA_SCHEMA_VERSION,
+      domain: STORAGE_DOMAINS.reminders,
+      model: 'Reminder[]',
+    });
+    expect(raw.data).toEqual([
+      expect.objectContaining({ id: created.id, text: 'Protect reminder storage' }),
+    ]);
+  });
+
+  it('continues reading legacy raw reminder arrays', () => {
+    window.localStorage.setItem('ceo-os-reminders', JSON.stringify([
+      {
+        id: 'legacy-reminder',
+        text: 'Legacy reminder',
+        isDone: false,
+        createdAt: '2026-04-23T12:00:00.000Z',
+      },
+    ]));
+
+    expect(listReminders()).toEqual([
+      expect.objectContaining({ id: 'legacy-reminder', text: 'Legacy reminder' }),
+    ]);
+  });
+
+  it('reads reminders from the current schema envelope', () => {
+    window.localStorage.setItem(
+      'ceo-os-reminders',
+      JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.reminders, [
+        {
+          id: 'versioned-reminder',
+          text: 'Versioned reminder',
+          isDone: false,
+          createdAt: '2026-04-23T12:00:00.000Z',
+        },
+      ])),
+    );
+
+    expect(listReminders()).toEqual([
+      expect.objectContaining({ id: 'versioned-reminder', text: 'Versioned reminder' }),
+    ]);
   });
 
   it('toggles reminder completion state', () => {

@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Capture from './Capture';
 
+function readStoredData(key) {
+  return JSON.parse(window.localStorage.getItem(key)).data;
+}
+
 describe('src/pages/Capture', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -188,7 +192,7 @@ describe('src/pages/Capture', () => {
 
     const contentRaw = window.localStorage.getItem('ceo-os-content-items');
     expect(contentRaw).toBeTruthy();
-    const contentItems = JSON.parse(contentRaw);
+    const contentItems = readStoredData('ceo-os-content-items');
     const drafted = contentItems.find((entry) => entry.title === 'Q3 launch retrospective post');
     expect(drafted).toBeDefined();
     expect(drafted.status).toBe('Drafting');
@@ -223,7 +227,7 @@ describe('src/pages/Capture', () => {
 
     const opportunitiesRaw = window.localStorage.getItem('ceo-os-opportunities');
     expect(opportunitiesRaw).toBeTruthy();
-    const opportunities = JSON.parse(opportunitiesRaw);
+    const opportunities = readStoredData('ceo-os-opportunities');
     const tracked = opportunities.find((entry) => entry.name === 'Acme partnership intro from Sarah');
     expect(tracked).toBeDefined();
     expect(tracked.priority).toBe('Medium');
@@ -259,8 +263,7 @@ describe('src/pages/Capture', () => {
 
     expect(await screen.findByText(/Drafted on Content OS/)).toBeInTheDocument();
 
-    const contentRaw = window.localStorage.getItem('ceo-os-content-items');
-    const items = JSON.parse(contentRaw);
+    const items = readStoredData('ceo-os-content-items');
     const matching = items.filter((entry) => entry.title === 'Founders weekly recap thread');
     expect(matching).toHaveLength(1);
   });
@@ -287,8 +290,7 @@ describe('src/pages/Capture', () => {
 
     expect(await screen.findByText(/Tracked as a new opportunity/)).toBeInTheDocument();
 
-    const opportunitiesRaw = window.localStorage.getItem('ceo-os-opportunities');
-    const opportunities = JSON.parse(opportunitiesRaw);
+    const opportunities = readStoredData('ceo-os-opportunities');
     const matching = opportunities.filter((entry) => entry.name === 'Conference recap follow-ups');
     expect(matching).toHaveLength(1);
   });
@@ -311,7 +313,7 @@ describe('src/pages/Capture', () => {
 
     const remindersRaw = window.localStorage.getItem('ceo-os-reminders');
     expect(remindersRaw).toBeTruthy();
-    const reminders = JSON.parse(remindersRaw);
+    const reminders = readStoredData('ceo-os-reminders');
     expect(reminders).toHaveLength(1);
     expect(reminders[0].text).toBe('Reply to Sarah by Friday');
     expect(reminders[0].isDone).toBe(false);

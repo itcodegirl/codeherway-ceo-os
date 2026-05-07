@@ -1,4 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import {
+  CURRENT_DATA_SCHEMA_VERSION,
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+} from './dataSchema';
 
 async function loadSettingsRepositoryWithSupabaseMock(mockDefinition) {
   vi.resetModules();
@@ -91,7 +96,12 @@ describe('settingsRepository', () => {
       const storedSettings = JSON.parse(window.localStorage.getItem('ceo-os-settings'));
 
       expect(result.source).toBe('local');
-      expect(storedSettings).toEqual({
+      expect(storedSettings).toMatchObject({
+        schemaVersion: CURRENT_DATA_SCHEMA_VERSION,
+        domain: STORAGE_DOMAINS.settings,
+        model: 'Settings',
+      });
+      expect(storedSettings.data).toEqual({
         teamName: 'Fallback Team',
         timezone: 'America/Chicago',
         emailDigest: true,
@@ -103,6 +113,33 @@ describe('settingsRepository', () => {
     } finally {
       window.removeEventListener('ceo-os:settings-updated', updateListener);
     }
+  });
+
+  it('reads settings from the current schema envelope', async () => {
+    window.localStorage.setItem('ceo-os-settings', JSON.stringify(
+      createVersionedStorageEnvelope(STORAGE_DOMAINS.settings, {
+        teamName: 'Versioned Team',
+        timezone: 'UTC',
+        emailDigest: false,
+        keyboardShortcuts: true,
+        autoSave: false,
+      }),
+    ));
+
+    const { loadSettings } = await loadSettingsRepositoryWithSupabaseMock({
+      isSupabaseConfigured: false,
+    });
+
+    await expect(loadSettings()).resolves.toMatchObject({
+      source: 'local',
+      settings: {
+        teamName: 'Versioned Team',
+        timezone: 'UTC',
+        emailDigest: false,
+        keyboardShortcuts: true,
+        autoSave: false,
+      },
+    });
   });
 
   it('throws and skips update events when local settings persistence fails', async () => {

@@ -9,6 +9,11 @@ import {
 } from './opportunitiesRepository';
 import { StaleRecordError, isStaleRecordError } from './staleRecordError';
 import { saveWorkspaceSetupMode } from './workspaceSetup';
+import {
+  CURRENT_DATA_SCHEMA_VERSION,
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+} from './dataSchema';
 
 describe('src/lib/opportunitiesRepository', () => {
   beforeEach(() => {
@@ -67,6 +72,66 @@ describe('src/lib/opportunitiesRepository', () => {
 
     expect(updated.updatedAt).toBeGreaterThan(created.updatedAt);
     expect(updated.nextStep).toBe('Send revised brief');
+  });
+
+  it('persists opportunities in a versioned schema envelope', async () => {
+    saveWorkspaceSetupMode('blank');
+    const created = await createOpportunity({
+      name: 'Versioned lead',
+      company: 'CodeHerWay',
+      priority: 'High',
+      stage: 'New',
+      nextStep: 'Follow up',
+    });
+
+    const raw = JSON.parse(window.localStorage.getItem('ceo-os-opportunities'));
+    expect(raw).toMatchObject({
+      schemaVersion: CURRENT_DATA_SCHEMA_VERSION,
+      domain: STORAGE_DOMAINS.opportunities,
+      model: 'Opportunity[]',
+    });
+    expect(raw.data).toEqual([
+      expect.objectContaining({ id: created.id, name: 'Versioned lead' }),
+    ]);
+  });
+
+  it('continues reading legacy raw opportunity arrays', async () => {
+    window.localStorage.setItem('ceo-os-opportunities', JSON.stringify([
+      {
+        id: 'legacy-opportunity',
+        name: 'Legacy lead',
+        company: 'Acme',
+        priority: 'Medium',
+        stage: 'New',
+        nextStep: 'Reply',
+        updatedAt: 1745190000000,
+      },
+    ]));
+
+    await expect(listOpportunities()).resolves.toEqual([
+      expect.objectContaining({ id: 'legacy-opportunity', name: 'Legacy lead' }),
+    ]);
+  });
+
+  it('reads opportunities from the current schema envelope', async () => {
+    window.localStorage.setItem(
+      'ceo-os-opportunities',
+      JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.opportunities, [
+        {
+          id: 'versioned-opportunity',
+          name: 'Versioned lead',
+          company: 'Acme',
+          priority: 'Medium',
+          stage: 'New',
+          nextStep: 'Reply',
+          updatedAt: 1745190000000,
+        },
+      ])),
+    );
+
+    await expect(listOpportunities()).resolves.toEqual([
+      expect.objectContaining({ id: 'versioned-opportunity', name: 'Versioned lead' }),
+    ]);
   });
 
   it('rejects a local update when the expected updatedAt is stale', async () => {

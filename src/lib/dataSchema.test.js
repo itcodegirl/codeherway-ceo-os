@@ -10,6 +10,21 @@ import {
 
 describe('dataSchema', () => {
   it('centralizes storage keys and model names for the primary domains', () => {
+    expect(STORAGE_SCHEMAS[STORAGE_DOMAINS.captureNotes]).toMatchObject({
+      key: 'ceo-os-capture-notes',
+      model: 'CaptureNote[]',
+      version: CURRENT_DATA_SCHEMA_VERSION,
+    });
+    expect(STORAGE_SCHEMAS[STORAGE_DOMAINS.opportunities]).toMatchObject({
+      key: 'ceo-os-opportunities',
+      model: 'Opportunity[]',
+      version: CURRENT_DATA_SCHEMA_VERSION,
+    });
+    expect(STORAGE_SCHEMAS[STORAGE_DOMAINS.contentItems]).toMatchObject({
+      key: 'ceo-os-content-items',
+      model: 'ContentItem[]',
+      version: CURRENT_DATA_SCHEMA_VERSION,
+    });
     expect(STORAGE_SCHEMAS[STORAGE_DOMAINS.weeklyBriefs]).toMatchObject({
       key: 'ceo-os-weekly-briefs',
       model: 'WeeklyBriefStore',
@@ -19,6 +34,8 @@ describe('dataSchema', () => {
       id: 'string',
       updatedAt: 'number',
     });
+    expect(DOMAIN_MODELS.CaptureNote.category).toBe('idea|task|content|opportunity|journal');
+    expect(DOMAIN_MODELS.ContentItem.status).toBe('Drafting|Editing|Scheduled');
     expect(DOMAIN_MODELS.WeeklyBrief).toMatchObject({
       priorities: 'WeeklyPriority[]',
       wins: 'WeeklyWin[]',
