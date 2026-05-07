@@ -8,6 +8,11 @@ import { buildCreateId, requireLocalStorageSetItem } from './utils';
 import { getSupabaseRuntime, isSupabaseRuntimeEnabled } from './supabaseRuntime';
 import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleRecordError';
 import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import {
+  STORAGE_DOMAINS,
+  createVersionedStorageEnvelope,
+  readVersionedStoragePayload,
+} from './dataSchema';
 
 const LOCAL_WEEKLY_BRIEFS_KEY = 'ceo-os-weekly-briefs';
 const LEGACY_PRIORITIES_KEY = 'ceo-os-weekly-priorities';
@@ -283,7 +288,8 @@ function readLocalWeekStore() {
     }
 
     const parsed = parseJsonOrPreserveCorruption(LOCAL_WEEKLY_BRIEFS_KEY, raw, null);
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    const { data } = readVersionedStoragePayload(STORAGE_DOMAINS.weeklyBriefs, parsed);
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
   } catch {
     return {};
   }
@@ -292,7 +298,7 @@ function readLocalWeekStore() {
 function writeLocalWeekStore(store) {
   requireLocalStorageSetItem(
     LOCAL_WEEKLY_BRIEFS_KEY,
-    JSON.stringify(store),
+    JSON.stringify(createVersionedStorageEnvelope(STORAGE_DOMAINS.weeklyBriefs, store)),
     'Failed to persist weekly brief data to localStorage',
   );
 }

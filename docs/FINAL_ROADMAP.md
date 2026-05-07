@@ -115,3 +115,9 @@ The project reads as thoughtful, strategic, and senior-level, not like another c
 ## Current PR Scope Note
 
 This PR intentionally does not ship full account onboarding/recovery, local-to-cloud migration, full authenticated Supabase regression across every mutable table, full offline replay coverage, fuzzy Chief of Staff dedup, or export/import backup. Those remain roadmap items unless a later phase explicitly pulls them into scope.
+
+## Progress Notes
+
+- Central data-schema registry started in `src/lib/dataSchema.js`.
+- Weekly Brief local storage now writes a versioned schema envelope and still reads legacy unwrapped data.
+- Export/import backup remains a Phase 1 follow-up because it should validate against the schema registry instead of dumping raw localStorage.

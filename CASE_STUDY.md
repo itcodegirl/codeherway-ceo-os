@@ -91,6 +91,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - Route-level splitting for Chief telemetry diagnostics so operational detail does not inflate the first Chief of Staff route load
 - CI enforcement for lint, build, test, and typecheck on every pull request
 - Optional fail-secure proxy auth mode plus bounded in-memory rate-limit tracking for AI traffic
+- Central data-schema registry plus a versioned Weekly Brief storage envelope, with legacy local data still readable
 
 ## 4) Accessibility and UX posture
 
@@ -194,9 +195,11 @@ npm run test:e2e
 A focused cloud-readiness pass that stays inside the current scope boundaries:
 
 - **Weekly Brief Supabase timestamp contract**
-  - `weekly_brief_items` list/create/update selectors now include `updated_at`, and Supabase rows normalize into positive `updatedAt` values.
-  - Supabase item updates apply the caller's expected timestamp as an `updated_at` equality filter before returning the updated row.
-  - Timestamped Weekly Brief deletes now reject stale local and Supabase attempts instead of emitting fake progress after another session changed the item.
+- `weekly_brief_items` list/create/update selectors now include `updated_at`, and Supabase rows normalize into positive `updatedAt` values.
+- Supabase item updates apply the caller's expected timestamp as an `updated_at` equality filter before returning the updated row.
+- Timestamped Weekly Brief deletes now reject stale local and Supabase attempts instead of emitting fake progress after another session changed the item.
+- `src/lib/dataSchema.js` now names the primary storage domains and model shapes, and Weekly Brief local storage writes a `{ schemaVersion, domain, model, data }` envelope while reading legacy stores.
+- Dashboard CSS now stays inside the static route budget by removing unused/decorative Focus Home styling instead of weakening the route-budget check.
 
 - **Scope preserved**
   - This is mocked repository coverage for the Weekly Brief item contract, not a full authenticated Supabase regression across every mutable table.
@@ -205,6 +208,8 @@ A focused cloud-readiness pass that stays inside the current scope boundaries:
 ### Tests added in this batch
 - 5 cases in `weeklyRepositorySupabase.test.js` — Supabase timestamp load/create/update/delete conflict behavior.
 - 1 case in `weeklyRepository.test.js` — stale local delete rejection by `expectedUpdatedAt`.
+- 3 cases in `weeklyRepository.test.js` — versioned Weekly Brief local storage writes plus legacy/current envelope reads.
+- 4 cases in `dataSchema.test.js` — schema registry, envelope creation, legacy reads, and domain mismatch handling.
 - 1 case in `useWeeklyBrief.test.js` — delete flows thread `expectedUpdatedAt` from loaded Weekly Brief items.
 
 ## 18) Calm-OS audit follow-ups (May 2, 2026, batch eight)

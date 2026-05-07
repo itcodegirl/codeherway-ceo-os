@@ -4,6 +4,9 @@ All notable updates are documented here for portfolio and release-review context
 
 ## 2026-05-07 - CEO OS audit: Weekly Supabase conflict hardening
 
+- Dashboard route CSS is back under the static budget by removing unused/decorative Focus Home styles instead of bypassing route-budget governance.
+- Added a central `dataSchema` registry for local storage domains and domain model shapes.
+- Weekly Brief local storage now writes a versioned schema envelope while continuing to read legacy unwrapped stores.
 - Weekly Brief Supabase item selectors now carry `updated_at` through list, create, and update flows so cloud-loaded rows keep a positive `updatedAt` value for conflict checks.
 - Weekly Brief Supabase item updates now apply the caller's expected timestamp as an `updated_at` equality filter and raise `StaleRecordError` when another session changed the row first.
 - Weekly Brief delete flows now thread `expectedUpdatedAt` from `useWeeklyBrief`, reject stale local deletes, and reject timestamped Supabase deletes without emitting fake progress.
