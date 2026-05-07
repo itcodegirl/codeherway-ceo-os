@@ -14,7 +14,27 @@ vi.mock('./supabaseRuntime', () => {
 
 import { isStaleRecordError } from './staleRecordError';
 import * as runtimeModule from './supabaseRuntime';
-import { updateOpportunity } from './opportunitiesRepository';
+import { listOpportunities, updateOpportunity } from './opportunitiesRepository';
+
+function buildSupabaseListClientStub({ rows = [] } = {}) {
+  const captured = { select: '', eqs: [] };
+  return {
+    captured,
+    from() {
+      const builder = {
+        select(value) {
+          captured.select = value;
+          return builder;
+        },
+        async eq(column, value) {
+          captured.eqs.push([column, value]);
+          return { data: rows, error: null };
+        },
+      };
+      return builder;
+    },
+  };
+}
 
 function buildSupabaseClientStub({ rowsByExpectedAt }) {
   const captured = { eqs: [] };
@@ -61,6 +81,34 @@ describe('updateOpportunity (Supabase optimistic locking)', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('loads updated_at from Supabase list rows as a positive updatedAt value', async () => {
+    const stub = buildSupabaseListClientStub({
+      rows: [
+        {
+          id: 'opp-1',
+          name: 'Expansion partner',
+          company: 'Acme',
+          priority: 'High',
+          stage: 'Awaiting Reply',
+          next_step: 'Send recap',
+          updated_at: '2026-05-01T12:00:00.000Z',
+        },
+      ],
+    });
+    runtimeModule.__supabaseRuntime.getSupabaseClient.mockResolvedValue(stub);
+
+    const rows = await listOpportunities();
+
+    expect(stub.captured.select).toContain('updated_at');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      id: 'opp-1',
+      nextStep: 'Send recap',
+      updatedAt: Date.parse('2026-05-01T12:00:00.000Z'),
+    });
+    expect(rows[0].updatedAt).toBeGreaterThan(0);
   });
 
   it('passes expected updated_at to Supabase and returns the fresh row when it matches', async () => {

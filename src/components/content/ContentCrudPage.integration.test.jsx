@@ -129,6 +129,44 @@ describe('ContentCrudPage integration', () => {
     expect(createContentItem.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('threads expectedUpdatedAt when editing a Supabase-loaded content row', async () => {
+    const expectedUpdatedAt = Date.parse('2026-05-01T13:00:00.000Z');
+    records = [
+      {
+        id: 'content-1',
+        title: 'Founder Weekly Brief',
+        platform: 'LinkedIn',
+        status: 'Drafting',
+        updatedAt: expectedUpdatedAt,
+      },
+    ];
+    getContentSource.mockReturnValue('supabase');
+    updateContentItem.mockImplementationOnce(async (id, payload) => ({
+      id,
+      ...payload,
+      updatedAt: Date.parse('2026-05-01T13:05:00.000Z'),
+    }));
+
+    renderWithRouter(<ContentCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Founder Weekly Brief'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit selected content item' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Founder Weekly Brief Updated' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save content changes' }));
+
+    await waitFor(() => {
+      expect(updateContentItem).toHaveBeenCalledWith(
+        'content-1',
+        expect.objectContaining({ title: 'Founder Weekly Brief Updated' }),
+        { expectedUpdatedAt },
+      );
+    });
+  });
+
   it('shows delete error and allows retry to complete deletion', async () => {
     deleteContentItem.mockImplementationOnce(async () => {
       throw new Error('delete failed');
