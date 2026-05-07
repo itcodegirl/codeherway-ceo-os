@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
-import Toast from '../components/ui/Toast';
 import {
   getJournalEntryByDate,
   getTodayJournalDateKey,
@@ -12,6 +11,8 @@ import { createReminder } from '../lib/remindersRepository';
 import { useToast } from '../hooks/useToast';
 import { buildAutosaveHelperText } from '../lib/uiCopy';
 import '../styles/journal.css';
+
+const SAVE_DEBOUNCE_MS = 600;
 
 function formatSavedAt(value) {
   if (!value) {
@@ -29,12 +30,71 @@ function formatSavedAt(value) {
   }).format(date)}`;
 }
 
+function describeSaveStatus({ status, hasError }) {
+  if (hasError || status === 'error') {
+    return { tone: 'error', text: 'Couldn’t save your reflection. We’ll keep trying.' };
+  }
+  if (status === 'pending' || status === 'saving') {
+    return { tone: 'saving', text: 'Saving your reflection…' };
+  }
+  if (status === 'saved') {
+    return { tone: 'saved', text: 'Saved.' };
+  }
+  return { tone: 'idle', text: '' };
+}
+
 function Journal() {
   const [dateKey, setDateKey] = useState(() => getTodayJournalDateKey());
   const [entry, setEntry] = useState(() => getJournalEntryByDate(getTodayJournalDateKey()));
   const [lastSavedAt, setLastSavedAt] = useState(entry.updatedAt);
+  const [saveStatus, setSaveStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const { isToastVisible, toastMessage, showToast } = useToast();
+  const { showToast } = useToast();
+
+  // Tracks the latest entry value synchronously so the debounced save
+  // and date-change flush can read the truth without depending on a
+  // setState updater (which Strict Mode runs twice in dev).
+  const entryRef = useRef(entry);
+  const dateKeyRef = useRef(dateKey);
+  const debounceTimerRef = useRef(null);
+
+  // Centralized persistence so date changes and unmount can flush a
+  // pending debounce window without re-implementing the save call.
+  const persistPending = useCallback(() => {
+    const pendingDateKey = dateKeyRef.current;
+    const pendingEntry = entryRef.current;
+    if (!pendingDateKey || !pendingEntry) {
+      return;
+    }
+    setSaveStatus('saving');
+    try {
+      const persisted = saveJournalEntry({
+        dateKey: pendingDateKey,
+        entry: pendingEntry,
+      });
+      setLastSavedAt(persisted.updatedAt);
+      setSaveStatus('saved');
+      setErrorMessage('');
+    } catch {
+      setErrorMessage('Unable to auto-save journal entry right now.');
+      setSaveStatus('error');
+    }
+  }, []);
+
+  const cancelPendingSave = useCallback(() => {
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+  }, []);
+
+  const flushPendingSave = useCallback(() => {
+    if (debounceTimerRef.current === null) {
+      return;
+    }
+    cancelPendingSave();
+    persistPending();
+  }, [cancelPendingSave, persistPending]);
 
   useEffect(() => {
     const handleJournalUpdate = (event) => {
@@ -44,6 +104,7 @@ function Journal() {
       }
 
       const nextEntry = getJournalEntryByDate(dateKey);
+      entryRef.current = nextEntry;
       setEntry(nextEntry);
       setLastSavedAt(nextEntry.updatedAt);
     };
@@ -54,29 +115,57 @@ function Journal() {
     };
   }, [dateKey]);
 
+  // Flush any pending edits when the user navigates away or the tab hides
+  // so a brief reflection isn't silently dropped.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingSave();
+      }
+    };
+
+    window.addEventListener('beforeunload', flushPendingSave);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', flushPendingSave);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [flushPendingSave]);
+
+  // Cancel any pending timer on unmount; a flush still happens via the
+  // beforeunload listener so we don't double-write here.
+  useEffect(() => () => {
+    cancelPendingSave();
+  }, [cancelPendingSave]);
+
   const savedAtLabel = useMemo(() => formatSavedAt(lastSavedAt), [lastSavedAt]);
   const journalSaveStatus = buildAutosaveHelperText({
     hasError: Boolean(errorMessage),
     healthyText: savedAtLabel,
     pausedText: 'Autosave is paused. Your latest journal changes are not saved yet.',
   });
+  const inlineStatus = describeSaveStatus({ status: saveStatus, hasError: Boolean(errorMessage) });
   const isEntryEmpty = useMemo(
     () => JOURNAL_PROMPTS.every((prompt) => !(entry[prompt.id] || '').trim()),
     [entry],
   );
 
   const handleDateChange = (nextDateKey) => {
+    // Flush any in-flight debounce before swapping the active entry so we
+    // never overwrite a different day's entry with a newer day's draft.
+    flushPendingSave();
     setDateKey(nextDateKey);
+    dateKeyRef.current = nextDateKey;
     const nextEntry = getJournalEntryByDate(nextDateKey);
+    entryRef.current = nextEntry;
     setEntry(nextEntry);
     setLastSavedAt(nextEntry.updatedAt);
+    setSaveStatus('idle');
+    setErrorMessage('');
   };
 
-  // Closes the journal-to-action loop the audit flagged: writing a "one next
-  // thing" no longer requires the user to context-switch to Dashboard and
-  // retype the same sentence as a reminder.
   const handleMakeReminderFromNextThing = () => {
-    const text = (entry.oneNextThing || '').trim();
+    const text = (entryRef.current?.oneNextThing || '').trim();
     if (!text) {
       showToast('Write your one next thing first.');
       return;
@@ -90,25 +179,19 @@ function Journal() {
   };
 
   const updateField = (fieldId, value) => {
-    setEntry((current) => {
-      const next = {
-        ...current,
-        [fieldId]: value,
-      };
+    // Compute the next entry once, in plain code, before calling setEntry.
+    // This keeps the persistence side effect out of the state updater so
+    // Strict Mode's double-invocation cannot trigger duplicate writes.
+    const nextEntry = { ...entryRef.current, [fieldId]: value };
+    entryRef.current = nextEntry;
+    setEntry(nextEntry);
+    setSaveStatus('pending');
 
-      try {
-        const persisted = saveJournalEntry({
-          dateKey,
-          entry: next,
-        });
-        setLastSavedAt(persisted.updatedAt);
-        setErrorMessage('');
-      } catch {
-        setErrorMessage('Unable to auto-save journal entry right now.');
-      }
-
-      return next;
-    });
+    cancelPendingSave();
+    debounceTimerRef.current = window.setTimeout(() => {
+      debounceTimerRef.current = null;
+      persistPending();
+    }, SAVE_DEBOUNCE_MS);
   };
 
   return (
@@ -138,6 +221,15 @@ function Journal() {
         </header>
 
         <p className="helper-text" role="status" aria-live="polite">{journalSaveStatus}</p>
+        {inlineStatus.tone !== 'idle' ? (
+          <p
+            className={`helper-text journal-save-status journal-save-status--${inlineStatus.tone}`}
+            aria-live="polite"
+            data-status={inlineStatus.tone}
+          >
+            {inlineStatus.text}
+          </p>
+        ) : null}
         {errorMessage ? <p role="alert" className="form-error">{errorMessage}</p> : null}
         {isEntryEmpty ? (
           <p className="helper-text">Start with one sentence. Small reflections count.</p>
@@ -155,6 +247,7 @@ function Journal() {
                   rows={4}
                   value={entry[prompt.id] || ''}
                   onChange={(event) => updateField(prompt.id, event.target.value)}
+                  onBlur={flushPendingSave}
                 />
                 {isNextThingPrompt ? (
                   <button
@@ -171,7 +264,6 @@ function Journal() {
           })}
         </div>
       </section>
-      <Toast className="toast--journal" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }

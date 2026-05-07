@@ -2,10 +2,15 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Capture from './Capture';
+import ToastProvider from '../components/ui/ToastProvider';
 
 function readStoredData(key) {
   return JSON.parse(window.localStorage.getItem(key)).data;
 }
+
+// Capture no longer renders its own <Toast>. Production mounts a single
+// ToastProvider in the app shell; tests wrap the route in the same provider
+// so the shared toast region renders alongside the page.
 
 describe('src/pages/Capture', () => {
   beforeEach(() => {
@@ -15,7 +20,9 @@ describe('src/pages/Capture', () => {
   it('renders empty state when no notes exist', () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -26,7 +33,9 @@ describe('src/pages/Capture', () => {
   it('creates, edits, and deletes a sticky note with local persistence', () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -54,7 +63,9 @@ describe('src/pages/Capture', () => {
   it('connects capture composer errors to the note field accessibly', () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -78,7 +89,9 @@ describe('src/pages/Capture', () => {
   it('clears composer errors as soon as the note draft changes', () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -102,7 +115,9 @@ describe('src/pages/Capture', () => {
 
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -115,7 +130,9 @@ describe('src/pages/Capture', () => {
 
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -126,7 +143,9 @@ describe('src/pages/Capture', () => {
   it('persists the composer draft and last-used category across remounts', () => {
     const { unmount } = render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -141,7 +160,9 @@ describe('src/pages/Capture', () => {
 
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -152,7 +173,9 @@ describe('src/pages/Capture', () => {
   it('keeps the last-used category selected after a successful save', () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -172,7 +195,9 @@ describe('src/pages/Capture', () => {
   it('drafts a sticky note as a new content item via the per-note action', async () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -207,7 +232,9 @@ describe('src/pages/Capture', () => {
   it('tracks a sticky note as a new opportunity via the per-note action', async () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -244,7 +271,9 @@ describe('src/pages/Capture', () => {
   it('does not duplicate content items when Draft as content is double-clicked', async () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -271,7 +300,9 @@ describe('src/pages/Capture', () => {
   it('does not duplicate opportunities when Track opportunity is double-clicked', async () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 
@@ -298,7 +329,9 @@ describe('src/pages/Capture', () => {
   it('promotes a sticky note into a reminder via the per-note action', async () => {
     render(
       <MemoryRouter>
-        <Capture />
+        <ToastProvider>
+          <Capture />
+        </ToastProvider>
       </MemoryRouter>,
     );
 

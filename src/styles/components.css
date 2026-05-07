@@ -601,11 +601,6 @@ textarea:focus-visible,
   pointer-events: none;
 }
 
-.toast--dashboard {
-  right: clamp(1rem, 2.5vw, 2rem);
-  bottom: clamp(1rem, 2vw, 1.5rem);
-}
-
 .chief-actions--disabled {
   opacity: 0.5;
   pointer-events: none;

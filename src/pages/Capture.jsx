@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
-import Toast from '../components/ui/Toast';
 import StickyNoteCard from '../components/capture/StickyNoteCard';
 import { usePersistentState } from '../hooks/usePersistentState';
 import {
@@ -58,7 +57,7 @@ function Capture() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showPromotedNotes, setShowPromotedNotes] = useState(false);
   const composerTextareaRef = useRef(null);
-  const { toastMessage, isToastVisible, showToast } = useToast();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const handleCaptureUpdate = () => {
@@ -272,7 +271,6 @@ function Capture() {
           />
         )}
       </section>
-      <Toast className="toast--capture" isVisible={isToastVisible} message={toastMessage} />
     </section>
   );
 }
