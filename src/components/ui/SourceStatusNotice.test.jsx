@@ -1,14 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { SOURCE_NOTICE_SAMPLE_DATA } from '../../lib/uiCopy';
+import { SOURCE_NOTICE_LOCAL_ONLY } from '../../lib/uiCopy';
 import SourceStatusNotice from './SourceStatusNotice';
 
 describe('SourceStatusNotice', () => {
   it('renders local source copy by default', () => {
     render(<SourceStatusNotice />);
 
-    expect(screen.getByText(SOURCE_NOTICE_SAMPLE_DATA)).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(SOURCE_NOTICE_SAMPLE_DATA);
+    expect(screen.getByText(SOURCE_NOTICE_LOCAL_ONLY)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(SOURCE_NOTICE_LOCAL_ONLY);
   });
 
   it('renders supabase source copy when source is supabase', () => {

@@ -117,7 +117,7 @@ export async function listOpportunities() {
     const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('opportunities')
-      .select('id, name, company, priority, stage, next_step')
+      .select('id, name, company, priority, stage, next_step, updated_at')
       .eq('user_id', userId);
 
     if (error) {
@@ -145,7 +145,7 @@ export async function createOpportunity(payload, options = {}) {
       const { data, error } = await supabaseClient
         .from('opportunities')
         .insert(formatForSupabase({ ...normalizedPayload, userId }))
-        .select('id, name, company, priority, stage, next_step')
+        .select('id, name, company, priority, stage, next_step, updated_at')
         .single();
 
       if (error) {

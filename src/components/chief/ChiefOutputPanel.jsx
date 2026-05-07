@@ -54,6 +54,12 @@ export default function ChiefOutputPanel({
         onAcceptAll={onAcceptAll}
         isAcceptingAll={isAcceptingAll}
         canAcceptAll={hasStructuredItems}
+        structuredCounts={{
+          priorities: priorities.length,
+          opportunities: opportunities.length,
+          contentItems: contentItems.length,
+          tasks: tasks.length,
+        }}
       />
 
       {!hasStructuredItems ? (

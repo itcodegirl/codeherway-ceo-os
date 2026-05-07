@@ -29,7 +29,7 @@ describe('LocalOnlyNotice', () => {
   it('renders an explanatory notice when the workspace is local-only', () => {
     useWorkspaceSettings.mockReturnValue({ source: 'local' });
     render(<LocalOnlyNotice />);
-    expect(screen.getByTestId('local-only-notice')).toHaveTextContent('local-only');
+    expect(screen.getByTestId('local-only-notice')).toHaveTextContent('stored on this device only');
   });
 
   it('persists dismissal so the notice stays hidden across renders', () => {

@@ -125,8 +125,8 @@ export const dashboardDemoData = {
     momentum: 'Needs attention',
   },
   focusScore: {
-    demoSuffix: 'Local sample',
+    demoSuffix: 'Local demo',
   },
-  demoNote: 'Local sample data is active on this device. It is not synced to an account.',
+  demoNote: 'Demo data is active on this device. It is not synced.',
 };
 

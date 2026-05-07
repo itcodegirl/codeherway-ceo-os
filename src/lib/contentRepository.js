@@ -100,7 +100,7 @@ export async function listContentItems() {
     const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
-      .select('id, title, platform, status')
+      .select('id, title, platform, status, updated_at')
       .eq('user_id', userId);
 
     if (error) {
@@ -133,7 +133,7 @@ export async function createContentItem(payload, options = {}) {
           platform: normalizedPayload.platform,
           status: normalizedPayload.status,
         })
-        .select('id, title, platform, status')
+        .select('id, title, platform, status, updated_at')
         .single();
 
       if (error) {

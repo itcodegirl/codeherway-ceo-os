@@ -15,7 +15,7 @@ import {
   listContentItems,
   updateContentItem,
 } from '../../lib/contentRepository';
-import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
+import { buildSourceNotice } from '../../lib/uiCopy';
 import { parseContentPayload } from '../../lib/contentPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
@@ -124,9 +124,7 @@ function ContentCrudPage() {
         description: 'Plan, track, and ship founder content across platforms with a clear publishing workflow.',
       }}
       status={{
-        sourceNote: source === 'supabase'
-          ? SOURCE_NOTICE_SUPABASE
-          : SOURCE_NOTICE_SAMPLE_DATA,
+        sourceNote: buildSourceNotice(source, { supabasePrefix: '' }),
         sourceNoteClassName: 'content-source-note',
         loadError,
         loadErrorClassName: 'content-error',

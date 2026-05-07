@@ -125,8 +125,8 @@ export default function ChiefOfStaff() {
           </p>
           <SourceStatusNotice
             source={source}
-            supabaseText={buildSourceNotice("supabase", { supabasePrefix: "Chief workspace: " })}
-            localText="Chief workspace is stored locally on this device right now."
+            supabaseText={buildSourceNotice("supabase", { supabasePrefix: "" })}
+            localText="Chief workspace is stored on this device only."
             loadError={isLoading ? "" : loadError}
             onRetry={refreshWorkspace}
             retryAriaLabel="Retry loading chief workspace"

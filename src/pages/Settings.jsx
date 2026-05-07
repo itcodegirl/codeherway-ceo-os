@@ -7,7 +7,7 @@ import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import { useSettings } from '../hooks/useSettings';
 import { useThemePreference } from '../hooks/useThemePreference';
 import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
-import { SOURCE_NOTICE_SAMPLE_DATA } from '../lib/uiCopy';
+import { SOURCE_NOTICE_DEMO_DATA, SOURCE_NOTICE_LOCAL_ONLY, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/forms.css';
 
 const THEME_CHOICES = [
@@ -92,6 +92,8 @@ function Settings() {
       />
       <SourceStatusNotice
         source={source}
+        supabaseText={buildSourceNotice('supabase', { supabasePrefix: '' })}
+        localText={SOURCE_NOTICE_LOCAL_ONLY}
         loadError={loadError}
         onRetry={refreshSettings}
         retryAriaLabel="Retry loading settings"
@@ -205,7 +207,7 @@ function Settings() {
             <p className="helper-text">
               {hasWorkspaceSetupChoice
                 ? isDemoMode
-                  ? 'Demo workspace is active on this device.'
+                  ? SOURCE_NOTICE_DEMO_DATA
                   : 'Blank local workspace is active on this device.'
                 : 'No setup choice has been saved yet. Demo records are shown for review until you choose.'}
             </p>
@@ -294,8 +296,8 @@ function Settings() {
 
       <div className="helper-text" role="status" aria-live="polite">
         {source === 'supabase'
-          ? 'Changes sync to your Supabase profile.'
-          : SOURCE_NOTICE_SAMPLE_DATA}
+          ? 'Settings save to your synced workspace.'
+          : 'Settings are stored on this device.'}
         {Number.isFinite(Number(savedAt)) && Number(savedAt) > 0 ? (() => {
           const savedDate = new Date(Number(savedAt));
           // Guard against corrupted timestamps (e.g. legacy storage) — an

@@ -10,6 +10,7 @@ import { CONTENT_ITEMS_UPDATED_EVENT, listContentItems } from '../lib/contentRep
 import { OPPORTUNITIES_UPDATED_EVENT, listOpportunities } from '../lib/opportunitiesRepository';
 import { REMINDERS_UPDATED_EVENT, listReminders } from '../lib/remindersRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
+import { buildOpenLoopsSummary } from '../lib/focusHomeLogic';
 import {
   getCurrentWeekStart,
   getWeeklyBriefByWeek,
@@ -23,12 +24,21 @@ function buildPulseItems({
   opportunities,
   captureNotes,
   reminders,
+  contentRows,
+  journalEntry,
 }) {
   const focusCount = priorities.filter((item) => item?.status === 'In Progress' || item?.status === 'Planned').length;
   const momentumCount = wins.length + opportunities.filter((item) => item?.stage === 'In Progress').length;
   const blockerCount = blockers.length;
   const ideaCount = captureNotes.filter((item) => item?.category === 'idea').length;
-  const resetCount = reminders.filter((item) => !item?.isDone).length;
+  const openLoopsCount = buildOpenLoopsSummary({
+    blockers,
+    captureNotes,
+    contentRows,
+    journalEntry,
+    opportunities,
+    reminders,
+  }).total;
 
   return [
     {
@@ -56,10 +66,10 @@ function buildPulseItems({
       tone: ideaCount > 0 ? 'positive' : 'neutral',
     },
     {
-      id: 'reset',
-      label: 'Reset',
-      value: String(resetCount),
-      tone: resetCount > 0 ? 'warning' : 'neutral',
+      id: 'open-loops',
+      label: 'Open Loops',
+      value: String(openLoopsCount),
+      tone: openLoopsCount > 0 ? 'warning' : 'neutral',
     },
   ];
 }
@@ -69,7 +79,7 @@ const DEFAULT_PULSE_ITEMS = [
   { id: 'momentum', label: 'Momentum', value: '--', tone: 'neutral' },
   { id: 'blockers', label: 'Blockers', value: '--', tone: 'neutral' },
   { id: 'ideas', label: 'Ideas', value: '--', tone: 'neutral' },
-  { id: 'reset', label: 'Reset', value: '--', tone: 'neutral' },
+  { id: 'open-loops', label: 'Open Loops', value: '--', tone: 'neutral' },
 ];
 
 export function useSystemPulse() {
@@ -123,6 +133,8 @@ export function useSystemPulse() {
         opportunities,
         captureNotes,
         reminders,
+        contentRows,
+        journalEntry,
       });
 
       setPulse({

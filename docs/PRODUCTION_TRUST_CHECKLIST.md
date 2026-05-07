@@ -8,14 +8,14 @@ UX, repository behavior, and authenticated regression coverage.
 
 - Sign-up, sign-in, sign-out, and auth-expired states are visible and tested.
 - Account recovery flow is documented and verified end to end.
-- Settings clearly distinguishes "this device only" from "synced to account."
+- Settings and source notices clearly distinguish local-only, demo data, blank local workspace, and synced workspace states.
 - Local-to-cloud migration lets a user decide what happens to existing local data before connecting Supabase.
 
 ## Sync And Conflict Trust
 
 - Offline replay coverage includes Weekly Brief, Chief workspace, Settings, Capture, Journal, and reminders, or those surfaces keep explicit local/error states.
 - Pending writes show a count only when real replay handlers exist for those queued kinds.
-- Supabase updates use a version or `updated_at` conflict check on every mutable table.
+- Supabase Opportunity and Content OS updates use `updated_at` conflict checks; extend the same contract to every mutable table before SaaS launch.
 - Conflict copy explains what changed, what was preserved, and what the user can do next.
 
 ## Staging Regression

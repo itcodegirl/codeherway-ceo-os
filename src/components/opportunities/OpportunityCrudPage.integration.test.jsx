@@ -135,6 +135,46 @@ describe('OpportunityCrudPage integration', () => {
     expect(createOpportunity.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('threads expectedUpdatedAt when editing a Supabase-loaded opportunity row', async () => {
+    const expectedUpdatedAt = Date.parse('2026-05-01T12:00:00.000Z');
+    records = [
+      {
+        id: 'opp-1',
+        name: 'Advisory Partnership',
+        company: 'Studio North',
+        priority: 'High',
+        stage: 'In Progress',
+        nextStep: 'Share proposal',
+        updatedAt: expectedUpdatedAt,
+      },
+    ];
+    getOpportunitiesSource.mockReturnValue('supabase');
+    updateOpportunity.mockImplementationOnce(async (id, payload) => ({
+      id,
+      ...payload,
+      updatedAt: Date.parse('2026-05-01T12:05:00.000Z'),
+    }));
+
+    renderWithRouter(<OpportunityCrudPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Advisory Partnership')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Advisory Partnership'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit selected opportunity' }));
+    fireEvent.change(screen.getByLabelText('Opportunity'), { target: { value: 'Advisory Partnership Updated' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save opportunity changes' }));
+
+    await waitFor(() => {
+      expect(updateOpportunity).toHaveBeenCalledWith(
+        'opp-1',
+        expect.objectContaining({ name: 'Advisory Partnership Updated' }),
+        { expectedUpdatedAt },
+      );
+    });
+  });
+
   it('shows delete error and allows retry to complete deletion', async () => {
     deleteOpportunity.mockImplementationOnce(async () => {
       throw new Error('delete failed');

@@ -4,8 +4,10 @@ import {
   buildMomentumMessage,
   buildNextMoveQueue,
   buildNextMoveRecommendations,
+  buildOpenLoopsSummary,
   buildOperatingRitual,
   buildQuickWin,
+  buildSafeToIgnoreList,
   resolveFocusMode,
 } from './focusHomeLogic';
 
@@ -103,11 +105,69 @@ describe('focusHomeLogic', () => {
 
   it('marks the current operating ritual by time of day', () => {
     expect(buildOperatingRitual(new Date('2026-05-06T08:00:00')).find((item) => item.isActive))
-      .toMatchObject({ id: 'morning' });
+      .toMatchObject({ id: 'start-day' });
     expect(buildOperatingRitual(new Date('2026-05-06T13:00:00')).find((item) => item.isActive))
-      .toMatchObject({ id: 'midday' });
-    expect(buildOperatingRitual(new Date('2026-05-06T18:00:00')).find((item) => item.isActive))
-      .toMatchObject({ id: 'evening' });
+      .toMatchObject({ id: 'execute' });
+    expect(buildOperatingRitual(new Date('2026-05-06T17:00:00')).find((item) => item.isActive))
+      .toMatchObject({ id: 'capture' });
+    expect(buildOperatingRitual(new Date('2026-05-06T19:00:00')).find((item) => item.isActive))
+      .toMatchObject({ id: 'reset' });
+    expect(buildOperatingRitual(new Date('2026-05-06T22:00:00')).find((item) => item.isActive))
+      .toMatchObject({ id: 'shutdown' });
+  });
+
+  it('summarizes safe-to-ignore work without naming the current high-friction move', () => {
+    const safeItems = buildSafeToIgnoreList({
+      priorities: [
+        { title: 'Customer rollout', status: 'In Progress' },
+        { title: 'Ops cleanup', status: 'Planned' },
+        { title: 'Research pass', status: 'Planned' },
+      ],
+      opportunities: [
+        { name: 'Strategic renewal', priority: 'High', stage: 'Awaiting Reply' },
+        { name: 'Newsletter swap', priority: 'Low', stage: 'New' },
+      ],
+      contentRows: [
+        { title: 'Launch note', status: 'Drafting' },
+        { title: 'Founder story', status: 'Drafting' },
+      ],
+      reminders: [
+        { text: 'Send contract', isDone: false },
+        { text: 'Buy stamps', isDone: false },
+      ],
+    });
+
+    expect(safeItems).toEqual([
+      '1 later reminder can wait until this focus block ends.',
+      '1 lower-priority opportunity can stay parked for now.',
+      '1 extra content draft can wait unless publishing is today\'s focus.',
+    ]);
+  });
+
+  it('builds a compact open-loops summary with one recommended loop to close', () => {
+    const summary = buildOpenLoopsSummary({
+      blockers: [{ text: 'Legal review is waiting.' }],
+      captureNotes: [
+        { text: 'Turn founder call into recap', promotedTo: '' },
+        { text: 'Already processed', promotedTo: 'content' },
+      ],
+      contentRows: [{ title: 'Weekly memo', status: 'Drafting' }],
+      journalEntry: { feelsHeavy: 'Launch ambiguity', oneNextThing: '' },
+      opportunities: [{ name: 'Acme renewal', stage: 'Awaiting Reply' }],
+      reminders: [{ text: 'Send sponsor recap', isDone: false }],
+    });
+
+    expect(summary.total).toBe(6);
+    expect(summary.items.map((item) => item.id)).toEqual([
+      'reminders',
+      'blockers',
+      'capture',
+      'opportunities',
+      'content',
+      'journal',
+    ]);
+    expect(summary.suggestedLoop).toBe('Clarify the next owner for "Legal review is waiting."');
+    expect(summary.canWait).toBe('The rest can wait until this focus block ends.');
   });
 
   it('keeps quick wins and momentum scoring deterministic with missing inputs', () => {
