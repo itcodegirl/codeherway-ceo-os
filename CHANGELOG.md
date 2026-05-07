@@ -2,6 +2,13 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-07 - CEO OS audit: Weekly Supabase conflict hardening
+
+- Weekly Brief Supabase item selectors now carry `updated_at` through list, create, and update flows so cloud-loaded rows keep a positive `updatedAt` value for conflict checks.
+- Weekly Brief Supabase item updates now apply the caller's expected timestamp as an `updated_at` equality filter and raise `StaleRecordError` when another session changed the row first.
+- Weekly Brief delete flows now thread `expectedUpdatedAt` from `useWeeklyBrief`, reject stale local deletes, and reject timestamped Supabase deletes without emitting fake progress.
+- Added focused mocked-Supabase coverage for Weekly Brief timestamp load/create/update/delete behavior while leaving full authenticated staging regression out of scope.
+
 ## 2026-05-05 - Audit cycle 2: trust, error surfaces, dead code, mobile, and perf
 
 Stability:
