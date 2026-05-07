@@ -13,7 +13,7 @@ import {
   defaultWins,
 } from '../lib/weeklyData';
 import { useWeeklyBrief } from '../hooks/useWeeklyBrief';
-import { buildAutosaveHelperText } from '../lib/uiCopy';
+import { buildAutosaveHelperText, buildSourceNotice } from '../lib/uiCopy';
 import '../styles/forms.css';
 import '../styles/weekly.css';
 
@@ -108,6 +108,8 @@ function WeeklyBrief() {
 
       <SourceStatusNotice
         source={source}
+        supabaseText={buildSourceNotice('supabase', { supabasePrefix: '' })}
+        localText={buildSourceNotice('local')}
         loadError={loadError}
         onRetry={refreshWeeklyBrief}
         retryAriaLabel="Retry loading weekly brief"

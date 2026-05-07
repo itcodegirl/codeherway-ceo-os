@@ -28,7 +28,7 @@ import {
   buildQuickWin,
   resolveFocusMode,
 } from '../lib/focusHomeLogic';
-import { SOURCE_NOTICE_SAMPLE_DATA, buildSourceNotice } from '../lib/uiCopy';
+import { buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
 const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
@@ -270,9 +270,6 @@ function Dashboard() {
     },
   });
 
-  const dashboardDemoNote = weeklySource === 'local' && isDemoMode
-    ? SOURCE_NOTICE_SAMPLE_DATA
-    : '';
   const showFirstRunSetup = weeklySource === 'local' && !hasWorkspaceSetupChoice;
 
   const isFocusDataLoading = isDataLoading || isWeeklyLoading;
@@ -291,7 +288,7 @@ function Dashboard() {
   const handleStartBlankWorkspace = useCallback(() => {
     Promise.resolve(startBlankWorkspace())
       .then(() => {
-        showToast('Blank local workspace ready. Sample records are cleared from this device.');
+        showToast('Blank local workspace ready. Demo records are cleared from this device.');
       })
       .catch(() => {
         showToast('Unable to update local workspace setup right now.');
@@ -319,8 +316,8 @@ function Dashboard() {
       />
       <SourceStatusNotice
         source={weeklySource}
-        supabaseText={buildSourceNotice('supabase', { supabasePrefix: 'Weekly data source: ' })}
-        localText={buildSourceNotice('local', { localPrefix: 'Weekly data source: ' })}
+        supabaseText={buildSourceNotice('supabase', { supabasePrefix: '' })}
+        localText={buildSourceNotice('local')}
         loadError={weeklyLoadError}
         onRetry={refreshWeeklyBrief}
         retryAriaLabel="Retry loading focus command center data"
@@ -331,7 +328,7 @@ function Dashboard() {
           <div>
             <h2>Choose how this device starts</h2>
             <p className="helper-text">
-              You are seeing local sample records. Start blank for real use, or keep the demo workspace for review.
+              Demo data is active on this device. Start blank for real use, or keep the demo workspace for review.
             </p>
           </div>
           <div className="focus-home__setup-actions">
@@ -390,7 +387,6 @@ function Dashboard() {
                 Loading your focus context...
               </p>
             ) : null}
-            {dashboardDemoNote ? <p className="helper-text">{dashboardDemoNote}</p> : null}
           </article>
         </ErrorBoundary>
 

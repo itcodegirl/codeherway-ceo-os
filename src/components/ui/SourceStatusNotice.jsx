@@ -1,5 +1,5 @@
 import Button from './Button';
-import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
+import { SOURCE_NOTICE_LOCAL_ONLY, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
 
 function resolveRecoveryText(source, recoveryText) {
   if (typeof recoveryText === 'string' && recoveryText.trim()) {
@@ -16,7 +16,7 @@ function resolveRecoveryText(source, recoveryText) {
 function SourceStatusNotice({
   source = 'local',
   supabaseText = SOURCE_NOTICE_SUPABASE,
-  localText = SOURCE_NOTICE_SAMPLE_DATA,
+  localText = SOURCE_NOTICE_LOCAL_ONLY,
   loadError = '',
   recoveryText = '',
   onRetry = null,

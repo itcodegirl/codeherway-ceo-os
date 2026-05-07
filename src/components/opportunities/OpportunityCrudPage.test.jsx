@@ -73,7 +73,7 @@ describe('OpportunityCrudPage', () => {
     expect(screen.getByRole('heading', { name: 'Opportunities' })).toBeInTheDocument();
     expect(screen.getByText('Loading opportunities data.')).toBeInTheDocument();
     expect(screen.getByRole('table', { name: 'Opportunity pipeline' })).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Local sample data is active on this device. It is not synced to an account.')).toBeInTheDocument();
+    expect(screen.getByText('Demo data is active on this device. It is not synced.')).toBeInTheDocument();
   });
 
   it('renders empty and error state content when there are no opportunities', () => {
@@ -87,7 +87,7 @@ describe('OpportunityCrudPage', () => {
 
     renderWithRouter(<OpportunityCrudPage />);
 
-    expect(screen.getByText('Data source: Live workspace sync is enabled.')).toBeInTheDocument();
+    expect(screen.getByText('Workspace sync is active.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load opportunities right now.');
     expect(screen.getByText('No opportunities yet')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /add opportunity/i }).length).toBeGreaterThan(0);

@@ -15,7 +15,7 @@ import {
   listOpportunities,
   updateOpportunity,
 } from '../../lib/opportunitiesRepository';
-import { SOURCE_NOTICE_SAMPLE_DATA, SOURCE_NOTICE_SUPABASE } from '../../lib/uiCopy';
+import { buildSourceNotice } from '../../lib/uiCopy';
 import { parseOpportunityPayload } from '../../lib/opportunityPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
 import '../../styles/forms.css';
@@ -135,9 +135,7 @@ function OpportunityCrudPage() {
         description: 'Track partnerships, roles, and outreach as an executive-grade pipeline.',
       }}
       status={{
-        sourceNote: source === 'supabase'
-          ? SOURCE_NOTICE_SUPABASE
-          : SOURCE_NOTICE_SAMPLE_DATA,
+        sourceNote: buildSourceNotice(source, { supabasePrefix: '' }),
         sourceNoteClassName: 'opportunities-source-note',
         loadError,
         loadErrorClassName: 'opportunities-error',

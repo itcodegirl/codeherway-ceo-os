@@ -1,31 +1,38 @@
 import { describe, expect, it } from 'vitest';
 import {
+  SOURCE_NOTICE_BLANK_LOCAL,
+  SOURCE_NOTICE_DEMO_DATA,
+  SOURCE_NOTICE_LOCAL_ONLY,
   SOURCE_LABEL_SUPABASE,
-  SOURCE_NOTICE_SAMPLE_DATA,
   SOURCE_NOTICE_SUPABASE,
   AUTOSAVE_PAUSED_COPY,
   buildAutosaveHelperText,
   buildSourceNotice,
+  resolveLocalSourceNotice,
 } from './uiCopy';
 
 describe('src/lib/uiCopy', () => {
   it('returns canonical source labels', () => {
-    expect(SOURCE_LABEL_SUPABASE).toBe('Live workspace sync is enabled.');
-    expect(SOURCE_NOTICE_SUPABASE).toBe('Data source: Live workspace sync is enabled.');
-    expect(SOURCE_NOTICE_SAMPLE_DATA)
-      .toBe('Local sample data is active on this device. It is not synced to an account.');
+    expect(SOURCE_LABEL_SUPABASE).toBe('Workspace sync is active.');
+    expect(SOURCE_NOTICE_SUPABASE).toBe('Data source: Workspace sync is active.');
+    expect(SOURCE_NOTICE_LOCAL_ONLY).toBe('This workspace is stored on this device only.');
+    expect(SOURCE_NOTICE_DEMO_DATA).toBe('Demo data is active on this device. It is not synced.');
+    expect(SOURCE_NOTICE_BLANK_LOCAL).toBe('Blank local workspace is active on this device.');
     expect(AUTOSAVE_PAUSED_COPY).toBe('Autosave is paused until this workspace saves successfully again.');
   });
 
   it('builds source notice for supabase with default prefix', () => {
-    expect(buildSourceNotice('supabase')).toBe('Data source: Live workspace sync is enabled.');
+    expect(buildSourceNotice('supabase')).toBe('Data source: Workspace sync is active.');
   });
 
-  it('builds source notice with custom prefixes', () => {
+  it('builds source notice with state-specific local copy and custom prefixes', () => {
     expect(buildSourceNotice('supabase', { supabasePrefix: 'Weekly data source: ' }))
-      .toBe('Weekly data source: Live workspace sync is enabled.');
-    expect(buildSourceNotice('local', { localPrefix: 'Weekly data source: ' }))
-      .toBe('Weekly data source: Local sample data is active on this device. It is not synced to an account.');
+      .toBe('Weekly data source: Workspace sync is active.');
+    expect(buildSourceNotice('local', { localMode: 'demo', localPrefix: 'Weekly data source: ' }))
+      .toBe('Weekly data source: Demo data is active on this device. It is not synced.');
+    expect(buildSourceNotice('local', { localMode: 'blank' }))
+      .toBe('Blank local workspace is active on this device.');
+    expect(resolveLocalSourceNotice('unknown')).toBe('This workspace is stored on this device only.');
   });
 
   it('builds autosave helper text from save health', () => {

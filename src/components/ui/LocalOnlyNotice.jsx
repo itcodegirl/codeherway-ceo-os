@@ -56,10 +56,9 @@ function LocalOnlyNotice() {
       data-testid="local-only-notice"
     >
       <div className="local-only-notice__body">
-        <strong className="local-only-notice__title">This workspace is local-only</strong>
+        <strong className="local-only-notice__title">This workspace is stored on this device only</strong>
         <p className="local-only-notice__text">
-          Your data is stored in this browser. It will not sync to your other devices.
-          Configure a Supabase workspace in Settings to enable cloud sync.
+          It will not sync to your other devices unless you configure a Supabase workspace in Settings.
         </p>
       </div>
       <button

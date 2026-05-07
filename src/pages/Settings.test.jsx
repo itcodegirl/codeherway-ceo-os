@@ -121,7 +121,7 @@ describe('src/pages/Settings', () => {
 
     renderSettings();
 
-    expect(screen.getByText('Demo workspace is active on this device.')).toBeInTheDocument();
+    expect(screen.getByText('Demo data is active on this device. It is not synced.')).toBeInTheDocument();
     expect(screen.getByText('Import from local backup: coming soon')).toBeInTheDocument();
     expect(screen.getByText('Connect Supabase account: setup required')).toBeInTheDocument();
 

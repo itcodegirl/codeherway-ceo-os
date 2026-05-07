@@ -49,7 +49,7 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(
       screen.getByText("Paste your notes in the workspace, then choose an action above to generate output."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Chief workspace is stored locally on this device right now.")).toBeInTheDocument();
+    expect(screen.getByText("Chief workspace is stored on this device only.")).toBeInTheDocument();
     expect(screen.getByText("Add a few founder notes to generate an action plan.")).toBeInTheDocument();
   });
 

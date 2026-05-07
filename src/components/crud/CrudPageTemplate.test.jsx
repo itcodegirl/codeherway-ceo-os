@@ -17,7 +17,7 @@ describe('CrudPageTemplate', () => {
           description: 'Track content workflow.',
         }}
         status={{
-          sourceNote: 'Data source: Live workspace sync is enabled.',
+          sourceNote: 'Workspace sync is active.',
           sourceNoteClassName: 'content-source-note',
           isLoading: false,
         }}
@@ -35,7 +35,7 @@ describe('CrudPageTemplate', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Content OS' })).toBeInTheDocument();
-    expect(screen.getByText('Data source: Live workspace sync is enabled.')).toBeInTheDocument();
+    expect(screen.getByText('Workspace sync is active.')).toBeInTheDocument();
     expect(screen.getByText('Summary content')).toBeInTheDocument();
     expect(screen.getByText('Section body')).toBeInTheDocument();
   });
