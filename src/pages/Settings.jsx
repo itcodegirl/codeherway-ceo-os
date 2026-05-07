@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
@@ -85,7 +85,7 @@ function Settings() {
   const themeRadiogroupId = useId();
   const importInputId = useId();
   const importInputRef = useRef(null);
-  const [dataHealthRefreshKey, setDataHealthRefreshKey] = useState(0);
+  const [, setDataHealthRefreshKey] = useState(0);
   const [portabilityStatus, setPortabilityStatus] = useState({ tone: '', message: '' });
   const { preference: themePreference, setThemePreference } = useThemePreference();
   const pendingSyncCount = useOfflineWriteQueueSize();
@@ -106,10 +106,7 @@ function Settings() {
   const canPersistSettings = (nextSettings = settings) => Boolean(
     resolveTimeZone(nextSettings?.timezone),
   );
-  const dataHealth = useMemo(
-    () => getLocalWorkspaceDataHealth(),
-    [dataHealthRefreshKey, pendingSyncCount, savedAt, source],
-  );
+  const dataHealth = getLocalWorkspaceDataHealth();
   const backupScopeCopy = source === 'supabase'
     ? 'Backups cover this browser\'s local fallback data. Synced Supabase records stay in Supabase.'
     : 'Backups cover the local workspace data stored in this browser.';
