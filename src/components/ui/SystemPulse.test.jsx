@@ -11,7 +11,7 @@ vi.mock('../../hooks/useSystemPulse', () => ({
       { id: 'momentum', label: 'Momentum', value: '3', tone: 'positive' },
       { id: 'blockers', label: 'Blockers', value: '1', tone: 'warning' },
       { id: 'ideas', label: 'Ideas', value: '4', tone: 'positive' },
-      { id: 'reset', label: 'Reset', value: '2', tone: 'warning' },
+      { id: 'open-loops', label: 'Open Loops', value: '2', tone: 'warning' },
     ],
   }),
 }));
@@ -27,7 +27,7 @@ describe('src/components/ui/SystemPulse', () => {
     expect(screen.getByText('Momentum')).toBeInTheDocument();
     expect(screen.getByText('Blockers')).toBeInTheDocument();
     expect(screen.getByText('Ideas')).toBeInTheDocument();
-    expect(screen.getByText('Reset')).toBeInTheDocument();
+    expect(screen.getByText('Open Loops')).toBeInTheDocument();
     expect(screen.getByRole('listitem', { name: 'Focus: 2' })).toBeInTheDocument();
     expect(screen.getByRole('listitem', { name: 'Blockers: 1' })).toBeInTheDocument();
   });

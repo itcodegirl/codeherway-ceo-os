@@ -106,12 +106,19 @@
 	margin: 0;
 }
 
+.focus-home__loop-label {
+	margin: 0;
+	color: var(--text-soft-strong);
+	font-size: 0.82rem;
+	font-weight: 600;
+}
+
 .focus-home__ritual-list {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(5, minmax(0, 1fr));
 	gap: 0.65rem;
 }
 
@@ -178,6 +185,34 @@
 	margin: 0;
 	color: var(--text-soft-strong);
 	font-size: 0.9rem;
+	line-height: 1.4;
+	overflow-wrap: anywhere;
+}
+
+.focus-home__safe-ignore {
+	display: grid;
+	gap: 0.45rem;
+	padding: 0.7rem 0;
+	border-block: 1px solid color-mix(in srgb, var(--border) 76%, transparent 24%);
+}
+
+.focus-home__safe-ignore-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 0.35rem;
+	color: var(--text-soft-strong);
+	font-size: 0.88rem;
+	line-height: 1.35;
+}
+
+.focus-home__safe-ignore-list li {
+	overflow-wrap: anywhere;
+}
+
+.focus-home__loop-close {
+	margin: 0;
 	line-height: 1.4;
 	overflow-wrap: anywhere;
 }
@@ -296,6 +331,16 @@
 	padding: 0.45rem 0 0.45rem 0.15rem;
 	border: 0;
 	background: transparent;
+}
+
+.focus-list--compact {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.45rem;
+}
+
+.focus-list--compact li {
+	padding: 0.45rem 0.55rem;
+	font-size: 0.86rem;
 }
 
 .focus-home__quick-win {

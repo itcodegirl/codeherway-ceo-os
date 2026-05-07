@@ -28,19 +28,29 @@ const DEFAULT_NEXT_MOVE_REASON = 'Recommended because: a short time-box creates 
 
 export const OPERATING_RITUALS = [
   {
-    id: 'morning',
-    label: 'Morning',
+    id: 'start-day',
+    label: 'Start Day',
     action: 'Choose one main focus, one blocker, and one reminder to protect.',
   },
   {
-    id: 'midday',
-    label: 'Midday',
-    action: 'Check progress, clear or reschedule reminders, and unblock one item.',
+    id: 'execute',
+    label: 'Execute',
+    action: 'Work the next smallest action without reopening the whole system.',
   },
   {
-    id: 'evening',
-    label: 'Evening',
-    action: 'Journal, then turn one next thing into tomorrow\'s first reminder.',
+    id: 'capture',
+    label: 'Capture',
+    action: 'Put loose notes, reminders, and decisions into one trusted place.',
+  },
+  {
+    id: 'reset',
+    label: 'Reset',
+    action: 'Shrink scope, clear one loop, or deliberately park what can wait.',
+  },
+  {
+    id: 'shutdown',
+    label: 'Shutdown',
+    action: 'Journal, choose tomorrow\'s first move, and close the day cleanly.',
   },
   {
     id: 'weekly',
@@ -62,6 +72,10 @@ function findOldestPendingReminder(reminders) {
   return reminders
     .filter((item) => !item?.isDone && hasText(item?.text))
     .sort((left, right) => parseCreatedAt(left?.createdAt) - parseCreatedAt(right?.createdAt))[0];
+}
+
+function pluralize(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function buildQuotedInstruction(prefix, value) {
@@ -87,24 +101,28 @@ function resolveRitualId(now = new Date()) {
     ? now.getHours()
     : new Date().getHours();
 
-  if (hour >= 5 && hour < 11) {
-    return 'morning';
+  if (hour >= 5 && hour < 10) {
+    return 'start-day';
   }
 
-  if (hour >= 11 && hour < 17) {
-    return 'midday';
+  if (hour >= 10 && hour < 16) {
+    return 'execute';
   }
 
-  if (hour >= 17 && hour < 23) {
-    return 'evening';
+  if (hour >= 16 && hour < 18) {
+    return 'capture';
   }
 
-  return 'morning';
+  if (hour >= 18 && hour < 21) {
+    return 'reset';
+  }
+
+  return 'shutdown';
 }
 
 export function buildOperatingRitual(now = new Date()) {
   const activeId = resolveRitualId(now);
-  return OPERATING_RITUALS.map((item) => ({
+  return OPERATING_RITUALS.filter((item) => item.id !== 'weekly').map((item) => ({
     ...item,
     isActive: item.id === activeId,
   }));
@@ -254,6 +272,104 @@ export function buildNextMoveRecommendations({
   });
 
   return recommendations;
+}
+
+export function buildSafeToIgnoreList({
+  priorities,
+  opportunities,
+  contentRows,
+  reminders,
+} = {}) {
+  const safePriorities = normalizeCollection(priorities);
+  const safeOpportunities = normalizeCollection(opportunities);
+  const safeContentRows = normalizeCollection(contentRows);
+  const safeReminders = normalizeCollection(reminders);
+  const items = [];
+
+  const laterReminders = safeReminders.filter((item) => !item?.isDone && hasText(item?.text)).slice(1);
+  if (laterReminders.length > 0) {
+    items.push(`${pluralize(laterReminders.length, 'later reminder')} can wait until this focus block ends.`);
+  }
+
+  const lowerPriorityOpportunities = safeOpportunities.filter((item) => (
+    item?.priority !== 'High'
+    && item?.stage !== 'In Progress'
+    && item?.stage !== 'Awaiting Reply'
+    && hasText(item?.name)
+  ));
+  if (lowerPriorityOpportunities.length > 0) {
+    items.push(`${pluralize(lowerPriorityOpportunities.length, 'lower-priority opportunity', 'lower-priority opportunities')} can stay parked for now.`);
+  }
+
+  const draftingContent = safeContentRows.filter((item) => item?.status === 'Drafting' && hasText(item?.title));
+  if (draftingContent.length > 1) {
+    items.push(`${pluralize(draftingContent.length - 1, 'extra content draft')} can wait unless publishing is today's focus.`);
+  }
+
+  const plannedPriorities = safePriorities.filter((item) => item?.status === 'Planned' && hasText(item?.title));
+  if (plannedPriorities.length > 1) {
+    items.push(`${pluralize(plannedPriorities.length - 1, 'planned priority', 'planned priorities')} can wait behind the current move.`);
+  }
+
+  return items.slice(0, 3);
+}
+
+export function buildOpenLoopsSummary({
+  blockers,
+  captureNotes,
+  contentRows,
+  journalEntry,
+  opportunities,
+  reminders,
+} = {}) {
+  const safeBlockers = normalizeCollection(blockers);
+  const safeCaptureNotes = normalizeCollection(captureNotes);
+  const safeContentRows = normalizeCollection(contentRows);
+  const safeOpportunities = normalizeCollection(opportunities);
+  const safeReminders = normalizeCollection(reminders);
+
+  const pendingReminders = safeReminders.filter((item) => !item?.isDone && hasText(item?.text));
+  const activeBlockers = safeBlockers.filter((item) => hasText(item?.text));
+  const unprocessedNotes = safeCaptureNotes.filter((item) => hasText(item?.text) && !hasText(item?.promotedTo));
+  const waitingOpportunities = safeOpportunities.filter((item) => item?.stage === 'Awaiting Reply' && hasText(item?.name));
+  const draftingContent = safeContentRows.filter((item) => item?.status === 'Drafting' && hasText(item?.title));
+  const journalNeedsNextStep = hasText(journalEntry?.feelsHeavy) && !hasText(journalEntry?.oneNextThing);
+
+  const items = [
+    { id: 'reminders', label: 'Pending reminders', count: pendingReminders.length },
+    { id: 'blockers', label: 'Blockers', count: activeBlockers.length },
+    { id: 'capture', label: 'Unprocessed capture notes', count: unprocessedNotes.length },
+    { id: 'opportunities', label: 'Waiting opportunities', count: waitingOpportunities.length },
+    { id: 'content', label: 'Drafting content', count: draftingContent.length },
+    { id: 'journal', label: 'Journal needs a next thing', count: journalNeedsNextStep ? 1 : 0 },
+  ].filter((item) => item.count > 0);
+
+  const total = items.reduce((sum, item) => sum + item.count, 0);
+  const suggestedLoop = activeBlockers[0]?.text
+    ? buildQuotedInstruction('Clarify the next owner for', activeBlockers[0].text)
+    : pendingReminders[0]?.text
+      ? buildQuotedInstruction('Complete or reschedule', pendingReminders[0].text)
+      : unprocessedNotes[0]?.text
+        ? buildQuotedInstruction('Process capture note', unprocessedNotes[0].text)
+        : waitingOpportunities[0]?.name
+          ? buildQuotedInstruction('Send one follow-up for', waitingOpportunities[0].name)
+          : draftingContent[0]?.title
+            ? buildQuotedInstruction('Lower friction on draft', draftingContent[0].title)
+            : journalNeedsNextStep
+              ? 'Name one next thing from today\'s heavy journal note.'
+              : 'No loop needs closing right now.';
+
+  return {
+    total,
+    headline: total > 0
+      ? `${pluralize(total, 'open loop')} visible.`
+      : 'No open loops need action right now.',
+    items,
+    suggestedLoop,
+    canWait: total > 1
+      ? 'The rest can wait until this focus block ends.'
+      : 'Nothing else needs attention during this focus block.',
+  };
 }
 
 export function buildQuickWin(wins, opportunities, contentRows) {

@@ -25,7 +25,9 @@ import {
   buildMainFocus,
   buildMomentumMessage,
   buildNextMoveRecommendations,
+  buildOpenLoopsSummary,
   buildQuickWin,
+  buildSafeToIgnoreList,
   resolveFocusMode,
 } from '../lib/focusHomeLogic';
 import { buildSourceNotice } from '../lib/uiCopy';
@@ -41,8 +43,9 @@ function Dashboard() {
     showToast,
   } = useToast();
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
-  // Audit follow-up: the top fold now shows only "1 focus + 3 blockers + 1
-  // next move + reminders". Focus-mode chips, quick-win + momentum, and the
+  // Audit follow-up: the top fold now leads with the operating step, one
+  // focus, one next move, open loops, blockers, and reminders. Focus-mode
+  // chips, quick-win + momentum, and the
   // overwhelmed-reset steps are kept in a collapsed drawer the user can
   // open. The drawer auto-opens whenever the user reaches for it (e.g.
   // clicks the "I'm overwhelmed" button) so we do not gate emergency
@@ -56,7 +59,6 @@ function Dashboard() {
   const { captureNotes, journalEntry, reminders } = useFocusHomeSignals();
   const {
     hasChoice: hasWorkspaceSetupChoice,
-    isDemoMode,
     startBlankWorkspace,
     loadDemoWorkspace,
   } = useWorkspaceSetup();
@@ -97,6 +99,10 @@ function Dashboard() {
   }, [focusMode]);
 
   const operatingRitual = useMemo(() => buildOperatingRitual(), []);
+  const currentOperatingStep = useMemo(
+    () => operatingRitual.find((step) => step.isActive) || operatingRitual[0],
+    [operatingRitual],
+  );
 
   const nextMoveRecommendations = useMemo(() => buildNextMoveRecommendations({
     priorities: weeklyPriorities,
@@ -117,6 +123,34 @@ function Dashboard() {
     () => nextMoveRecommendations.map((item) => item.text),
     [nextMoveRecommendations],
   );
+
+  const safeToIgnoreItems = useMemo(() => buildSafeToIgnoreList({
+    priorities: weeklyPriorities,
+    opportunities: opportunityItems,
+    contentRows,
+    reminders,
+  }), [
+    contentRows,
+    opportunityItems,
+    reminders,
+    weeklyPriorities,
+  ]);
+
+  const openLoops = useMemo(() => buildOpenLoopsSummary({
+    blockers: weeklyBlockers,
+    captureNotes,
+    contentRows,
+    journalEntry,
+    opportunities: opportunityItems,
+    reminders,
+  }), [
+    captureNotes,
+    contentRows,
+    journalEntry,
+    opportunityItems,
+    reminders,
+    weeklyBlockers,
+  ]);
 
   const mainFocus = useMemo(
     () => buildMainFocus(weeklyPriorities, opportunityItems, contentRows),
@@ -346,9 +380,12 @@ function Dashboard() {
 
       <section className="focus-home__ritual" aria-label="Daily operating rhythm">
         <div className="focus-home__ritual-header">
-          <h2>Operating rhythm</h2>
-          <p className="helper-text">Use the current checkpoint first, then keep moving.</p>
+          <h2>Current Operating Step</h2>
+          <p className="helper-text">
+            {currentOperatingStep?.label}: {currentOperatingStep?.action}
+          </p>
         </div>
+        <p className="focus-home__loop-label">Start Day &gt; Execute &gt; Capture &gt; Reset &gt; Shutdown</p>
         <ol className="focus-home__ritual-list">
           {operatingRitual.map((step) => (
             <li
@@ -405,6 +442,17 @@ function Dashboard() {
             </div>
             <p className="focus-home__next-move-text">{displayedNextMove}</p>
             <p className="focus-home__next-move-reason">{displayedNextMoveReason}</p>
+            <div className="focus-home__safe-ignore" aria-label="Safe to ignore for now">
+              <p className="focus-home__subheading">Safe to ignore for now</p>
+              <ul className="focus-home__safe-ignore-list">
+                {(safeToIgnoreItems.length
+                  ? safeToIgnoreItems
+                  : ['Nothing else needs attention during this focus block.']
+                ).map((item, index) => (
+                  <li key={`safe-ignore-${index + 1}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
             <div className="focus-home__actions">
               <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
                 Tell me what to do next
@@ -413,6 +461,36 @@ function Dashboard() {
                 I'm overwhelmed
               </Button>
             </div>
+          </article>
+        </ErrorBoundary>
+
+        <ErrorBoundary
+          name="Dashboard / Open Loops"
+          fallback={(
+            <article className="focus-panel" aria-label="Open loops panel">
+              <p className="calm-copy">Open loops could not load. Refresh the page to retry.</p>
+            </article>
+          )}
+        >
+          <article className="focus-panel focus-panel--open-loops" aria-label="Open loops panel">
+            <div className="focus-panel__header">
+              <h2>Open Loops</h2>
+              <span className="signal-node" aria-hidden="true" />
+            </div>
+            <p className="calm-copy">{openLoops.headline}</p>
+            {openLoops.items.length ? (
+              <ul className="focus-list focus-list--compact" aria-label="Open loops summary">
+                {openLoops.items.slice(0, 4).map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.count}</strong> {item.label}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <p className="focus-home__loop-close">
+              <strong>One loop worth closing:</strong> {openLoops.suggestedLoop}
+            </p>
+            <p className="helper-text">{openLoops.canWait}</p>
           </article>
         </ErrorBoundary>
 

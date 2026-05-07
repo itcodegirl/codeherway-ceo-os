@@ -88,12 +88,18 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Focus Home' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: "Today's Main Focus" })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Next Smallest Action' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Open Loops' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Blockers' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Operating rhythm' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Current Operating Step' })).toBeInTheDocument();
+    expect(screen.getByText('Start Day > Execute > Capture > Reset > Shutdown')).toBeInTheDocument();
     expect(screen.getByText('Choose one main focus, one blocker, and one reminder to protect.')).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
     expect(screen.getByText('Recommended because: this priority is blocked and needs one clear unblock message.')).toBeInTheDocument();
+    expect(screen.getByText('Safe to ignore for now')).toBeInTheDocument();
+    expect(screen.getByText('Nothing else needs attention during this focus block.')).toBeInTheDocument();
+    expect(screen.getByText('3 open loops visible.')).toBeInTheDocument();
+    expect(screen.getByText(/One loop worth closing:/)).toBeInTheDocument();
     expect(screen.queryByText('This blocker may need attention.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Show suggestions' }));
     expect(screen.getByText('This blocker may need attention.')).toBeInTheDocument();
@@ -325,6 +331,7 @@ describe('src/pages/Dashboard', () => {
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
     expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
+    expect(screen.getByText('No open loops need action right now.')).toBeInTheDocument();
     expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
 
