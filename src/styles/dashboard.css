@@ -30,18 +30,6 @@
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: clamp(0.9rem, 2vw, 1.35rem);
-	position: relative;
-}
-
-.focus-home__grid::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	background:
-		linear-gradient(115deg, transparent 4%, rgba(79, 173, 255, 0.17) 36%, transparent 68%);
-	opacity: 0.55;
-	z-index: -1;
 }
 
 .focus-home__ritual {
@@ -279,15 +267,6 @@
 	gap: 0.65rem;
 }
 
-.focus-home__next-move {
-	border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
-	background: color-mix(in srgb, var(--surface-card) 72%, rgba(29, 106, 171, 0.24) 28%);
-	border-radius: calc(var(--radius-lg) - 4px);
-	padding: 0.8rem 0.9rem;
-	display: grid;
-	gap: 0.35rem;
-}
-
 .focus-home__subheading {
 	margin: 0;
 	font-size: 0.78rem;
@@ -295,11 +274,6 @@
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--text-soft-strong);
-}
-
-.focus-home__next-move p {
-	margin: 0;
-	overflow-wrap: anywhere;
 }
 
 .focus-list {
@@ -561,16 +535,6 @@
 	.focus-mode__chips .focus-chip {
 		flex: 1 1 9rem;
 	}
-}
-
-/*
- * Light-theme retuning. The default accent stripe and per-panel tints are
- * tuned for a dark background; they read too saturated against warm paper.
- */
-:root[data-theme="light"] .focus-home__grid::before {
-	background:
-		linear-gradient(115deg, transparent 4%, rgba(31, 127, 198, 0.07) 36%, transparent 68%);
-	opacity: 0.6;
 }
 
 :root[data-theme="light"] .focus-home-page--overwhelmed .focus-panel--main,
