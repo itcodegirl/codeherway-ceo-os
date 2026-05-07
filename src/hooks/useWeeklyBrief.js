@@ -201,19 +201,24 @@ export function useWeeklyBrief() {
     const nextMap = new Map(nextItems.map((item) => [String(item.id), item]));
     let hasChanges = false;
 
-    const deletedItemIds = [];
-    previousMap.forEach((_, id) => {
+    const deletedItems = [];
+    previousMap.forEach((item, id) => {
       if (!nextMap.has(id)) {
-        deletedItemIds.push(id);
+        deletedItems.push(item);
       }
     });
 
-    for (let index = 0; index < deletedItemIds.length; index += 1) {
+    for (let index = 0; index < deletedItems.length; index += 1) {
+      const deletedItem = deletedItems[index];
+      const expectedUpdatedAt = Number(deletedItem?.updatedAt);
       await deleteWeeklyItem({
         weekStart,
         itemType,
-        itemId: deletedItemIds[index],
+        itemId: String(deletedItem.id),
         emitEvent: false,
+        ...(Number.isFinite(expectedUpdatedAt) && expectedUpdatedAt > 0
+          ? { expectedUpdatedAt }
+          : {}),
       });
       hasChanges = true;
     }

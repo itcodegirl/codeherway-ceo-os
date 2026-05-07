@@ -208,6 +208,42 @@ describe('src/lib/weeklyRepository', () => {
     expect(updated.text).toBe('Updated without timestamp');
   });
 
+  it('rejects a local weekly delete when expectedUpdatedAt is stale', async () => {
+    const created = await createWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      item: {
+        id: 'priority-delete-conflict',
+        title: 'Original priority',
+        owner: 'Jenna',
+        status: 'Planned',
+      },
+      emitEvent: false,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    await updateWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      itemId: 'priority-delete-conflict',
+      item: { ...created, title: 'Tab B saved first' },
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    });
+
+    await expect(deleteWeeklyItem({
+      weekStart,
+      itemType: 'priority',
+      itemId: 'priority-delete-conflict',
+      expectedUpdatedAt: created.updatedAt,
+      emitEvent: false,
+    })).rejects.toMatchObject({ name: 'StaleRecordError' });
+
+    const brief = await getWeeklyBriefByWeek(weekStart);
+    const persisted = brief.priorities.find((entry) => entry.id === 'priority-delete-conflict');
+    expect(persisted.title).toBe('Tab B saved first');
+  });
+
   it('does not auto-seed demo weekly items after the workspace starts blank', async () => {
     saveWorkspaceSetupMode('blank');
 
