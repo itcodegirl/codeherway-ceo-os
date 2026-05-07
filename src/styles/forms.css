@@ -129,11 +129,41 @@
 }
 
 .settings-workspace-setup__actions,
-.settings-workspace-setup__unavailable {
+.settings-workspace-setup__unavailable,
+.settings-timezone-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
   align-items: center;
+}
+
+.settings-timezone-actions {
+  margin-top: 0.5rem;
+}
+
+.settings-account {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
+
+.settings-account__signin-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-action, 12px);
+  border: 1px solid var(--border-accent);
+  color: var(--accent-soft-strong);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.settings-account__signin-link:hover,
+.settings-account__signin-link:focus-visible {
+  background: var(--bg-accent-soft);
+  color: var(--accent);
 }
 
 .settings-workspace-setup__unavailable span {

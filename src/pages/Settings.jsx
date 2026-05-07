@@ -1,4 +1,5 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
@@ -8,7 +9,9 @@ import { useSettings } from '../hooks/useSettings';
 import { useOfflineWriteQueueSize } from '../hooks/useOfflineWriteQueue';
 import { useThemePreference } from '../hooks/useThemePreference';
 import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
-import { resolveTimeZone } from '../lib/settings';
+import { useAuthSession } from '../hooks/useAuthSession';
+import { isSupabaseConfigured, signOut } from '../lib/supabase';
+import { getDeviceTimezone, getSupportedTimezones, resolveTimeZone } from '../lib/settings';
 import { SOURCE_NOTICE_DEMO_DATA, SOURCE_NOTICE_LOCAL_ONLY, buildSourceNotice } from '../lib/uiCopy';
 import {
   buildWorkspaceBackup,
@@ -77,6 +80,8 @@ function Settings() {
   } = useSettings();
   const teamNameFieldId = useId();
   const timezoneFieldId = useId();
+  const timezoneListId = useId();
+  const supportedTimezones = useMemo(() => getSupportedTimezones(), []);
   const autoSaveToggleId = useId();
   const emailDigestToggleId = useId();
   const shortcutsToggleId = useId();
@@ -96,6 +101,24 @@ function Settings() {
     loadDemoWorkspace,
     clearDemoData,
   } = useWorkspaceSetup();
+  const { user, isAuthenticated, isInitializing: isAuthInitializing, isDisabled: isAuthDisabled } = useAuthSession();
+  const [signOutState, setSignOutState] = useState('idle');
+  const [signOutError, setSignOutError] = useState('');
+
+  const handleSignOut = async () => {
+    if (signOutState === 'pending') {
+      return;
+    }
+    setSignOutState('pending');
+    setSignOutError('');
+    try {
+      await signOut();
+      setSignOutState('idle');
+    } catch (caught) {
+      setSignOutError(caught?.message || 'Sign out failed.');
+      setSignOutState('error');
+    }
+  };
   const fieldsDisabled = isSaving || isLoading;
   const canSave = timezoneIsValid && !fieldsDisabled;
   const saveButtonLabel = isSaving
@@ -241,6 +264,51 @@ function Settings() {
 
       <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving || isLoading}>
         <SectionCard
+          title="Account"
+          iconName="settings"
+        >
+          {!isSupabaseConfigured || isAuthDisabled ? (
+            <p className="helper-text">
+              Cloud sync is not configured for this build. Local data on this device is the
+              source of truth. To enable accounts, set <code>VITE_SUPABASE_URL</code> and{' '}
+              <code>VITE_SUPABASE_ANON_KEY</code>, then redeploy.
+            </p>
+          ) : isAuthInitializing ? (
+            <p className="helper-text" role="status" aria-live="polite">
+              Checking your session…
+            </p>
+          ) : isAuthenticated ? (
+            <div className="settings-account">
+              <p className="helper-text">
+                Signed in as <strong>{user?.email || 'authenticated user'}</strong>.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="small"
+                onClick={handleSignOut}
+                disabled={signOutState === 'pending'}
+              >
+                {signOutState === 'pending' ? 'Signing out…' : 'Sign out'}
+              </Button>
+              {signOutError ? (
+                <p role="alert" className="form-error">{signOutError}</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="settings-account">
+              <p className="helper-text">
+                You are not signed in. Cloud sync stays off until you sign in. Local data on
+                this device is preserved either way.
+              </p>
+              <Link to="/sign-in" className="settings-account__signin-link">
+                Sign in with magic link
+              </Link>
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard
           title="Workspace"
           iconName="settings"
         >
@@ -265,11 +333,12 @@ function Settings() {
               name="timezone"
               label="Timezone"
               autoComplete="off"
+              list={timezoneListId}
               value={settings.timezone}
               required
               minLength={2}
               disabled={fieldsDisabled}
-              error={!timezoneIsValid ? 'Timezone is invalid. Example: America/Chicago.' : ''}
+              error={!timezoneIsValid ? 'Timezone is invalid. Pick one from the list, for example America/Chicago.' : ''}
               title={
                 timezoneIsValid
                   ? 'Use an IANA timezone, for example America/Chicago.'
@@ -280,11 +349,27 @@ function Settings() {
               }}
               onChange={(e) => handleChange('timezone', e.target.value)}
             />
-            {timezoneIsValid ? (
-              <span className="helper-text helper-text--offset">
-                Use IANA format such as America/Chicago.
-              </span>
-            ) : null}
+            <datalist id={timezoneListId}>
+              {supportedTimezones.map((zone) => (
+                <option key={zone} value={zone} />
+              ))}
+            </datalist>
+            <div className="settings-timezone-actions">
+              <Button
+                type="button"
+                size="small"
+                variant="ghost"
+                disabled={fieldsDisabled}
+                onClick={() => handleChange('timezone', getDeviceTimezone())}
+              >
+                Use device timezone
+              </Button>
+              {timezoneIsValid ? (
+                <span className="helper-text helper-text--offset">
+                  Start typing to filter the IANA list (for example, "Chicago" or "Tokyo").
+                </span>
+              ) : null}
+            </div>
           </div>
         </SectionCard>
 
