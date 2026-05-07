@@ -598,10 +598,25 @@ button.sync-status-pill--retry:focus-visible {
 	}
 
 	.topbar__right {
-		display: grid;
-		grid-template-columns: 1fr;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 0.6rem;
 		justify-items: start;
 		width: 100%;
+		align-items: center;
+	}
+
+	/* Mobile topbar collapse — keep the sync/save pills + a compact date on
+	 * screen, suppress the verbose desktop-only metadata rows so the page
+	 * heading is not pushed below five stacked metadata lines on phones. */
+	.topbar__label--desktop,
+	.topbar__status--desktop {
+		display: none;
+	}
+
+	.topbar__meta {
+		font-size: 0.82rem;
+		opacity: 0.85;
 	}
 
 	.system-pulse {
