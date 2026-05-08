@@ -96,8 +96,9 @@ function ReminderRow({
           <span>
             {item.text}
             {isSnoozed ? (
-              <span className="focus-reminder-list__snooze-badge" aria-label={`Snoozed until ${formatSnoozeDeadline(item.snoozedUntil)}`}>
-                Snoozed · {formatSnoozeDeadline(item.snoozedUntil)}
+              <span className="focus-reminder-list__snooze-badge">
+                {' Snoozed until '}
+                {formatSnoozeDeadline(item.snoozedUntil)}
               </span>
             ) : null}
           </span>

@@ -594,9 +594,9 @@ function Dashboard() {
                 <p className="focus-home__quick-win">{quickWin}</p>
                 <p
                   className={`focus-home__momentum-pill focus-home__momentum-pill--${momentum.state}`}
-                  aria-label={`Today feels: ${momentum.label}`}
                 >
                   <span className="focus-home__momentum-pill-dot" aria-hidden="true" />
+                  <span className="sr-only">Today: </span>
                   {momentum.label}
                 </p>
                 <p className="calm-copy">{momentum.text}</p>

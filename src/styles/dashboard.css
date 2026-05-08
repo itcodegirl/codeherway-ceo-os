@@ -550,6 +550,23 @@
 	background: var(--surface-overlay-subtle, rgba(120, 144, 168, 0.10));
 	border: 1px solid var(--border);
 	letter-spacing: 0.01em;
+	white-space: nowrap;
+}
+
+/*
+ * Touch devices: bump reminder action buttons to a comfortable 44px target.
+ * Using `pointer: coarse` keeps mouse-only users on the compact 32px height
+ * so desktop density isn't sacrificed for mobile ergonomics.
+ */
+@media (pointer: coarse) {
+	.focus-reminder-list__delete,
+	.focus-reminder-list__promote,
+	.focus-reminder-list__edit-button,
+	.focus-reminder-list__snooze,
+	.focus-reminder-list__wake {
+		min-height: 2.75rem;
+		padding: 0.55rem 0.7rem;
+	}
 }
 
 .focus-reminder-list__toggle-suggestions {
