@@ -354,13 +354,27 @@ textarea:focus-visible,
 }
 
 .empty-state {
-  padding: 1.35rem;
+  padding: 1.5rem 1.35rem;
   border: 1px dashed var(--border);
   border-radius: var(--radius-lg);
   text-align: center;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.empty-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin-bottom: 0.25rem;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--surface-overlay-subtle, rgba(60, 185, 255, 0.12));
+  border: 1px solid var(--surface-overlay-soft, rgba(60, 185, 255, 0.22));
 }
 
 .empty-state__title {
@@ -370,6 +384,7 @@ textarea:focus-visible,
 .empty-state__description {
   color: var(--text-muted);
   line-height: 1.4;
+  max-width: 36ch;
 }
 
 .empty-state__action {

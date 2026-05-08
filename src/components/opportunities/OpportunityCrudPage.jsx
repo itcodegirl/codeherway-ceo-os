@@ -5,6 +5,7 @@ import OpportunityItemModal from './OpportunityItemModal';
 import OpportunityFormModal from './OpportunityFormModal';
 import OpportunityDeleteConfirmModal from './OpportunityDeleteConfirmModal';
 import Button from '../ui/Button';
+import Icon from '../ui/Icon';
 import SummaryCards from '../ui/SummaryCards';
 import { CrudTableLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
@@ -180,6 +181,7 @@ function OpportunityCrudPage() {
           ),
           isEmpty: opportunityItems.length === 0,
           emptyState: {
+            icon: <Icon name="opportunities" size={20} />,
             title: 'No opportunities yet',
             description: 'Add your first opportunity to start tracking outreach and next steps.',
             action: (

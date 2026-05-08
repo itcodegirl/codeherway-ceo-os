@@ -45,6 +45,7 @@ function CrudPageTemplate({
   } = sectionSlot;
 
   const {
+    icon: emptyStateIcon,
     title: emptyStateTitle,
     description: emptyStateDescription,
     action: emptyStateAction,
@@ -86,6 +87,7 @@ function CrudPageTemplate({
       >
         {isLoading ? sectionLoadingContent : isEmpty ? (
           <EmptyState
+            icon={emptyStateIcon}
             title={emptyStateTitle}
             description={emptyStateDescription}
             action={emptyStateAction}

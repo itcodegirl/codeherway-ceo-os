@@ -5,6 +5,7 @@ import ContentItemModal from './ContentItemModal';
 import ContentFormModal from './ContentFormModal';
 import ContentDeleteConfirmModal from './ContentDeleteConfirmModal';
 import Button from '../ui/Button';
+import Icon from '../ui/Icon';
 import SummaryCards from '../ui/SummaryCards';
 import { CrudCardGridLoadingSkeleton } from '../crud/CrudLoadingSkeletons';
 import {
@@ -164,6 +165,7 @@ function ContentCrudPage() {
           ),
           isEmpty: contentRows.length === 0,
           emptyState: {
+            icon: <Icon name="content" size={20} />,
             title: 'No content items yet',
             description: 'Add your first draft to begin tracking your publishing pipeline.',
             action: (
