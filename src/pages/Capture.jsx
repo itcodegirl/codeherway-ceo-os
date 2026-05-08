@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
+import Icon from '../components/ui/Icon';
 import StickyNoteCard from '../components/capture/StickyNoteCard';
 import { usePersistentState } from '../hooks/usePersistentState';
 import {
@@ -266,6 +267,7 @@ function Capture() {
           </div>
         ) : (
           <EmptyState
+            icon={<Icon name="capture" size={20} />}
             title="No sticky notes yet"
             description="Start with one idea or one tiny task to clear mental load."
           />

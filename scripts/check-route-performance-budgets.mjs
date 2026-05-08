@@ -22,7 +22,11 @@ const routeBudgets = [
     // to reflect the additional selector blocks.
     // Bumped 6.1 -> 9.0 / 1.65 -> 2.1 for the same Focus Home trust
     // surfaces: ritual strip, first-run setup prompt, and rationale styling.
-    css: { rawKb: 9.0, gzipKb: 2.1 },
+    // Bumped 9.0 -> 11.0 / 2.1 -> 2.3 for the May 2026 senior audit pass:
+    // qualitative momentum pill (replacing the 0–100 score), Chief-of-Staff
+    // empty-state hint, snooze-badge + snooze/wake actions, and a
+    // (pointer: coarse) touch-target block for reminder controls.
+    css: { rawKb: 11.0, gzipKb: 2.3 },
   },
   {
     route: 'Opportunities',

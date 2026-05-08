@@ -323,15 +323,55 @@
 	font-weight: 500;
 }
 
-.focus-home__momentum-score {
-	margin: 0;
-	font-size: 0.9rem;
+.focus-home__empty-hint {
+	margin: 0.4rem 0 0;
+	padding: 0.55rem 0.75rem;
+	border-radius: var(--radius-md, 10px);
+	border: 1px solid var(--border);
 	color: var(--text-soft-strong);
+	font-size: 0.88rem;
+	line-height: 1.45;
 }
 
-.focus-home__momentum-score strong {
-	font-size: 1.05rem;
+.focus-home__empty-hint-link {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
 }
+
+/*
+ * Qualitative momentum pill. Replaced the legacy 0–100 score so the calm-OS
+ * thesis isn't undermined by an optimisation-friendly number. Variants set
+ * --pill-tone; the single rule uses color-mix to derive bg/border/dot so we
+ * don't repeat 4 nearly identical blocks.
+ */
+.focus-home__momentum-pill {
+	--pill-tone: var(--accent);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	margin: 0;
+	padding: 0.18rem 0.7rem;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: var(--pill-tone);
+	background: color-mix(in srgb, var(--pill-tone) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--pill-tone) 32%, transparent);
+	width: max-content;
+}
+
+.focus-home__momentum-pill-dot {
+	width: 0.45rem;
+	height: 0.45rem;
+	border-radius: 999px;
+	background: var(--pill-tone);
+}
+
+.focus-home__momentum-pill--visible { --pill-tone: var(--success, #7be5bc); }
+.focus-home__momentum-pill--steady { --pill-tone: var(--text-soft-strong); }
+.focus-home__momentum-pill--quiet { --pill-tone: var(--text-muted); }
 
 .focus-panel--reset {
 	border-color: color-mix(in srgb, var(--border-warning-soft) 55%, var(--border) 45%);
@@ -410,7 +450,10 @@
 .focus-reminder-list__delete,
 .focus-reminder-list__promote,
 .focus-reminder-list__edit-button,
-.focus-reminder-list__toggle-completed {
+.focus-reminder-list__snooze,
+.focus-reminder-list__wake,
+.focus-reminder-list__toggle-completed,
+.focus-reminder-list__toggle-snoozed {
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
@@ -428,23 +471,63 @@
 .focus-reminder-list__delete:hover,
 .focus-reminder-list__promote:hover,
 .focus-reminder-list__edit-button:hover,
-.focus-reminder-list__toggle-completed:hover {
+.focus-reminder-list__snooze:hover,
+.focus-reminder-list__wake:hover,
+.focus-reminder-list__toggle-completed:hover,
+.focus-reminder-list__toggle-snoozed:hover {
 	color: var(--text);
 }
 
 .focus-reminder-list__delete:focus-visible,
 .focus-reminder-list__promote:focus-visible,
 .focus-reminder-list__edit-button:focus-visible,
-.focus-reminder-list__toggle-completed:focus-visible {
+.focus-reminder-list__snooze:focus-visible,
+.focus-reminder-list__wake:focus-visible,
+.focus-reminder-list__toggle-completed:focus-visible,
+.focus-reminder-list__toggle-snoozed:focus-visible {
 	color: var(--text);
 	outline: 2px solid var(--focus-ring);
 	outline-offset: 2px;
 }
 
-.focus-reminder-list__toggle-completed {
+.focus-reminder-list__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
 	margin: 0.4rem 0 0.6rem;
+}
+
+.focus-reminder-list__toggle-completed,
+.focus-reminder-list__toggle-snoozed {
 	display: inline-flex;
 	font-size: 0.78rem;
+}
+
+.focus-reminder-list__item--snoozed {
+	opacity: 0.78;
+}
+
+.focus-reminder-list__snooze-badge {
+	display: inline-flex;
+	margin-left: 0.5rem;
+	padding: 0.05rem 0.45rem;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--text-muted);
+	border: 1px solid var(--border);
+	white-space: nowrap;
+}
+
+/* Touch devices: 44px reminder action targets without affecting desktop. */
+@media (pointer: coarse) {
+	.focus-reminder-list__delete,
+	.focus-reminder-list__promote,
+	.focus-reminder-list__edit-button,
+	.focus-reminder-list__snooze,
+	.focus-reminder-list__wake {
+		min-height: 2.75rem;
+	}
 }
 
 .focus-reminder-list__toggle-suggestions {

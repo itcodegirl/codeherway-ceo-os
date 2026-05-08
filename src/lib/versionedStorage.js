@@ -3,6 +3,7 @@ import {
   getStorageSchema,
   readVersionedStoragePayload,
 } from './dataSchema';
+import { migrateStoragePayload } from './storageMigrations';
 import { parseJsonOrPreserveCorruption } from './storageCorruption';
 import { requireLocalStorageSetItem, safeLocalStorageSetItem } from './utils';
 
@@ -38,12 +39,25 @@ export function readVersionedLocalStorage(domain, fallbackValue) {
     }
 
     const parsed = parseJsonOrPreserveCorruption(storageKey, raw, null);
-    const { data, isDomainMismatch } = readVersionedStoragePayload(domain, parsed);
+    const {
+      data,
+      schemaVersion,
+      isDomainMismatch,
+    } = readVersionedStoragePayload(domain, parsed);
     if (isDomainMismatch) {
       return fallbackValue;
     }
 
-    return data ?? fallbackValue;
+    if (data == null) {
+      return fallbackValue;
+    }
+
+    // Run any registered migrators so callers always observe data in the
+    // current shape. Today the registry is empty (every domain ships v1), so
+    // this is a cheap no-op; once a v1 → v2 migrator is registered, reads
+    // will lift legacy/older payloads automatically.
+    const migrated = migrateStoragePayload(domain, schemaVersion, data);
+    return migrated.data ?? fallbackValue;
   } catch {
     return fallbackValue;
   }
