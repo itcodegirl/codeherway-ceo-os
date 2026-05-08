@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  buildTomorrowSnoozeDeadline,
   createReminder,
   deleteReminder,
   getReminderProgress,
+  isReminderSnoozed,
   listReminders,
+  snoozeReminderUntil,
   toggleReminder,
   updateReminderText,
+  wakeReminder,
 } from './remindersRepository';
 import {
   CURRENT_DATA_SCHEMA_VERSION,
@@ -145,5 +149,67 @@ describe('src/lib/remindersRepository', () => {
 
   it('rejects renames for missing reminders', () => {
     expect(() => updateReminderText('missing-id', 'anything')).toThrow('Reminder not found');
+  });
+
+  describe('snooze', () => {
+    it('builds a tomorrow-morning deadline ahead of now', () => {
+      const now = new Date('2026-05-08T15:00:00.000Z');
+      const iso = buildTomorrowSnoozeDeadline(now);
+      expect(new Date(iso).getTime()).toBeGreaterThan(now.getTime());
+    });
+
+    it('parks an active reminder behind a future snooze deadline', () => {
+      const reminder = createReminder({ text: 'Polish weekly recap' });
+      const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+      const snoozed = snoozeReminderUntil(reminder.id, future);
+
+      expect(snoozed.snoozedUntil).toBe(future);
+      expect(isReminderSnoozed(snoozed)).toBe(true);
+      const persisted = listReminders().find((row) => row.id === reminder.id);
+      expect(persisted.snoozedUntil).toBe(future);
+    });
+
+    it('clears the snooze when the reminder is woken', () => {
+      const reminder = createReminder({ text: 'Polish weekly recap' });
+      const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      snoozeReminderUntil(reminder.id, future);
+
+      const woken = wakeReminder(reminder.id);
+
+      expect(woken.snoozedUntil).toBe('');
+      expect(isReminderSnoozed(woken)).toBe(false);
+    });
+
+    it('refuses past or invalid snooze deadlines', () => {
+      const reminder = createReminder({ text: 'Polish weekly recap' });
+      const past = new Date(Date.now() - 60 * 1000).toISOString();
+      expect(() => snoozeReminderUntil(reminder.id, past)).toThrow(/in the future/);
+      expect(() => snoozeReminderUntil(reminder.id, 'not-an-iso')).toThrow(/valid ISO/);
+    });
+
+    it('skips snoozing completed reminders without throwing', () => {
+      const reminder = createReminder({ text: 'Polish weekly recap' });
+      toggleReminder(reminder.id, true);
+      const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+      const result = snoozeReminderUntil(reminder.id, future);
+      expect(result.isDone).toBe(true);
+      expect(result.snoozedUntil).toBe('');
+    });
+
+    it('drops the snooze marker when a reminder is marked done', () => {
+      const reminder = createReminder({ text: 'Polish weekly recap' });
+      const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      snoozeReminderUntil(reminder.id, future);
+
+      const done = toggleReminder(reminder.id, true);
+
+      // Completed reminders should not still carry a snooze marker; the
+      // normalize step strips it on the next read.
+      const persisted = listReminders().find((row) => row.id === reminder.id);
+      expect(done.isDone).toBe(true);
+      expect(persisted.snoozedUntil).toBe('');
+    });
   });
 });

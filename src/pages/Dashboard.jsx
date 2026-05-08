@@ -540,6 +540,8 @@ function Dashboard() {
             onDeleteReminder={reminderActions.remove}
             onPromoteReminder={handlePromoteReminderToPriority}
             onEditReminder={reminderActions.edit}
+            onSnoozeReminder={reminderActions.snooze}
+            onWakeReminder={reminderActions.wake}
           />
         </ErrorBoundary>
       </div>

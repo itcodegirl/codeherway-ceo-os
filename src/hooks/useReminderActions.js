@@ -1,8 +1,11 @@
 import { useCallback, useMemo } from 'react';
 import {
+  buildTomorrowSnoozeDeadline,
   deleteReminder,
+  snoozeReminderUntil,
   toggleReminder,
   updateReminderText,
+  wakeReminder,
 } from '../lib/remindersRepository';
 
 function isReminderNotFoundError(error) {
@@ -82,13 +85,49 @@ export function useReminderActions({ reminders, showToast }) {
     [isReminderKnown, showToast],
   );
 
+  const snooze = useCallback(
+    (id) => {
+      if (!isReminderKnown(id)) {
+        return;
+      }
+
+      try {
+        snoozeReminderUntil(id, buildTomorrowSnoozeDeadline());
+      } catch (error) {
+        if (!isReminderNotFoundError(error)) {
+          showToast('Unable to snooze reminder right now.');
+        }
+      }
+    },
+    [isReminderKnown, showToast],
+  );
+
+  const wake = useCallback(
+    (id) => {
+      if (!isReminderKnown(id)) {
+        return;
+      }
+
+      try {
+        wakeReminder(id);
+      } catch (error) {
+        if (!isReminderNotFoundError(error)) {
+          showToast('Unable to wake reminder right now.');
+        }
+      }
+    },
+    [isReminderKnown, showToast],
+  );
+
   return useMemo(
     () => ({
       toggle,
       remove,
       edit,
+      snooze,
+      wake,
       isReminderKnown,
     }),
-    [toggle, remove, edit, isReminderKnown],
+    [toggle, remove, edit, snooze, wake, isReminderKnown],
   );
 }

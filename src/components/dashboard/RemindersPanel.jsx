@@ -1,5 +1,21 @@
 import { useMemo, useState } from 'react';
 import Button from '../ui/Button';
+import { isReminderSnoozed } from '../../lib/remindersRepository';
+
+function formatSnoozeDeadline(iso) {
+  if (!iso) return '';
+  try {
+    const date = new Date(iso);
+    if (!Number.isFinite(date.getTime())) return '';
+    return date.toLocaleString(undefined, {
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '';
+  }
+}
 
 function ReminderRow({
   item,
@@ -7,6 +23,8 @@ function ReminderRow({
   onPromoteReminder,
   onDeleteReminder,
   onEditReminder,
+  onSnoozeReminder,
+  onWakeReminder,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(item.text);
@@ -48,9 +66,12 @@ function ReminderRow({
     }
   };
 
+  const isSnoozed = isReminderSnoozed(item);
   const className = item.isDone
     ? 'focus-reminder-list__item focus-reminder-list__item--done'
-    : 'focus-reminder-list__item';
+    : isSnoozed
+      ? 'focus-reminder-list__item focus-reminder-list__item--snoozed'
+      : 'focus-reminder-list__item';
 
   return (
     <li className={className}>
@@ -72,7 +93,14 @@ function ReminderRow({
             aria-label={`Edit reminder ${item.text}`}
           />
         ) : (
-          <span>{item.text}</span>
+          <span>
+            {item.text}
+            {isSnoozed ? (
+              <span className="focus-reminder-list__snooze-badge" aria-label={`Snoozed until ${formatSnoozeDeadline(item.snoozedUntil)}`}>
+                Snoozed · {formatSnoozeDeadline(item.snoozedUntil)}
+              </span>
+            ) : null}
+          </span>
         )}
       </label>
       <div className="focus-reminder-list__actions">
@@ -94,6 +122,26 @@ function ReminderRow({
             onClick={() => onPromoteReminder(item)}
           >
             Promote
+          </button>
+        ) : null}
+        {!isEditing && typeof onSnoozeReminder === 'function' && !item.isDone && !isSnoozed ? (
+          <button
+            type="button"
+            className="focus-reminder-list__snooze"
+            aria-label={`Snooze reminder ${item.text} until tomorrow morning`}
+            onClick={() => onSnoozeReminder(item.id)}
+          >
+            Snooze
+          </button>
+        ) : null}
+        {!isEditing && typeof onWakeReminder === 'function' && !item.isDone && isSnoozed ? (
+          <button
+            type="button"
+            className="focus-reminder-list__wake"
+            aria-label={`Wake snoozed reminder ${item.text} now`}
+            onClick={() => onWakeReminder(item.id)}
+          >
+            Wake
           </button>
         ) : null}
         {!isEditing ? (
@@ -123,16 +171,23 @@ function RemindersPanel({
   onDeleteReminder,
   onPromoteReminder,
   onEditReminder,
+  onSnoozeReminder,
+  onWakeReminder,
 }) {
   // Keep completed reminders hidden by default so the list doesn't grow into
-  // a backlog of finished work. Users can opt-in to seeing them.
+  // a backlog of finished work. Users can opt-in to seeing them. Snoozed
+  // reminders follow the same pattern: parked off-screen by default so the
+  // user's active list stays calm, surfaced on demand via "Show snoozed".
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showSnoozed, setShowSnoozed] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  // Single pass over visibleReminders for both derived values. Dashboard
-  // re-renders frequently (focus mode, next-move clicks, debounced reminder
-  // adds) so keeping this O(n) once instead of twice avoids waste.
-  const { completedCount, filteredReminders } = useMemo(() => {
+
+  // Single pass over visibleReminders. Dashboard re-renders frequently
+  // (focus mode, next-move clicks, debounced reminder adds) so keeping this
+  // O(n) once instead of three times avoids waste.
+  const { completedCount, snoozedCount, filteredReminders } = useMemo(() => {
     let completed = 0;
+    let snoozed = 0;
     const filtered = [];
     for (const item of visibleReminders) {
       if (item.isDone) {
@@ -140,12 +195,23 @@ function RemindersPanel({
         if (showCompleted) {
           filtered.push(item);
         }
-      } else {
-        filtered.push(item);
+        continue;
       }
+      if (isReminderSnoozed(item)) {
+        snoozed += 1;
+        if (showSnoozed) {
+          filtered.push(item);
+        }
+        continue;
+      }
+      filtered.push(item);
     }
-    return { completedCount: completed, filteredReminders: filtered };
-  }, [visibleReminders, showCompleted]);
+    return {
+      completedCount: completed,
+      snoozedCount: snoozed,
+      filteredReminders: filtered,
+    };
+  }, [visibleReminders, showCompleted, showSnoozed]);
   const hasItems = filteredReminders.length > 0;
 
   return (
@@ -191,18 +257,32 @@ function RemindersPanel({
           : 'No reminder progress yet.'}
       </p>
 
-      {completedCount > 0 ? (
-        <button
-          type="button"
-          className="focus-reminder-list__toggle-completed"
-          aria-pressed={showCompleted}
-          onClick={() => setShowCompleted((prev) => !prev)}
-        >
-          {showCompleted
-            ? `Hide ${completedCount} completed`
-            : `Show ${completedCount} completed`}
-        </button>
-      ) : null}
+      <div className="focus-reminder-list__filters">
+        {completedCount > 0 ? (
+          <button
+            type="button"
+            className="focus-reminder-list__toggle-completed"
+            aria-pressed={showCompleted}
+            onClick={() => setShowCompleted((prev) => !prev)}
+          >
+            {showCompleted
+              ? `Hide ${completedCount} completed`
+              : `Show ${completedCount} completed`}
+          </button>
+        ) : null}
+        {snoozedCount > 0 ? (
+          <button
+            type="button"
+            className="focus-reminder-list__toggle-snoozed"
+            aria-pressed={showSnoozed}
+            onClick={() => setShowSnoozed((prev) => !prev)}
+          >
+            {showSnoozed
+              ? `Hide ${snoozedCount} snoozed`
+              : `Show ${snoozedCount} snoozed`}
+          </button>
+        ) : null}
+      </div>
 
       <ul className="focus-reminder-list">
         {hasItems ? filteredReminders.map((item) => (
@@ -213,6 +293,8 @@ function RemindersPanel({
             onPromoteReminder={onPromoteReminder}
             onDeleteReminder={onDeleteReminder}
             onEditReminder={onEditReminder}
+            onSnoozeReminder={onSnoozeReminder}
+            onWakeReminder={onWakeReminder}
           />
         )) : (
           <li className="focus-reminder-list__item focus-reminder-list__item--empty">

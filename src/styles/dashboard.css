@@ -481,7 +481,10 @@
 .focus-reminder-list__delete,
 .focus-reminder-list__promote,
 .focus-reminder-list__edit-button,
-.focus-reminder-list__toggle-completed {
+.focus-reminder-list__snooze,
+.focus-reminder-list__wake,
+.focus-reminder-list__toggle-completed,
+.focus-reminder-list__toggle-snoozed {
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
@@ -499,23 +502,54 @@
 .focus-reminder-list__delete:hover,
 .focus-reminder-list__promote:hover,
 .focus-reminder-list__edit-button:hover,
-.focus-reminder-list__toggle-completed:hover {
+.focus-reminder-list__snooze:hover,
+.focus-reminder-list__wake:hover,
+.focus-reminder-list__toggle-completed:hover,
+.focus-reminder-list__toggle-snoozed:hover {
 	color: var(--text);
 }
 
 .focus-reminder-list__delete:focus-visible,
 .focus-reminder-list__promote:focus-visible,
 .focus-reminder-list__edit-button:focus-visible,
-.focus-reminder-list__toggle-completed:focus-visible {
+.focus-reminder-list__snooze:focus-visible,
+.focus-reminder-list__wake:focus-visible,
+.focus-reminder-list__toggle-completed:focus-visible,
+.focus-reminder-list__toggle-snoozed:focus-visible {
 	color: var(--text);
 	outline: 2px solid var(--focus-ring);
 	outline-offset: 2px;
 }
 
-.focus-reminder-list__toggle-completed {
+.focus-reminder-list__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
 	margin: 0.4rem 0 0.6rem;
+}
+
+.focus-reminder-list__toggle-completed,
+.focus-reminder-list__toggle-snoozed {
 	display: inline-flex;
 	font-size: 0.78rem;
+}
+
+.focus-reminder-list__item--snoozed {
+	opacity: 0.78;
+}
+
+.focus-reminder-list__snooze-badge {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 0.5rem;
+	padding: 0.05rem 0.45rem;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--text-muted);
+	background: var(--surface-overlay-subtle, rgba(120, 144, 168, 0.10));
+	border: 1px solid var(--border);
+	letter-spacing: 0.01em;
 }
 
 .focus-reminder-list__toggle-suggestions {

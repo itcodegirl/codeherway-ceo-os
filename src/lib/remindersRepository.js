@@ -9,6 +9,14 @@ function normalizeReminder(reminder) {
     ? reminder.completedAt
     : '';
 
+  // `snoozedUntil` is optional. When set, it carries an ISO timestamp the
+  // reminder should re-surface at; the UI hides snoozed reminders whose
+  // deadline is still in the future. Completed reminders never carry a
+  // snooze marker — completion supersedes it.
+  const snoozedUntil = !reminder?.isDone && typeof reminder?.snoozedUntil === 'string'
+    ? reminder.snoozedUntil
+    : '';
+
   return {
     id: String(reminder?.id || buildCreateId()),
     text: typeof reminder?.text === 'string' ? reminder.text.trim() : '',
@@ -17,7 +25,31 @@ function normalizeReminder(reminder) {
     createdAt: typeof reminder?.createdAt === 'string'
       ? reminder.createdAt
       : new Date().toISOString(),
+    snoozedUntil,
   };
+}
+
+/**
+ * Returns an ISO timestamp for tomorrow at 6 AM local. Used as the default
+ * snooze target so a single button reliably parks something off today's
+ * surface without forcing a date picker decision.
+ */
+export function buildTomorrowSnoozeDeadline(now = new Date()) {
+  const target = new Date(now.getTime());
+  target.setDate(target.getDate() + 1);
+  target.setHours(6, 0, 0, 0);
+  return target.toISOString();
+}
+
+export function isReminderSnoozed(reminder, now = new Date()) {
+  if (!reminder || !reminder.snoozedUntil || reminder.isDone) {
+    return false;
+  }
+  const wakeAt = new Date(reminder.snoozedUntil).getTime();
+  if (!Number.isFinite(wakeAt)) {
+    return false;
+  }
+  return wakeAt > now.getTime();
 }
 
 function readStorage() {
@@ -147,6 +179,67 @@ export function updateReminderText(id, text) {
 
   writeStorage(next);
   emitReminderUpdated({ type: 'update', id: normalizedId });
+  return updatedReminder;
+}
+
+export function snoozeReminderUntil(id, untilIso) {
+  const normalizedId = String(id || '');
+  if (!normalizedId) {
+    throw new Error('Reminder id is required');
+  }
+
+  const wakeAt = new Date(untilIso).getTime();
+  if (!Number.isFinite(wakeAt)) {
+    throw new Error('Snooze deadline must be a valid ISO timestamp');
+  }
+  if (wakeAt <= Date.now()) {
+    throw new Error('Snooze deadline must be in the future');
+  }
+
+  const current = readStorage();
+  let updatedReminder = null;
+  const next = current.map((reminder) => {
+    if (reminder.id !== normalizedId) {
+      return reminder;
+    }
+    if (reminder.isDone) {
+      // Completed reminders cannot be snoozed; the action is a no-op.
+      updatedReminder = reminder;
+      return reminder;
+    }
+    updatedReminder = { ...reminder, snoozedUntil: new Date(wakeAt).toISOString() };
+    return updatedReminder;
+  });
+  if (!updatedReminder) {
+    throw new Error('Reminder not found');
+  }
+
+  writeStorage(next);
+  emitReminderUpdated({ type: 'snooze', id: normalizedId });
+  return updatedReminder;
+}
+
+export function wakeReminder(id) {
+  const normalizedId = String(id || '');
+  if (!normalizedId) {
+    throw new Error('Reminder id is required');
+  }
+
+  const current = readStorage();
+  let updatedReminder = null;
+  const next = current.map((reminder) => {
+    if (reminder.id !== normalizedId) {
+      return reminder;
+    }
+    updatedReminder = { ...reminder, snoozedUntil: '' };
+    return updatedReminder;
+  });
+  if (!updatedReminder) {
+    throw new Error('Reminder not found');
+  }
+
+  writeStorage(next);
+  emitReminderUpdated({ type: 'wake', id: normalizedId });
   return updatedReminder;
 }
 
