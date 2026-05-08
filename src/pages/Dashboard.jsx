@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
+import TodayFocusPanel from '../components/dashboard/TodayFocusPanel';
+import OpenLoopsPanel from '../components/dashboard/OpenLoopsPanel';
+import BlockersPanel from '../components/dashboard/BlockersPanel';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
@@ -400,37 +402,10 @@ function Dashboard() {
       </section>
 
       <div className="focus-home__grid">
-        <ErrorBoundary
-          name="Dashboard / Today focus"
-          fallback={(
-            <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
-              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-            </article>
-          )}
-        >
-          <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
-            <div className="focus-panel__header">
-              <h2>Today's Main Focus</h2>
-              <span className="signal-node" aria-hidden="true" />
-            </div>
-            <p className="focus-home__main-focus">{mainFocus.title}</p>
-            <p className="calm-copy">{mainFocus.context}</p>
-            {mainFocus.isEmpty ? (
-              <p className="focus-home__empty-hint">
-                Or paste raw notes into{' '}
-                <Link className="focus-home__empty-hint-link" to="/chief-of-staff">
-                  Chief of Staff
-                </Link>{' '}
-                and let it draft a starting structure for you.
-              </p>
-            ) : null}
-            {isFocusDataLoading ? (
-              <p className="helper-text" role="status" aria-live="polite">
-                Loading your focus context...
-              </p>
-            ) : null}
-          </article>
-        </ErrorBoundary>
+        <TodayFocusPanel
+          mainFocus={mainFocus}
+          isFocusDataLoading={isFocusDataLoading}
+        />
 
         <ErrorBoundary
           name="Dashboard / Next move"
@@ -469,56 +444,9 @@ function Dashboard() {
           </article>
         </ErrorBoundary>
 
-        <ErrorBoundary
-          name="Dashboard / Open Loops"
-          fallback={(
-            <article className="focus-panel" aria-label="Open loops panel">
-              <p className="calm-copy">Open loops could not load. Refresh the page to retry.</p>
-            </article>
-          )}
-        >
-          <article className="focus-panel focus-panel--open-loops" aria-label="Open loops panel">
-            <div className="focus-panel__header">
-              <h2>Open Loops</h2>
-              <span className="signal-node" aria-hidden="true" />
-            </div>
-            <p className="calm-copy">{openLoops.headline}</p>
-            {openLoops.items.length ? (
-              <ul className="focus-list focus-list--compact" aria-label="Open loops summary">
-                {openLoops.items.slice(0, 4).map((item) => (
-                  <li key={item.id}>
-                    <strong>{item.count}</strong> {item.label}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <p className="focus-home__loop-close">
-              <strong>One loop worth closing:</strong> {openLoops.suggestedLoop}
-            </p>
-            <p className="helper-text">{openLoops.canWait}</p>
-          </article>
-        </ErrorBoundary>
+        <OpenLoopsPanel openLoops={openLoops} />
 
-        <ErrorBoundary
-          name="Dashboard / Blockers"
-          fallback={(
-            <article className="focus-panel" aria-label="Blockers panel">
-              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-            </article>
-          )}
-        >
-          <article className="focus-panel" aria-label="Blockers panel">
-            <div className="focus-panel__header">
-              <h2>Blockers</h2>
-              <span className="signal-node" aria-hidden="true" />
-            </div>
-            <ul className="focus-list">
-              {blockerItems.map((item, index) => (
-                <li key={`blocker-${index + 1}`}>{item}</li>
-              ))}
-            </ul>
-          </article>
-        </ErrorBoundary>
+        <BlockersPanel blockerItems={blockerItems} />
 
         <ErrorBoundary
           name="Dashboard / Reminders"
