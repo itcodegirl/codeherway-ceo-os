@@ -323,14 +323,85 @@
 	font-weight: 500;
 }
 
-.focus-home__momentum-score {
+.focus-home__empty-hint {
+	margin: 0.4rem 0 0;
+	padding: 0.55rem 0.75rem;
+	border-radius: var(--radius-md, 10px);
+	border: 1px solid var(--border);
+	background: var(--surface-overlay-subtle, rgba(60, 185, 255, 0.05));
+	color: var(--text-soft-strong);
+	font-size: 0.88rem;
+	line-height: 1.45;
+}
+
+.focus-home__empty-hint-link {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.focus-home__empty-hint-link:hover,
+.focus-home__empty-hint-link:focus-visible {
+	text-decoration-thickness: 2px;
+}
+
+/*
+ * Qualitative momentum pill. Replaced the legacy 0–100 score: a numeric score
+ * conflicts with the calm-OS thesis because it pushes users toward
+ * optimisation. The pill describes the day in words instead.
+ */
+.focus-home__momentum-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
 	margin: 0;
-	font-size: 0.9rem;
+	padding: 0.18rem 0.7rem;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	color: var(--text-soft-strong);
+	background: var(--surface-overlay-subtle, rgba(60, 185, 255, 0.10));
+	border: 1px solid var(--surface-overlay-soft, rgba(60, 185, 255, 0.20));
+	width: max-content;
+}
+
+.focus-home__momentum-pill-dot {
+	width: 0.45rem;
+	height: 0.45rem;
+	border-radius: 999px;
+	background: var(--accent);
+}
+
+.focus-home__momentum-pill--visible {
+	color: var(--success, #7be5bc);
+	background: color-mix(in srgb, var(--success, #7be5bc) 14%, transparent);
+	border-color: color-mix(in srgb, var(--success, #7be5bc) 32%, transparent);
+}
+
+.focus-home__momentum-pill--visible .focus-home__momentum-pill-dot {
+	background: var(--success, #7be5bc);
+}
+
+.focus-home__momentum-pill--in-motion {
+	color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+	border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.focus-home__momentum-pill--steady {
 	color: var(--text-soft-strong);
 }
 
-.focus-home__momentum-score strong {
-	font-size: 1.05rem;
+.focus-home__momentum-pill--quiet {
+	color: var(--text-muted);
+	background: transparent;
+	border-color: var(--border);
+}
+
+.focus-home__momentum-pill--quiet .focus-home__momentum-pill-dot {
+	background: var(--text-muted);
 }
 
 .focus-panel--reset {

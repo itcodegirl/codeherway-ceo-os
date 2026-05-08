@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
@@ -414,6 +415,15 @@ function Dashboard() {
             </div>
             <p className="focus-home__main-focus">{mainFocus.title}</p>
             <p className="calm-copy">{mainFocus.context}</p>
+            {mainFocus.isEmpty ? (
+              <p className="focus-home__empty-hint">
+                Or paste raw notes into{' '}
+                <Link className="focus-home__empty-hint-link" to="/chief-of-staff">
+                  Chief of Staff
+                </Link>{' '}
+                and let it draft a starting structure for you.
+              </p>
+            ) : null}
             {isFocusDataLoading ? (
               <p className="helper-text" role="status" aria-live="polite">
                 Loading your focus context...
@@ -580,8 +590,12 @@ function Dashboard() {
                   <span className="signal-node" aria-hidden="true" />
                 </div>
                 <p className="focus-home__quick-win">{quickWin}</p>
-                <p className="focus-home__momentum-score">
-                  Momentum: <strong>{momentum.score}%</strong>
+                <p
+                  className={`focus-home__momentum-pill focus-home__momentum-pill--${momentum.state}`}
+                  aria-label={`Today feels: ${momentum.label}`}
+                >
+                  <span className="focus-home__momentum-pill-dot" aria-hidden="true" />
+                  {momentum.label}
                 </p>
                 <p className="calm-copy">{momentum.text}</p>
               </article>

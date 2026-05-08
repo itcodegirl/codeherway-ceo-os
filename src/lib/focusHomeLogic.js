@@ -142,6 +142,7 @@ export function buildMainFocus(priorities, opportunities, contentRows) {
     return {
       title: inProgressPriority.title,
       context: 'This is already in motion. Protect your attention until one visible step is done.',
+      isEmpty: false,
     };
   }
 
@@ -150,6 +151,7 @@ export function buildMainFocus(priorities, opportunities, contentRows) {
     return {
       title: blockedPriority.title,
       context: 'This is blocked. Your CEO move is to unblock, delegate, or deliberately park it.',
+      isEmpty: false,
     };
   }
 
@@ -158,6 +160,7 @@ export function buildMainFocus(priorities, opportunities, contentRows) {
     return {
       title: plannedPriority.title,
       context: 'This is your highest leverage item right now. Start with the smallest visible action.',
+      isEmpty: false,
     };
   }
 
@@ -166,6 +169,7 @@ export function buildMainFocus(priorities, opportunities, contentRows) {
     return {
       title: `${highPriorityOpportunity.name} (${highPriorityOpportunity.company || 'Opportunity'})`,
       context: 'This opportunity can move quickly with one clear follow-up.',
+      isEmpty: false,
     };
   }
 
@@ -174,12 +178,17 @@ export function buildMainFocus(priorities, opportunities, contentRows) {
     return {
       title: draftContent.title,
       context: 'Shipping this content keeps your founder signal active.',
+      isEmpty: false,
     };
   }
 
+  // Empty state: nothing is in motion yet. The Dashboard surfaces a calm
+  // Chief-of-Staff hint here so first-time founders discover that they can
+  // paste raw notes and let the AI draft a starting structure.
   return {
     title: 'Create one calming priority for today',
     context: 'Start with a 10-minute planning pass and commit to one realistic next move.',
+    isEmpty: true,
   };
 }
 
@@ -401,6 +410,11 @@ export function buildQuickWin(wins, opportunities, contentRows) {
 // negative weights are gone, and the bottom-tier copy no longer calls the
 // user's day "fragile". `blockerCount` / `pendingReminderCount` are accepted
 // for backwards-compatibility with existing call sites.
+//
+// The numeric `score` is kept on the return value as an internal/analytics
+// signal but is no longer surfaced in the UI: a 0–100 score conflicts with
+// the calm-OS thesis (it invites optimisation-thinking). The Dashboard now
+// reads `label` and `state` instead, which describe the day in words.
 export function buildMomentumMessage({
   inProgressCount = 0,
   winsCount = 0,
@@ -418,13 +432,33 @@ export function buildMomentumMessage({
   );
 
   if (completedReminderCount > 0 && score >= 60) {
-    return { score, text: 'Momentum is visible. Completed reminders are turning intent into proof.' };
+    return {
+      score,
+      state: 'visible',
+      label: 'Visible',
+      text: 'Today is visible. Completed reminders are turning intent into proof.',
+    };
   }
   if (score >= 75) {
-    return { score, text: 'Momentum is strong. Protect this lane and finish one more step.' };
+    return {
+      score,
+      state: 'in-motion',
+      label: 'In motion',
+      text: 'Things are moving. Protect this lane and finish one more step.',
+    };
   }
   if (score >= 55) {
-    return { score, text: 'Momentum is building. Keep actions tiny and visibly complete.' };
+    return {
+      score,
+      state: 'steady',
+      label: 'Steady',
+      text: 'Steady progress. Keep actions tiny and visibly complete.',
+    };
   }
-  return { score, text: 'Momentum is quiet today. One small visible step is enough.' };
+  return {
+    score,
+    state: 'quiet',
+    label: 'Quiet day',
+    text: 'Today is a quiet day. One small visible step is enough.',
+  };
 }

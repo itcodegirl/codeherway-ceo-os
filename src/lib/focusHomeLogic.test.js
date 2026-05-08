@@ -184,7 +184,9 @@ describe('focusHomeLogic', () => {
       completedReminderCount: 2,
     })).toMatchObject({
       score: 100,
-      text: 'Momentum is visible. Completed reminders are turning intent into proof.',
+      state: 'visible',
+      label: 'Visible',
+      text: 'Today is visible. Completed reminders are turning intent into proof.',
     });
 
     expect(buildMomentumMessage({
@@ -192,7 +194,9 @@ describe('focusHomeLogic', () => {
       pendingReminderCount: 5,
     })).toMatchObject({
       score: 35,
-      text: 'Momentum is quiet today. One small visible step is enough.',
+      state: 'quiet',
+      label: 'Quiet day',
+      text: 'Today is a quiet day. One small visible step is enough.',
     });
 
     // Blockers and pending reminders no longer drag the score down: capturing
@@ -201,5 +205,23 @@ describe('focusHomeLogic', () => {
     const noWork = buildMomentumMessage({});
     const onlyBlockers = buildMomentumMessage({ blockerCount: 8, pendingReminderCount: 8 });
     expect(onlyBlockers.score).toBe(noWork.score);
+  });
+
+  it('returns a qualitative state and label for every score tier', () => {
+    // No surfaced numeric score: the UI reads `label` and `state`.
+    expect(buildMomentumMessage({ inProgressCount: 4 })).toMatchObject({
+      state: 'in-motion',
+      label: 'In motion',
+    });
+
+    expect(buildMomentumMessage({ inProgressCount: 2 })).toMatchObject({
+      state: 'steady',
+      label: 'Steady',
+    });
+
+    expect(buildMomentumMessage({})).toMatchObject({
+      state: 'quiet',
+      label: 'Quiet day',
+    });
   });
 });
