@@ -2,6 +2,39 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-08 - Senior audit pass: calm-OS polish, snooze, page boundaries
+
+Trust & reliability:
+
+- Added `src/lib/storageMigrations.js`: a forward-compat per-domain × `fromVersion` migration registry, wired into `readVersionedLocalStorage` so reads transparently lift legacy/older payloads. Empty today (every domain is at v1) but the pattern is in place for the next schema bump.
+
+UX clarity:
+
+- Replaced the Dashboard's 0–100 momentum percent with a qualitative state pill — `Visible`, `In motion`, `Steady`, `Quiet day`. The numeric score is kept on the data shape for analytics but is no longer surfaced; a numeric score conflicted with the calm-OS thesis.
+- Today's Main Focus panel now surfaces a Chief-of-Staff link when `buildMainFocus` reports `isEmpty: true`, so first-time founders discover the AI surface without an onboarding modal.
+- `EmptyState` gained an optional `icon` slot rendered inside an accent-tinted bubble; wired into Opportunities, Content, and Capture.
+
+Feature flow:
+
+- Reminders gained a Snooze button that defers the active reminder until tomorrow at 6 AM local. Snoozed items disappear from the active list and are reachable via "Show N snoozed" with a Wake button to pull them back. New repository functions: `snoozeReminderUntil`, `wakeReminder`, `isReminderSnoozed`, `buildTomorrowSnoozeDeadline`. Hook actions: `reminderActions.snooze` / `wake`.
+
+A11y & mobile:
+
+- `(pointer: coarse)` widens reminder action buttons to 44px on touch devices without changing desktop density.
+- `index.html` declares `color-scheme: dark light`, per-scheme `theme-color`, and a `<noscript>` fallback. Meta description rewritten to match the calm-OS thesis.
+- Removed redundant aria-labels on the new momentum pill and snooze badge in favour of visible text + `sr-only` prefixes.
+
+Architecture cleanup:
+
+- Extracted `TodayFocusPanel`, `OpenLoopsPanel`, and `BlockersPanel` from `Dashboard.jsx` into co-located components in `src/components/dashboard/`. Each gets its own isolation test. Dashboard.jsx 623 → 567 LOC.
+
+Portfolio polish:
+
+- New `docs/ARCHITECTURE.md` covers design trade-offs, why JS not TS yet, why pub/sub via DOM events, what's intentionally out of scope.
+- `docs/KNOWN_LIMITATIONS.md` updated with this PR's closed items.
+
+Verification: `npm run lint`, `npm run typecheck`, `npm run test:run` (647 passed, 1 skipped, +25 new tests), `npm run build`.
+
 ## 2026-05-07 - CEO OS audit: Weekly Supabase conflict hardening
 
 - Dashboard route CSS is back under the static budget by removing unused/decorative Focus Home styles instead of bypassing route-budget governance.

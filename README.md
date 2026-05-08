@@ -357,6 +357,7 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 
 ## Portfolio assets
 
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the *why* — design decisions, trade-offs, and what's intentionally out of scope.
 - [CASE_STUDY.md](./CASE_STUDY.md) for interview- and recruiter-facing architecture summary.
 - [docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md) for final release-candidate verification.
 - [CHANGELOG.md](./CHANGELOG.md) for timestamped hardening and release-readiness updates.

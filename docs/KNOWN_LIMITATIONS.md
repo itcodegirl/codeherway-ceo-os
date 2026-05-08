@@ -14,6 +14,19 @@ Use this as the honest interview framing for CodeHerWay CEO OS. The project is s
 
 ## Recently closed audit items
 
+The May 8, 2026 senior audit pass closed these gaps on `improve/ceo-os-audit-fixes`:
+
+- ✅ **Forward-compat schema migration registry.** `src/lib/storageMigrations.js` ships a per-domain × `fromVersion` migrator registry, wired into `readVersionedLocalStorage` so reads transparently lift legacy/older payloads into the current shape. Today the registry is empty (every domain ships v1) but the pattern is in place so the next schema bump only requires registering a single migrator function.
+- ✅ **Calm momentum signal.** The Dashboard's "Momentum: NN%" pill is replaced with a qualitative state — `Visible`, `In motion`, `Steady`, `Quiet day` — read from `buildMomentumMessage().label`. The numeric score remains on the data shape for analytics but is no longer surfaced; a numeric score conflicted with the calm-OS thesis because it nudged users toward optimisation.
+- ✅ **Chief-of-Staff hint on empty Focus Home.** When `buildMainFocus` reports `isEmpty: true` (no priority, opportunity, or content in motion yet), the Today's Main Focus panel surfaces a Chief-of-Staff link so first-time founders discover that they can paste raw notes and have them drafted into structure.
+- ✅ **Snooze-until-tomorrow on reminders.** Reminders carry an optional `snoozedUntil` ISO timestamp; the UI offers a Snooze button on each active row that defers the reminder until tomorrow at 6 AM local. Snoozed items disappear from the active list and are reachable via "Show N snoozed". A Wake button pulls them back. Completed reminders cannot be snoozed (no-op). Reduces the binary done-or-not pressure that conflicted with the calm-OS thesis.
+- ✅ **Warmer empty states.** `EmptyState` gained an optional `icon` slot rendered inside an accent-tinted bubble; wired into Opportunities, Content, and Capture so first-time list pages feel like an invitation instead of a placeholder.
+- ✅ **Touch targets on touch devices.** `(pointer: coarse)` media query widens reminder action buttons (delete, promote, edit, snooze, wake) to 44px on touch devices without changing the 32px desktop density.
+- ✅ **OS color-scheme + noscript fallback.** `index.html` now declares `color-scheme: dark light` and per-scheme `theme-color`, and a `<noscript>` block explains the JS requirement instead of rendering empty.
+- ✅ **Dashboard page boundary discipline.** `TodayFocusPanel`, `OpenLoopsPanel`, and `BlockersPanel` were extracted from `Dashboard.jsx` into co-located components in `src/components/dashboard/`, each with isolation tests. Dashboard.jsx 623 → 567 LOC.
+
+## Earlier audit pass
+
 The May 2026 calm-OS audit pass closed several gaps in this branch:
 
 - ✅ **Light theme.** A `:root[data-theme="light"]` overlay and a System / Dark / Light picker in Settings, persisted locally. Raw-rgba surfaces in `system.css` and `chief-of-staff.css` are retuned in light mode.
