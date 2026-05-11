@@ -7,9 +7,12 @@ import { useChiefWorkspace } from './useChiefWorkspace';
 import { useIsMountedRef } from './useIsMountedRef';
 
 function getDefaultFeedback() {
+  // Don't surface env-var names in user-facing feedback. The proxy-config
+  // hint stays in README / Settings; here we only need a calm starting
+  // message regardless of deployment state.
   return aiConfig.hasProxyEndpoint
-    ? 'Start by pasting notes. Then choose an action to transform them into executive-ready output.'
-    : 'AI proxy is using the default endpoint. For production reliability, configure VITE_OPENAI_PROXY_URL and OPENAI_API_KEY.';
+    ? 'Paste notes when you have them. Then choose an action to turn them into a structured plan.'
+    : 'Running in local mode. Drafts use a deterministic fallback until an AI proxy is configured.';
 }
 
 function resolveNotes(nextNotes) {

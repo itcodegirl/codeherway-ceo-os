@@ -144,8 +144,8 @@ function WeeklyBrief() {
         ]}
       />
 
-      <p className="helper-text">
-        Use each section&apos;s <strong>Add</strong> button to open the editor, then use row-level <strong>Edit</strong> and <strong>Delete</strong> actions to manage items.
+      <p className="helper-text weekly-brief__intent">
+        What you log here shapes the next-move recommendations on Focus Home.
       </p>
 
       <div className="weekly-grid">
