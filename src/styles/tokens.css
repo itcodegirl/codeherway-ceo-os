@@ -109,11 +109,22 @@
   --danger-input-ring: rgba(255, 150, 150, 0.2);
   --danger-surface: rgba(255, 123, 123, 0.11);
 
-  --pill-high-bg: rgba(255, 152, 152, 0.22);
-  --pill-medium-bg: rgba(255, 205, 132, 0.2);
-  --pill-warning-bg: rgba(255, 196, 120, 0.22);
-  --pill-low-bg: rgba(141, 225, 255, 0.2);
-  --status-scheduled-bg: rgba(131, 227, 188, 0.22);
+  /* Dark-theme pill backgrounds: bumped from the previous 0.20-0.22 range
+   * to 0.30-0.32 so the colored text reads at AA contrast on the dark
+   * canvas without losing the calm hue. Audit flagged the pill contrast
+   * as borderline. */
+  --pill-high-bg: rgba(255, 152, 152, 0.32);
+  --pill-medium-bg: rgba(255, 205, 132, 0.3);
+  --pill-warning-bg: rgba(255, 196, 120, 0.32);
+  --pill-low-bg: rgba(141, 225, 255, 0.3);
+  --status-scheduled-bg: rgba(131, 227, 188, 0.32);
+  /* Higher-contrast text colors specific to pills, separated from the
+   * larger danger / warning / info palettes so general copy can stay
+   * calm while pills earn legible AA contrast. */
+  --pill-high-text: #ffefef;
+  --pill-medium-text: #fff1d6;
+  --pill-warning-text: #fff1d6;
+  --pill-low-text: #e0f6ff;
 
   --shadow-overlay: 0 24px 46px rgba(2, 10, 20, 0.44);
   --shadow-chief-card: 0 20px 44px rgba(2, 10, 21, 0.5);
@@ -260,6 +271,12 @@
   --pill-warning-bg: rgba(204, 130, 28, 0.16);
   --pill-low-bg: rgba(31, 127, 198, 0.12);
   --status-scheduled-bg: rgba(43, 167, 132, 0.16);
+  /* Light-theme pill text — saturated rather than pastel so contrast on
+   * the warm-paper canvas stays well above AA. */
+  --pill-high-text: #8b1f1f;
+  --pill-medium-text: #7a4108;
+  --pill-warning-text: #7a4108;
+  --pill-low-text: #134f7d;
 
   --success: #1f8a5e;
   --success-soft: rgba(43, 167, 132, 0.18);
