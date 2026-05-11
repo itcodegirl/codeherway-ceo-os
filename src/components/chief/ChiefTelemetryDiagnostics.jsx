@@ -41,7 +41,7 @@ export default function ChiefTelemetryDiagnostics({
   return (
     <div className="chief-card chief-telemetry-card" aria-live="polite">
       <div className="chief-section-header">
-        <h4>Decision Engine Health</h4>
+        <h3>Decision Engine Health</h3>
         <span className="chief-count-badge">{recentCount}</span>
       </div>
 

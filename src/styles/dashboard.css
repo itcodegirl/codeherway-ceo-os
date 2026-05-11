@@ -92,65 +92,25 @@
 	font-weight: 600;
 }
 
-.focus-home__ritual-details {
-	margin-top: 0.6rem;
-}
-
-.focus-home__ritual-summary {
-	cursor: pointer;
-	font-size: 0.82rem;
-	font-weight: 600;
-	color: var(--text-soft-strong);
-	padding: 0.35rem 0.55rem;
-	border-radius: 0.5rem;
-	display: inline-block;
-}
-
-.focus-home__ritual-summary:hover,
-.focus-home__ritual-summary:focus-visible {
-	background: var(--surface-overlay-2);
-	outline: none;
-}
-
-.focus-home__ritual-details[open] .focus-home__ritual-summary {
-	margin-bottom: 0.65rem;
-}
-
-.focus-home__ritual-list {
-	list-style: none;
+/*
+ * Active operating step paragraph. Replaces the prior 5-card grid: the
+ * step label is rendered slightly stronger and the action sits inline
+ * beside it so the ritual strip stays roughly one line tall on desktop
+ * and wraps cleanly on small screens without consuming vertical space
+ * that the next-action panel needs.
+ */
+.focus-home__ritual-active {
 	margin: 0;
-	padding: 0;
-	display: grid;
-	grid-template-columns: repeat(5, minmax(0, 1fr));
-	gap: 0.65rem;
-}
-
-.focus-home__ritual-item {
-	display: grid;
-	gap: 0.3rem;
-	min-width: 0;
-	padding: 0.62rem 0.68rem;
-	border-radius: 0.75rem;
-	border: 1px solid var(--border);
-	background: color-mix(in srgb, var(--surface-card) 84%, transparent 16%);
-}
-
-.focus-home__ritual-item--active {
-	border-color: color-mix(in srgb, var(--border-accent) 78%, var(--border) 22%);
-	background: color-mix(in srgb, var(--surface-card) 72%, rgba(29, 106, 171, 0.2) 28%);
-}
-
-.focus-home__ritual-label {
-	font-size: 0.75rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	color: var(--text-soft-strong);
-}
-
-.focus-home__ritual-action {
-	font-size: 0.87rem;
-	line-height: 1.35;
 	overflow-wrap: anywhere;
+}
+
+.focus-home__ritual-active-label {
+	font-weight: 700;
+	color: var(--text);
+}
+
+.focus-home__ritual-active-action {
+	color: var(--text-soft-strong);
 }
 
 .focus-panel h2 {
@@ -592,20 +552,12 @@
 	.focus-home__drawer-grid {
 		grid-template-columns: 1fr;
 	}
-
-	.focus-home__ritual-list {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
 }
 
 @media (max-width: 640px) {
 	.focus-home__ritual-header {
 		align-items: flex-start;
 		flex-direction: column;
-	}
-
-	.focus-home__ritual-list {
-		grid-template-columns: 1fr;
 	}
 
 	.focus-home__actions {

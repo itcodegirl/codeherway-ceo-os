@@ -115,7 +115,9 @@ describe('src/pages/Journal', () => {
         vi.advanceTimersByTime(700);
       });
 
-      expect(screen.getByRole('alert')).toHaveTextContent('Unable to auto-save journal entry right now.');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Couldn’t auto-save your journal entry. Your latest changes are still in the form — try again in a moment.',
+      );
       expect(screen.getByRole('status')).toHaveTextContent(
         'Autosave is paused. Your latest journal changes are not saved yet.',
       );

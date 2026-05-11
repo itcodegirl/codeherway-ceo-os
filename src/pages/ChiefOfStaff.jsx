@@ -6,9 +6,9 @@ import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
 import { useMetaMode } from "../hooks/useMetaMode";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import { buildSourceNotice } from "../lib/uiCopy";
+import { MAX_NOTES_LENGTH } from "../../shared/chiefConfig.js";
 import "../styles/chief-of-staff.css";
 
-const MAX_NOTES_LENGTH = 12000;
 const ChiefTelemetryDiagnosticsPanel = lazy(() =>
   import("../components/chief/ChiefTelemetryDiagnosticsPanel")
 );
@@ -111,7 +111,7 @@ export default function ChiefOfStaff() {
           <div className="chief-input-header">
             <div>
               <p className="chief-eyebrow">Prompt Workspace</p>
-              <h3>Turn founder notes into action</h3>
+              <h2>Turn founder notes into action</h2>
             </div>
 
             <Button type="button" variant="ghost" size="small" onClick={clearWorkspace} disabled={isGenerating}>
@@ -227,7 +227,7 @@ export default function ChiefOfStaff() {
               fallback={(
                 <div className="chief-card" aria-live="polite">
                   <div className="chief-section-header">
-                    <h4>Decision Engine Health</h4>
+                    <h3>Decision Engine Health</h3>
                     <span className="chief-count-badge">--</span>
                   </div>
                   <p className="chief-helper-text">Loading telemetry diagnostics...</p>

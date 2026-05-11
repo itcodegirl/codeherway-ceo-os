@@ -376,7 +376,9 @@ describe('src/pages/Capture', () => {
       });
       fireEvent.click(screen.getByRole('button', { name: 'Save sticky note' }));
 
-      expect(screen.getByRole('alert')).toHaveTextContent('Unable to save this note right now.');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Couldn’t save this note. Your text is still in the composer — try again in a moment.',
+      );
       expect(screen.getByText('Autosave is paused until sticky notes save successfully again.')).toBeInTheDocument();
     } finally {
       window.localStorage.setItem = originalSetItem;

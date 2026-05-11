@@ -1,16 +1,5 @@
 ﻿import ChiefSectionCard from "./ChiefSectionCard";
-
-function getActionLabel(isAccepting, isAccepted) {
-  if (isAccepting) {
-    return "Saving...";
-  }
-
-  if (isAccepted) {
-    return "Added";
-  }
-
-  return "Add to Weekly";
-}
+import { getChiefAcceptLabel } from "./chiefAcceptLabel";
 
 export default function ChiefTaskList({
   items = [],
@@ -29,7 +18,7 @@ export default function ChiefTaskList({
         return (
           <div className="chief-item" key={`${item.title}-${index}`}>
             <div className="chief-item-copy">
-              <h5>{item.title}</h5>
+              <h4>{item.title}</h4>
               <small>{item.status || "Planned"}</small>
             </div>
 
@@ -38,7 +27,7 @@ export default function ChiefTaskList({
               disabled={accepting || accepted}
               onClick={() => onAccept(item)}
             >
-              {getActionLabel(accepting, accepted)}
+              {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Weekly" })}
             </button>
           </div>
         );

@@ -45,6 +45,10 @@ describe("src/pages/ChiefOfStaff", () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByText("Nothing here yet")).toBeInTheDocument();
+   
+        /When you generate, structured priorities, opportunities, content drafts/,
+      ),
     expect(screen.getByText("Ready to generate")).toBeInTheDocument();
     // Audit follow-up: empty state now names all five actions so the user is
     // not pointed at a "choose an action" hint when the layout only renders
@@ -90,7 +94,7 @@ describe("src/pages/ChiefOfStaff", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Building your action plan…")).toBeInTheDocument();
+    expect(screen.getByText("Working on your action plan…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Building Action Plan..." })).toBeDisabled();
   });
 

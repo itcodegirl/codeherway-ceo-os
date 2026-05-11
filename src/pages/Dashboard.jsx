@@ -3,6 +3,7 @@ import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
+import PanelErrorFallback from '../components/ui/PanelErrorFallback';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
 import TodayFocusPanel from '../components/dashboard/TodayFocusPanel';
@@ -360,7 +361,7 @@ function Dashboard() {
           <div>
             <h2>Choose how this device starts</h2>
             <p className="helper-text">
-              Demo data is active on this device. Start blank for real use, or keep the demo workspace for review.
+              Demo data is showing so you can explore. Start blank for real work, or keep the demo workspace for review.
             </p>
           </div>
           <div className="focus-home__setup-actions">
@@ -377,39 +378,22 @@ function Dashboard() {
         </section>
       ) : null}
 
+      {/*
+        Operating ritual context strip. Compacted from a 5-card grid + label
+        + breadcrumb into a single calm strip: header, active step, breadcrumb.
+        The 5 step cards were redundant with the active-step helper text and
+        the breadcrumb sequence, and consumed ~150px of top-fold space —
+        pushing the actual next-action panel below the fold on small screens.
+      */}
       <section className="focus-home__ritual" aria-label="Daily operating rhythm">
         <div className="focus-home__ritual-header">
           <h2>Current Operating Step</h2>
-          <p className="helper-text">
-            {currentOperatingStep?.label}: {currentOperatingStep?.action}
+          <p className="helper-text focus-home__ritual-active">
+            <span className="focus-home__ritual-active-label">{currentOperatingStep?.label}:</span>{' '}
+            <span className="focus-home__ritual-active-action">{currentOperatingStep?.action}</span>
           </p>
         </div>
         <p className="focus-home__loop-label">Start Day &gt; Execute &gt; Capture &gt; Reset &gt; Shutdown</p>
-        {/*
-         * Audit feedback: the full 5-step ritual was always rendered above
-         * the panel grid, adding density before the user reached any
-         * actionable content. Wrap it in a collapsible <details> so the
-         * loop label still teaches the rhythm, but the breakdown is
-         * one-click away rather than always-on.
-         */}
-        <details className="focus-home__ritual-details">
-          <summary className="focus-home__ritual-summary">Show full ritual</summary>
-          <ol className="focus-home__ritual-list">
-            {operatingRitual.map((step) => (
-              <li
-                key={step.id}
-                className={step.isActive ? 'focus-home__ritual-item focus-home__ritual-item--active' : 'focus-home__ritual-item'}
-                aria-current={step.isActive ? 'step' : undefined}
-              >
-                <span className="focus-home__ritual-label">
-                  {step.label}
-                  {step.isActive ? ' now' : ''}
-                </span>
-                <span className="focus-home__ritual-action">{step.action}</span>
-              </li>
-            ))}
-          </ol>
-        </details>
       </section>
 
       <div className="focus-home__grid">
@@ -420,11 +404,7 @@ function Dashboard() {
 
         <ErrorBoundary
           name="Dashboard / Next move"
-          fallback={(
-            <article className="focus-panel" aria-label="Next move panel">
-              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-            </article>
-          )}
+          fallback={<PanelErrorFallback panelName="Next move" />}
         >
           <article className="focus-panel focus-panel--next-move" aria-label="Next move panel">
             <div className="focus-panel__header">
@@ -461,11 +441,7 @@ function Dashboard() {
 
         <ErrorBoundary
           name="Dashboard / Reminders"
-          fallback={(
-            <article className="focus-panel" aria-label="Reminders panel">
-              <p className="calm-copy">Reminders couldn’t load. Refresh the page to retry.</p>
-            </article>
-          )}
+          fallback={<PanelErrorFallback panelName="Reminders" />}
         >
           <RemindersPanel
             reminderDraft={reminderDraft}
@@ -519,11 +495,7 @@ function Dashboard() {
           <div className="focus-home__drawer-grid">
             <ErrorBoundary
               name="Dashboard / Momentum"
-              fallback={(
-                <article className="focus-panel" aria-label="Momentum panel">
-                  <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-                </article>
-              )}
+              fallback={<PanelErrorFallback panelName="Quick win" ariaLabel="Momentum panel" />}
             >
               <article className="focus-panel" aria-label="Momentum panel">
                 <div className="focus-panel__header">
@@ -545,9 +517,11 @@ function Dashboard() {
             <ErrorBoundary
               name="Dashboard / Reset"
               fallback={(
-                <article className="focus-panel focus-panel--reset" aria-label="Reset panel">
-                  <p className="calm-copy">Reset steps couldn’t load. Refresh the page to retry.</p>
-                </article>
+                <PanelErrorFallback
+                  panelName="Reset"
+                  panelClassName="focus-panel focus-panel--reset"
+                  ariaLabel="Reset panel"
+                />
               )}
             >
               <article className="focus-panel focus-panel--reset" aria-live="polite">

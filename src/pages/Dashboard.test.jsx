@@ -93,7 +93,14 @@ describe('src/pages/Dashboard', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Current Operating Step' })).toBeInTheDocument();
     expect(screen.getByText('Start Day > Execute > Capture > Reset > Shutdown')).toBeInTheDocument();
-    expect(screen.getByText('Choose one main focus, one blocker, and one reminder to protect.')).toBeInTheDocument();
+    // The active step's action varies by time of day — the strip now shows
+    // only the active step inline rather than all 5. Assert that an action
+    // from any ritual step is present, instead of pinning to one phrase.
+    expect(
+      screen.getByText(
+        /Choose one main focus|Work the next smallest action|Put loose notes|Shrink scope|Journal, choose tomorrow/,
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText('Finalize pricing page')).toBeInTheDocument();
     expect(screen.getByText('Recommended because: this priority is blocked and needs one clear unblock message.')).toBeInTheDocument();
     expect(screen.getByText('Safe to ignore for now')).toBeInTheDocument();

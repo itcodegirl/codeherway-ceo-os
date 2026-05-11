@@ -1,4 +1,5 @@
 import ErrorBoundary from '../ui/ErrorBoundary';
+import PanelErrorFallback from '../ui/PanelErrorFallback';
 
 /**
  * Open loops summary card on Focus Home. Pure presentation: receives the
@@ -10,9 +11,7 @@ function OpenLoopsPanel({ openLoops }) {
     <ErrorBoundary
       name="Dashboard / Open Loops"
       fallback={(
-        <article className="focus-panel" aria-label="Open loops panel">
-          <p className="calm-copy">Open loops could not load. Refresh the page to retry.</p>
-        </article>
+        <PanelErrorFallback panelName="Open loops" />
       )}
     >
       <article className="focus-panel focus-panel--open-loops" aria-label="Open loops panel">

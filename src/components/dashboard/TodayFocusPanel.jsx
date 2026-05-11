@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import ErrorBoundary from '../ui/ErrorBoundary';
+import PanelErrorFallback from '../ui/PanelErrorFallback';
 
 /**
  * Today's main focus card on Focus Home. Pure presentation: receives the
@@ -15,9 +16,7 @@ function TodayFocusPanel({ mainFocus, isFocusDataLoading }) {
     <ErrorBoundary
       name="Dashboard / Today focus"
       fallback={(
-        <article className="focus-panel focus-panel--main" aria-label="Today focus panel">
-          <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-        </article>
+        <PanelErrorFallback panelName="Today focus" panelClassName="focus-panel focus-panel--main" />
       )}
     >
       <article className="focus-panel focus-panel--main" aria-label="Today focus panel">

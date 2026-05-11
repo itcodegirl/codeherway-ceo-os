@@ -1,16 +1,5 @@
 ﻿import ChiefSectionCard from "./ChiefSectionCard";
-
-function getActionLabel(isAccepting, isAccepted) {
-  if (isAccepting) {
-    return "Saving...";
-  }
-
-  if (isAccepted) {
-    return "Added";
-  }
-
-  return "Add to Opportunities";
-}
+import { getChiefAcceptLabel } from "./chiefAcceptLabel";
 
 export default function ChiefOpportunityList({
   items = [],
@@ -29,7 +18,7 @@ export default function ChiefOpportunityList({
         return (
           <div className="chief-item" key={`${item.name}-${index}`}>
             <div className="chief-item-copy">
-              <h5>{item.name}</h5>
+              <h4>{item.name}</h4>
               <p>{item.company}</p>
               <small>
                 {item.priority} priority · {item.stage}
@@ -42,7 +31,7 @@ export default function ChiefOpportunityList({
               disabled={accepting || accepted}
               onClick={() => onAccept(item)}
             >
-              {getActionLabel(accepting, accepted)}
+              {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Opportunities" })}
             </button>
           </div>
         );

@@ -1,4 +1,5 @@
 import ErrorBoundary from '../ui/ErrorBoundary';
+import PanelErrorFallback from '../ui/PanelErrorFallback';
 
 /**
  * Blockers list on Focus Home. Pure presentation: receives a flat array of
@@ -9,9 +10,7 @@ function BlockersPanel({ blockerItems }) {
     <ErrorBoundary
       name="Dashboard / Blockers"
       fallback={(
-        <article className="focus-panel" aria-label="Blockers panel">
-          <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-        </article>
+        <PanelErrorFallback panelName="Blockers" />
       )}
     >
       <article className="focus-panel" aria-label="Blockers panel">
