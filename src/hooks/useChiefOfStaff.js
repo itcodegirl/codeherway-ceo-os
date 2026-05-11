@@ -8,8 +8,8 @@ import { useIsMountedRef } from './useIsMountedRef';
 
 function getDefaultFeedback() {
   return aiConfig.hasProxyEndpoint
-    ? 'Start by pasting notes. Then choose an action to transform them into executive-ready output.'
-    : 'AI proxy is using the default endpoint. For production reliability, configure VITE_OPENAI_PROXY_URL and OPENAI_API_KEY.';
+    ? 'Paste your notes, then choose an action to turn them into executive-ready output.'
+    : 'AI is not configured on this build — actions will return a deterministic local template instead. The structured workflow still works for review.';
 }
 
 function resolveNotes(nextNotes) {
