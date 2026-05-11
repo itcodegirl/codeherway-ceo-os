@@ -376,29 +376,22 @@ function Dashboard() {
         </section>
       ) : null}
 
+      {/*
+        Operating ritual context strip. Compacted from a 5-card grid + label
+        + breadcrumb into a single calm strip: header, active step, breadcrumb.
+        The 5 step cards were redundant with the active-step helper text and
+        the breadcrumb sequence, and consumed ~150px of top-fold space —
+        pushing the actual next-action panel below the fold on small screens.
+      */}
       <section className="focus-home__ritual" aria-label="Daily operating rhythm">
         <div className="focus-home__ritual-header">
           <h2>Current Operating Step</h2>
-          <p className="helper-text">
-            {currentOperatingStep?.label}: {currentOperatingStep?.action}
+          <p className="helper-text focus-home__ritual-active">
+            <span className="focus-home__ritual-active-label">{currentOperatingStep?.label}:</span>{' '}
+            <span className="focus-home__ritual-active-action">{currentOperatingStep?.action}</span>
           </p>
         </div>
         <p className="focus-home__loop-label">Start Day &gt; Execute &gt; Capture &gt; Reset &gt; Shutdown</p>
-        <ol className="focus-home__ritual-list">
-          {operatingRitual.map((step) => (
-            <li
-              key={step.id}
-              className={step.isActive ? 'focus-home__ritual-item focus-home__ritual-item--active' : 'focus-home__ritual-item'}
-              aria-current={step.isActive ? 'step' : undefined}
-            >
-              <span className="focus-home__ritual-label">
-                {step.label}
-                {step.isActive ? ' now' : ''}
-              </span>
-              <span className="focus-home__ritual-action">{step.action}</span>
-            </li>
-          ))}
-        </ol>
       </section>
 
       <div className="focus-home__grid">
