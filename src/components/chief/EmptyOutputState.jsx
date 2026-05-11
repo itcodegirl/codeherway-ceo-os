@@ -4,7 +4,7 @@
       <p className="chief-eyebrow">AI Output</p>
       <h3>Ready to generate</h3>
       <p>
-        Paste your notes in the workspace, then choose an action above to generate output.
+        Paste founder notes in the workspace, then pick one of the actions — Build Action Plan, Summarize This Week, Draft LinkedIn Post, Convert to Action Items, or Suggest Next Priorities.
       </p>
     </div>
   );

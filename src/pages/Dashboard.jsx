@@ -371,9 +371,10 @@ function Dashboard() {
             <Button type="button" variant="ghost" onClick={handleLoadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
               Load demo workspace
             </Button>
-            <span className="focus-home__setup-unavailable">Import backup: coming soon</span>
-            <span className="focus-home__setup-unavailable">Connect Supabase: setup required</span>
           </div>
+          <p className="helper-text">
+            Restore from a JSON backup or connect a Supabase workspace from Settings &gt; Workspace data.
+          </p>
         </section>
       ) : null}
 
@@ -385,21 +386,31 @@ function Dashboard() {
           </p>
         </div>
         <p className="focus-home__loop-label">Start Day &gt; Execute &gt; Capture &gt; Reset &gt; Shutdown</p>
-        <ol className="focus-home__ritual-list">
-          {operatingRitual.map((step) => (
-            <li
-              key={step.id}
-              className={step.isActive ? 'focus-home__ritual-item focus-home__ritual-item--active' : 'focus-home__ritual-item'}
-              aria-current={step.isActive ? 'step' : undefined}
-            >
-              <span className="focus-home__ritual-label">
-                {step.label}
-                {step.isActive ? ' now' : ''}
-              </span>
-              <span className="focus-home__ritual-action">{step.action}</span>
-            </li>
-          ))}
-        </ol>
+        {/*
+         * Audit feedback: the full 5-step ritual was always rendered above
+         * the panel grid, adding density before the user reached any
+         * actionable content. Wrap it in a collapsible <details> so the
+         * loop label still teaches the rhythm, but the breakdown is
+         * one-click away rather than always-on.
+         */}
+        <details className="focus-home__ritual-details">
+          <summary className="focus-home__ritual-summary">Show full ritual</summary>
+          <ol className="focus-home__ritual-list">
+            {operatingRitual.map((step) => (
+              <li
+                key={step.id}
+                className={step.isActive ? 'focus-home__ritual-item focus-home__ritual-item--active' : 'focus-home__ritual-item'}
+                aria-current={step.isActive ? 'step' : undefined}
+              >
+                <span className="focus-home__ritual-label">
+                  {step.label}
+                  {step.isActive ? ' now' : ''}
+                </span>
+                <span className="focus-home__ritual-action">{step.action}</span>
+              </li>
+            ))}
+          </ol>
+        </details>
       </section>
 
       <div className="focus-home__grid">

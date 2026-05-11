@@ -124,3 +124,9 @@
 	color: var(--accent-soft-strong);
 	background: var(--bg-accent-soft);
 }
+
+.capture-composer__local-only-notice {
+	margin-top: 0.35rem;
+	font-style: italic;
+	opacity: 0.9;
+}

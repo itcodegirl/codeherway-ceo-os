@@ -6,6 +6,7 @@ import {
   requireLocalStorageSetItem,
   safeLocalStorageSetItem,
 } from './utils';
+import { SAVE_STATUS_EVENT } from './saveStatusBus';
 
 describe('src/lib/utils', () => {
   beforeEach(() => {
@@ -71,6 +72,58 @@ describe('src/lib/utils', () => {
       )).toThrow('Required write failed');
     } finally {
       window.localStorage.setItem = originalSetItem;
+    }
+  });
+
+  it('emits a saved save-status event on successful write', () => {
+    const listener = vi.fn();
+    window.addEventListener(SAVE_STATUS_EVENT, listener);
+
+    try {
+      safeLocalStorageSetItem('ceo-os-test-key', 'value');
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      const detail = listener.mock.calls[0][0].detail;
+      expect(detail.phase).toBe('saved');
+      expect(detail.key).toBe('ceo-os-test-key');
+    } finally {
+      window.removeEventListener(SAVE_STATUS_EVENT, listener);
+    }
+  });
+
+  it('emits a failed save-status event when a write throws', () => {
+    const listener = vi.fn();
+    window.addEventListener(SAVE_STATUS_EVENT, listener);
+
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(() => {
+      throw new Error('storage full');
+    });
+
+    try {
+      const result = safeLocalStorageSetItem('ceo-os-test-key', 'value');
+      expect(result).toBe(false);
+      expect(listener).toHaveBeenCalledTimes(1);
+      const detail = listener.mock.calls[0][0].detail;
+      expect(detail.phase).toBe('failed');
+      expect(detail.key).toBe('ceo-os-test-key');
+      expect(detail.message).toContain('storage full');
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+      window.removeEventListener(SAVE_STATUS_EVENT, listener);
+    }
+  });
+
+  it('suppresses save-status events when silent is true', () => {
+    const listener = vi.fn();
+    window.addEventListener(SAVE_STATUS_EVENT, listener);
+
+    try {
+      safeLocalStorageSetItem('ceo-os-test-key', 'value', 'msg', { silent: true });
+
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener(SAVE_STATUS_EVENT, listener);
     }
   });
 });

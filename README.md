@@ -53,6 +53,17 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 
 CodeHerWay CEO OS is best framed as a product-minded frontend systems project: a calm founder command center with local-first resilience, a Supabase upgrade path, explicit failure handling, and end-to-end verification for the workflows reviewers can actually click through.
 
+## Honest screenshot status
+
+The PNGs in [`docs/assets/screenshots/`](./docs/assets/screenshots/) predate
+the recent calm-OS audit cycle and **do not match the current UI**. They
+show the older "Dashboard" surface with a purple-accent sidebar, no Capture
+or Journal pages, and a Chief of Staff with action chips that the page
+currently renders again post-audit. A re-capture pass is the cheapest next
+portfolio improvement. If you are reviewing this repository, please run
+`npm run dev` and open the app directly rather than relying on the embedded
+screenshots.
+
 ## What's done, what's honest
 
 This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. Recruiter-facing trust signals already in the codebase:
@@ -224,71 +235,14 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 
 ## Configuration
 
-### Frontend environment
+For the full environment variable reference (frontend, Chief proxy, error
+telemetry signing + KMS adapters, scheduled SLO probe), see
+[`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md).
 
-- `VITE_OPENAI_PROXY_URL` (optional, defaults to `/api/chief-of-staff`)
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_APP_ERROR_TELEMETRY_URL` (optional remote ingest endpoint for app error telemetry)
-- `VITE_APP_ERROR_TELEMETRY_TOKEN` (optional shared ingest token header)
-- `VITE_APP_ERROR_TELEMETRY_HMAC_SECRET` (optional HMAC signing secret for trusted/internal deployments only)
-- `VITE_APP_ERROR_TELEMETRY_SIGNATURE_KEY_ID` (optional key-id header used with signed payloads)
-
-### Server runtime environment
-
-- `OPENAI_API_KEY` (required for proxy responses)
-- `OPENAI_MODEL` (optional)
-- `CHIEF_STAFF_PROXY_TOKEN` (optional)
-- `CHIEF_STAFF_REQUIRE_TOKEN` (optional, set to `true` to reject requests when no proxy token is configured)
-- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
-- `APP_ERROR_TELEMETRY_INGEST_TOKEN` (optional, validates telemetry ingest requests when set)
-- `APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT` (optional, active HMAC key for ingest signature validation)
-- `APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT` (optional, next HMAC key used during overlap windows)
-- `APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM` (optional ISO datetime cutoff for when `*_NEXT` becomes valid)
-- `APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL` (optional ISO datetime cutoff for current key sunset)
-- `APP_ERROR_TELEMETRY_HMAC_SECRET` (optional legacy fallback when rotation keys are not configured)
-- `APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON` (optional JSON map of `keyId -> PEM public key` for ed25519 verification)
-- `APP_ERROR_TELEMETRY_KMS_KEYS_URL` (optional KMS-backed key distribution endpoint for asymmetric verification)
-- `APP_ERROR_TELEMETRY_KMS_AUTH_TOKEN` (optional bearer token used to fetch KMS keysets)
-- `APP_ERROR_TELEMETRY_KMS_CACHE_MS` (optional keyset cache TTL in milliseconds, defaults to `300000`)
-- `APP_ERROR_TELEMETRY_KEY_PROVIDER` (optional provider-native key adapter: `aws-kms`, `gcp-kms`, `azure-keyvault`)
-- `APP_ERROR_TELEMETRY_AWS_KMS_KEYS_JSON` (optional JSON array for AWS KMS signature key mappings)
-- `APP_ERROR_TELEMETRY_GCP_KMS_KEYS_JSON` (optional JSON array for GCP KMS signature key mappings)
-- `APP_ERROR_TELEMETRY_AZURE_KV_KEYS_JSON` (optional JSON array for Azure Key Vault signature key mappings)
-- `APP_ERROR_TELEMETRY_AWS_REGION` (optional AWS region for provider-native key lookups)
-- `APP_ERROR_TELEMETRY_ROTATION_MAX_KEY_AGE_DAYS` (optional asymmetric key max-age enforcement window)
-- `APP_ERROR_TELEMETRY_ROTATION_MIN_ACTIVE_KEYS` (optional minimum active asymmetric keys required, default `1`)
-- `APP_ERROR_TELEMETRY_ROTATION_REQUIRE_FUTURE_KEY` (optional, require at least one future-dated key to validate rollout readiness)
-- `APP_ERROR_TELEMETRY_KEY_AUDIT_ENABLED` (optional, set to `false` to disable key verification audit writes)
-- `SUPABASE_SERVICE_ROLE_KEY` (required for durable telemetry ingest persistence)
-- `APP_ERROR_TELEMETRY_RETENTION_DAYS` (optional, defaults to `45`)
-- `APP_ERROR_TELEMETRY_MAX_ROWS` (optional, defaults to `50000`)
-- `OPS_INCIDENT_SUPABASE_URL` (optional, durable lifecycle state persistence for scheduled ops incidents)
-- `OPS_INCIDENT_SUPABASE_SERVICE_ROLE_KEY` (optional service role key for lifecycle event writes)
-- `OPS_INCIDENT_KEY` (optional override for incident dedupe key, defaults to `<repo>:scheduled-ops-alert`)
-- `TELEMETRY_INGEST_MONITOR_URL` (optional, used by scheduled SLO probe job)
-- `TELEMETRY_INGEST_MONITOR_TOKEN` (optional ingest token for SLO probe requests)
-- `TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE` (optional: `hmac-sha256` or `ed25519`)
-- `TELEMETRY_INGEST_MONITOR_SIGNATURE_KEY_ID` (optional key-id header for SLO probe signatures)
-- `SLACK_OPS_WEBHOOK_URL` (optional webhook used by scheduled ops fanout alerts)
-- `PAGERDUTY_EVENTS_ROUTING_KEY` (optional PagerDuty Events v2 routing key for on-call fanout)
-
-## Data model references
-
-- Supabase migration scripts in `supabase/migrations/`.
-- Primary tables:
-  - `opportunities`
-  - `content_items`
-  - `weekly_briefs`
-  - `weekly_brief_items`
-  - `profiles`
-  - `chief_sessions`
-  - `chief_outputs`
-  - `chief_telemetry_events`
-  - `app_error_telemetry_events`
-  - `app_error_telemetry_key_audit_events`
-  - `ops_slo_snapshots`
-  - `ops_incident_lifecycle_events`
+The short version: the core app runs **without any environment configuration**
+on local-first storage. `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+enable sync; `OPENAI_API_KEY` + `CHIEF_STAFF_PROXY_TOKEN` enable AI in
+Chief of Staff. Everything else is opt-in.
 
 ## Roadmap
 
@@ -386,6 +340,8 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 Dated release notes, audit cycles, and quality-gate snapshots live in
 [CHANGELOG.md](./CHANGELOG.md). Architectural trade-offs and what's
 intentionally out of scope live in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+The full product-readiness audit is at
+[`docs/audits/ceo-os-product-readiness-audit.md`](./docs/audits/ceo-os-product-readiness-audit.md).
 
 ## Author
 

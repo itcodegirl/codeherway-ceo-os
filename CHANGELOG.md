@@ -23,6 +23,90 @@ Portfolio polish:
 
 Verification: `npm run lint`, `npm run typecheck`, `npm run test:run` (615 tests passed, 1 skipped, 0 failed), `npm run build`.
 
+## 2026-05-11 - Audit priority fixes (Phases 1–6)
+
+Companion branch to the product-readiness audit at
+[`docs/audits/ceo-os-product-readiness-audit.md`](./docs/audits/ceo-os-product-readiness-audit.md).
+Six phased commits on `improve/ceo-os-audit-priority-fixes`.
+
+Trust & reliability (Phase 1):
+
+- `safeLocalStorageSetItem` / `requireLocalStorageSetItem` now emit
+  `saveStatusBus` events on every CRUD write, with a `silent: true`
+  escape hatch for internal telemetry housekeeping. The `SaveStatusPill`
+  reflects user-data writes, not just `usePersistentState` writes.
+- `dataSchema.js` declares the two real chief-workspace storage keys
+  (`chiefNotes`, `chiefResponses`), removing the snowflake the audit
+  flagged.
+- `appErrorTelemetry.writeStoredArray` shares one storage write helper
+  with the rest of the app instead of swallowing quota errors inline.
+- CSP `connect-src` drops the unused `api.openai.com` host — the browser
+  never speaks to OpenAI directly.
+- Capture / Journal carry explicit "stays on this device, never synced"
+  copy so the local-only nature of those surfaces is honest at the point
+  of use.
+
+UX clarity (Phase 2):
+
+- Removed the disabled "Weekly Digest" and "Keyboard Shortcuts" toggles
+  from Settings. They read as half-finished.
+- Removed the "Connect Supabase: setup required" chip from Settings and
+  the "Import backup: coming soon" / "Connect Supabase: setup required"
+  chips from Focus Home's first-run card.
+- Wrapped the 5-step operating ritual list above Focus Home in a
+  collapsed `<details>` so the loop label still teaches the rhythm
+  without dominating the top fold.
+- Defined four previously-undefined design tokens (`--radius-card`,
+  `--radius-md`, `--border-strong`, `--surface-muted`) and added a base
+  CSS rule for `.stat-card`.
+
+Feature flow (Phase 3):
+
+- Restored the four secondary Chief of Staff action chips —
+  Summarize This Week, Draft LinkedIn Post, Convert to Action Items,
+  Suggest Next Priorities — alongside the primary Build Action Plan.
+  The proxy already supported all five actions via `getAllowedActionKeys`.
+- Added an aging hint to Opportunities: any opportunity in stage
+  "Awaiting Reply" with `updatedAt` older than 7 days renders a small
+  warning badge ("Waiting Nd") with a screen-reader-friendly aria-label.
+- New `WeeklyBriefSummary` panel above the Weekly Brief editors derives a
+  founder-readable brief from the current priorities, wins, blockers,
+  and reflection — with a one-click "Copy brief" that writes a plain-
+  text version to the clipboard.
+
+Accessibility & mobile (Phase 4):
+
+- Bumped dark-theme pill backgrounds from 0.20–0.22 to 0.30–0.32 alpha
+  and introduced `--pill-*-text` tokens per theme so pill contrast clears
+  AA in both themes.
+- `Badge` now accepts an optional `ariaLabel` so contextual badges expose
+  expanded labels to screen readers.
+- Chief of Staff action chips are grouped under `role="group"` with a
+  descriptive `aria-label`.
+
+Architecture cleanup (Phase 5):
+
+- Extracted `src/hooks/useSilentRefresh.js` to encapsulate the
+  load-coalesce-subscribe pattern (custom events + storage + focus +
+  visibilitychange) that four data hooks re-implemented.
+- Migrated `useDashboardData` and `useWorkspaceSettings` onto the helper.
+  `useWeeklyBrief` and `useFocusHomeSignals` are intentionally kept on
+  their existing per-event handlers and tracked as a follow-up.
+
+Documentation (Phase 6):
+
+- Split the env-variable reference out of README into
+  [`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md). README trimmed from
+  619 lines to roughly the product story plus pointers.
+- Added an honest screenshot caveat — the PNGs in `docs/assets/`
+  predate the audit cycle and do not match the current UI.
+- Refreshed `docs/KNOWN_LIMITATIONS.md` with the deferred items.
+- Updated `docs/ARCHITECTURE.md` to describe the new `useSilentRefresh`
+  abstraction.
+
+Verification: `npm run lint`, `npm run typecheck`, and the affected
+vitest suites pass at every phase commit.
+
 ## 2026-05-08 - Senior audit pass: calm-OS polish, snooze, page boundaries
 
 Trust & reliability:

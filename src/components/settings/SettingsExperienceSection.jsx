@@ -2,18 +2,12 @@ import { useId } from 'react';
 import SectionCard from '../ui/SectionCard';
 
 /**
- * Experience toggles. The auto-save toggle is wired through the page's
- * `onToggle(key, value)` callback. The email digest and keyboard shortcuts
- * toggles are intentionally disabled — labelled "coming soon" — because the
- * underlying systems are not wired yet. Keeping them visible communicates
- * roadmap without pretending the features work.
+ * Experience toggles. Only the auto-save toggle is wired — the email digest
+ * and keyboard shortcuts surfaces were removed because they read as
+ * half-finished when the underlying systems are not ready.
  */
 function SettingsExperienceSection({ autoSave, fieldsDisabled, onToggle }) {
   const autoSaveToggleId = useId();
-  const emailDigestToggleId = useId();
-  const shortcutsToggleId = useId();
-  const emailDigestComingSoonId = useId();
-  const shortcutsComingSoonId = useId();
 
   return (
     <SectionCard title="Experience" iconName="settings">
@@ -27,35 +21,8 @@ function SettingsExperienceSection({ autoSave, fieldsDisabled, onToggle }) {
         />
         <span>Enable auto-save for drafts and notes</span>
       </label>
-
-      <label className="settings-toggle" htmlFor={emailDigestToggleId}>
-        <input
-          id={emailDigestToggleId}
-          type="checkbox"
-          checked={false}
-          disabled
-          aria-describedby={emailDigestComingSoonId}
-          readOnly
-        />
-        <span>Weekly digest reminders (coming soon)</span>
-      </label>
-      <p id={emailDigestComingSoonId} className="helper-text helper-text--offset">
-        Email delivery is not wired yet, so this stays unavailable until reminders can actually send.
-      </p>
-
-      <label className="settings-toggle" htmlFor={shortcutsToggleId}>
-        <input
-          id={shortcutsToggleId}
-          type="checkbox"
-          checked={false}
-          disabled
-          aria-describedby={shortcutsComingSoonId}
-          readOnly
-        />
-        <span>Keyboard shortcuts (coming soon)</span>
-      </label>
-      <p id={shortcutsComingSoonId} className="helper-text helper-text--offset">
-        Shortcuts will return once every command has tested keyboard behavior.
+      <p className="helper-text helper-text--offset">
+        Drafts and notes save in the background as you type. Disable to require explicit save actions.
       </p>
     </SectionCard>
   );

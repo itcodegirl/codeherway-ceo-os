@@ -68,15 +68,6 @@
 	gap: 0.55rem;
 }
 
-.focus-home__setup-unavailable {
-	padding: 0.42rem 0.58rem;
-	border-radius: 999px;
-	border: 1px dashed var(--border);
-	color: var(--text-muted);
-	font-size: 0.78rem;
-	line-height: 1.2;
-}
-
 .focus-home__ritual-header {
 	display: flex;
 	align-items: baseline;
@@ -99,6 +90,30 @@
 	color: var(--text-soft-strong);
 	font-size: 0.82rem;
 	font-weight: 600;
+}
+
+.focus-home__ritual-details {
+	margin-top: 0.6rem;
+}
+
+.focus-home__ritual-summary {
+	cursor: pointer;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--text-soft-strong);
+	padding: 0.35rem 0.55rem;
+	border-radius: 0.5rem;
+	display: inline-block;
+}
+
+.focus-home__ritual-summary:hover,
+.focus-home__ritual-summary:focus-visible {
+	background: var(--surface-overlay-2);
+	outline: none;
+}
+
+.focus-home__ritual-details[open] .focus-home__ritual-summary {
+	margin-bottom: 0.65rem;
 }
 
 .focus-home__ritual-list {

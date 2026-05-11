@@ -43,6 +43,19 @@ describe('dataSchema', () => {
     });
   });
 
+  it('declares the two chief workspace storage domains separately', () => {
+    expect(STORAGE_SCHEMAS[STORAGE_DOMAINS.chiefNotes]).toMatchObject({
+      key: 'ceo-os-chief-notes',
+      model: 'ChiefNotes',
+      version: CURRENT_DATA_SCHEMA_VERSION,
+    });
+    expect(STORAGE_SCHEMAS[STORAGE_DOMAINS.chiefResponses]).toMatchObject({
+      key: 'ceo-os-chief-responses',
+      model: 'ChiefResponse[]',
+      version: CURRENT_DATA_SCHEMA_VERSION,
+    });
+  });
+
   it('wraps storage payloads in a versioned envelope', () => {
     const data = { '2026-05-04': { reviewNotes: 'Ship proof' } };
 

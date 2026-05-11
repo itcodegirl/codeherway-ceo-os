@@ -57,9 +57,6 @@ function SettingsWorkspaceDataSection({
             Clear demo data
           </Button>
         </div>
-        <div className="settings-workspace-setup__unavailable" aria-label="Unavailable setup paths">
-          <span>Connect Supabase account: setup required</span>
-        </div>
       </div>
 
       <div className="settings-data-health" role="group" aria-label="Local data health">

@@ -147,7 +147,11 @@ describe('src/pages/Settings', () => {
     expect(screen.getByText('Demo data is active on this device. It is not synced.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export local workspace backup' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Import local workspace backup' })).toBeInTheDocument();
-    expect(screen.getByText('Connect Supabase account: setup required')).toBeInTheDocument();
+    // Audit follow-up: the "Connect Supabase account: setup required" chip
+    // overstated the gap — Supabase is wired and just needs env config — so
+    // it was removed. We assert it's gone here so a future re-add gets a
+    // test failure rather than silently regressing the audit fix.
+    expect(screen.queryByText(/Connect Supabase account: setup required/)).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear demo data from this device' }));
     expect(clearDemoData).toHaveBeenCalledTimes(1);
@@ -227,14 +231,16 @@ describe('src/pages/Settings', () => {
     expect(screen.getByText(/1 local store imported/)).toBeInTheDocument();
   });
 
-  it('labels unwired experience preferences as coming soon instead of active toggles', () => {
+  it('no longer renders the legacy coming-soon experience toggles', () => {
+    // Audit follow-up: the disabled "Weekly digest" and "Keyboard shortcuts"
+    // toggles read as half-finished and were removed. The auto-save toggle
+    // remains as the one experience preference that is actually wired.
     useSettings.mockReturnValue(createSettingsState());
 
     renderSettings();
 
-    expect(screen.getByLabelText('Weekly digest reminders (coming soon)')).toBeDisabled();
-    expect(screen.getByText('Email delivery is not wired yet, so this stays unavailable until reminders can actually send.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Keyboard shortcuts (coming soon)')).toBeDisabled();
-    expect(screen.getByText('Shortcuts will return once every command has tested keyboard behavior.')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Weekly digest reminders/)).toBeNull();
+    expect(screen.queryByLabelText(/Keyboard shortcuts/)).toBeNull();
+    expect(screen.getByLabelText('Enable auto-save for drafts and notes')).toBeInTheDocument();
   });
 });

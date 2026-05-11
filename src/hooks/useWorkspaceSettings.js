@@ -2,12 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, resolveTeamName, resolveTimeZone } from '../lib/settings';
 import { getSettingsSource, loadSettings, SETTINGS_UPDATED_EVENT } from '../lib/settingsRepository';
 import { shallowEqualRecords } from '../lib/stateUtils';
+import { useSilentRefresh } from './useSilentRefresh';
 
-const SETTINGS_STORAGE_KEYS = new Set([
+// Audit follow-up: cross-tab refresh wiring is now shared with
+// useDashboardData via useSilentRefresh.
+const SETTINGS_EVENTS = [SETTINGS_UPDATED_EVENT];
+const SETTINGS_STORAGE_KEYS = [
   'ceo-os-settings',
   'ceo-os-settings-saved-at',
-]);
-const SILENT_REFRESH_COALESCE_MS = 400;
+];
 const LOAD_ERROR_MESSAGE = 'Unable to load workspace settings right now.';
 
 export function useWorkspaceSettings() {
@@ -15,7 +18,6 @@ export function useWorkspaceSettings() {
   const [source, setSource] = useState(getSettingsSource());
   const [loadError, setLoadError] = useState('');
   const requestIdRef = useRef(0);
-  const lastRefreshAtRef = useRef(0);
 
   const refreshWorkspaceSettings = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -61,45 +63,18 @@ export function useWorkspaceSettings() {
     };
   }, [refreshWorkspaceSettings]);
 
-  useEffect(() => {
-    const requestRefresh = ({ force = false } = {}) => {
-      const now = Date.now();
-      if (!force && now - lastRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
-        return;
-      }
-
-      lastRefreshAtRef.current = now;
-      void refreshWorkspaceSettings();
-    };
-
-    const handleSettingsUpdated = () => {
-      requestRefresh({ force: true });
-    };
-
-    const handleStorageChange = (event) => {
-      if (event?.key === null || SETTINGS_STORAGE_KEYS.has(event?.key)) {
-        requestRefresh();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        requestRefresh();
-      }
-    };
-
-    window.addEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated);
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', requestRefresh);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', requestRefresh);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+  const silentRefresh = useCallback(() => {
+    void refreshWorkspaceSettings();
   }, [refreshWorkspaceSettings]);
+
+  useSilentRefresh({
+    events: SETTINGS_EVENTS,
+    // Settings updates are intentional in-app saves — never coalesce them so
+    // two quick saves both produce a fresh refresh.
+    forceEvents: SETTINGS_EVENTS,
+    storageKeys: SETTINGS_STORAGE_KEYS,
+    onRefresh: silentRefresh,
+  });
 
   return useMemo(() => ({
     settings,
