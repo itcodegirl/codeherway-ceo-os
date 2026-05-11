@@ -45,9 +45,11 @@ describe("src/pages/ChiefOfStaff", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Ready to generate")).toBeInTheDocument();
+    expect(screen.getByText("Nothing here yet")).toBeInTheDocument();
     expect(
-      screen.getByText("Paste your notes in the workspace, then choose an action above to generate output."),
+      screen.getByText(
+        /When you generate, structured priorities, opportunities, content drafts/,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Chief workspace is stored on this device only.")).toBeInTheDocument();
     expect(screen.getByText("Add a few founder notes to generate an action plan.")).toBeInTheDocument();
@@ -67,7 +69,7 @@ describe("src/pages/ChiefOfStaff", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Building your action plan…")).toBeInTheDocument();
+    expect(screen.getByText("Working on your action plan…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Building Action Plan..." })).toBeDisabled();
   });
 
