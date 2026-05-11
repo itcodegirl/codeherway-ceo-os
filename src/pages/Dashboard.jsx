@@ -3,6 +3,7 @@ import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
+import PanelErrorFallback from '../components/ui/PanelErrorFallback';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
 import TodayFocusPanel from '../components/dashboard/TodayFocusPanel';
@@ -402,11 +403,7 @@ function Dashboard() {
 
         <ErrorBoundary
           name="Dashboard / Next move"
-          fallback={(
-            <article className="focus-panel" aria-label="Next move panel">
-              <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-            </article>
-          )}
+          fallback={<PanelErrorFallback panelName="Next move" />}
         >
           <article className="focus-panel focus-panel--next-move" aria-label="Next move panel">
             <div className="focus-panel__header">
@@ -443,11 +440,7 @@ function Dashboard() {
 
         <ErrorBoundary
           name="Dashboard / Reminders"
-          fallback={(
-            <article className="focus-panel" aria-label="Reminders panel">
-              <p className="calm-copy">Reminders couldn’t load. Refresh the page to retry.</p>
-            </article>
-          )}
+          fallback={<PanelErrorFallback panelName="Reminders" />}
         >
           <RemindersPanel
             reminderDraft={reminderDraft}
@@ -501,11 +494,7 @@ function Dashboard() {
           <div className="focus-home__drawer-grid">
             <ErrorBoundary
               name="Dashboard / Momentum"
-              fallback={(
-                <article className="focus-panel" aria-label="Momentum panel">
-                  <p className="calm-copy">This panel ran into an error. Refresh the page to retry.</p>
-                </article>
-              )}
+              fallback={<PanelErrorFallback panelName="Quick win" ariaLabel="Momentum panel" />}
             >
               <article className="focus-panel" aria-label="Momentum panel">
                 <div className="focus-panel__header">
@@ -527,9 +516,11 @@ function Dashboard() {
             <ErrorBoundary
               name="Dashboard / Reset"
               fallback={(
-                <article className="focus-panel focus-panel--reset" aria-label="Reset panel">
-                  <p className="calm-copy">Reset steps couldn’t load. Refresh the page to retry.</p>
-                </article>
+                <PanelErrorFallback
+                  panelName="Reset"
+                  panelClassName="focus-panel focus-panel--reset"
+                  ariaLabel="Reset panel"
+                />
               )}
             >
               <article className="focus-panel focus-panel--reset" aria-live="polite">

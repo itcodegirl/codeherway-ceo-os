@@ -5,6 +5,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
+import LastSavedIndicator from '../components/ui/LastSavedIndicator';
 import { useSettings } from '../hooks/useSettings';
 import { useOfflineWriteQueueSize } from '../hooks/useOfflineWriteQueue';
 import { useThemePreference } from '../hooks/useThemePreference';
@@ -581,20 +582,7 @@ function Settings() {
         {source === 'supabase'
           ? 'Settings save to your synced workspace.'
           : 'Settings are stored on this device.'}
-        {Number.isFinite(Number(savedAt)) && Number(savedAt) > 0 ? (() => {
-          const savedDate = new Date(Number(savedAt));
-          // Guard against corrupted timestamps (e.g. legacy storage) — an
-          // invalid Date here would crash the page on toISOString().
-          if (Number.isNaN(savedDate.getTime())) {
-            return null;
-          }
-          return (
-            <span className="settings-saved-indicator">
-              {' '}
-              Last saved <time dateTime={savedDate.toISOString()}>{savedDate.toLocaleString()}</time>.
-            </span>
-          );
-        })() : null}
+        <LastSavedIndicator savedAt={savedAt} />
       </div>
     </section>
   );
