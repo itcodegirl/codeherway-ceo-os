@@ -357,8 +357,13 @@ describe('src/pages/Dashboard', () => {
     );
 
     expect(screen.getByRole('heading', { level: 2, name: 'Choose how this device starts' })).toBeInTheDocument();
-    expect(screen.getByText('Import backup: coming soon')).toBeInTheDocument();
-    expect(screen.getByText('Connect Supabase: setup required')).toBeInTheDocument();
+    // Audit follow-up: the "coming soon" / "setup required" chips on the
+    // first-run choice card were replaced with a single helper line pointing
+    // to Settings — Import backup is already implemented there and Supabase
+    // setup is documented, so the chips overstated the gap.
+    expect(
+      screen.getByText(/Restore from a JSON backup or connect a Supabase workspace/),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Start blank' }));
     expect(startBlankWorkspace).toHaveBeenCalledTimes(1);

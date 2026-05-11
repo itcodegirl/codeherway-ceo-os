@@ -122,10 +122,18 @@
   --bg-count-badge: rgba(68, 181, 255, 0.22);
 
   --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-card: var(--radius-lg);
   --radius-action: 13px;
   --action-height: 2.7rem;
   --action-font-size: var(--fs-helper);
   --action-padding-x: 1.05rem;
+
+  /* Aliases for the border + surface scale used by Ops Reliability. Earlier
+   * iterations referenced these names directly; map them onto the canonical
+   * scale so all surfaces share one underlying value. */
+  --border-strong: var(--border-depth-3);
+  --surface-muted: var(--surface-overlay-1);
 
   --font-display: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", "Consolas", "Menlo", monospace;
