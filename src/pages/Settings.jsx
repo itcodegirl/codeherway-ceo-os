@@ -1,10 +1,13 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import SectionCard from '../components/ui/SectionCard';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
+import SettingsAccountSection from '../components/settings/SettingsAccountSection';
+import SettingsThemeSection from '../components/settings/SettingsThemeSection';
+import SettingsWorkspaceDataSection from '../components/settings/SettingsWorkspaceDataSection';
+import SettingsExperienceSection from '../components/settings/SettingsExperienceSection';
 import { useSettings } from '../hooks/useSettings';
 import { useOfflineWriteQueueSize } from '../hooks/useOfflineWriteQueue';
 import { useThemePreference } from '../hooks/useThemePreference';
@@ -12,7 +15,7 @@ import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { useAuthSession } from '../hooks/useAuthSession';
 import { isSupabaseConfigured, signOut } from '../lib/supabase';
 import { getDeviceTimezone, getSupportedTimezones, resolveTimeZone } from '../lib/settings';
-import { SOURCE_NOTICE_DEMO_DATA, SOURCE_NOTICE_LOCAL_ONLY, buildSourceNotice } from '../lib/uiCopy';
+import { buildSourceNotice, SOURCE_NOTICE_LOCAL_ONLY } from '../lib/uiCopy';
 import {
   buildWorkspaceBackup,
   buildWorkspaceBackupFileName,
@@ -20,12 +23,6 @@ import {
   importWorkspaceBackup,
 } from '../lib/workspacePortability';
 import '../styles/forms.css';
-
-const THEME_CHOICES = [
-  { value: 'system', label: 'Match system', description: 'Follow your OS dark or light setting.' },
-  { value: 'dark', label: 'Dark', description: 'The original calm-night palette.' },
-  { value: 'light', label: 'Light', description: 'Warm-paper palette for bright environments.' },
-];
 
 function formatCount(count, singular, plural = `${singular}s`) {
   const normalized = Number(count) || 0;
@@ -82,13 +79,6 @@ function Settings() {
   const timezoneFieldId = useId();
   const timezoneListId = useId();
   const supportedTimezones = useMemo(() => getSupportedTimezones(), []);
-  const autoSaveToggleId = useId();
-  const emailDigestToggleId = useId();
-  const shortcutsToggleId = useId();
-  const emailDigestComingSoonId = useId();
-  const shortcutsComingSoonId = useId();
-  const themeRadiogroupId = useId();
-  const importInputId = useId();
   const importInputRef = useRef(null);
   const [, setDataHealthRefreshKey] = useState(0);
   const [portabilityStatus, setPortabilityStatus] = useState({ tone: '', message: '' });
@@ -131,7 +121,7 @@ function Settings() {
   );
   const dataHealth = getLocalWorkspaceDataHealth();
   const backupScopeCopy = source === 'supabase'
-    ? 'Backups cover this browser\'s local fallback data. Synced Supabase records stay in Supabase.'
+    ? "Backups cover this browser's local fallback data. Synced Supabase records stay in Supabase."
     : 'Backups cover the local workspace data stored in this browser.';
   const healthIssueCopy = dataHealth.invalidStoreCount > 0
     ? `${formatCount(dataHealth.invalidStoreCount, 'local store')} needs recovery and will not be exported.`
@@ -263,50 +253,15 @@ function Settings() {
       ) : null}
 
       <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving || isLoading}>
-        <SectionCard
-          title="Account"
-          iconName="settings"
-        >
-          {!isSupabaseConfigured || isAuthDisabled ? (
-            <p className="helper-text">
-              Cloud sync is not configured for this build. Local data on this device is the
-              source of truth. To enable accounts, set <code>VITE_SUPABASE_URL</code> and{' '}
-              <code>VITE_SUPABASE_ANON_KEY</code>, then redeploy.
-            </p>
-          ) : isAuthInitializing ? (
-            <p className="helper-text" role="status" aria-live="polite">
-              Checking your session…
-            </p>
-          ) : isAuthenticated ? (
-            <div className="settings-account">
-              <p className="helper-text">
-                Signed in as <strong>{user?.email || 'authenticated user'}</strong>.
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="small"
-                onClick={handleSignOut}
-                disabled={signOutState === 'pending'}
-              >
-                {signOutState === 'pending' ? 'Signing out…' : 'Sign out'}
-              </Button>
-              {signOutError ? (
-                <p role="alert" className="form-error">{signOutError}</p>
-              ) : null}
-            </div>
-          ) : (
-            <div className="settings-account">
-              <p className="helper-text">
-                You are not signed in. Cloud sync stays off until you sign in. Local data on
-                this device is preserved either way.
-              </p>
-              <Link to="/sign-in" className="settings-account__signin-link">
-                Sign in with magic link
-              </Link>
-            </div>
-          )}
-        </SectionCard>
+        <SettingsAccountSection
+          isCloudConfigured={isSupabaseConfigured && !isAuthDisabled}
+          isAuthInitializing={isAuthInitializing}
+          isAuthenticated={isAuthenticated}
+          userEmail={user?.email}
+          signOutState={signOutState}
+          signOutError={signOutError}
+          onSignOut={handleSignOut}
+        />
 
         <SectionCard
           title="Workspace"
@@ -373,197 +328,35 @@ function Settings() {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="Theme"
-          iconName="settings"
-        >
-          <fieldset
-            className="settings-theme"
-            aria-describedby={`${themeRadiogroupId}-helper`}
-          >
-            <legend className="settings-theme__legend">Display theme</legend>
-            <div className="settings-theme__choices" role="radiogroup">
-              {THEME_CHOICES.map((choice) => {
-                const isActive = themePreference === choice.value;
-                const radioId = `${themeRadiogroupId}-${choice.value}`;
-                return (
-                  <label
-                    key={choice.value}
-                    htmlFor={radioId}
-                    className={
-                      isActive
-                        ? 'settings-theme__choice settings-theme__choice--active'
-                        : 'settings-theme__choice'
-                    }
-                  >
-                    <input
-                      id={radioId}
-                      type="radio"
-                      name={themeRadiogroupId}
-                      value={choice.value}
-                      checked={isActive}
-                      onChange={() => setThemePreference(choice.value)}
-                    />
-                    <span className="settings-theme__choice-label">{choice.label}</span>
-                    <span className="settings-theme__choice-description">{choice.description}</span>
-                  </label>
-                );
-              })}
-            </div>
-            <p id={`${themeRadiogroupId}-helper`} className="helper-text helper-text--muted">
-              Stored in this browser. Changes apply immediately.
-            </p>
-          </fieldset>
-        </SectionCard>
+        <SettingsThemeSection
+          themePreference={themePreference}
+          onThemePreferenceChange={setThemePreference}
+        />
 
-        <SectionCard
-          title="Workspace Data"
-          iconName="section"
-        >
-          <div className="settings-workspace-setup">
-            <p className="helper-text">
-              {hasWorkspaceSetupChoice
-                ? isDemoMode
-                  ? SOURCE_NOTICE_DEMO_DATA
-                  : 'Blank local workspace is active on this device.'
-                : 'No setup choice has been saved yet. Demo records are shown for review until you choose.'}
-            </p>
-            <div className="settings-workspace-setup__actions">
-              <Button type="button" size="small" onClick={startBlankWorkspace} icon={{ name: 'check', size: 14 }}>
-                Start blank
-              </Button>
-              <Button type="button" size="small" variant="ghost" onClick={loadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
-                Load demo workspace
-              </Button>
-              <Button
-                type="button"
-                size="small"
-                variant="ghost"
-                onClick={clearDemoData}
-                disabled={!isDemoMode}
-                ariaLabel={isDemoMode ? 'Clear demo data from this device' : 'Clear demo data unavailable'}
-              >
-                Clear demo data
-              </Button>
-            </div>
-            <div className="settings-workspace-setup__unavailable" aria-label="Unavailable setup paths">
-              <span>Connect Supabase account: setup required</span>
-            </div>
-          </div>
+        <SettingsWorkspaceDataSection
+          hasWorkspaceSetupChoice={hasWorkspaceSetupChoice}
+          isDemoMode={isDemoMode}
+          onStartBlankWorkspace={startBlankWorkspace}
+          onLoadDemoWorkspace={loadDemoWorkspace}
+          onClearDemoData={clearDemoData}
+          dataHealth={dataHealth}
+          pendingSyncCount={pendingSyncCount}
+          formatSavedAt={formatSavedAt}
+          backupScopeCopy={backupScopeCopy}
+          healthIssueCopy={healthIssueCopy}
+          pendingSyncCopy={pendingSyncCopy}
+          onExportBackup={handleExportBackup}
+          onImportClick={handleImportClick}
+          onImportBackup={handleImportBackup}
+          importInputRef={importInputRef}
+          portabilityStatus={portabilityStatus}
+        />
 
-          <div className="settings-data-health" role="group" aria-label="Local data health">
-            <div className="settings-data-health__summary" role="list">
-              <span role="listitem">
-                <strong>{dataHealth.localRecordCount}</strong>
-                Local records
-              </span>
-              <span role="listitem">
-                <strong>{dataHealth.restorableStoreCount}</strong>
-                Backup stores
-              </span>
-              <span role="listitem">
-                <strong>{pendingSyncCount}</strong>
-                Pending sync
-              </span>
-            </div>
-            <p className="helper-text">
-              {backupScopeCopy} {healthIssueCopy} {pendingSyncCopy}
-            </p>
-            <p className="helper-text helper-text--muted">
-              {formatSavedAt(dataHealth.lastSettingsSavedAt)}
-            </p>
-            <div className="settings-workspace-setup__actions">
-              <Button
-                type="button"
-                size="small"
-                onClick={handleExportBackup}
-                disabled={!dataHealth.isAvailable}
-                ariaLabel="Export local workspace backup"
-                icon={{ name: 'copy', size: 14 }}
-              >
-                Export backup
-              </Button>
-              <Button
-                type="button"
-                size="small"
-                variant="ghost"
-                onClick={handleImportClick}
-                disabled={!dataHealth.isAvailable}
-                ariaLabel="Import local workspace backup"
-                icon={{ name: 'section', size: 14 }}
-              >
-                Import backup
-              </Button>
-              <input
-                id={importInputId}
-                ref={importInputRef}
-                className="settings-backup-file"
-                type="file"
-                accept="application/json,.json"
-                aria-label="Import local workspace backup file"
-                onChange={handleImportBackup}
-              />
-            </div>
-            <p className="helper-text helper-text--muted">
-              Import replaces matching local stores only. It does not delete other local data or migrate anything into Supabase.
-            </p>
-            {portabilityStatus.message ? (
-              <p
-                className={`helper-text settings-backup-status settings-backup-status--${portabilityStatus.tone}`}
-                role={portabilityStatus.tone === 'error' ? 'alert' : 'status'}
-                aria-live="polite"
-              >
-                {portabilityStatus.message}
-              </p>
-            ) : null}
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          title="Experience"
-          iconName="settings"
-        >
-          <label className="settings-toggle" htmlFor={autoSaveToggleId}>
-            <input
-              id={autoSaveToggleId}
-              type="checkbox"
-              checked={settings.autoSave}
-              disabled={fieldsDisabled}
-              onChange={(e) => handleToggle('autoSave', e.target.checked)}
-            />
-            <span>Enable auto-save for drafts and notes</span>
-          </label>
-
-          <label className="settings-toggle" htmlFor={emailDigestToggleId}>
-            <input
-              id={emailDigestToggleId}
-              type="checkbox"
-              checked={false}
-              disabled
-              aria-describedby={emailDigestComingSoonId}
-              readOnly
-            />
-            <span>Weekly digest reminders (coming soon)</span>
-          </label>
-          <p id={emailDigestComingSoonId} className="helper-text helper-text--offset">
-            Email delivery is not wired yet, so this stays unavailable until reminders can actually send.
-          </p>
-
-          <label className="settings-toggle" htmlFor={shortcutsToggleId}>
-            <input
-              id={shortcutsToggleId}
-              type="checkbox"
-              checked={false}
-              disabled
-              aria-describedby={shortcutsComingSoonId}
-              readOnly
-            />
-            <span>Keyboard shortcuts (coming soon)</span>
-          </label>
-          <p id={shortcutsComingSoonId} className="helper-text helper-text--offset">
-            Shortcuts will return once every command has tested keyboard behavior.
-          </p>
-        </SectionCard>
+        <SettingsExperienceSection
+          autoSave={settings.autoSave}
+          fieldsDisabled={fieldsDisabled}
+          onToggle={handleToggle}
+        />
 
         <div className="settings-actions">
           <Button
@@ -601,4 +394,3 @@ function Settings() {
 }
 
 export default Settings;
-
