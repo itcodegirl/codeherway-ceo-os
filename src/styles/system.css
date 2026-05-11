@@ -166,6 +166,28 @@ body::after {
   margin-bottom: 0.85rem;
 }
 
+/*
+ * Quiet "all clear" state for panels that would otherwise render an empty
+ * list. Using calm-copy text + a small success dot keeps the panel feeling
+ * present and reassuring without mimicking a real list row.
+ */
+.focus-panel__affirmative {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.focus-panel__affirmative-dot {
+  flex: 0 0 auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.45rem;
+  border-radius: 999px;
+  background: var(--success, #7be5bc);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success, #7be5bc) 24%, transparent);
+}
+
 .focus-chip {
   display: inline-flex;
   align-items: center;

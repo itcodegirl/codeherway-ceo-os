@@ -10,4 +10,21 @@ describe('BlockersPanel', () => {
     expect(screen.getByText('Hiring contract draft')).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
+
+  it('shows an affirmative empty state instead of an empty bullet list', () => {
+    render(<BlockersPanel blockerItems={[]} />);
+
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Nothing is blocking you right now/i),
+    ).toBeInTheDocument();
+  });
+
+  it('tolerates a missing blockers prop without crashing', () => {
+    render(<BlockersPanel />);
+
+    expect(
+      screen.getByText(/Nothing is blocking you right now/i),
+    ).toBeInTheDocument();
+  });
 });

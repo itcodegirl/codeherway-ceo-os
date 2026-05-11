@@ -330,7 +330,9 @@ describe('src/pages/Dashboard', () => {
     );
 
     expect(screen.getByText('Create one calming priority for today')).toBeInTheDocument();
-    expect(screen.getByText('No blockers logged. Keep protecting this focus window.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Nothing is blocking you right now. Keep protecting this focus window.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('No open loops need action right now.')).toBeInTheDocument();
     expect(screen.getByText('No reminder progress yet.')).toBeInTheDocument();
     expect(screen.getByText('No reminders yet. Add one small commitment.')).toBeInTheDocument();
