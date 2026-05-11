@@ -53,6 +53,60 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 
 CodeHerWay CEO OS is best framed as a product-minded frontend systems project: a calm founder command center with local-first resilience, a Supabase upgrade path, explicit failure handling, and end-to-end verification for the workflows reviewers can actually click through.
 
+## Honest screenshot status
+
+The PNGs in [`docs/assets/screenshots/`](./docs/assets/screenshots/) predate
+the recent calm-OS audit cycle and **do not match the current UI**. They
+show the older "Dashboard" surface with a purple-accent sidebar, no Capture
+or Journal pages, and a Chief of Staff with action chips that the page
+currently renders again post-audit (Phase 3 below). A re-capture pass is
+the cheapest next portfolio improvement and is tracked in
+[`docs/audits/ceo-os-product-readiness-audit.md`](./docs/audits/ceo-os-product-readiness-audit.md)
+(Phase A — Portfolio surface).
+
+If you are reviewing this repository, please run `npm run dev` and open the
+app directly rather than relying on the embedded screenshots.
+
+## Recent audit follow-up
+
+The product-readiness audit in
+[`docs/audits/ceo-os-product-readiness-audit.md`](./docs/audits/ceo-os-product-readiness-audit.md)
+was followed by a six-phase fix branch
+(`improve/ceo-os-audit-priority-fixes`). The shipped phases:
+
+1. **Trust & reliability** — wired the save-status bus into the shared
+   `requireLocalStorageSetItem` so CRUD writes (not just UI prefs) feed the
+   trust pill; declared the two real chief-workspace storage keys in
+   `dataSchema.js`; standardized storage-quota handling; tightened CSP to
+   remove the unused `api.openai.com` host; gave Capture and Journal an
+   explicit "stays on this device" notice.
+2. **UX clarity** — removed the "coming soon" Weekly Digest / Keyboard
+   Shortcuts toggles in Settings; removed the misleading "Import backup:
+   coming soon" and "Connect Supabase: setup required" chips; collapsed the
+   5-step ritual list above Focus Home into a `<details>` block to reduce
+   density; defined four previously-undefined design tokens; added a base
+   CSS rule for `.stat-card`.
+3. **Feature flow** — restored the four secondary Chief of Staff action
+   chips (Summarize / Draft LinkedIn / Convert to Action Items / Suggest
+   Next Priorities) alongside the primary Build Action Plan; added an
+   "Awaiting Reply > 7 days" aging signal to Opportunities; added a
+   rendered `WeeklyBriefSummary` above the editors with copy-to-clipboard
+   so the Monday-morning founder artifact is actually produced.
+4. **Accessibility & mobile** — bumped pill contrast above AA on dark
+   surfaces; added `aria-label` support to `Badge`; grouped the Chief of
+   Staff actions under a labeled landmark; ensured the Weekly summary
+   metric grid collapses cleanly on phones.
+5. **Architecture cleanup** — extracted `useSilentRefresh` and migrated
+   `useDashboardData` and `useWorkspaceSettings` onto it, removing
+   duplicated event-subscription effects.
+6. **Documentation** — split the long env-variable reference into
+   [`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md), refreshed
+   [`docs/KNOWN_LIMITATIONS.md`](./docs/KNOWN_LIMITATIONS.md), and added the
+   screenshot caveat above.
+
+Items deliberately deferred to follow-up PRs are listed in
+[`docs/KNOWN_LIMITATIONS.md`](./docs/KNOWN_LIMITATIONS.md).
+
 ## Portfolio review snapshot
 
 This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. The current implementation now covers the core reviewer risks:
@@ -278,71 +332,14 @@ npm run configure:branch-protection:dry -- --repo owner/repo --branch main
 
 ## Configuration
 
-### Frontend environment
+For the full environment variable reference (frontend, Chief proxy, error
+telemetry signing + KMS adapters, scheduled SLO probe), see
+[`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md).
 
-- `VITE_OPENAI_PROXY_URL` (optional, defaults to `/api/chief-of-staff`)
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_APP_ERROR_TELEMETRY_URL` (optional remote ingest endpoint for app error telemetry)
-- `VITE_APP_ERROR_TELEMETRY_TOKEN` (optional shared ingest token header)
-- `VITE_APP_ERROR_TELEMETRY_HMAC_SECRET` (optional HMAC signing secret for trusted/internal deployments only)
-- `VITE_APP_ERROR_TELEMETRY_SIGNATURE_KEY_ID` (optional key-id header used with signed payloads)
-
-### Server runtime environment
-
-- `OPENAI_API_KEY` (required for proxy responses)
-- `OPENAI_MODEL` (optional)
-- `CHIEF_STAFF_PROXY_TOKEN` (optional)
-- `CHIEF_STAFF_REQUIRE_TOKEN` (optional, set to `true` to reject requests when no proxy token is configured)
-- `CHIEF_STAFF_RATE_LIMIT_PER_MINUTE` (optional)
-- `APP_ERROR_TELEMETRY_INGEST_TOKEN` (optional, validates telemetry ingest requests when set)
-- `APP_ERROR_TELEMETRY_HMAC_SECRET_CURRENT` (optional, active HMAC key for ingest signature validation)
-- `APP_ERROR_TELEMETRY_HMAC_SECRET_NEXT` (optional, next HMAC key used during overlap windows)
-- `APP_ERROR_TELEMETRY_HMAC_NEXT_VALID_FROM` (optional ISO datetime cutoff for when `*_NEXT` becomes valid)
-- `APP_ERROR_TELEMETRY_HMAC_CURRENT_VALID_UNTIL` (optional ISO datetime cutoff for current key sunset)
-- `APP_ERROR_TELEMETRY_HMAC_SECRET` (optional legacy fallback when rotation keys are not configured)
-- `APP_ERROR_TELEMETRY_ASYMMETRIC_PUBLIC_KEYS_JSON` (optional JSON map of `keyId -> PEM public key` for ed25519 verification)
-- `APP_ERROR_TELEMETRY_KMS_KEYS_URL` (optional KMS-backed key distribution endpoint for asymmetric verification)
-- `APP_ERROR_TELEMETRY_KMS_AUTH_TOKEN` (optional bearer token used to fetch KMS keysets)
-- `APP_ERROR_TELEMETRY_KMS_CACHE_MS` (optional keyset cache TTL in milliseconds, defaults to `300000`)
-- `APP_ERROR_TELEMETRY_KEY_PROVIDER` (optional provider-native key adapter: `aws-kms`, `gcp-kms`, `azure-keyvault`)
-- `APP_ERROR_TELEMETRY_AWS_KMS_KEYS_JSON` (optional JSON array for AWS KMS signature key mappings)
-- `APP_ERROR_TELEMETRY_GCP_KMS_KEYS_JSON` (optional JSON array for GCP KMS signature key mappings)
-- `APP_ERROR_TELEMETRY_AZURE_KV_KEYS_JSON` (optional JSON array for Azure Key Vault signature key mappings)
-- `APP_ERROR_TELEMETRY_AWS_REGION` (optional AWS region for provider-native key lookups)
-- `APP_ERROR_TELEMETRY_ROTATION_MAX_KEY_AGE_DAYS` (optional asymmetric key max-age enforcement window)
-- `APP_ERROR_TELEMETRY_ROTATION_MIN_ACTIVE_KEYS` (optional minimum active asymmetric keys required, default `1`)
-- `APP_ERROR_TELEMETRY_ROTATION_REQUIRE_FUTURE_KEY` (optional, require at least one future-dated key to validate rollout readiness)
-- `APP_ERROR_TELEMETRY_KEY_AUDIT_ENABLED` (optional, set to `false` to disable key verification audit writes)
-- `SUPABASE_SERVICE_ROLE_KEY` (required for durable telemetry ingest persistence)
-- `APP_ERROR_TELEMETRY_RETENTION_DAYS` (optional, defaults to `45`)
-- `APP_ERROR_TELEMETRY_MAX_ROWS` (optional, defaults to `50000`)
-- `OPS_INCIDENT_SUPABASE_URL` (optional, durable lifecycle state persistence for scheduled ops incidents)
-- `OPS_INCIDENT_SUPABASE_SERVICE_ROLE_KEY` (optional service role key for lifecycle event writes)
-- `OPS_INCIDENT_KEY` (optional override for incident dedupe key, defaults to `<repo>:scheduled-ops-alert`)
-- `TELEMETRY_INGEST_MONITOR_URL` (optional, used by scheduled SLO probe job)
-- `TELEMETRY_INGEST_MONITOR_TOKEN` (optional ingest token for SLO probe requests)
-- `TELEMETRY_INGEST_MONITOR_SIGNATURE_MODE` (optional: `hmac-sha256` or `ed25519`)
-- `TELEMETRY_INGEST_MONITOR_SIGNATURE_KEY_ID` (optional key-id header for SLO probe signatures)
-- `SLACK_OPS_WEBHOOK_URL` (optional webhook used by scheduled ops fanout alerts)
-- `PAGERDUTY_EVENTS_ROUTING_KEY` (optional PagerDuty Events v2 routing key for on-call fanout)
-
-## Data model references
-
-- Supabase migration scripts in `supabase/migrations/`.
-- Primary tables:
-  - `opportunities`
-  - `content_items`
-  - `weekly_briefs`
-  - `weekly_brief_items`
-  - `profiles`
-  - `chief_sessions`
-  - `chief_outputs`
-  - `chief_telemetry_events`
-  - `app_error_telemetry_events`
-  - `app_error_telemetry_key_audit_events`
-  - `ops_slo_snapshots`
-  - `ops_incident_lifecycle_events`
+The short version: the core app runs **without any environment configuration**
+on local-first storage. `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+enable sync; `OPENAI_API_KEY` + `CHIEF_STAFF_PROXY_TOKEN` enable AI in
+Chief of Staff. Everything else is opt-in.
 
 ## Roadmap
 
@@ -463,156 +460,10 @@ The repository now includes stable paths for visual proof artifacts so portfolio
 
 ## Release evidence
 
-- Verification snapshot date: April 30, 2026
-- Quality gates executed successfully:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run`
-  - `npm run typecheck`
-  - `npm run check:route-budgets`
-  - `npm run check:route-budgets:trend`
-  - `npm run test:e2e`
-- Final hardening and readiness commits:
-  - `d95e8d3` - test: harden chief-of-staff edge-case coverage
-  - `188dcc7` - test: harden dashboard insight edge-case resilience
-  - `24d811d` - fix: normalize route paths for page metadata resolution
-  - `f18c16a` - docs: add release-candidate checklist and portfolio polish
-- Post-verification hardening cycle (April 23, 2026):
-  - `f5ae62c` - test: stabilize source status copy assertion
-  - `07f3213` - feat: improve dashboard credibility and accessibility semantics
-  - `3da3eae` - refactor: centralize supabase runtime access
-- Blueprint redesign foundation cycle (April 23, 2026):
-  - `2e02795` - feat: establish blueprint design system foundation
-  - `541f140` - feat: replace dashboard with focus command center
-  - `eba9561` - feat: add sticky-note capture workspace with local persistence
-  - `a13bd86` - feat: add journal page with local daily prompt autosave
-  - `eec8c74` - feat: add deterministic reminders and suggestion layer
-  - `0c15d13` - feat: add shared system pulse across the app shell
-- Product hardening cycle (April 30, 2026):
-  - `3708271` - fix: guard stale settings and weekly brief loads
-  - `66a4c0d` - refactor: centralize shared state utilities
-  - `c1f43a5` - feat: preserve chief workspace edits during refresh
-  - `fe94f2b` - fix: improve chief workspace trust cues
-  - `9a5098d` - fix: restore chief workspace hydration in strict mode
-- Stability and execution hardening cycle (April 30, 2026):
-  - `da56ca5` - fix: guard system pulse and telemetry refreshes
-  - `00eb961` - refactor: remove legacy chief ai components
-  - `bbbf75b` - fix: keep dashboard next moves current
-  - `d504d74` - fix: improve focus mode keyboard navigation
-  - `e340d4b` - test: cover focus home execution flow
-- Recovery and reminder hardening cycle (April 30, 2026):
-  - `dd8d31d` - fix: make error recovery return home
-  - `0128dba` - refactor: derive app routes from route metadata
-  - `4ba77bc` - fix: keep completed reminders recoverable
-  - `f3a7a60` - fix: polish recovery and focus accessibility
-  - `7a8865e` - test: cover reversible reminder completion
-- CRUD lifecycle hardening cycle (April 30, 2026):
-  - `0b8db1d` - fix: guard crud mutation lifecycle
-  - `fbfa22e` - refactor: centralize mounted ref lifecycle
-  - `22ccc3a` - fix: reject stale reminder mutations
-  - `4942074` - fix: preserve reminder control contrast
-  - `f2fcd90` - test: cover confirm unmount safety
-- Settings persistence and accessibility hardening cycle (April 30, 2026):
-  - `41b8764` - fix: guard duplicate settings saves
-  - `03b0bbc` - refactor: reuse mounted lifecycle for settings
-  - `632b18e` - fix: fail settings persistence explicitly
-  - `d013ca7` - fix: clarify settings save state
-  - `91ce193` - test: cover settings save accessibility
-- Chief and weekly persistence truth hardening cycle (April 30, 2026):
-  - `bccafd8` - fix: fail chief local persistence explicitly
-  - `6541eb8` - refactor: centralize required local storage writes
-  - `48749ac` - fix: reject stale weekly mutations
-  - `48ea73f` - fix: clarify weekly autosave failure state
-  - `890fbae` - test: cover weekly and chief persistence states
-- Capture and journal autosave trust hardening cycle (April 30, 2026):
-  - `c444cd2` - fix: reject stale capture deletes
-  - `1b4089d` - refactor: centralize autosave helper copy
-  - `0780d8a` - fix: reject stale capture updates
-  - `f715acb` - fix: clarify capture and journal autosave failures
-  - `fdf01c4` - test: cover capture and journal save failures
-- CRUD stale-record integrity hardening cycle (May 1, 2026):
-  - `0a6a97c` - fix: reject stale opportunity mutations
-  - `d040d08` - refactor: share local record mutation guards
-  - `8477064` - fix: reject stale content mutations
-  - `204ae9b` - fix: clarify crud stale record errors
-  - `88c46d3` - test: cover crud stale record guidance
-- Calm OS recovery and decision-support cycle (May 1, 2026):
-  - `19ebcb2` - fix: harden app shell crash recovery
-  - `3b9266f` - refactor: extract focus home decision logic
-  - `3786ca1` - feat: strengthen focus home decision support
-  - `2be9bd6` - style: improve calm responsive trust cues
-  - `bfb5167` - test: cover app recovery and trust cues
-- May 1, 2026 local verification:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:run` (80 files passed, 302 tests passed, 1 skipped)
-  - `npm run build`
-  - `npm run check:route-budgets`
-  - `npm run test:e2e` (18 passed)
-- Compact navigation and Focus Home signal cycle (May 1, 2026):
-  - `4484b5b` - fix: stabilize compact sidebar route changes
-  - `99944c3` - refactor: centralize focus home signals
-  - `4736a4d` - fix: prioritize oldest pending reminder
-  - `2f7f94f` - style: polish focus home loading and reminders
-  - `e14d497` - test: cover compact navigation e2e
-- May 1, 2026 second local verification:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:run` (81 files passed, 306 tests passed, 1 skipped)
-  - `npm run build`
-  - `npm run check:route-budgets`
-  - `npm run test:e2e` (19 passed)
-- Product hardening batch (May 1, 2026):
-  - `3d03dec` - fix: reset transient home route errors
-  - `008b56b` - refactor: share focus signal helpers
-  - `d8bc496` - fix: harden persisted state and crud loading
-  - `cec77dd` - fix: keep fallback record ids unique
-  - `49e88bd` - fix: refresh focus and weekly data after external updates
-  - `82ed2f2` - refactor: unify shell settings consumption
-  - `2571fb9` - refactor: centralize workspace settings refresh logic
-  - `5a21229` - fix: recover weekly brief state after save failures
-  - `4b4e528` - fix: clarify data recovery status cues
-  - `77963de` - fix: harden dashboard reminder interactions
-  - `a236504` - fix: improve capture feedback and compact nav focus
-  - `c30dc06` - test: cover shell settings sync and reminder timing
-- May 1, 2026 third local verification:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run` (83 files passed, 322 tests passed, 1 skipped)
-  - `npx playwright test` (21 passed)
-- QA and route-budget verification pass (May 1, 2026):
-  - `52bd2a1` - test: cover capture flow and route budgets
-- May 1, 2026 fourth local verification:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:run` (83 files passed, 324 tests passed, 1 skipped)
-  - `npm run build`
-  - `npm run check:route-budgets`
-  - `npm run check:route-budgets:trend`
-  - `npm run test:e2e` (21 passed)
-- Audit cycle: stability, schema validation, and UX polish (May 5, 2026):
-  - Removed `CrudPageTemplate` legacy flat props; migration doc closed — `slots.*` API only.
-  - Added `useOfflineQueueDrain` hook wired into `AppLayout` shell toast for offline write failure surfacing.
-  - Consolidated `useCrudPage` dual-prop aliases; cleaned test suite to match.
-  - Adopted Valibot schema validation for Opportunity and Content OS payloads.
-  - Made Dashboard "Today's Main Focus" panel collapsible by default (persistent state).
-  - Updated Dashboard CSS route-performance budget to cover disclosure-toggle styles.
-- May 5, 2026 local verification:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
-  - `npm run check:route-budgets`
-- Audit cycle 2: trust, error surfaces, dead code, mobile, and perf (May 5, 2026):
-  - Closed 4 unhandled-error paths (`useOfflineQueueDrain`, `Capture` sort, `Settings` saved-at, `OpsReliability` panel boundaries).
-  - Surfaced `loadError` from `useDashboardData`; replaced misleading "0" stat cards on WeeklyBrief and OpsReliability with `—`.
-  - Deleted 617 lines of dead `useDashboardInsights` code; consolidated 4 hand-rolled `useRef(true)` blocks onto `useIsMountedRef`.
-  - Raised the `.action-button--small` touch-target floor to 36px and made the OpsReliability snapshot table collapse to a stacked-card layout on phones.
-  - Stabilized `useFocusHomeSignals` reference identity, lifted CRUD-page `source` reads out of render, and merged `Capture`/`RemindersPanel` two-pass filters into single-pass memos.
-- May 5, 2026 second local verification:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
-  - `npm run check:route-budgets`
+A timestamped history of audit + hardening cycles lives in
+[`CHANGELOG.md`](./CHANGELOG.md). The recent product-readiness audit and the
+follow-up phase work are documented in
+[`docs/audits/ceo-os-product-readiness-audit.md`](./docs/audits/ceo-os-product-readiness-audit.md).
 
 ## Author
 

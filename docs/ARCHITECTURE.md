@@ -45,7 +45,9 @@ Repositories dispatch `<DOMAIN>_UPDATED_EVENT` on the window. Consumers listen a
 - It makes cross-tab refresh free (`storage` events feed the same handlers).
 - It doesn't compose well in tests; consumers mock the events when they need to.
 
-The path forward is a small Zustand or signal-based store wrapping the repositories — but only when there's a second pattern that needs the same plumbing. Premature abstraction is more expensive than the current pub/sub.
+The shared subscription contract is now extracted into `src/hooks/useSilentRefresh.js` so consumer hooks declare *what* they care about — a list of custom event names, a list of storage keys to filter on, and an optional `forceEvents` set that bypasses the coalesce window — instead of re-implementing the same `addEventListener` boilerplate. `useDashboardData` and `useWorkspaceSettings` use it today. `useWeeklyBrief` and `useFocusHomeSignals` are intentionally kept on their existing per-event handlers (granular updaters and event-payload filters that don't fit the shared shape).
+
+The path forward beyond pub/sub is a small Zustand or signal-based store wrapping the repositories — but only when there's a second pattern that needs the same plumbing. Premature abstraction is more expensive than the current pub/sub.
 
 ## Page boundary discipline
 
