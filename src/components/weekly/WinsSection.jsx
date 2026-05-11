@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import SectionCard from '../ui/SectionCard';
 import ConfirmModal from '../ui/ConfirmModal';
 import WeeklyTextList from './WeeklyTextList';
@@ -6,6 +7,15 @@ import { useWeeklySectionEditor } from '../../hooks/useWeeklySectionEditor';
 
 function WinsSection({ items, setItems, defaultItems }) {
   const winItems = Array.isArray(items) ? items : defaultItems;
+  // Mirror the Priorities/Blockers impact-message pattern so the user
+  // sees that wins also feed Focus Home (quick-win and momentum signal).
+  // The README narrates this cross-feature connection but only two of the
+  // three Weekly Brief sections were communicating it back to the user.
+  const [impactMessage, setImpactMessage] = useState('');
+  const setWinItems = useCallback((nextValue) => {
+    setItems(nextValue);
+    setImpactMessage('This shows up as your Focus Home quick-win and momentum signal.');
+  }, [setItems]);
   const {
     formValues,
     formError,
@@ -25,7 +35,7 @@ function WinsSection({ items, setItems, defaultItems }) {
   } = useWeeklySectionEditor({
     type: 'win',
     defaultItems,
-    setItems,
+    setItems: setWinItems,
   });
 
   return (
@@ -50,6 +60,7 @@ function WinsSection({ items, setItems, defaultItems }) {
         ) : (
           <p className="helper-text">No wins captured yet. Add one to preserve momentum context.</p>
         )}
+        {impactMessage ? <p className="helper-text weekly-impact-copy" role="status">{impactMessage}</p> : null}
       </SectionCard>
 
       <WeeklyEditorModal
