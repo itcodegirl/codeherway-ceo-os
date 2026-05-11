@@ -1,4 +1,5 @@
 import { parseJsonOrPreserveCorruption } from './storageCorruption';
+import { safeLocalStorageSetItem } from './utils';
 
 export const APP_ERROR_TELEMETRY_EVENT = 'ceo-os:app-error';
 
@@ -98,17 +99,17 @@ function readStoredArray(storageKey) {
 }
 
 function writeStoredArray(storageKey, items) {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify(items));
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error(`Unable to persist ${storageKey}.`, error);
-    }
-  }
+  // Telemetry persistence is best-effort housekeeping — failure here should
+  // NOT surface in the user-facing SaveStatusPill (the user did not initiate
+  // a save). `silent: true` keeps the DEV log path but skips the bus event so
+  // we share one helper with the user-data write path without overloading the
+  // trust pill with internal telemetry noise.
+  safeLocalStorageSetItem(
+    storageKey,
+    JSON.stringify(items),
+    `Unable to persist ${storageKey}.`,
+    { silent: true },
+  );
 }
 
 function getRemoteTelemetryEndpoint() {

@@ -40,10 +40,14 @@ const routeBudgets = [
   },
   {
     route: 'WeeklyBrief',
-    js: { rawKb: 16, gzipKb: 5 },
-    // Raw bumped 3.0 → 3.5 to absorb the light-mode autosave-status-dot
-    // ring overrides; gzip ceiling unchanged.
-    css: { rawKb: 3.5, gzipKb: 1.2 },
+    // Raw bumped 16 → 18 / gzip 5 → 5.5 for the May 2026 audit Phase 3
+    // WeeklyBriefSummary panel (derived founder-readable brief above the
+    // editors with copy-to-clipboard). Real founder-grade output the page
+    // name had implied but didn't ship — earning the budget bump.
+    js: { rawKb: 18, gzipKb: 5.5 },
+    // CSS bumped 3.5 → 5.0 / gzip 1.2 → 1.3 for the WeeklyBriefSummary
+    // panel styles (header, metrics grid, reflection snippet, copy feedback).
+    css: { rawKb: 5.0, gzipKb: 1.3 },
   },
   {
     route: 'ChiefOfStaff',

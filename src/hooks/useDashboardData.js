@@ -12,8 +12,14 @@ import {
 import { shallowEqualRecordArrays } from '../lib/stateUtils';
 import { isDemoWorkspaceEnabled } from '../lib/workspaceSetup';
 import { useIsMountedRef } from './useIsMountedRef';
+import { useSilentRefresh } from './useSilentRefresh';
 
-const SILENT_REFRESH_COALESCE_MS = 400;
+// Audit follow-up: the load/coalesce/subscribe pattern that used to live
+// inline here is now shared with useFocusHomeSignals / useWeeklyBrief /
+// useWorkspaceSettings via useSilentRefresh, so each hook focuses on its
+// data shape instead of re-implementing event plumbing.
+const DASHBOARD_EVENTS = [OPPORTUNITIES_UPDATED_EVENT, CONTENT_ITEMS_UPDATED_EVENT];
+const DASHBOARD_STORAGE_KEYS = ['ceo-os-opportunities', 'ceo-os-content-items'];
 
 export const isLocalDashboardDemoMode = getOpportunitiesSource() === 'local'
   && getContentSource() === 'local'
@@ -27,7 +33,6 @@ export function useDashboardData({ onLoadError }) {
   const isMountedRef = useIsMountedRef();
   const onLoadErrorRef = useRef(onLoadError);
   const requestIdRef = useRef(0);
-  const lastSilentRefreshAtRef = useRef(0);
 
   useEffect(() => {
     onLoadErrorRef.current = onLoadError;
@@ -93,47 +98,15 @@ export function useDashboardData({ onLoadError }) {
     };
   }, [loadDashboardData]);
 
-  useEffect(() => {
-    const requestSilentRefresh = () => {
-      const now = Date.now();
-      if (now - lastSilentRefreshAtRef.current < SILENT_REFRESH_COALESCE_MS) {
-        return;
-      }
-
-      lastSilentRefreshAtRef.current = now;
-      loadDashboardData({ silent: true }).catch(() => {});
-    };
-
-    const handleStorageChange = (event) => {
-      if (
-        event.key === 'ceo-os-opportunities'
-        || event.key === 'ceo-os-content-items'
-        || event.key === null
-      ) {
-        requestSilentRefresh();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        requestSilentRefresh();
-      }
-    };
-
-    window.addEventListener(OPPORTUNITIES_UPDATED_EVENT, requestSilentRefresh);
-    window.addEventListener(CONTENT_ITEMS_UPDATED_EVENT, requestSilentRefresh);
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', requestSilentRefresh);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener(OPPORTUNITIES_UPDATED_EVENT, requestSilentRefresh);
-      window.removeEventListener(CONTENT_ITEMS_UPDATED_EVENT, requestSilentRefresh);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', requestSilentRefresh);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+  const silentRefresh = useCallback(() => {
+    loadDashboardData({ silent: true }).catch(() => {});
   }, [loadDashboardData]);
+
+  useSilentRefresh({
+    events: DASHBOARD_EVENTS,
+    storageKeys: DASHBOARD_STORAGE_KEYS,
+    onRefresh: silentRefresh,
+  });
 
   return {
     opportunityItems,

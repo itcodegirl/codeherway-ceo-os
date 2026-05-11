@@ -4,13 +4,39 @@ Use this as the honest interview framing for CodeHerWay CEO OS. The project is s
 
 ## Current Boundaries
 
+- **Screenshots in `docs/assets/screenshots/` are out of date** and do not match the current UI. They predate the calm-OS audit cycle and the restored Chief of Staff action chips. A re-capture pass is the cheapest next portfolio improvement.
 - Authentication exists as a backend path, but the end-to-end account onboarding, sign-in, account recovery, and multi-user UX still need product hardening.
-- Supabase persistence is implemented as an upgrade path, but local-first workflows still need a complete authenticated regression pass against a real Supabase environment.
-- In-session shell settings now stay aligned with the Settings page, but authenticated multi-device and multi-tab settings reconciliation still needs broader QA.
-- Chief of Staff AI generation depends on deployed server secrets and proxy configuration. Without those, the app should be presented through its deterministic fallback and structured-review flow.
-- Local browser storage is intentionally resilient for demos and solo use, and Settings now supports local JSON backup/import. It is still this-device-only unless the user is on a Supabase-backed workspace, and local backup import does not migrate data into Supabase.
-- Screenshots and demo recordings should be refreshed after UI changes, especially Focus Home daily-loop guidance, Open Loops summaries, source-status styling, System Pulse trust cues, and compact mobile navigation.
-- Operational telemetry and route-budget tooling demonstrate production thinking, but alert response workflows are still portfolio evidence rather than a fully staffed production process.
+- Supabase persistence is implemented as an upgrade path for Opportunities, Content OS, Weekly Brief, and Settings. **Capture, Journal, and Reminders are deliberately local-only** — they have no Supabase tables and never sync, even when the user is signed in. The in-product copy on those pages now says so explicitly. To make a record part of the synced workspace, promote it (e.g. Capture sticky → Opportunity).
+- Local-first workflows still need a complete authenticated regression pass against a real Supabase environment.
+- In-session shell settings stay aligned with the Settings page, but authenticated multi-device and multi-tab settings reconciliation still needs broader QA.
+- Chief of Staff AI generation depends on deployed server secrets and proxy configuration. Without those, the app falls back to a deterministic local template. The fallback is visibly labeled — failure is honest, not hidden.
+- Local browser storage is intentionally resilient for demos and solo use, and Settings supports local JSON backup/import. Local backup import does not migrate data into Supabase.
+- Operational telemetry (KMS adapters, asymmetric key rotation, ops incident lifecycle) is implemented but is **out of scope for portfolio framing** — it's defensible engineering but more elaborate than a single-founder app requires. A future cleanup PR will move it behind an `experimental/telemetry/` boundary; the main tree keeps CSP, RLS, fail-closed proxy, rate limiting, and a thin HMAC ingest.
+
+## Items deferred from the May 2026 audit follow-up
+
+These items were identified in the product-readiness audit and the
+follow-up `improve/ceo-os-audit-priority-fixes` branch but are intentionally
+out of scope for that PR:
+
+- **"Idea" status and publish-date for Content OS.** Touches schema +
+  Valibot + multiple tests; tracked for a focused follow-up.
+- **Calendar view for Content OS.** Same scope concern.
+- **Cmd+K command palette.** The "Keyboard shortcuts" Settings toggle was
+  removed because it was disabled and unwired. Restoring a real command
+  palette is the bigger feature it was placeholder for.
+- **`useWeeklyBrief` and `useFocusHomeSignals` migration to `useSilentRefresh`.**
+  Phase 5 migrated `useDashboardData` and `useWorkspaceSettings` as the
+  lowest-risk callers. The other two hooks have shape concerns
+  (per-event granular updaters, event-payload filters) that warrant
+  individual review rather than a forced shared signature.
+- **Telemetry / KMS / ops-incident scope reduction.** The audit
+  recommended moving `server/appErrorTelemetry*` behind an
+  `experimental/telemetry/` boundary. Not done in this PR — too large a
+  surface to refactor safely without a focused PR.
+- **Screenshot + walkthrough re-capture.** The visual proof artifacts need
+  to be regenerated against the current UI. README now flags them as out
+  of date so reviewers are not misled.
 
 ## Recently closed audit items
 

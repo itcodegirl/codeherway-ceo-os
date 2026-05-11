@@ -138,4 +138,60 @@ describe('OpportunityTable', () => {
     const { container } = render(<OpportunityTable items={null} />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('renders an aging hint for an opportunity awaiting reply > 7 days', () => {
+    const updatedAt = Date.now() - 12 * 24 * 60 * 60 * 1000;
+    const item = {
+      id: 'o-aged',
+      name: 'Investor intro',
+      company: 'Skylark',
+      priority: 'Medium',
+      stage: 'Awaiting Reply',
+      nextStep: 'Send a nudge',
+      updatedAt,
+    };
+
+    const { getByLabelText, getByText } = render(
+      <OpportunityTable items={[item]} />,
+    );
+
+    // The visible text is short ("Waiting 12d") while the aria-label
+    // expands the abbreviation for screen readers.
+    expect(getByText('Waiting 12d')).toBeInTheDocument();
+    expect(getByLabelText(/Awaiting reply for 12 days/)).toBeInTheDocument();
+  });
+
+  it('does not render an aging hint within the 7-day window', () => {
+    const updatedAt = Date.now() - 2 * 24 * 60 * 60 * 1000;
+    const item = {
+      id: 'o-fresh',
+      name: 'Recent ask',
+      company: 'Skylark',
+      priority: 'Low',
+      stage: 'Awaiting Reply',
+      nextStep: 'Follow up later',
+      updatedAt,
+    };
+
+    const { queryByText } = render(<OpportunityTable items={[item]} />);
+
+    expect(queryByText(/Waiting \d+d/)).toBeNull();
+  });
+
+  it('only surfaces the aging hint for "Awaiting Reply" stages', () => {
+    const updatedAt = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const item = {
+      id: 'o-in-progress',
+      name: 'Active deal',
+      company: 'Skylark',
+      priority: 'High',
+      stage: 'In Progress',
+      nextStep: 'Ship demo',
+      updatedAt,
+    };
+
+    const { queryByText } = render(<OpportunityTable items={[item]} />);
+
+    expect(queryByText(/Waiting \d+d/)).toBeNull();
+  });
 });

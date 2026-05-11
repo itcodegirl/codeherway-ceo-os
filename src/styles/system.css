@@ -52,6 +52,52 @@ body::after {
   backdrop-filter: blur(10px);
 }
 
+/* Base layout for the StatCard component. Previously this class inherited
+ * only ambient overlay treatment from this file, leaving padding and
+ * typography undefined wherever StatCard rendered. Audit flagged this as a
+ * missing base rule; consumers now get a consistent visual without each
+ * page re-styling stat cards. */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: var(--space-card-padding, 1.25rem);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  color: var(--text);
+}
+
+.stat-card__label {
+  margin: 0;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-card__value {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  line-height: 1.1;
+}
+
+.stat-card__change {
+  margin: 0;
+  font-size: var(--fs-helper);
+  color: var(--text-soft);
+}
+
+.stat-card--tone-positive .stat-card__value {
+  color: var(--success);
+}
+
+.stat-card--tone-warning .stat-card__value {
+  color: var(--warning);
+}
+
 .section-card,
 .summary-card,
 .stat-card,

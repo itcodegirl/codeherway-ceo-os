@@ -162,15 +162,57 @@ export default function ChiefOfStaff() {
           <div
             className={`chief-action-grid ${isGenerating ? "chief-action-grid--disabled" : ""}`.trim()}
             aria-busy={isGenerating}
+            role="group"
+            aria-label="Chief of Staff actions"
           >
-            <Button
-              type="button"
-              onClick={() => handleAction("plan")}
-              disabled={!notes.trim() || isGenerating || notesLimitReached}
-              icon={{ name: "weekly", size: 14 }}
-            >
-              {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
-            </Button>
+            <div className="chief-action-grid__primary">
+              <Button
+                type="button"
+                onClick={() => handleAction("plan")}
+                disabled={!notes.trim() || isGenerating || notesLimitReached}
+                icon={{ name: "weekly", size: 14 }}
+              >
+                {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
+              </Button>
+            </div>
+            <div className="chief-action-grid__secondary">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleAction("summarize")}
+                disabled={!notes.trim() || isGenerating || notesLimitReached}
+                icon={{ name: "section", size: 14 }}
+              >
+                Summarize This Week
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleAction("draft")}
+                disabled={!notes.trim() || isGenerating || notesLimitReached}
+                icon={{ name: "content", size: 14 }}
+              >
+                Draft LinkedIn Post
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleAction("actions")}
+                disabled={!notes.trim() || isGenerating || notesLimitReached}
+                icon={{ name: "action", size: 14 }}
+              >
+                Convert to Action Items
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleAction("priorities")}
+                disabled={!notes.trim() || isGenerating || notesLimitReached}
+                icon={{ name: "check", size: 14 }}
+              >
+                Suggest Next Priorities
+              </Button>
+            </div>
           </div>
           <p id="chief-action-hint" className="chief-helper-text" role="status" aria-live="polite">
             {actionHint}
