@@ -29,7 +29,7 @@ export default function ChiefOpportunityList({
         return (
           <div className="chief-item" key={`${item.name}-${index}`}>
             <div className="chief-item-copy">
-              <h5>{item.name}</h5>
+              <h4>{item.name}</h4>
               <p>{item.company}</p>
               <small>
                 {item.priority} priority · {item.stage}

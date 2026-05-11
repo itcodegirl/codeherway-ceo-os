@@ -2,7 +2,7 @@
   return (
     <div className="chief-card chief-section-card">
       <div className="chief-section-header">
-        <h4>{title}</h4>
+        <h3>{title}</h3>
         <span className="chief-count-badge">{count}</span>
       </div>
 

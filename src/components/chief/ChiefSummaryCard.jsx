@@ -57,7 +57,7 @@ export default function ChiefSummaryCard({
       <div className="chief-summary-header">
         <div>
           <p className="chief-eyebrow">Executive Output</p>
-          <h3>{title || "Action Plan"}</h3>
+          <h2>{title || "Action Plan"}</h2>
           <span className={`chief-source-badge ${isFallback ? "chief-source-badge--fallback" : ""}`.trim()}>
             {sourceLabel}
           </span>

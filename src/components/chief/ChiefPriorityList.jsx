@@ -29,7 +29,7 @@ export default function ChiefPriorityList({
         return (
           <div className="chief-item" key={`${item.title}-${index}`}>
             <div className="chief-item-copy">
-              <h5>{item.title}</h5>
+              <h4>{item.title}</h4>
               <p>{item.reason}</p>
               <small>
                 Owner: {item.owner || "You"} · Status: {item.status || "Planned"}
