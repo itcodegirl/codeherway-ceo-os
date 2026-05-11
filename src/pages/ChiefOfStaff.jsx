@@ -6,9 +6,9 @@ import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
 import { useMetaMode } from "../hooks/useMetaMode";
 import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
 import { buildSourceNotice } from "../lib/uiCopy";
+import { MAX_NOTES_LENGTH } from "../../shared/chiefConfig.js";
 import "../styles/chief-of-staff.css";
 
-const MAX_NOTES_LENGTH = 12000;
 const ChiefTelemetryDiagnosticsPanel = lazy(() =>
   import("../components/chief/ChiefTelemetryDiagnosticsPanel")
 );

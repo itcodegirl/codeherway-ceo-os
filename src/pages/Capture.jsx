@@ -148,7 +148,10 @@ function Capture() {
       // have to reselect it for the next note.
       setErrorMessage('');
     } catch {
-      setErrorMessage('Unable to save this note right now.');
+      // Reassure the user that the composer text is still in the field so
+      // they can retry without retyping. The composer mirrors to localStorage
+      // through usePersistentState, so the draft survives reloads too.
+      setErrorMessage('Couldn’t save this note. Your text is still in the composer — try again in a moment.');
       composerTextareaRef.current?.focus?.();
     }
   };
@@ -158,7 +161,7 @@ function Capture() {
       updateCaptureNote(id, payload);
       setErrorMessage('');
     } catch {
-      setErrorMessage('Unable to update this note right now.');
+      setErrorMessage('Couldn’t update this note. Your last edit is still visible — try again in a moment.');
     }
   };
 
@@ -167,7 +170,7 @@ function Capture() {
       deleteCaptureNote(id);
       setErrorMessage('');
     } catch {
-      setErrorMessage('Unable to delete this note right now.');
+      setErrorMessage('Couldn’t delete this note. Nothing was changed — try again in a moment.');
     }
   };
 

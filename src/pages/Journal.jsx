@@ -76,7 +76,10 @@ function Journal() {
       setSaveStatus('saved');
       setErrorMessage('');
     } catch {
-      setErrorMessage('Unable to auto-save journal entry right now.');
+      // The entry stays in `entryRef.current` and the rendered <textarea>s
+      // so the user's latest changes are still on screen even though
+      // persistence failed. The copy reflects that explicitly.
+      setErrorMessage('Couldn’t auto-save your journal entry. Your latest changes are still in the form — try again in a moment.');
       setSaveStatus('error');
     }
   }, []);

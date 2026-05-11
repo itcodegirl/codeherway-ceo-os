@@ -1,9 +1,9 @@
 import { getChiefActionConfig } from '../shared/chiefActions.js';
+import { MAX_NOTES_LENGTH } from '../shared/chiefConfig.js';
 import { extractStructuredPayloadIfPresent } from '../shared/chiefStructuredPayload.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
-const MAX_NOTES_LENGTH = 12000;
 const REQUEST_TIMEOUT_MS = 10000;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 10;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
