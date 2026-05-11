@@ -1,16 +1,5 @@
 ﻿import ChiefSectionCard from "./ChiefSectionCard";
-
-function getActionLabel(isAccepting, isAccepted) {
-  if (isAccepting) {
-    return "Saving...";
-  }
-
-  if (isAccepted) {
-    return "Added";
-  }
-
-  return "Add to Weekly";
-}
+import { getChiefAcceptLabel } from "./chiefAcceptLabel";
 
 export default function ChiefPriorityList({
   items = [],
@@ -41,7 +30,7 @@ export default function ChiefPriorityList({
               disabled={accepting || accepted}
               onClick={() => onAccept(item)}
             >
-              {getActionLabel(accepting, accepted)}
+              {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Weekly" })}
             </button>
           </div>
         );
