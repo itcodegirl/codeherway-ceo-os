@@ -63,7 +63,6 @@ function Topbar({ pageTitle = 'Focus Home' }) {
         <time className="topbar__meta" dateTime={isoDate}>
           {today}
         </time>
-        <p className="topbar__status topbar__status--desktop">Current period: This Week</p>
         <p
           className="topbar__status topbar__status--desktop"
           title={`Date shown in ${timezoneLabel}`}

@@ -360,7 +360,7 @@ function Dashboard() {
           <div>
             <h2>Choose how this device starts</h2>
             <p className="helper-text">
-              Demo data is active on this device. Start blank for real use, or keep the demo workspace for review.
+              Demo data is showing so you can explore. Start blank for real work, or keep the demo workspace for review.
             </p>
           </div>
           <div className="focus-home__setup-actions">
