@@ -49,9 +49,12 @@ The path forward is a small Zustand or signal-based store wrapping the repositor
 
 ## Page boundary discipline
 
-`Dashboard.jsx` and `Settings.jsx` were the two largest files in the repo. Recent work pulled the pure-presentational sections out of Dashboard into co-located components in `src/components/dashboard/` (`TodayFocusPanel`, `OpenLoopsPanel`, `BlockersPanel`, `RemindersPanel`, `FocusModeChips`). The orchestration hooks (`useDashboardData`, `useFocusHomeSignals`, `useReminderActions`, `useWorkspaceSetup`) stay in the page so the test surface is preserved.
+`Dashboard.jsx` and `Settings.jsx` were the two largest files in the repo. Both have now been pulled apart along the same axis: pure-presentational sections live in co-located component folders, while orchestration hooks (`useDashboardData`, `useFocusHomeSignals`, `useReminderActions`, `useWorkspaceSetup`, `useSettings`, `useThemePreference`, `useWorkspaceSetup`, `useAuthSession`) stay in the page so the test surface is preserved.
 
-Settings is next; it remains larger because much of it is form orchestration that can't be cleanly split without restructuring the underlying state.
+- `src/components/dashboard/`: `TodayFocusPanel`, `OpenLoopsPanel`, `BlockersPanel`, `RemindersPanel`, `FocusModeChips`. The Blockers panel now owns its own empty-state decision instead of relying on the page to seed a placeholder string into the list.
+- `src/components/settings/`: `SettingsAccountSection`, `SettingsThemeSection`, `SettingsWorkspaceDataSection`, `SettingsExperienceSection`. The `Workspace` (timezone) section stays inline because it owns FormData submission semantics and would otherwise have to thread the page's `handleSubmit` through props.
+
+The rule the codebase keeps: a page that exceeds ~500 lines is a structural signal, not a styling one, and the right move is to find pure-presentational sub-sections to lift out rather than to add component-internal collapse toggles.
 
 ## Accessibility commitments
 

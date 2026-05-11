@@ -53,45 +53,17 @@ Use this exact flow for portfolio demos or recruiter screenshares:
 
 CodeHerWay CEO OS is best framed as a product-minded frontend systems project: a calm founder command center with local-first resilience, a Supabase upgrade path, explicit failure handling, and end-to-end verification for the workflows reviewers can actually click through.
 
-## Portfolio review snapshot
+## What's done, what's honest
 
-This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. The current implementation now covers the core reviewer risks:
+This project is strongest when presented as a local-first productivity system with a real backend upgrade path, not as a finished SaaS. Recruiter-facing trust signals already in the codebase:
 
-- Direct Netlify routes are protected with an SPA fallback and E2E direct-route refresh tests.
-- Persisted state key swaps and malformed CRUD repository responses now recover cleanly instead of silently reusing stale values or showing false empty states.
-- Route labels, navigation, and metadata come from one route definition source to reduce product drift.
-- App routing now derives route paths from the same route metadata used by navigation and page descriptions.
-- Route error recovery returns users directly to Focus Home instead of relying on fragile browser history.
-- Sidebar branding and topbar timezone metadata now consume the same workspace-settings pathway as the Settings page, with browser coverage for the save-to-shell flow.
-- CRUD mutation flows guard in-flight saves, deletes, and pending confirmations so rapid clicks or route changes do not create duplicate writes or late state updates.
-- Settings saves now guard duplicate submits, reject failed local persistence explicitly, and expose busy/invalid states through accessible button names.
-- Chief workspace and Weekly Brief local persistence now fail explicitly when browser storage rejects writes, so the UI does not imply unsaved work was safely stored.
-- Weekly Brief rejects stale item update/delete attempts without emitting fake progress events.
-- Weekly Brief Supabase item rows now preserve `updated_at` through list/create/update paths and use expected timestamps on update/delete conflict checks, with focused mocked-Supabase coverage.
-- A central data-schema registry now names the primary local storage domains and model shapes, and Weekly Brief local storage writes a versioned envelope while still reading legacy data.
-- Weekly Brief recovery now reloads persisted data after save failures so optimistic edits do not linger as false truth in the interface.
-- Capture rejects stale sticky-note edits/deletes without fake update events.
-- Opportunities and Content OS reject stale local edits/deletes without writing unchanged data or emitting fake update events.
-- Capture and Journal autosave copy now changes to a paused state when local saves fail.
-- Chief of Staff fallback output is visibly labeled when AI is unavailable, with error metadata preserved for trust/debugging.
-- Chief workspace notes now persist across reloads, reset cleanly, and are covered by Playwright so the workflow behaves like a real saved workspace instead of a one-tab demo.
-- Reminder completion is timestamped, summarized, and reversible so Focus Home shows real execution progress without trapping accidental checks.
-- Source-status recovery cues now explain when the app is showing a cached workspace snapshot while sync reconnects.
-- Async hydration guards are strict-mode-safe, which keeps local dev, Playwright, and production behavior aligned for reviewer demos.
-- System Pulse and Chief telemetry refreshes ignore stale async results, reducing noisy state updates during Strict Mode, fast navigation, and reviewer reloads.
-- Dashboard next-move selection is validated against the current queue so stale recommendations do not stay pinned after the underlying work changes.
-- Focus Home decision rules now live in tested product logic, including blocked-work context, pending reminders, and journal heaviness without a next action.
-- Focus Home support modes now use keyboard-friendly roving focus, with E2E coverage for mode switching and reminder completion.
-- Compact mobile navigation now closes cleanly after clicks, programmatic route changes, and browser-history returns, with unit and Playwright coverage.
-- Focus Home capture, journal, and reminder signal loading is centralized in a dedicated hook so the command center stays composition-first.
-- Next-move guidance now prioritizes the oldest unfinished reminder, reducing the risk that quiet commitments get buried.
-- Focus Home loading and reminder-helper states now expose busy/status/description semantics without making the interface visually louder.
-- Focus Home and Weekly Brief now refresh from storage, focus, and visibility changes so the command center is less likely to show stale context after tab switches.
-- Capture empty-submit feedback is connected directly to the note field, and the Capture workspace has reload-persistence E2E coverage.
-- App-shell crash recovery is covered globally, so sidebar/topbar/shell failures are caught instead of blanking the whole app.
-- Source and System Pulse cues now expose accessible status/labels while staying visually quiet on mobile screens.
-- Chief telemetry diagnostics are split from the initial route bundle so observability detail stays available without bloating the first Chief of Staff load.
-- CI covers lint, build, typecheck, unit tests, route performance budgets, and Playwright smoke flows.
+- **Persistence the user can trust.** Versioned storage envelopes (`src/lib/versionedStorage.js`), a forward-compat migration registry (`src/lib/storageMigrations.js`), and a corruption-preservation layer that backs up unreadable JSON blobs and surfaces a non-blocking banner instead of silently losing data.
+- **Honest sync status.** A `SyncStatusPill` in the topbar combines `useWorkspaceSettings().source`, `useOnlineStatus()`, and the offline write queue to render Synced / Local only / Offline / Pending sync — never silently labelling pending work as synced.
+- **Optimistic concurrency for local CRUD.** Opportunities, Content OS, and Weekly Brief items stamp `updatedAt` on writes and reject stale saves with `StaleRecordError`; `useCrudPage` surfaces a friendly conflict message and refreshes the list under the open modal.
+- **Calm-by-design UX.** Qualitative momentum signals (no 0–100 score), a Snooze-until-tomorrow verb on reminders, affirmative empty states, and grouped IA that demotes account/ops surfaces so daily work leads the eye.
+- **Tested execution.** ~120 unit/integration test files, a Playwright suite covering CRUD/direct-route refresh/Focus Home/Chief workspace/mobile nav/settings shell, and an `@axe-core/playwright` sweep gating serious/critical a11y violations in CI.
+- **Local-first by default, real cloud upgrade path.** Without `VITE_SUPABASE_URL`, the app works fully from browser storage. With creds + session, every domain repository upgrades to Supabase, and `source` is rendered transparently so users always know where their data lives.
+- **AI with safe failure.** `src/lib/openai.js` parses tool-like and plain outputs, normalizes structured payloads, and surfaces a visibly-labelled deterministic fallback when the proxy is unavailable.
 
 ### Honest current boundaries
 
@@ -99,34 +71,8 @@ This project is strongest when presented as a local-first productivity system wi
 - Supabase persistence exists as an upgrade path, but several local-first workflows still need end-to-end authenticated UX review.
 - Chief of Staff is useful as a structured assistant workflow, but production AI readiness still depends on deployed secrets, proxy auth, observability, and usage controls.
 - Screenshots and demo recordings should be refreshed after major UI changes before this is used as a flagship portfolio artifact.
-- See [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for the current recruiter-facing limitation list and [docs/PRODUCTION_TRUST_CHECKLIST.md](./docs/PRODUCTION_TRUST_CHECKLIST.md) for the account/sync work that still separates this from a production SaaS.
-- See [docs/FINAL_ROADMAP.md](./docs/FINAL_ROADMAP.md) for the phased path from stabilization to a calmer guided operating system and portfolio case study.
 
-## Recent calm-OS audit improvements
-
-Driven by a structured product + UX audit of the system, this branch adds:
-
-- **Honest sync status** - a `SyncStatusPill` in the topbar combines `useWorkspaceSettings().source`, `useOnlineStatus()`, and the offline write queue. It renders **Synced**, **Local only**, **Offline**, or **Pending sync** when supported Supabase writes are actually waiting to replay. Users never silently fall off Supabase, and the UI no longer labels pending work as fully synced.
-- **Corruption recovery, not silent loss** - `usePersistentState` and repository localStorage reads preserve unreadable JSON blobs under `${key}__corrupt_<ts>` backup keys and emit `ceo-os:storage-corruption`. A non-blocking `StorageCorruptionBanner` tells the user we kept a copy.
-- **Schema-version foundation** - `src/lib/dataSchema.js` centralizes storage domains and model shapes. Weekly Brief local storage now writes `{ schemaVersion, domain, model, data }` envelopes and keeps legacy unwrapped data readable, creating a safe path for migrations and backup/import validation.
-- **Optimistic locking for local CRUD** — local Opportunities, Content OS, and Weekly Brief items now stamp `updatedAt` on writes and reject stale saves with a `StaleRecordError` (encoded once in a shared `assertRecordIsFresh` helper). `useCrudPage` surfaces this as a friendly form error: *"This record was changed in another window."* — and refreshes the list under the open modal so closing it reveals the up-to-date row instead of hiding the conflict. Supabase-backed Weekly Brief items now preserve `updated_at` and use expected timestamps for update/delete conflicts in focused repository tests; full authenticated staging regression remains a next step.
-- **Cross-page promotion** — four verbs share a single `usePromotionAction` hook (per-record in-flight guard, id-membership check, async run, toast feedback): each Capture sticky has "Make reminder", "Track opportunity", and "Draft as content" actions, and each pending Focus Home reminder has a "Promote" action that creates a weekly priority. All four use the existing repositories, fire calm toast confirmations, and leave the source record in place so the user decides whether to keep the long-form context.
-- **Cross-tab list refresh** — `useCrudPage` subscribes to its repository's `*_UPDATED_EVENT` so promotions from Capture (or any other tab) silently re-fetch an open Opportunities or Content OS list without a manual reload, and refreshes never flash the loading skeleton because items stay on screen during the refetch.
-- **Composer rehydration** — the Capture composer persists in-progress draft text and the last-used category through `usePersistentState`, so a long brain-dump survives reloads, route changes, and accidental navigation. Invalid stored category values fall back to the default safely.
-- **Offline write queue for supported Supabase writes** - `src/lib/offlineWriteQueue.js` ships a localStorage-backed queue with FIFO drop, drain-on-handler, stop-on-first-failure, attempt counters, and `OFFLINE_QUEUE_UPDATED_EVENT` notifications. Opportunities and Content OS create/update/delete mutations enqueue on recoverable Supabase/network failure and drain through shell replay handlers. Weekly Brief, Chief workspace, Settings, Capture, Journal, and reminders still present honest local/error states instead of claiming queued replay.
-- **Intentional local setup** - first-run local users can choose **Start blank** or **Load demo workspace** from Focus Home, and Settings includes a visible **Clear demo data** action. Blank mode stops automatic sample seeding for Opportunities, Content OS, and Weekly Brief while preserving user-created local records.
-- **Local data portability** - Settings now shows local record count, backup-ready stores, pending supported sync writes, and last local settings save. Users can export/import a validated local JSON backup for known CEO OS browser storage keys. This is a local backup safety valve, not a Supabase migration.
-- **Expectation-safe controls** - Settings labels unwired email digest and keyboard shortcut preferences as coming soon, and Weekly Brief shows that saved priorities/blockers influence Focus Home recommendations.
-- **Accessibility automation** — `@axe-core/playwright` scans every primary route with the wcag2a/wcag2aa/best-practice rule set; serious/critical violations fail CI, and lighter findings are reported for review.
-- **Debounced reflective autosave** — the Weekly Brief close-of-week reflection now debounces to 600ms and surfaces an explicit `Saving / Saved / Couldn't save` indicator next to the field; errors are routed through toasts and `appErrorTelemetry`.
-- **Tonal scope** — `SystemPulse` is hidden on Settings and Ops Reliability so action-mode copy doesn't pull at users who are in setup or diagnostic contexts.
-- **Grouped IA** — the sidebar now groups routes into **Today / This week / Workspace / Account**. Account links (Ops Reliability, Settings) are visually demoted so daily surfaces lead the eye.
-- **Light theme** — a `:root[data-theme="light"]` overlay in `tokens.css` and a `useThemePreference` hook expose a System / Dark / Light picker in Settings. The preference is stored locally so no Supabase profile-schema migration is required, and OS preference changes are reactive when "System" is selected.
-- **Architecture cleanup** — `Dashboard.jsx` is split into `FocusModeChips` and `RemindersPanel` (491 → 379 lines); the `.crm-table` primitives are extracted into a shared `crm-table.css` consumed by Opportunities and Content OS; the sync-pill descriptor is a pure helper at `src/lib/syncStatusDescriptors.js`.
-- **Settings autosave on blur** — input fields and toggles persist immediately while the explicit `Save Settings` button is preserved as a "save now" affordance.
-- **Motion token system** — `--duration-fast / --duration-base / --duration-deliberate` and `--easing-standard` are exported from `tokens.css` so transitions can converge on a calm rhythm.
-
-Coverage for the above ships in this branch: 491 unit/integration tests, lint, typecheck, build, and route-budget checks all pass. The `@axe-core/playwright` sweep ships as a Playwright spec — exercise it on a machine with browsers installed (`npx playwright install` first).
+See [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) for the recruiter-facing limitation list, [docs/PRODUCTION_TRUST_CHECKLIST.md](./docs/PRODUCTION_TRUST_CHECKLIST.md) for the account/sync work that still separates this from a production SaaS, and [docs/FINAL_ROADMAP.md](./docs/FINAL_ROADMAP.md) for the phased path from stabilization to a calmer guided operating system.
 
 ## What this repository demonstrates
 
@@ -420,33 +366,7 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - Route shells (`src/layouts`)
   - Orchestrator hooks (`src/hooks`)
   - Persistence and transport (`src/lib`)
-- Structured behavior is backed by explicit tests in:
-  - `src/lib/openai.test.js`
-  - `src/hooks/useChiefOfStaff.test.js`
-  - `src/hooks/useDashboardData.test.js`
-  - `src/hooks/useWeeklyBrief.test.js`
-  - `src/hooks/useWorkspaceSettings.test.js`
-  - `src/hooks/useFocusHomeSignals.test.js`
-  - `src/lib/focusSignalUtils.test.js`
-  - `src/lib/pageMeta.test.js`
-  - `src/pages/Settings.test.jsx`
-  - `src/hooks/useSettings.test.js`
-  - `src/lib/settingsRepository.test.js`
-  - `src/lib/weeklyRepository.test.js`
-  - `src/pages/WeeklyBrief.test.jsx`
-  - `src/hooks/useChiefWorkspace.test.js`
-  - `src/lib/captureRepository.test.js`
-  - `src/lib/opportunitiesRepository.test.js`
-  - `src/lib/contentRepository.test.js`
-  - `src/lib/stateUtils.test.js`
-  - `src/pages/Capture.test.jsx`
-  - `src/pages/Journal.test.jsx`
-  - `src/lib/focusHomeLogic.test.js`
-  - `src/App.test.jsx`
-  - `src/components/ui/Sidebar.test.jsx`
-  - `e2e/capture-workspace.spec.js`
-  - `e2e/mobile-navigation.spec.js`
-  - `e2e/settings-shell.spec.js`
+- Structured behavior is backed by ~120 unit/integration test files in `src/**` and a Playwright suite in `e2e/` covering CRUD smoke flows, direct-route refresh, Focus Home execution, Chief workspace persistence, compact mobile navigation, settings shell, and a per-route axe-core a11y sweep. Run `npm run test:run` and `npm run test:e2e` for the full picture; CI runs both on every PR.
 
 ### Production readiness checklist
 
@@ -461,158 +381,11 @@ The repository now includes stable paths for visual proof artifacts so portfolio
   - `CASE_STUDY.md`
   - `docs/RELEASE_CHECKLIST.md`
 
-## Release evidence
+## Release history
 
-- Verification snapshot date: April 30, 2026
-- Quality gates executed successfully:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run`
-  - `npm run typecheck`
-  - `npm run check:route-budgets`
-  - `npm run check:route-budgets:trend`
-  - `npm run test:e2e`
-- Final hardening and readiness commits:
-  - `d95e8d3` - test: harden chief-of-staff edge-case coverage
-  - `188dcc7` - test: harden dashboard insight edge-case resilience
-  - `24d811d` - fix: normalize route paths for page metadata resolution
-  - `f18c16a` - docs: add release-candidate checklist and portfolio polish
-- Post-verification hardening cycle (April 23, 2026):
-  - `f5ae62c` - test: stabilize source status copy assertion
-  - `07f3213` - feat: improve dashboard credibility and accessibility semantics
-  - `3da3eae` - refactor: centralize supabase runtime access
-- Blueprint redesign foundation cycle (April 23, 2026):
-  - `2e02795` - feat: establish blueprint design system foundation
-  - `541f140` - feat: replace dashboard with focus command center
-  - `eba9561` - feat: add sticky-note capture workspace with local persistence
-  - `a13bd86` - feat: add journal page with local daily prompt autosave
-  - `eec8c74` - feat: add deterministic reminders and suggestion layer
-  - `0c15d13` - feat: add shared system pulse across the app shell
-- Product hardening cycle (April 30, 2026):
-  - `3708271` - fix: guard stale settings and weekly brief loads
-  - `66a4c0d` - refactor: centralize shared state utilities
-  - `c1f43a5` - feat: preserve chief workspace edits during refresh
-  - `fe94f2b` - fix: improve chief workspace trust cues
-  - `9a5098d` - fix: restore chief workspace hydration in strict mode
-- Stability and execution hardening cycle (April 30, 2026):
-  - `da56ca5` - fix: guard system pulse and telemetry refreshes
-  - `00eb961` - refactor: remove legacy chief ai components
-  - `bbbf75b` - fix: keep dashboard next moves current
-  - `d504d74` - fix: improve focus mode keyboard navigation
-  - `e340d4b` - test: cover focus home execution flow
-- Recovery and reminder hardening cycle (April 30, 2026):
-  - `dd8d31d` - fix: make error recovery return home
-  - `0128dba` - refactor: derive app routes from route metadata
-  - `4ba77bc` - fix: keep completed reminders recoverable
-  - `f3a7a60` - fix: polish recovery and focus accessibility
-  - `7a8865e` - test: cover reversible reminder completion
-- CRUD lifecycle hardening cycle (April 30, 2026):
-  - `0b8db1d` - fix: guard crud mutation lifecycle
-  - `fbfa22e` - refactor: centralize mounted ref lifecycle
-  - `22ccc3a` - fix: reject stale reminder mutations
-  - `4942074` - fix: preserve reminder control contrast
-  - `f2fcd90` - test: cover confirm unmount safety
-- Settings persistence and accessibility hardening cycle (April 30, 2026):
-  - `41b8764` - fix: guard duplicate settings saves
-  - `03b0bbc` - refactor: reuse mounted lifecycle for settings
-  - `632b18e` - fix: fail settings persistence explicitly
-  - `d013ca7` - fix: clarify settings save state
-  - `91ce193` - test: cover settings save accessibility
-- Chief and weekly persistence truth hardening cycle (April 30, 2026):
-  - `bccafd8` - fix: fail chief local persistence explicitly
-  - `6541eb8` - refactor: centralize required local storage writes
-  - `48749ac` - fix: reject stale weekly mutations
-  - `48ea73f` - fix: clarify weekly autosave failure state
-  - `890fbae` - test: cover weekly and chief persistence states
-- Capture and journal autosave trust hardening cycle (April 30, 2026):
-  - `c444cd2` - fix: reject stale capture deletes
-  - `1b4089d` - refactor: centralize autosave helper copy
-  - `0780d8a` - fix: reject stale capture updates
-  - `f715acb` - fix: clarify capture and journal autosave failures
-  - `fdf01c4` - test: cover capture and journal save failures
-- CRUD stale-record integrity hardening cycle (May 1, 2026):
-  - `0a6a97c` - fix: reject stale opportunity mutations
-  - `d040d08` - refactor: share local record mutation guards
-  - `8477064` - fix: reject stale content mutations
-  - `204ae9b` - fix: clarify crud stale record errors
-  - `88c46d3` - test: cover crud stale record guidance
-- Calm OS recovery and decision-support cycle (May 1, 2026):
-  - `19ebcb2` - fix: harden app shell crash recovery
-  - `3b9266f` - refactor: extract focus home decision logic
-  - `3786ca1` - feat: strengthen focus home decision support
-  - `2be9bd6` - style: improve calm responsive trust cues
-  - `bfb5167` - test: cover app recovery and trust cues
-- May 1, 2026 local verification:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:run` (80 files passed, 302 tests passed, 1 skipped)
-  - `npm run build`
-  - `npm run check:route-budgets`
-  - `npm run test:e2e` (18 passed)
-- Compact navigation and Focus Home signal cycle (May 1, 2026):
-  - `4484b5b` - fix: stabilize compact sidebar route changes
-  - `99944c3` - refactor: centralize focus home signals
-  - `4736a4d` - fix: prioritize oldest pending reminder
-  - `2f7f94f` - style: polish focus home loading and reminders
-  - `e14d497` - test: cover compact navigation e2e
-- May 1, 2026 second local verification:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:run` (81 files passed, 306 tests passed, 1 skipped)
-  - `npm run build`
-  - `npm run check:route-budgets`
-  - `npm run test:e2e` (19 passed)
-- Product hardening batch (May 1, 2026):
-  - `3d03dec` - fix: reset transient home route errors
-  - `008b56b` - refactor: share focus signal helpers
-  - `d8bc496` - fix: harden persisted state and crud loading
-  - `cec77dd` - fix: keep fallback record ids unique
-  - `49e88bd` - fix: refresh focus and weekly data after external updates
-  - `82ed2f2` - refactor: unify shell settings consumption
-  - `2571fb9` - refactor: centralize workspace settings refresh logic
-  - `5a21229` - fix: recover weekly brief state after save failures
-  - `4b4e528` - fix: clarify data recovery status cues
-  - `77963de` - fix: harden dashboard reminder interactions
-  - `a236504` - fix: improve capture feedback and compact nav focus
-  - `c30dc06` - test: cover shell settings sync and reminder timing
-- May 1, 2026 third local verification:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run` (83 files passed, 322 tests passed, 1 skipped)
-  - `npx playwright test` (21 passed)
-- QA and route-budget verification pass (May 1, 2026):
-  - `52bd2a1` - test: cover capture flow and route budgets
-- May 1, 2026 fourth local verification:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:run` (83 files passed, 324 tests passed, 1 skipped)
-  - `npm run build`
-  - `npm run check:route-budgets`
-  - `npm run check:route-budgets:trend`
-  - `npm run test:e2e` (21 passed)
-- Audit cycle: stability, schema validation, and UX polish (May 5, 2026):
-  - Removed `CrudPageTemplate` legacy flat props; migration doc closed — `slots.*` API only.
-  - Added `useOfflineQueueDrain` hook wired into `AppLayout` shell toast for offline write failure surfacing.
-  - Consolidated `useCrudPage` dual-prop aliases; cleaned test suite to match.
-  - Adopted Valibot schema validation for Opportunity and Content OS payloads.
-  - Made Dashboard "Today's Main Focus" panel collapsible by default (persistent state).
-  - Updated Dashboard CSS route-performance budget to cover disclosure-toggle styles.
-- May 5, 2026 local verification:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
-  - `npm run check:route-budgets`
-- Audit cycle 2: trust, error surfaces, dead code, mobile, and perf (May 5, 2026):
-  - Closed 4 unhandled-error paths (`useOfflineQueueDrain`, `Capture` sort, `Settings` saved-at, `OpsReliability` panel boundaries).
-  - Surfaced `loadError` from `useDashboardData`; replaced misleading "0" stat cards on WeeklyBrief and OpsReliability with `—`.
-  - Deleted 617 lines of dead `useDashboardInsights` code; consolidated 4 hand-rolled `useRef(true)` blocks onto `useIsMountedRef`.
-  - Raised the `.action-button--small` touch-target floor to 36px and made the OpsReliability snapshot table collapse to a stacked-card layout on phones.
-  - Stabilized `useFocusHomeSignals` reference identity, lifted CRUD-page `source` reads out of render, and merged `Capture`/`RemindersPanel` two-pass filters into single-pass memos.
-- May 5, 2026 second local verification:
-  - `npm run lint`
-  - `npm run build`
-  - `npm run test:run` (105 files passed, 491 tests passed, 1 skipped)
-  - `npm run check:route-budgets`
+Dated release notes, audit cycles, and quality-gate snapshots live in
+[CHANGELOG.md](./CHANGELOG.md). Architectural trade-offs and what's
+intentionally out of scope live in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ## Author
 

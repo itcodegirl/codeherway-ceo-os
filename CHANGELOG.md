@@ -2,6 +2,27 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-11 - Audit follow-up: HTML branding, blockers empty state, Settings extraction, docs trim
+
+Trust & reliability:
+
+- `index.html` static `<title>`, `og:title`, and `twitter:title` switched from the stale "Dashboard" string to "Focus Home" so the pre-hydration paint and any non-JS crawler match the IA the rest of the app uses. `usePageMeta` still rewrites these at runtime; this fixes the gap during initial parse.
+
+UX clarity:
+
+- `BlockersPanel` now owns its empty-state decision. Previously, when the user had no blockers, the Dashboard pushed `"No blockers logged…"` into the `blockerItems` array and the panel rendered it as a bulleted list item — which reads like another blocker. The panel now renders a quiet affirmative paragraph with a small success dot when the list is empty, and tolerates a missing/non-array prop without crashing.
+
+Architecture cleanup:
+
+- Extracted four pure-presentational sections from `Settings.jsx` into `src/components/settings/`: `SettingsAccountSection`, `SettingsThemeSection`, `SettingsWorkspaceDataSection`, `SettingsExperienceSection`. The `Workspace` (timezone) section stays inline because it owns FormData submission semantics. `Settings.jsx` dropped from 603 → 396 lines with no test surface changes (all 9 Settings tests pass; lint and typecheck clean).
+
+Portfolio polish:
+
+- README cut by ~250 lines. Replaced the 152-line "Release evidence" timeline (commit-by-commit dump) with a pointer to `CHANGELOG.md`. Replaced the brittle 26-file test-coverage list with a coverage summary. Collapsed the 35-bullet "Portfolio review snapshot" + 20-bullet "Recent calm-OS audit improvements" into a tight 7-bullet "What's done, what's honest" block. Recruiter scan-time drops sharply.
+- `docs/ARCHITECTURE.md` updated to note Settings extraction is now done.
+
+Verification: `npm run lint`, `npm run typecheck`, `npm run test:run` (615 tests passed, 1 skipped, 0 failed), `npm run build`.
+
 ## 2026-05-08 - Senior audit pass: calm-OS polish, snooze, page boundaries
 
 Trust & reliability:
