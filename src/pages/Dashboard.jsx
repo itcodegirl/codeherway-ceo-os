@@ -371,9 +371,10 @@ function Dashboard() {
             <Button type="button" variant="ghost" onClick={handleLoadDemoWorkspace} icon={{ name: 'section', size: 14 }}>
               Load demo workspace
             </Button>
-            <span className="focus-home__setup-unavailable">Import backup: coming soon</span>
-            <span className="focus-home__setup-unavailable">Connect Supabase: setup required</span>
           </div>
+          <p className="helper-text">
+            Restore from a JSON backup or connect a Supabase workspace from Settings &gt; Workspace data.
+          </p>
         </section>
       ) : null}
 

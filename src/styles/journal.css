@@ -109,3 +109,9 @@
 .journal-save-status--error {
 	color: var(--danger-text);
 }
+
+.journal-panel__local-only-notice {
+	margin-top: 0.35rem;
+	font-style: italic;
+	opacity: 0.9;
+}

@@ -1,8 +1,13 @@
 export const CURRENT_DATA_SCHEMA_VERSION = 1;
 
+// Storage domains declared in the central registry. Each maps to a single
+// browser-storage key — when a domain needs more than one physical key (the
+// chief workspace currently splits notes and responses), declare both here so
+// the schema stays an honest description of what's on disk.
 export const STORAGE_DOMAINS = Object.freeze({
   captureNotes: 'captureNotes',
-  chiefWorkspace: 'chiefWorkspace',
+  chiefNotes: 'chiefNotes',
+  chiefResponses: 'chiefResponses',
   contentItems: 'contentItems',
   journalEntries: 'journalEntries',
   opportunities: 'opportunities',
@@ -19,9 +24,16 @@ export const DOMAIN_MODELS = Object.freeze({
     createdAt: 'number',
     updatedAt: 'number',
   }),
-  ChiefWorkspace: Object.freeze({
-    notes: 'string',
-    responses: 'ChiefResponse[]',
+  ChiefNotes: 'string',
+  ChiefResponse: Object.freeze({
+    id: 'string',
+    title: 'string',
+    content: 'string',
+    source: 'proxy|local',
+    fallbackReason: 'string',
+    errorCode: 'string',
+    errorMessage: 'string',
+    structuredPayload: 'object',
   }),
   ContentItem: Object.freeze({
     id: 'string',
@@ -74,9 +86,19 @@ export const STORAGE_SCHEMAS = Object.freeze({
     model: 'CaptureNote[]',
     version: CURRENT_DATA_SCHEMA_VERSION,
   }),
-  [STORAGE_DOMAINS.chiefWorkspace]: Object.freeze({
-    key: 'ceo-os-chief-workspace',
-    model: 'ChiefWorkspace',
+  // Chief workspace is split across two physical keys (plain-text notes
+  // separate from the structured response history) so the schema declares
+  // both. The two domains share the `chief workspace` concept in the UI but
+  // are persisted independently because notes are saved on every keystroke
+  // while responses are appended once per generation.
+  [STORAGE_DOMAINS.chiefNotes]: Object.freeze({
+    key: 'ceo-os-chief-notes',
+    model: 'ChiefNotes',
+    version: CURRENT_DATA_SCHEMA_VERSION,
+  }),
+  [STORAGE_DOMAINS.chiefResponses]: Object.freeze({
+    key: 'ceo-os-chief-responses',
+    model: 'ChiefResponse[]',
     version: CURRENT_DATA_SCHEMA_VERSION,
   }),
   [STORAGE_DOMAINS.contentItems]: Object.freeze({

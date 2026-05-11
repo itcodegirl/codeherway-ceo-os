@@ -217,3 +217,93 @@
 	box-shadow: 0 0 0 3px rgba(177, 69, 69, 0.18);
 }
 
+/* Rendered weekly brief summary. Sits above the list editors so the founder
+ * sees the readable artifact first, with a one-click copy to clipboard for
+ * sharing in Slack / email. */
+.weekly-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+	padding: var(--space-card-padding, 1.25rem);
+}
+
+.weekly-summary__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.weekly-summary__eyebrow {
+	margin: 0;
+	font-size: var(--fs-meta);
+	font-weight: 600;
+	color: var(--text-meta);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.weekly-summary__header h2 {
+	margin: 0.1rem 0 0;
+	font-size: 1.1rem;
+}
+
+.weekly-summary__focus {
+	margin: 0;
+	color: var(--text-strong);
+	font-size: 0.98rem;
+	line-height: 1.45;
+}
+
+.weekly-summary__metrics {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.85rem;
+	margin: 0;
+}
+
+.weekly-summary__metrics > div {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.weekly-summary__metrics dt {
+	font-size: var(--fs-meta);
+	color: var(--text-meta);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.weekly-summary__metrics dd {
+	margin: 0;
+	font-size: 0.95rem;
+	color: var(--text);
+}
+
+.weekly-summary__reflection {
+	margin: 0;
+	color: var(--text-soft-strong);
+	font-size: 0.92rem;
+	line-height: 1.5;
+	font-style: italic;
+}
+
+.weekly-summary__reflection-label {
+	font-style: normal;
+	font-weight: 600;
+	color: var(--text-strong);
+}
+
+.weekly-summary__feedback {
+	margin: 0;
+}
+
+@media (max-width: 640px) {
+	.weekly-summary__metrics {
+		grid-template-columns: 1fr;
+	}
+}
+

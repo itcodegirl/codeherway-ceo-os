@@ -192,6 +192,9 @@ function Capture() {
         <p className="supportive-copy">
           Drop the thought here. Keep it messy now, organize later.
         </p>
+        <p className="helper-text capture-composer__local-only-notice">
+          Capture stays on this device — it is not synced to the workspace, even when you are signed in. Promote a note to make it part of the synced surfaces.
+        </p>
         <form onSubmit={createNote} className="capture-composer__form">
           <label htmlFor="capture-note-text" className="helper-text">Note</label>
           <p id="capture-composer-helper" className="sr-only">

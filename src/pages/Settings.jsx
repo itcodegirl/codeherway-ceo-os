@@ -84,10 +84,6 @@ function Settings() {
   const timezoneListId = useId();
   const supportedTimezones = useMemo(() => getSupportedTimezones(), []);
   const autoSaveToggleId = useId();
-  const emailDigestToggleId = useId();
-  const shortcutsToggleId = useId();
-  const emailDigestComingSoonId = useId();
-  const shortcutsComingSoonId = useId();
   const themeRadiogroupId = useId();
   const importInputId = useId();
   const importInputRef = useRef(null);
@@ -447,9 +443,6 @@ function Settings() {
                 Clear demo data
               </Button>
             </div>
-            <div className="settings-workspace-setup__unavailable" aria-label="Unavailable setup paths">
-              <span>Connect Supabase account: setup required</span>
-            </div>
           </div>
 
           <div className="settings-data-health" role="group" aria-label="Local data health">
@@ -534,35 +527,8 @@ function Settings() {
             />
             <span>Enable auto-save for drafts and notes</span>
           </label>
-
-          <label className="settings-toggle" htmlFor={emailDigestToggleId}>
-            <input
-              id={emailDigestToggleId}
-              type="checkbox"
-              checked={false}
-              disabled
-              aria-describedby={emailDigestComingSoonId}
-              readOnly
-            />
-            <span>Weekly digest reminders (coming soon)</span>
-          </label>
-          <p id={emailDigestComingSoonId} className="helper-text helper-text--offset">
-            Email delivery is not wired yet, so this stays unavailable until reminders can actually send.
-          </p>
-
-          <label className="settings-toggle" htmlFor={shortcutsToggleId}>
-            <input
-              id={shortcutsToggleId}
-              type="checkbox"
-              checked={false}
-              disabled
-              aria-describedby={shortcutsComingSoonId}
-              readOnly
-            />
-            <span>Keyboard shortcuts (coming soon)</span>
-          </label>
-          <p id={shortcutsComingSoonId} className="helper-text helper-text--offset">
-            Shortcuts will return once every command has tested keyboard behavior.
+          <p className="helper-text helper-text--offset">
+            Drafts and notes save in the background as you type. Disable to require explicit save actions.
           </p>
         </SectionCard>
 

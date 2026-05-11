@@ -13,6 +13,8 @@ function getDefaultFeedback() {
   return aiConfig.hasProxyEndpoint
     ? 'Paste notes when you have them. Then choose an action to turn them into a structured plan.'
     : 'Running in local mode. Drafts use a deterministic fallback until an AI proxy is configured.';
+    ? 'Paste your notes, then choose an action to turn them into executive-ready output.'
+    : 'AI is not configured on this build — actions will return a deterministic local template instead. The structured workflow still works for review.';
 }
 
 function resolveNotes(nextNotes) {

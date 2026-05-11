@@ -555,25 +555,25 @@ textarea:focus-visible,
 
 .pill--high {
   background: var(--pill-high-bg);
-  color: var(--danger-soft);
+  color: var(--pill-high-text);
   border-color: var(--border-danger-soft);
 }
 
 .pill--medium {
   background: var(--pill-medium-bg);
-  color: var(--warning-soft);
+  color: var(--pill-medium-text);
   border-color: var(--border-warning-soft);
 }
 
 .pill--warning {
   background: var(--pill-warning-bg);
-  color: var(--warning-soft);
+  color: var(--pill-warning-text);
   border-color: var(--border-warning-subtle);
 }
 
 .pill--low {
   background: var(--pill-low-bg);
-  color: var(--info-soft);
+  color: var(--pill-low-text);
   border-color: var(--border-info-soft);
 }
 

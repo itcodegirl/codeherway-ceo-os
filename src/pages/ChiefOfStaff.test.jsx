@@ -46,13 +46,38 @@ describe("src/pages/ChiefOfStaff", () => {
     );
 
     expect(screen.getByText("Nothing here yet")).toBeInTheDocument();
-    expect(
-      screen.getByText(
+   
         /When you generate, structured priorities, opportunities, content drafts/,
       ),
+    expect(screen.getByText("Ready to generate")).toBeInTheDocument();
+    // Audit follow-up: empty state now names all five actions so the user is
+    // not pointed at a "choose an action" hint when the layout only renders
+    // one button. Match a stable fragment to keep the test resilient to copy
+    // tweaks on the action labels.
+    expect(
+      screen.getByText(/Paste founder notes in the workspace/),
     ).toBeInTheDocument();
     expect(screen.getByText("Chief workspace is stored on this device only.")).toBeInTheDocument();
     expect(screen.getByText("Add a few founder notes to generate an action plan.")).toBeInTheDocument();
+  });
+
+  it("renders all four secondary action chips alongside the primary Build Action Plan button", () => {
+    useChiefOfStaff.mockReturnValue(createHookState({ notes: "Quick notes" }));
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    // Audit follow-up: restored the four secondary action chips that match
+    // the proxy's getAllowedActionKeys (plan, summarize, draft, actions,
+    // priorities). The primary "Build Action Plan" is still the lead CTA.
+    expect(screen.getByRole("button", { name: /Build Action Plan/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Summarize This Week/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Draft LinkedIn Post/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Convert to Action Items/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Suggest Next Priorities/ })).toBeInTheDocument();
   });
 
   it("renders loading output state when generating", () => {

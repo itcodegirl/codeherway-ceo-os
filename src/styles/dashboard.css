@@ -68,15 +68,6 @@
 	gap: 0.55rem;
 }
 
-.focus-home__setup-unavailable {
-	padding: 0.42rem 0.58rem;
-	border-radius: 999px;
-	border: 1px dashed var(--border);
-	color: var(--text-muted);
-	font-size: 0.78rem;
-	line-height: 1.2;
-}
-
 .focus-home__ritual-header {
 	display: flex;
 	align-items: baseline;

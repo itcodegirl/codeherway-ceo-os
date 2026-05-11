@@ -21,6 +21,12 @@ describe('src/lib/uiCopy', () => {
     expect(AUTOSAVE_PAUSED_COPY).toBe('Autosave is paused until this workspace saves successfully again.');
   });
 
+  it('exposes a local-first-only notice for Capture / Journal / Reminders', async () => {
+    const { SOURCE_NOTICE_LOCAL_FIRST_ONLY } = await import('./uiCopy');
+    expect(SOURCE_NOTICE_LOCAL_FIRST_ONLY)
+      .toBe('This surface stays on this device — it is not part of the synced workspace.');
+  });
+
   it('builds source notice for supabase with default prefix', () => {
     expect(buildSourceNotice('supabase')).toBe('Data source: Workspace sync is active.');
   });

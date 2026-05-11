@@ -6,6 +6,7 @@ import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import PrioritiesSection from '../components/weekly/PrioritiesSection';
 import WinsSection from '../components/weekly/WinsSection';
 import BlockersSection from '../components/weekly/BlockersSection';
+import WeeklyBriefSummary from '../components/weekly/WeeklyBriefSummary';
 import Textarea from '../components/ui/Textarea';
 import {
   defaultBlockers,
