@@ -2,6 +2,35 @@ import { useCallback, useMemo } from 'react';
 import Badge from '../ui/Badge';
 import { opportunityStageTone } from '../../lib/statusMaps';
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const WAITING_STAGE_DAYS_THRESHOLD = 7;
+
+// Surface an "aging" hint for opportunities that have been waiting for a
+// reply for more than a week. Pure date math on the existing `updatedAt`
+// field — no schema change required. Returns `null` when no hint should be
+// shown so the JSX can early-return cleanly.
+function buildAgingHint(item, now = Date.now()) {
+  if (!item) {
+    return null;
+  }
+  const stage = typeof item.stage === 'string' ? item.stage : '';
+  if (stage !== 'Awaiting Reply') {
+    return null;
+  }
+  const updatedMs = Number(item.updatedAt);
+  if (!Number.isFinite(updatedMs) || updatedMs <= 0) {
+    return null;
+  }
+  const ageDays = Math.floor((now - updatedMs) / MS_PER_DAY);
+  if (ageDays < WAITING_STAGE_DAYS_THRESHOLD) {
+    return null;
+  }
+  return {
+    label: `Waiting ${ageDays}d`,
+    ariaLabel: `Awaiting reply for ${ageDays} days — consider a nudge`,
+  };
+}
+
 function OpportunityTable({ items, onSelect }) {
   const isValidItemsArray = Array.isArray(items);
   const normalizedItems = useMemo(
@@ -85,38 +114,49 @@ function OpportunityTable({ items, onSelect }) {
           onClick={hasHandler ? handleRowClick : undefined}
           onKeyDown={hasHandler ? handleRowKeyDown : undefined}
         >
-          {normalizedItems.map((item) => (
-            <tr
-              key={item.id}
-              data-item-id={String(item.id)}
-              className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
-              title={hasHandler ? `Open ${item.name} details` : undefined}
-              tabIndex={hasHandler ? 0 : undefined}
-            >
-              <th scope="row" className="crm-table__cell" data-label="Opportunity">
-                <p className="crm-table__title crm-table__title--row">{item.name}</p>
-              </th>
-              <td className="crm-table__cell" data-label="Company">
-                <p className="crm-table__subtitle">{item.company}</p>
-              </td>
-              <td className="crm-table__cell" data-label="Priority">
-                <Badge label={item.priority} tone={item.priority.toLowerCase()} />
-              </td>
-              <td className="crm-table__cell" data-label="Stage / Next Step">
-                <p className="crm-table__subtitle">
-                  <Badge label={item.stage} tone={opportunityStageTone[item.stage] || 'low'} /> {item.nextStep}
-                </p>
-              </td>
-              <td className="crm-table__cell crm-table__cell--action" data-label="Details">
-                {hasHandler ? (
-                  <button type="button" className="crm-table__open-button">
-                    Open
-                    <span className="sr-only"> {item.name} opportunity from {item.company}</span>
-                  </button>
-                ) : null}
-              </td>
-            </tr>
-          ))}
+          {normalizedItems.map((item) => {
+            const agingHint = buildAgingHint(item);
+            return (
+              <tr
+                key={item.id}
+                data-item-id={String(item.id)}
+                className={hasHandler ? 'crm-table__row crm-table__row--interactive' : 'crm-table__row'}
+                title={hasHandler ? `Open ${item.name} details` : undefined}
+                tabIndex={hasHandler ? 0 : undefined}
+              >
+                <th scope="row" className="crm-table__cell" data-label="Opportunity">
+                  <p className="crm-table__title crm-table__title--row">{item.name}</p>
+                </th>
+                <td className="crm-table__cell" data-label="Company">
+                  <p className="crm-table__subtitle">{item.company}</p>
+                </td>
+                <td className="crm-table__cell" data-label="Priority">
+                  <Badge label={item.priority} tone={item.priority.toLowerCase()} />
+                </td>
+                <td className="crm-table__cell" data-label="Stage / Next Step">
+                  <p className="crm-table__subtitle">
+                    <Badge label={item.stage} tone={opportunityStageTone[item.stage] || 'low'} />
+                    {agingHint ? (
+                      <Badge
+                        label={agingHint.label}
+                        tone="warning"
+                        ariaLabel={agingHint.ariaLabel}
+                      />
+                    ) : null}
+                    {' '}{item.nextStep}
+                  </p>
+                </td>
+                <td className="crm-table__cell crm-table__cell--action" data-label="Details">
+                  {hasHandler ? (
+                    <button type="button" className="crm-table__open-button">
+                      Open
+                      <span className="sr-only"> {item.name} opportunity from {item.company}</span>
+                    </button>
+                  ) : null}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

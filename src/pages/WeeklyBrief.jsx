@@ -6,6 +6,7 @@ import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import PrioritiesSection from '../components/weekly/PrioritiesSection';
 import WinsSection from '../components/weekly/WinsSection';
 import BlockersSection from '../components/weekly/BlockersSection';
+import WeeklyBriefSummary from '../components/weekly/WeeklyBriefSummary';
 import Textarea from '../components/ui/Textarea';
 import {
   defaultBlockers,
@@ -142,6 +143,20 @@ function WeeklyBrief() {
             description: 'Risks that need active follow-up.',
           },
         ]}
+      />
+
+      {/*
+       * Audit follow-up: WeeklyBrief used to be three list editors + a
+       * reflection textarea, but the *name* promises a readable brief.
+       * The rendered summary derives one above the editors and offers a
+       * one-click copy to clipboard so the Monday-morning artifact is
+       * actually available without composing it in another tool.
+       */}
+      <WeeklyBriefSummary
+        priorities={priorityItems}
+        wins={winItems}
+        blockers={blockerItems}
+        reviewNotes={reviewNotesDraft}
       />
 
       <p className="helper-text">

@@ -120,8 +120,26 @@
 
 .chief-action-grid {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
   margin-top: 1rem;
+}
+
+.chief-action-grid__primary {
+  grid-column: 1 / -1;
+}
+
+.chief-action-grid__secondary {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+@media (max-width: 540px) {
+  .chief-action-grid__secondary {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chief-notes-meta {
