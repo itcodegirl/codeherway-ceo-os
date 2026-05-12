@@ -79,7 +79,12 @@ function AppShellInner() {
 
   const showSystemPulse = useMemo(() => {
     const path = location.pathname || '/';
-    return path !== '/settings' && path !== '/ops-reliability';
+    // Focus Home already surfaces the "next move" + open-loops signal in its
+    // own panels, so the System Pulse strip there is duplicate chrome that
+    // works against the calm-OS thesis. Settings and Ops Reliability are
+    // configuration/diagnostic surfaces that don't need the cross-system
+    // signal at all.
+    return path !== '/' && path !== '/settings' && path !== '/ops-reliability';
   }, [location.pathname]);
 
   usePageMeta(appName);
