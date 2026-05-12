@@ -2,73 +2,6 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
-## 2026-05-12 - Product-readiness follow-ups (round 2)
-
-Additional commits on `improve/ceo-os-product-readiness` covering the
-"deferred follow-up work" the first round listed in its PR description.
-All five follow-ups are now in the branch.
-
-Trust — feedback the founder can rely on:
-
-- **Kind-tagged Chief feedback.** The Chief workspace used to store
-  `feedback` as a bare string and protect the high-value "Created: …" /
-  "AI unavailable: …" / "Unable to generate" messages by regex-matching
-  the prefix in the autosave timer. Brittle: any reword silently broke
-  the guard, and the regex did not cover the "Add all complete" or
-  per-item acceptance results. A small `chiefFeedback` module introduces
-  an `info / progress / result / error` taxonomy; the hook stores a
-  `{ kind, text }` internally, still exposes the bare text on `feedback`
-  (no public-API churn), and the autosave timer skips its info-level
-  "Notes saved" message whenever the current kind is `result` or
-  `error`. Regression test forces a generation failure and asserts the
-  error message survives the 2.5s autosave threshold.
-
-UX clarity — explain what each click will do:
-
-- **Quiet output loading state.** The "Reading your notes / Pulling out
-  priorities / Mapping opportunities / Drafting content ideas" step
-  list read as AI theater (the proxy does not run those stages) and
-  turned the wait into performance art. Replaced with a calm skeleton
-  that mirrors the real summary + section card structure, plus a single
-  sr-only role=status announcement and a `prefers-reduced-motion`
-  override that drops the shimmer animation.
-- **Per-item acceptance previews.** The "Add All" button has explained
-  its effect for a while via `buildAcceptanceSummary`; the four per-item
-  accept buttons did not. Added a shared `acceptancePreview` helper that
-  emits a short caption ("Weekly Brief · priority", "Opportunities ·
-  stage Discovery", "Content OS · LinkedIn", "Weekly Brief · task") and
-  a long aria-label / title sentence ("Add priority 'Ship pricing v2'
-  to this week's Weekly Brief") for every section. The visible button
-  text is unchanged so the layout stays calm; the new information is
-  opt-in via hover or screen reader.
-
-Usefulness — stop hiding work the user has already done:
-
-- **Recent outputs strip.** `chiefRepository` already kept the last 30
-  responses in storage; the UI only rendered `responses[0]`. Now a
-  horizontal "Recent outputs" strip renders one chip per response with
-  the position ("Latest" / "1 back" / "2 back" …) and the source ("AI
-  generated" / "Local fallback"). Clicking a chip swaps the active
-  output panel; a new generation auto-pulls the selection forward. The
-  strip self-hides for 0 or 1 responses to keep the panel calm on the
-  first run.
-
-Reliability — persistence aligned with the rest of the app:
-
-- **Chief workspace on the versioned-envelope pattern.**
-  `chiefRepository` was the only domain writing raw localStorage keys
-  outside the schema registry — `ceo-os-chief-notes` as a bare string,
-  `ceo-os-chief-responses` as a bare JSON array. Both now use
-  `writeVersionedLocalStorage` / `readVersionedLocalStorage` so a future
-  schema bump can land via the central migration registry instead of a
-  point fix. Legacy bare-string chief notes are read correctly (without
-  triggering the storage-corruption preservation banner) and upgraded
-  to an envelope on the next save.
-
-Checks: `npm run lint`, `npm run typecheck`, `npm run build`, and
-`vitest run` (697 passing, 1 skipped — was 678/1 before this round)
-all green.
-
 ## 2026-05-12 - Product-readiness pass
 
 Branch `improve/ceo-os-product-readiness`.
@@ -81,25 +14,7 @@ Reliability — green baseline restored:
   pair after a completed `return` in `getDefaultFeedback()`, and a
   split-apart empty-state assertion that referenced a non-existent
   "Ready to generate" string. Both are repaired; build, lint, typecheck,
-  and the Vitest suite are green again.
-
-Bug fixes:
-
-- **Weekly Brief now actually renders the "Founder brief" summary.**
-  `WeeklyBriefSummary` was imported into `src/pages/WeeklyBrief.jsx` but
-  never placed in the JSX, so the at-a-glance focus/priorities/wins/
-  blockers readout with the one-click "Copy brief" — advertised in the
-  README and this changelog — didn't exist for users. It renders between
-  the intent line and the editor grid, wired to the live lists and the
-  in-progress reflection draft.
-
-Trust:
-
-- **Chief of Staff "Reset Workspace" now asks for confirmation.** It used
-  to wipe the founder's notes and saved action plans with one click and
-  no undo, right next to the action chips. It now opens a `ConfirmModal`
-  ("Reset Chief workspace? … It can't be undone." / Keep workspace /
-  Reset workspace) and only clears on confirm.
+  and the 676-test Vitest suite are green again.
 
 UX clarity:
 
@@ -108,62 +23,59 @@ UX clarity:
   a "Created: …" or error message 2.5s after a keystroke — it now shows
   a plain "Notes saved. Pick an action when you are ready." and yields to
   result/error messages the user still needs to read.
-- Focus Home no longer renders the full-width **System Pulse** strip — it
-  duplicated the "next move" + open-loops signal already shown by the
-  page's own panels (calmer top fold on the thesis page). System Pulse
-  still renders on the other product surfaces where it's the only
-  cross-system signal.
 
-Accessibility:
+## 2026-05-12 - Chief of Staff product depth
 
-- **Modal focus restoration no longer strands focus on `<body>`.** If the
-  element that opened a dialog has unmounted by the time the dialog
-  closes (e.g. a table-row action button whose row re-rendered), focus
-  now falls back to the `#main-content` landmark instead of a detached
-  node. The pending initial-focus animation frame is also cancelled on
-  unmount. Covered by a new regression test.
+Branch `improve/chief-of-staff-product-depth` (follow-on to the
+product-readiness pass above).
 
-Hygiene:
+Tooling:
 
-- Stripped stray UTF-8 BOMs from ten `chief/*` source files.
-- Relaxed two markdown-lint style rules in `.markdownlint.json`
-  (`MD032` → off, `MD024` → `siblings_only`) and added the missing blank
-  lines after a few `CASE_STUDY.md` sub-headings, so the documented
-  `markdownlint-cli2` quality gate is actually green.
+- Added `npm run verify` (`lint → typecheck → test:run → build`) as a
+  one-command local pre-push gate mirroring CI. README quickstart points
+  at it.
 
-Content OS rebuild — idea → published lifecycle (companion audit at
-[`docs/audits/content-os-audit.md`](./docs/audits/content-os-audit.md)):
+Feature — output catalogue:
 
-- Status lifecycle widened from `Drafting → Editing → Scheduled` to
-  `Idea → Drafting → Editing → Ready → Scheduled → Published`.
-- New `ContentItem` fields: `contentType`, `purpose`, `scheduledFor`, `notes`;
-  `contentPayloadSchema` validates the new picklists + `YYYY-MM-DD` date format
-  and exports `CONTENT_STATUSES` / `CONTENT_TYPES`. Additive migration
-  `20260512_content_items_lifecycle_fields.sql`; `contentRepository` normalises
-  camelCase ↔ snake_case and selects the new columns on every Supabase path.
-  Demo data reworked to show every lane of the lifecycle.
-- New `ContentBoard`: a stage filter (chips appear only when more than one
-  stage has content, and fall back to *All* rather than stranding an empty
-  filter) over a lifecycle-ordered table that floats the soonest-dated piece
-  first.
-- Table gains content-type and publish-date columns; the detail modal renders
-  the full record as label/value rows; the form modal gains content type,
-  target publish date, purpose, and repurposing notes.
-- Four-card pipeline summary (Ideas / In progress / Ready & scheduled with a
-  `Next: <date> — <title>` cue / Published); calmer empty state and CTA copy
-  ("Capture your first idea", "Add a content idea or draft", "Add to Pipeline").
-- New `contentFormatting` helpers (`formatPublishDate`, `contentStatusRank`,
-  `findNextScheduledItem`) with unit coverage; `ContentBoard` tests; content
-  page/table tests updated. ContentOS route budget bumped 12→14 kB raw /
-  4→4.6 kB gzip to match the new surface.
-- Mobile: the summary grid steps 4→2→1 columns; the new table cells carry
-  `data-label` for the card collapse; the form type+status pair collapses to
-  stacked fields.
+- `shared/chiefActions.js` is now the single source of truth for ten
+  output types — decision brief, blocker analysis, action plan, priority
+  list, action list (next 72h), weekly update, founder memo, meeting
+  summary, content idea, opportunity follow-up — each with a picker
+  label, group, one-line "best when…" hint, model instruction, and a
+  deterministic fallback template. The server proxy derives its
+  `getAllowedActionKeys()` allow-list from this config.
+- Replaced the five verb buttons with a `ChiefOutputPicker`: a grouped
+  "Make a…" dropdown (Decide / Plan / Communicate / Pipeline), a hint
+  line for the current selection, and a "Generate …" CTA that names the
+  selected artifact.
 
-Checks: `npm run lint`, `npm run typecheck`, `npm run build`,
-`npm run check:route-budgets`,
-`npx markdownlint-cli2 "**/*.md" "!node_modules/**"`, and `vitest run`
-(693 passing, 1 skipped) all green.
+Feature — output history & safe reset:
+
+- New `ChiefHistoryList` "Recent outputs" panel lists the saved
+  generations (the repository already keeps the last 30); selecting one
+  re-renders it in the output panel behind a read-only banner with a
+  "Back to latest" control, and a fresh generation auto-snaps forward.
+- "Reset Workspace" now opens a `ConfirmModal` that spells out exactly
+  what is cleared (notes + saved outputs) and what is not (items already
+  routed into Weekly Brief / Opportunities / Content OS).
+
+Trust — acceptance routing:
+
+- Each structured section carries a one-line destination note, and every
+  item shows its specific target beside the accept button
+  ("→ Opportunities · New", "→ Content OS · Drafting", "→ Weekly Brief
+  priority"), flipping to an "In …" confirmation once accepted.
+
+Budgets:
+
+- ChiefOfStaff static route budget bumped (JS 42 → 52 KB raw / 12.5 → 16
+  KB gzip, CSS 4 → 6 KB raw) with a justification comment for the picker,
+  history panel, confirm dialog, and richer action config.
+
+Verification: `npm run verify` green; `npm run check:route-budgets`
+green; Vitest 677 passing / 1 skipped. (`check:route-budgets:trend` is
+pre-existing-red on `main` against the frozen 2026-05-01 baseline — out
+of scope here; tracked for the next release baseline refresh.)
 
 ## 2026-05-11 - Audit priority fixes (Phases 1–6)
 
@@ -295,31 +207,37 @@ Verification: `npm run lint`, `npm run typecheck`, `npm run test:run` (647 passe
 ## 2026-05-05 - Audit cycle 2: trust, error surfaces, dead code, mobile, and perf
 
 Stability:
+
 - `useOfflineQueueDrain` now catches storage-layer rejections and surfaces them as a synthetic drain failure rather than letting them escape as unhandled rejections on every reconnect.
 - Capture's `sortedNotes` comparator coerces invalid `updatedAt` to 0 instead of producing NaN comparisons.
 - Settings guards the saved-at timestamp before calling `toISOString` so a corrupted legacy value cannot crash the page.
 - OpsReliability wraps its stat cards and snapshot table in panel-level `ErrorBoundary` blocks so a malformed Supabase row only takes down its panel, not the whole route.
 
 Reliability:
+
 - `useDashboardData` exposes `loadError` so consumers can distinguish "empty workspace" from "fetch failed". The `onLoadError` callback is wrapped so a thrown `showToast` (post-unmount) cannot escape.
 - WeeklyBrief and OpsReliability stat cards render `—` instead of `0` when load fails — no more "Active Priorities: 0" next to a "couldn't load" notice.
 - `useChiefOfStaff` and `useChiefTelemetryHealth` replace `void refresh()` fire-and-forget calls with `.catch(() => {})` so unexpected rejects cannot escape the hook boundary.
 
 Architecture:
+
 - Deleted `useDashboardInsights` (389-line hook + 228-line test, **617 lines** of dead code with zero importers).
 - Consolidated four hand-rolled `useRef(true)` mount/teardown blocks onto the existing `useIsMountedRef` helper across `useDashboardData`, `useChiefOfStaff`, `useSystemPulse`, and `useWeeklyBrief`.
 
 UX & Mobile:
+
 - `.action-button--small` raised from a fixed `2rem` height to `min-height: 2.25rem` so every sticky action, modal close, retry button, and reminder action meets the 36px touch-target floor on phones.
 - OpsReliability snapshot table now collapses on phones via the `data-label` stacked-card pattern already used by `.crm-table` — no more horizontal scroll.
 - Settings replaces its sr-only loading announcement with a visible `Loading settings...` helper text + `aria-busy` on the form so sighted users see the page is still hydrating.
 
 Performance:
+
 - `useFocusHomeSignals` gates `setCaptureNotes` / `setJournalEntry` / `setReminders` on shallow equality. Without these guards every focus, visibility, and storage event swapped to a fresh reference and invalidated Dashboard's `nextMoveQueue` / `suggestions` / `mainFocus` memos on every tab switch.
 - `OpportunityCrudPage` and `ContentCrudPage` now read `source` from a `useState` initializer instead of calling the resolver in render — the page re-renders often (modal open, form keystroke), and the resolver hits localStorage each time.
 - `Capture` and `RemindersPanel` collapse their two-pass filters into single-pass `useMemo` blocks.
 
 Coverage:
+
 - 491 unit/integration tests, lint, build, and route-budget checks all pass.
 
 ## 2026-05-05 - Audit cycle: stability, schema validation, and UX polish

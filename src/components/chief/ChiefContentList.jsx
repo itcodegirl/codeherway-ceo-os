@@ -14,17 +14,15 @@ export default function ChiefContentList({
   if (!items.length) return null;
 
   return (
-    <ChiefSectionCard title="Content Ideas" count={items.length}>
+    <ChiefSectionCard
+      title="Content Ideas"
+      count={items.length}
+      destinationNote="Accepting adds a draft to Content OS so you can plan and ship it."
+    >
       {items.map((item, index) => {
         const accepting = Boolean(isAccepting?.(item));
         const accepted = Boolean(isAccepted?.(item));
-        const ariaLabel = getAcceptButtonAriaLabel({
-          section: "contentItems",
-          item,
-          isAccepting: accepting,
-          isAccepted: accepted,
-        });
-        const caption = getAcceptancePreviewCaption("contentItems", item);
+        const statusLabel = item.status || "Drafting";
 
         return (
           <div className="chief-item" key={`${item.title}-${index}`}>
@@ -32,22 +30,25 @@ export default function ChiefContentList({
               <h4>{item.title}</h4>
               <p>{item.summary}</p>
               <small>
-                {item.platform} · {item.status}
+                {item.platform} · {statusLabel}
               </small>
               {caption ? (
                 <small className="chief-item-destination">→ {caption}</small>
               ) : null}
             </div>
 
-            <button
-              type="button"
-              disabled={accepting || accepted}
-              onClick={() => onAccept(item)}
-              aria-label={ariaLabel}
-              title={ariaLabel}
-            >
-              {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Content" })}
-            </button>
+            <div className="chief-item-action">
+              <p className="chief-item-destination">
+                {accepted ? "In Content OS" : `→ Content OS · ${statusLabel}`}
+              </p>
+              <button
+                type="button"
+                disabled={accepting || accepted}
+                onClick={() => onAccept(item)}
+              >
+                {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Content" })}
+              </button>
+            </div>
           </div>
         );
       })}

@@ -14,7 +14,11 @@ export default function ChiefPriorityList({
   if (!items.length) return null;
 
   return (
-    <ChiefSectionCard title="Priorities" count={items.length}>
+    <ChiefSectionCard
+      title="Priorities"
+      count={items.length}
+      destinationNote="Accepting adds each item to this week's Weekly Brief priorities."
+    >
       {items.map((item, index) => {
         const accepting = Boolean(isAccepting?.(item));
         const accepted = Boolean(isAccepted?.(item));
@@ -39,15 +43,18 @@ export default function ChiefPriorityList({
               ) : null}
             </div>
 
-            <button
-              type="button"
-              disabled={accepting || accepted}
-              onClick={() => onAccept(item)}
-              aria-label={ariaLabel}
-              title={ariaLabel}
-            >
-              {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Weekly" })}
-            </button>
+            <div className="chief-item-action">
+              <p className="chief-item-destination">
+                {accepted ? "In Weekly Brief" : "→ Weekly Brief priority"}
+              </p>
+              <button
+                type="button"
+                disabled={accepting || accepted}
+                onClick={() => onAccept(item)}
+              >
+                {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Weekly" })}
+              </button>
+            </div>
           </div>
         );
       })}
