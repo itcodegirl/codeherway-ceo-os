@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
@@ -7,8 +7,7 @@ import PanelErrorFallback from '../components/ui/PanelErrorFallback';
 import FocusModeChips from '../components/dashboard/FocusModeChips';
 import RemindersPanel from '../components/dashboard/RemindersPanel';
 import TodayFocusPanel from '../components/dashboard/TodayFocusPanel';
-import OpenLoopsPanel from '../components/dashboard/OpenLoopsPanel';
-import BlockersPanel from '../components/dashboard/BlockersPanel';
+import NeedsAttentionPanel from '../components/dashboard/NeedsAttentionPanel';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToast } from '../hooks/useToast';
@@ -17,10 +16,8 @@ import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import { usePromotionAction } from '../hooks/usePromotionAction';
 import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { useReminderActions } from '../hooks/useReminderActions';
-import {
-  createReminder,
-  getReminderProgress,
-} from '../lib/remindersRepository';
+import { useReminderComposer } from '../hooks/useReminderComposer';
+import { getReminderProgress } from '../lib/remindersRepository';
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
@@ -36,7 +33,6 @@ import {
 import { buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
-const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
 const FOCUS_TOOLS_DRAWER_ID = 'focus-tools-drawer';
 
 function Dashboard() {
@@ -61,11 +57,13 @@ function Dashboard() {
     startBlankWorkspace,
     loadDemoWorkspace,
   } = useWorkspaceSetup();
-  const [reminderDraft, setReminderDraft] = useState('');
-  const [isAddingReminder, setIsAddingReminder] = useState(false);
+  const {
+    reminderDraft,
+    setReminderDraft,
+    isAddingReminder,
+    handleAddReminder,
+  } = useReminderComposer({ showToast });
   const nextMoveCursorRef = useRef(0);
-  const isAddingReminderRef = useRef(false);
-  const addReminderReleaseTimerRef = useRef(null);
 
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh your focus data right now.');
@@ -208,6 +206,7 @@ function Dashboard() {
     weeklyWins.length,
   ]);
 
+  const hasBlockers = weeklyBlockers.length > 0;
   const blockerItems = useMemo(() => {
     if (weeklyBlockers.length === 0) {
       return ['No blockers logged. Keep protecting this focus window.'];
@@ -238,7 +237,7 @@ function Dashboard() {
     }, REMINDER_ACTION_SETTLE_DELAY_MS);
   }, []);
 
-  const handleTellMeWhatToDoNext = () => {
+  const handleDoThisNext = () => {
     const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
       || 'Take one deep breath, choose one action, and complete it before context-switching.';
     nextMoveCursorRef.current += 1;
@@ -255,31 +254,6 @@ function Dashboard() {
     // click instead of two.
     setIsFocusToolsExpanded(true);
     showToast('Reset mode enabled. Start small and skip perfection today.');
-  };
-
-  const handleAddReminder = (event) => {
-    event.preventDefault();
-    if (isAddingReminderRef.current) {
-      return;
-    }
-
-    const nextText = reminderDraft.trim();
-    if (!nextText) {
-      showToast('Add reminder text before saving.');
-      return;
-    }
-
-    isAddingReminderRef.current = true;
-    setIsAddingReminder(true);
-
-    try {
-      createReminder({ text: nextText });
-      setReminderDraft('');
-    } catch {
-      showToast('Unable to save reminder right now.');
-    } finally {
-      scheduleReminderFormRelease();
-    }
   };
 
   const reminderActions = useReminderActions({ reminders, showToast });
@@ -345,7 +319,7 @@ function Dashboard() {
     >
       <PageHeader
         title="Focus Home"
-        description="Today / Focus Command Center for clear execution, supportive resets, and daily momentum."
+        description="Your one focus today, what needs attention, and the next small step."
       />
       <SourceStatusNotice
         source={weeklySource}
@@ -378,66 +352,22 @@ function Dashboard() {
         </section>
       ) : null}
 
-      {/*
-        Operating ritual context strip. Compacted from a 5-card grid + label
-        + breadcrumb into a single calm strip: header, active step, breadcrumb.
-        The 5 step cards were redundant with the active-step helper text and
-        the breadcrumb sequence, and consumed ~150px of top-fold space —
-        pushing the actual next-action panel below the fold on small screens.
-      */}
-      <section className="focus-home__ritual" aria-label="Daily operating rhythm">
-        <div className="focus-home__ritual-header">
-          <h2>Current Operating Step</h2>
-          <p className="helper-text focus-home__ritual-active">
-            <span className="focus-home__ritual-active-label">{currentOperatingStep?.label}:</span>{' '}
-            <span className="focus-home__ritual-active-action">{currentOperatingStep?.action}</span>
-          </p>
-        </div>
-        <p className="focus-home__loop-label">Start Day &gt; Execute &gt; Capture &gt; Reset &gt; Shutdown</p>
-      </section>
-
       <div className="focus-home__grid">
         <TodayFocusPanel
           mainFocus={mainFocus}
+          nextMove={displayedNextMove}
+          nextMoveReason={displayedNextMoveReason}
+          safeToIgnoreItems={safeToIgnoreItems}
+          onDoThisNext={handleDoThisNext}
+          onOverwhelmed={handleOverwhelmedReset}
           isFocusDataLoading={isFocusDataLoading}
         />
 
-        <ErrorBoundary
-          name="Dashboard / Next move"
-          fallback={<PanelErrorFallback panelName="Next move" />}
-        >
-          <article className="focus-panel focus-panel--next-move" aria-label="Next move panel">
-            <div className="focus-panel__header">
-              <h2>Next Smallest Action</h2>
-              <span className="signal-node" aria-hidden="true" />
-            </div>
-            <p className="focus-home__next-move-text">{displayedNextMove}</p>
-            <p className="focus-home__next-move-reason">{displayedNextMoveReason}</p>
-            <div className="focus-home__safe-ignore" aria-label="Safe to ignore for now">
-              <p className="focus-home__subheading">Safe to ignore for now</p>
-              <ul className="focus-home__safe-ignore-list">
-                {(safeToIgnoreItems.length
-                  ? safeToIgnoreItems
-                  : ['Nothing else needs attention during this focus block.']
-                ).map((item, index) => (
-                  <li key={`safe-ignore-${index + 1}`}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="focus-home__actions">
-              <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
-                Tell me what to do next
-              </Button>
-              <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
-                I'm overwhelmed
-              </Button>
-            </div>
-          </article>
-        </ErrorBoundary>
-
-        <OpenLoopsPanel openLoops={openLoops} />
-
-        <BlockersPanel blockerItems={blockerItems} />
+        <NeedsAttentionPanel
+          blockerItems={blockerItems}
+          hasBlockers={hasBlockers}
+          openLoops={openLoops}
+        />
 
         <ErrorBoundary
           name="Dashboard / Reminders"
@@ -543,6 +473,22 @@ function Dashboard() {
             </ErrorBoundary>
           </div>
         </div>
+      </section>
+
+      {/*
+        Daily operating rhythm — context, not a to-do. Demoted out of the top
+        fold to a calm footer strip so the page leads with what matters, what
+        needs attention, and the next step rather than process chrome.
+      */}
+      <section className="focus-home__ritual" aria-label="Daily operating rhythm">
+        <div className="focus-home__ritual-header">
+          <h2>Current Operating Step</h2>
+          <p className="helper-text focus-home__ritual-active">
+            <span className="focus-home__ritual-active-label">{currentOperatingStep?.label}:</span>{' '}
+            <span className="focus-home__ritual-active-action">{currentOperatingStep?.action}</span>
+          </p>
+        </div>
+        <p className="focus-home__loop-label">Start Day &gt; Execute &gt; Capture &gt; Reset &gt; Shutdown</p>
       </section>
 
     </section>
