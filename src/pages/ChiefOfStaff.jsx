@@ -6,7 +6,7 @@ import ConfirmModal from "../components/ui/ConfirmModal";
 import SourceStatusNotice from "../components/ui/SourceStatusNotice";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
 import { useMetaMode } from "../hooks/useMetaMode";
-import { normalizeChiefOutput } from "../lib/normalizeChiefOutput";
+import { toPanelResult } from "../lib/chiefPanelResult";
 import { buildSourceNotice } from "../lib/uiCopy";
 import { MAX_NOTES_LENGTH } from "../../shared/chiefConfig.js";
 import "../styles/chief-of-staff.css";
@@ -14,42 +14,6 @@ import "../styles/chief-of-staff.css";
 const ChiefTelemetryDiagnosticsPanel = lazy(() =>
   import("../components/chief/ChiefTelemetryDiagnosticsPanel")
 );
-
-function parseStructuredText(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(trimmed);
-    return parsed && typeof parsed === "object" ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function toPanelResult(entry) {
-  if (!entry || typeof entry !== "object") {
-    return null;
-  }
-
-  const parsedContent = parseStructuredText(entry.content);
-
-  return normalizeChiefOutput({
-    title: parsedContent?.title || entry.title || "Executive Action Plan",
-    summary: parsedContent?.summary || entry.content || "",
-    source: entry.source || "proxy",
-    fallbackReason: entry.fallbackReason || "",
-    errorCode: entry.errorCode || "",
-    errorMessage: entry.errorMessage || "",
-    structured: entry.structuredPayload || parsedContent?.structured || {}
-  });
-}
 
 export default function ChiefOfStaff() {
   const {

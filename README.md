@@ -91,9 +91,10 @@ npm run build
 
 For portfolio demos or recruiter screenshares:
 
-1. **Focus Home** — see the current operating step, the next smallest action,
-   open loops, blockers, and reminders. Toggle support mode chips and the
-   "I'm overwhelmed" reset.
+1. **Focus Home** — one hero ("Today's Focus" → next step → why → safe to
+   ignore), a "Needs Your Attention" panel (blockers + open loops merged),
+   and reminders. The daily operating rhythm and support tools (mode chips,
+   "I'm overwhelmed" reset, momentum) sit below in a calm footer / drawer.
 2. **Capture** — add one sticky note as `idea`, then edit text/category inline.
 3. **Journal** — answer one prompt; watch the debounced autosave status.
 4. **Weekly Brief + Opportunities** — add one blocker or in-progress item;

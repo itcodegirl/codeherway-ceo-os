@@ -12,12 +12,8 @@ function getDefaultFeedbackText() {
   // hint stays in README / Settings; here we only need a calm starting
   // message regardless of deployment state.
   return aiConfig.hasProxyEndpoint
-    ? 'Paste your notes, then choose an action to turn them into executive-ready output.'
-    : 'Running in local mode — actions return a deterministic local template instead of AI output. The review-and-save workflow still works.';
-}
-
-function getDefaultFeedback() {
-  return buildFeedback(FEEDBACK_KIND.info, getDefaultFeedbackText());
+    ? 'Paste your notes, then choose an action to turn them into a structured plan.'
+    : 'Running in local mode. Drafts use a deterministic fallback until an AI proxy is configured.';
 }
 
 function resolveNotes(nextNotes) {

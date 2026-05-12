@@ -124,10 +124,18 @@
 	grid-column: 1 / -1;
 }
 
-.focus-panel--next-move {
+/*
+ * Hero panel — the single "one thing" surface (merged Today's Main Focus +
+ * Next Smallest Action). Carries a quiet accent border so it reads as the
+ * page's anchor without shouting.
+ */
+.focus-panel--hero {
+	border: 1px solid color-mix(in srgb, var(--border) 76%, var(--accent) 24%);
+	background: color-mix(in srgb, var(--surface-card) 84%, rgba(29, 106, 171, 0.16) 16%);
+}
+
+.focus-panel--attention {
 	grid-column: 1 / -1;
-	border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
-	background: color-mix(in srgb, var(--surface-card) 72%, rgba(29, 106, 171, 0.24) 28%);
 }
 
 .focus-home__main-focus {
@@ -135,6 +143,35 @@
 	font-size: clamp(1.25rem, 2.3vw, 1.65rem);
 	line-height: 1.28;
 	font-weight: 600;
+}
+
+/*
+ * "Next step" subsection inside the hero — bordered top-and-bottom like the
+ * safe-to-ignore block so the hero reads as three calm bands: what matters,
+ * the next step, what's safe to ignore.
+ */
+.focus-home__next-step {
+	display: grid;
+	gap: 0.4rem;
+	padding: 0.7rem 0;
+	border-block: 1px solid color-mix(in srgb, var(--border) 76%, transparent 24%);
+}
+
+.focus-home__attention-tag {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 0.4rem;
+	padding: 0.02rem 0.4rem;
+	border-radius: 999px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-soft-strong);
+	border: 1px solid color-mix(in srgb, var(--border-warning-soft) 55%, var(--border) 45%);
+	background: color-mix(in srgb, var(--surface-card) 80%, rgba(212, 162, 74, 0.16) 20%);
+	white-space: nowrap;
+	vertical-align: baseline;
 }
 
 .focus-home__next-move-text {
