@@ -1,5 +1,9 @@
 import ChiefSectionCard from "./ChiefSectionCard";
 import { getChiefAcceptLabel } from "./chiefAcceptLabel";
+import {
+  getAcceptButtonAriaLabel,
+  getAcceptancePreviewCaption,
+} from "./acceptancePreview";
 
 export default function ChiefPriorityList({
   items = [],
@@ -14,6 +18,13 @@ export default function ChiefPriorityList({
       {items.map((item, index) => {
         const accepting = Boolean(isAccepting?.(item));
         const accepted = Boolean(isAccepted?.(item));
+        const ariaLabel = getAcceptButtonAriaLabel({
+          section: "priorities",
+          item,
+          isAccepting: accepting,
+          isAccepted: accepted,
+        });
+        const caption = getAcceptancePreviewCaption("priorities", item);
 
         return (
           <div className="chief-item" key={`${item.title}-${index}`}>
@@ -23,12 +34,17 @@ export default function ChiefPriorityList({
               <small>
                 Owner: {item.owner || "You"} · Status: {item.status || "Planned"}
               </small>
+              {caption ? (
+                <small className="chief-item-destination">→ {caption}</small>
+              ) : null}
             </div>
 
             <button
               type="button"
               disabled={accepting || accepted}
               onClick={() => onAccept(item)}
+              aria-label={ariaLabel}
+              title={ariaLabel}
             >
               {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Weekly" })}
             </button>

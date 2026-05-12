@@ -225,9 +225,13 @@ describe("src/pages/ChiefOfStaff", () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Add to Weekly" })[0]);
-    fireEvent.click(screen.getByRole("button", { name: "Add to Opportunities" }));
-    fireEvent.click(screen.getByRole("button", { name: "Add to Content" }));
+    // The accessible name now describes the per-item downstream effect
+    // (e.g. `Add priority "Priority A" to this week's Weekly Brief`). Match
+    // the section keyword + title fragment instead of the bare ready label
+    // so the test stays resilient as the destination copy evolves.
+    fireEvent.click(screen.getByRole("button", { name: /Add priority "Priority A"/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Add opportunity "Opp A"/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Add content draft "Post A"/ }));
 
     expect(hookState.acceptStructuredItem).toHaveBeenCalledWith("priorities", expect.any(Object));
     expect(hookState.acceptStructuredItem).toHaveBeenCalledWith("opportunities", expect.any(Object));
