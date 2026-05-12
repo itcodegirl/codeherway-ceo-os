@@ -83,7 +83,7 @@ Content OS rebuild — idea → published lifecycle (companion audit at
   the full record as label/value rows; the form modal gains content type,
   target publish date, purpose, and repurposing notes.
 - Four-card pipeline summary (Ideas / In progress / Ready & scheduled with a
-  "Next: <date> — <title>" cue / Published); calmer empty state and CTA copy
+  `Next: <date> — <title>` cue / Published); calmer empty state and CTA copy
   ("Capture your first idea", "Add a content idea or draft", "Add to Pipeline").
 - New `contentFormatting` helpers (`formatPublishDate`, `contentStatusRank`,
   `findNextScheduledItem`) with unit coverage; `ContentBoard` tests; content

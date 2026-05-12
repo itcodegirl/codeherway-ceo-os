@@ -55,7 +55,7 @@ promised.
 
 ## 3. Recommended workflow (shipped)
 
-```
+```text
 Idea  →  Drafting  →  Editing  →  Ready  →  Scheduled  →  Published
  │          │           │          │          │             │
 capture   write       review/    finished,  has a date    a record of
@@ -106,7 +106,7 @@ entity, content calendar view. Notes on these in §9.
 
 ## 5. Recommended UI structure (shipped)
 
-```
+```text
 Content OS  (header: "Move founder content from idea to published…")
 │
 ├── Summary (4 cards):
@@ -165,7 +165,7 @@ stays a pure presenter and `ContentCrudPage` stays template-driven.
 
 ## 9. Architecture recommendations
 
-**Shipped this PR**
+### Shipped this PR
 
 - New `src/lib/contentFormatting.js` (`formatPublishDate`, `contentStatusRank`,
   `findNextScheduledItem`) — pure, unit-tested, shared by the table, board,
@@ -176,7 +176,7 @@ stays a pure presenter and `ContentCrudPage` stays template-driven.
 - Additive Supabase migration; repository tolerates both camelCase and
   snake_case rows.
 
-**Follow-up (not in scope here)**
+### Follow-up (not in scope here)
 
 - **Calendar view** of `Scheduled` / `Ready` items keyed on `scheduledFor` —
   the data now supports it.
