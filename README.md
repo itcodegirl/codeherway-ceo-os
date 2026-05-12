@@ -76,6 +76,12 @@ Open `http://127.0.0.1:5173/`.
 Run the headline quality checks:
 
 ```bash
+npm run verify   # lint → typecheck → test:run → build
+```
+
+or individually:
+
+```bash
 npm run lint
 npm run typecheck
 npm run test:run
