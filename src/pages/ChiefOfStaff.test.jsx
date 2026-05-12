@@ -46,11 +46,6 @@ describe("src/pages/ChiefOfStaff", () => {
     );
 
     expect(screen.getByText("Nothing here yet")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /When you generate, structured priorities, opportunities, content drafts/,
-      ),
-    ).toBeInTheDocument();
     // Audit follow-up: empty state now names all five actions so the user is
     // not pointed at a "choose an action" hint when the layout only renders
     // one button. Match a stable fragment to keep the test resilient to copy
