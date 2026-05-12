@@ -49,20 +49,20 @@ export const contentItems = [
 export const weeklyPriorities = [
   {
     id: 1,
-    title: 'Ship a meaningful progress update for XPAIRK partnership',
-    owner: 'Team Member',
+    title: 'Send the XPAIRK partnership proposal and book the follow-up call',
+    owner: '',
     status: 'In Progress',
   },
   {
     id: 2,
-    title: "Finalize this week's founder narrative draft",
-    owner: 'Team Lead',
+    title: "Finish this week's founder narrative draft and schedule it",
+    owner: '',
     status: 'Planned',
   },
   {
     id: 3,
-    title: 'Recruiter follow-up sequence for Studio North',
-    owner: 'Team Member',
+    title: 'Close out the Studio North recruiter conversation',
+    owner: '',
     status: 'Blocked',
   },
 ];
@@ -70,31 +70,31 @@ export const weeklyPriorities = [
 export const weeklyWins = [
   {
     id: 1,
-    text: 'Shipped baseline dashboard and executive KPI surface with responsive cards.',
-    category: 'Product',
+    text: 'Closed the first paid pilot — revenue is real now.',
+    category: 'Revenue',
   },
   {
     id: 2,
-    text: 'Built a clean side nav + top bar pattern with route-level shell consistency.',
-    category: 'Execution',
+    text: 'Shipped the onboarding flow the team has been asking for.',
+    category: 'Product',
   },
   {
     id: 3,
-    text: 'Established a modular style architecture for page-specific CSS refinements.',
-    category: 'Engineering',
+    text: 'Said no to a distracting partnership without burning the bridge.',
+    category: 'Personal',
   },
 ];
 
 export const weeklyBlockers = [
   {
     id: 1,
-    text: 'Partnership proposal follow-up needs a clear owner before Friday.',
-    severity: 'warning',
+    text: 'Partnership proposal is stuck — no one owns the follow-up.',
+    severity: 'owner',
   },
   {
     id: 2,
-    text: 'Founder content queue has strong ideas but no protected publishing window.',
-    severity: 'warning',
+    text: 'Strong content ideas, but no protected window to write.',
+    severity: 'time',
   },
 ];
 

@@ -11,7 +11,7 @@ function getDefaultFeedback() {
   // hint stays in README / Settings; here we only need a calm starting
   // message regardless of deployment state.
   return aiConfig.hasProxyEndpoint
-    ? 'Paste notes when you have them. Then choose an action to turn them into a structured plan.'
+    ? 'Paste your notes, then choose an action to turn them into a structured plan.'
     : 'Running in local mode. Drafts use a deterministic fallback until an AI proxy is configured.';
 }
 
