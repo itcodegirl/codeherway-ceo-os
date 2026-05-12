@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
+import ChiefOutputPicker from "../components/chief/ChiefOutputPicker";
 import ChiefHistoryList from "../components/chief/ChiefHistoryList";
 import { getChiefResponseId } from "../components/chief/chiefHistory";
 import Button from "../components/ui/Button";
@@ -76,6 +77,7 @@ export default function ChiefOfStaff() {
   const responseList = useMemo(() => (Array.isArray(responses) ? responses : []), [responses]);
   const latestResponseId = responseList.length ? getChiefResponseId(responseList[0], 0) : null;
 
+  const [selectedActionKey, setSelectedActionKey] = useState("plan");
   const [selectedResponseId, setSelectedResponseId] = useState(null);
   const [trackedLatestId, setTrackedLatestId] = useState(latestResponseId);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
@@ -122,10 +124,16 @@ export default function ChiefOfStaff() {
     ? "Review the workspace status above, then retry when ready."
     : feedback;
   const actionHint = notesLimitReached
-    ? "Notes reached the current limit. Trim them before generating a new action plan."
+    ? "Notes reached the current limit. Trim them before generating again."
     : notes.trim()
       ? "Your notes stay editable. Review every recommendation before using it."
-      : "Add a few founder notes to generate an action plan.";
+      : "Add a few founder notes, then choose what to make.";
+
+  const canGenerate = Boolean(notes.trim()) && !isGenerating && !notesLimitReached;
+
+  const handleGenerate = useCallback(() => {
+    handleAction(selectedActionKey);
+  }, [handleAction, selectedActionKey]);
 
   const handleSelectResponse = useCallback((id) => {
     setSelectedResponseId(id || null);
@@ -230,59 +238,16 @@ export default function ChiefOfStaff() {
           </p>
 
           <div
-            className={`chief-action-grid ${isGenerating ? "chief-action-grid--disabled" : ""}`.trim()}
+            className={`chief-make-shell ${isGenerating ? "chief-make-shell--disabled" : ""}`.trim()}
             aria-busy={isGenerating}
-            role="group"
-            aria-label="Chief of Staff actions"
           >
-            <div className="chief-action-grid__primary">
-              <Button
-                type="button"
-                onClick={() => handleAction("plan")}
-                disabled={!notes.trim() || isGenerating || notesLimitReached}
-                icon={{ name: "weekly", size: 14 }}
-              >
-                {isGenerating ? "Building Action Plan..." : "Build Action Plan"}
-              </Button>
-            </div>
-            <div className="chief-action-grid__secondary">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleAction("summarize")}
-                disabled={!notes.trim() || isGenerating || notesLimitReached}
-                icon={{ name: "section", size: 14 }}
-              >
-                Summarize This Week
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleAction("draft")}
-                disabled={!notes.trim() || isGenerating || notesLimitReached}
-                icon={{ name: "content", size: 14 }}
-              >
-                Draft LinkedIn Post
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleAction("actions")}
-                disabled={!notes.trim() || isGenerating || notesLimitReached}
-                icon={{ name: "action", size: 14 }}
-              >
-                Convert to Action Items
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleAction("priorities")}
-                disabled={!notes.trim() || isGenerating || notesLimitReached}
-                icon={{ name: "check", size: 14 }}
-              >
-                Suggest Next Priorities
-              </Button>
-            </div>
+            <ChiefOutputPicker
+              value={selectedActionKey}
+              onChange={setSelectedActionKey}
+              onGenerate={handleGenerate}
+              disabled={!canGenerate}
+              isGenerating={isGenerating}
+            />
           </div>
           <p id="chief-action-hint" className="chief-helper-text" role="status" aria-live="polite">
             {actionHint}

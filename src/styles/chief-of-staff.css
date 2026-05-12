@@ -118,28 +118,52 @@
   color: inherit;
 }
 
-.chief-action-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.55rem;
+.chief-make-shell {
   margin-top: 1rem;
 }
 
-.chief-action-grid__primary {
-  grid-column: 1 / -1;
+.chief-make-shell--disabled {
+  opacity: 0.6;
 }
 
-.chief-action-grid__secondary {
+.chief-make {
   display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-chief-soft);
+  background: var(--surface-overlay-1);
 }
 
-@media (max-width: 540px) {
-  .chief-action-grid__secondary {
-    grid-template-columns: 1fr;
-  }
+.chief-make__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.chief-make__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chief-make__select {
+  flex: 1 1 14rem;
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.6rem;
+  background: var(--surface-chief-input);
+  border: 1px solid var(--border-chief-input);
+  color: inherit;
+  font: inherit;
+}
+
+.chief-make__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0.82;
 }
 
 .chief-notes-meta {
@@ -154,11 +178,6 @@
    * themes; the previous hardcoded #f8a2b4 (soft pink) fades on light paper. */
   color: var(--danger-text);
   opacity: 1;
-}
-
-.chief-action-grid--disabled {
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 .chief-feedback-text {
