@@ -17,7 +17,7 @@ function WeeklyPriorities({ items = defaultPriorities, onEditItem, onDeleteItem 
             <div className="weekly-list__details">
               <p className="weekly-note">{item.title}</p>
               <p className="helper-text helper-text--offset">
-                Owner: {item.owner} | Status: {item.status}
+                {item.owner ? `Owner: ${item.owner}. ` : ''}Status: {item.status}
               </p>
             </div>
             <div className="weekly-list__actions">
