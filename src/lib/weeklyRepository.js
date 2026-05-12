@@ -41,7 +41,7 @@ const ITEM_DESCRIPTORS = {
     collectionKey: 'priorities',
     legacyStorageKey: LEGACY_PRIORITIES_KEY,
     fallbackSource: defaultPriorities,
-    fields: { title: '', owner: 'Team Member', status: 'Planned' },
+    fields: { title: '', owner: '', status: 'Planned' },
     fromSupabaseRow: (row) => ({
       id: row.id,
       title: row.title,
@@ -62,7 +62,7 @@ const ITEM_DESCRIPTORS = {
     collectionKey: 'wins',
     legacyStorageKey: LEGACY_WINS_KEY,
     fallbackSource: defaultWins,
-    fields: { text: '', category: 'Execution' },
+    fields: { text: '', category: 'Product' },
     fromSupabaseRow: (row) => ({
       id: row.id,
       text: row.description || row.title,
@@ -82,7 +82,7 @@ const ITEM_DESCRIPTORS = {
     collectionKey: 'blockers',
     legacyStorageKey: LEGACY_BLOCKERS_KEY,
     fallbackSource: defaultBlockers,
-    fields: { text: '', severity: 'warning' },
+    fields: { text: '', severity: 'decision' },
     fromSupabaseRow: (row) => ({
       id: row.id,
       text: row.description || row.title,
@@ -162,7 +162,7 @@ function getDemoPriorities() {
   return defaultPriorities.map((item) => ({
     id: String(item.id || buildCreateId()),
     title: item.title || '',
-    owner: item.owner || 'Team Member',
+    owner: item.owner || '',
     status: item.status || 'Planned',
   }));
 }
@@ -171,7 +171,7 @@ function getDemoWins() {
   return defaultWins.map((item) => ({
     id: String(item.id || buildCreateId()),
     text: item.text || '',
-    category: item.category || 'Execution',
+    category: item.category || 'Product',
   }));
 }
 
@@ -179,7 +179,7 @@ function getDemoBlockers() {
   return defaultBlockers.map((item) => ({
     id: String(item.id || buildCreateId()),
     text: item.text || '',
-    severity: item.severity || 'warning',
+    severity: item.severity || 'decision',
   }));
 }
 

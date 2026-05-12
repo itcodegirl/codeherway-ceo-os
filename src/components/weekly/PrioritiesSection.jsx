@@ -37,7 +37,7 @@ function PrioritiesSection({ items, setItems, defaultItems }) {
   return (
     <>
       <SectionCard
-        title="Priority Track"
+        title="This week's priorities"
         iconName="weekly"
         actionText="Add Priority"
         onAction={openCreateEditor}
@@ -50,7 +50,7 @@ function PrioritiesSection({ items, setItems, defaultItems }) {
             onDeleteItem={requestDelete}
           />
         ) : (
-          <p className="helper-text">No priorities yet. Add one to define this week&apos;s focus.</p>
+          <p className="helper-text">Nothing here yet. What are the 3&ndash;5 things this week is really about?</p>
         )}
         {impactMessage ? <p className="helper-text weekly-impact-copy" role="status">{impactMessage}</p> : null}
       </SectionCard>

@@ -79,6 +79,10 @@
 	background: var(--danger);
 }
 
+.weekly-list__dot--muted {
+	background: var(--text-muted);
+}
+
 .weekly-note {
 	color: var(--text-sidebar-hover);
 	line-height: 1.7;
