@@ -14,7 +14,25 @@ Reliability — green baseline restored:
   pair after a completed `return` in `getDefaultFeedback()`, and a
   split-apart empty-state assertion that referenced a non-existent
   "Ready to generate" string. Both are repaired; build, lint, typecheck,
-  and the 676-test Vitest suite are green again.
+  and the Vitest suite are green again.
+
+Bug fixes:
+
+- **Weekly Brief now actually renders the "Founder brief" summary.**
+  `WeeklyBriefSummary` was imported into `src/pages/WeeklyBrief.jsx` but
+  never placed in the JSX, so the at-a-glance focus/priorities/wins/
+  blockers readout with the one-click "Copy brief" — advertised in the
+  README and this changelog — didn't exist for users. It renders between
+  the intent line and the editor grid, wired to the live lists and the
+  in-progress reflection draft.
+
+Trust:
+
+- **Chief of Staff "Reset Workspace" now asks for confirmation.** It used
+  to wipe the founder's notes and saved action plans with one click and
+  no undo, right next to the action chips. It now opens a `ConfirmModal`
+  ("Reset Chief workspace? … It can't be undone." / Keep workspace /
+  Reset workspace) and only clears on confirm.
 
 UX clarity:
 
@@ -47,8 +65,9 @@ Hygiene:
   `markdownlint-cli2` quality gate is actually green.
 
 Checks: `npm run lint`, `npm run typecheck`, `npm run build`,
+`npm run check:route-budgets`,
 `npx markdownlint-cli2 "**/*.md" "!node_modules/**"`, and `vitest run`
-(677 passing, 1 skipped) all green.
+(678 passing, 1 skipped) all green.
 
 ## 2026-05-11 - Audit priority fixes (Phases 1–6)
 
