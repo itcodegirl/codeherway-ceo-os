@@ -64,10 +64,39 @@ Hygiene:
   lines after a few `CASE_STUDY.md` sub-headings, so the documented
   `markdownlint-cli2` quality gate is actually green.
 
+Content OS rebuild — idea → published lifecycle (companion audit at
+[`docs/audits/content-os-audit.md`](./docs/audits/content-os-audit.md)):
+
+- Status lifecycle widened from `Drafting → Editing → Scheduled` to
+  `Idea → Drafting → Editing → Ready → Scheduled → Published`.
+- New `ContentItem` fields: `contentType`, `purpose`, `scheduledFor`, `notes`;
+  `contentPayloadSchema` validates the new picklists + `YYYY-MM-DD` date format
+  and exports `CONTENT_STATUSES` / `CONTENT_TYPES`. Additive migration
+  `20260512_content_items_lifecycle_fields.sql`; `contentRepository` normalises
+  camelCase ↔ snake_case and selects the new columns on every Supabase path.
+  Demo data reworked to show every lane of the lifecycle.
+- New `ContentBoard`: a stage filter (chips appear only when more than one
+  stage has content, and fall back to *All* rather than stranding an empty
+  filter) over a lifecycle-ordered table that floats the soonest-dated piece
+  first.
+- Table gains content-type and publish-date columns; the detail modal renders
+  the full record as label/value rows; the form modal gains content type,
+  target publish date, purpose, and repurposing notes.
+- Four-card pipeline summary (Ideas / In progress / Ready & scheduled with a
+  "Next: <date> — <title>" cue / Published); calmer empty state and CTA copy
+  ("Capture your first idea", "Add a content idea or draft", "Add to Pipeline").
+- New `contentFormatting` helpers (`formatPublishDate`, `contentStatusRank`,
+  `findNextScheduledItem`) with unit coverage; `ContentBoard` tests; content
+  page/table tests updated. ContentOS route budget bumped 12→14 kB raw /
+  4→4.6 kB gzip to match the new surface.
+- Mobile: the summary grid steps 4→2→1 columns; the new table cells carry
+  `data-label` for the card collapse; the form type+status pair collapses to
+  stacked fields.
+
 Checks: `npm run lint`, `npm run typecheck`, `npm run build`,
 `npm run check:route-budgets`,
 `npx markdownlint-cli2 "**/*.md" "!node_modules/**"`, and `vitest run`
-(678 passing, 1 skipped) all green.
+(693 passing, 1 skipped) all green.
 
 ## 2026-05-11 - Audit priority fixes (Phases 1–6)
 
