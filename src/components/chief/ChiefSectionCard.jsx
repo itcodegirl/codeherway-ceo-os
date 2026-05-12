@@ -1,4 +1,4 @@
-﻿export default function ChiefSectionCard({ title, count, children }) {
+export default function ChiefSectionCard({ title, count, children }) {
   return (
     <div className="chief-card chief-section-card">
       <div className="chief-section-header">

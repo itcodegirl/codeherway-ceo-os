@@ -1,4 +1,4 @@
-﻿export default function EmptyOutputState() {
+export default function EmptyOutputState() {
   return (
     <div className="chief-card chief-empty-state">
       <p className="chief-eyebrow">Action Plan</p>

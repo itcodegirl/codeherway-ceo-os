@@ -1,4 +1,4 @@
-﻿export default function OutputLoadingState() {
+export default function OutputLoadingState() {
   return (
     <div className="chief-card chief-loading-state">
       <p className="chief-eyebrow">Action Plan</p>

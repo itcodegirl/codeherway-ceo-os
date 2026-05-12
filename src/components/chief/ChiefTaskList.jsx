@@ -1,4 +1,4 @@
-﻿import ChiefSectionCard from "./ChiefSectionCard";
+import ChiefSectionCard from "./ChiefSectionCard";
 import { getChiefAcceptLabel } from "./chiefAcceptLabel";
 
 export default function ChiefTaskList({
