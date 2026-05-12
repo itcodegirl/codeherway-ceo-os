@@ -2,6 +2,28 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-12 - Product-readiness pass
+
+Branch `improve/ceo-os-product-readiness`.
+
+Reliability — green baseline restored:
+
+- `src/hooks/useChiefOfStaff.js` and `src/pages/ChiefOfStaff.test.jsx`
+  carried unresolved merge fragments that broke `npm run build`,
+  `npm run lint`, and `npm run typecheck` on `main`: a dangling `? :`
+  pair after a completed `return` in `getDefaultFeedback()`, and a
+  split-apart empty-state assertion that referenced a non-existent
+  "Ready to generate" string. Both are repaired; build, lint, typecheck,
+  and the 676-test Vitest suite are green again.
+
+UX clarity:
+
+- The Chief of Staff notes autosave confirmation no longer says
+  "Draft pipeline ready" (there is no pipeline) and no longer overwrites
+  a "Created: …" or error message 2.5s after a keystroke — it now shows
+  a plain "Notes saved. Pick an action when you are ready." and yields to
+  result/error messages the user still needs to read.
+
 ## 2026-05-11 - Audit priority fixes (Phases 1–6)
 
 Companion branch to the product-readiness audit at
