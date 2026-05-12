@@ -38,13 +38,13 @@ const FOCUS_TOOLS_DRAWER_ID = 'focus-tools-drawer';
 function Dashboard() {
   const { showToast } = useToast();
   const [focusMode, setFocusMode] = usePersistentState('ceo-os-focus-mode', 'planning');
-  // Audit follow-up: the top fold now leads with the operating step, one
-  // focus, one next move, open loops, blockers, and reminders. Focus-mode
-  // chips, quick-win + momentum, and the
-  // overwhelmed-reset steps are kept in a collapsed drawer the user can
-  // open. The drawer auto-opens whenever the user reaches for it (e.g.
-  // clicks the "I'm overwhelmed" button) so we do not gate emergency
-  // affordances behind a click.
+  // The top fold leads with the hero (Today's Focus → next step → safe to
+  // ignore), the merged "Needs Your Attention" panel, and reminders. The
+  // focus-mode chips, quick-win + momentum readout, and the overwhelmed-reset
+  // steps are kept in a collapsed drawer the user can open; the operating
+  // rhythm sits in a calm footer strip. The drawer auto-opens whenever the
+  // user reaches for it (e.g. clicks "I'm overwhelmed") so we do not gate
+  // emergency affordances behind a click.
   const [isFocusToolsExpanded, setIsFocusToolsExpanded] = usePersistentState(
     'ceo-os-focus-tools-expanded',
     false,
