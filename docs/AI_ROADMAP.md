@@ -64,6 +64,10 @@ new capability; it is making this one action excellent and obviously trustworthy
   that produced it, and a one-line "what we sent" disclosure.
 - "Add to workspace" is per-item and reversible (writes through the existing
   repository layer with undo/archive).
+- Each suggested item can show **which lines of the notes it came from** (even
+  crude substring matching is enough): a small "from your notes" affordance that
+  highlights the source text. This is the strongest single trust multiplier —
+  the user can *see* nothing was invented. See §4 (`sourceSpans`).
 - Works offline via the existing deterministic fallback, clearly labeled
   "Offline draft — generated locally from your notes."
 
@@ -139,9 +143,25 @@ words each").
 response leaves the proxy. The client never trusts raw model text — it runs it
 through `normalizeChiefOutput` and renders only known fields.
 
+**Item-level provenance (`sourceSpans`).** Each structured item may carry an
+optional `sourceSpans: [{ start, end }]` array — character offsets into the
+submitted notes that the item is derived from. The model is asked to include
+them; the server verifies the spans actually exist in the notes and drops any
+that don't (never trust offsets blindly). The UI uses them for the "from your
+notes" highlight (§2, §7). If absent or unverifiable, the item still renders —
+provenance degrades gracefully, it's never a hard requirement.
+
+**Prompt & schema versioning.** Action instructions and output schemas live in
+`shared/chiefActions.js` and will change. Version them — `plan@v3`,
+`summarize@v1` — and stamp the version onto every generated output (and onto
+anything the user accepts into the workspace), so an old accepted draft stays
+explainable and prompt changes can be A/B'd and tied to evaluation runs (§12).
+A version bump is a deliberate, reviewed change, not an incidental edit.
+
 **Token discipline:** truncate notes to `MAX_NOTES_LENGTH` (12000), cap output
-items per section (`MAX_STRUCTURED_ITEMS_PER_SECTION = 12`) and per-item text
-(`MAX_STRUCTURED_TEXT_LENGTH = 280`) — all already enforced; keep enforcing.
+items per section (`MAX_STRUCTURED_ITEMS_PER_SECTION = 12`), per-item text
+(`MAX_STRUCTURED_TEXT_LENGTH = 280`), and `max_output_tokens` server-side (§13)
+— keep enforcing all of these.
 
 ---
 
@@ -248,6 +268,28 @@ Rules:
   normalization.
 - **Telemetry on the client stays content-free** (action name, source, latency,
   error code) — reuse `app-error-telemetry`.
+- **Provenance highlight.** When an item has verified `sourceSpans` (§4), render
+  a subtle "from your notes" control that highlights the matching range in the
+  notes textarea. Quiet by default; never the dominant visual.
+
+**Accessibility & streaming.**
+
+- **Announce state transitions.** The idle → loading → result/fallback change is
+  announced to screen readers via a polite live region ("Generating draft…",
+  then "Draft ready, N priorities" / "Couldn't reach the AI service — showing a
+  local draft"). Don't rely on visual-only spinners.
+- **Don't trap or steal focus** during the call. Keep the notes textarea usable;
+  move focus to the result panel heading only after the result renders, not
+  before.
+- **Decide streaming explicitly: don't stream tokens.** Streaming feels faster
+  but fights the "render only normalized, schema-validated fields" rule and
+  makes provenance/clamping awkward. Show the calm loading skeleton, then render
+  the validated object in one step. (Revisit only if a real latency complaint
+  shows up — and even then, stream a status, not raw text.)
+- **Respect `prefers-reduced-motion`** for the loading skeleton.
+- Keyboard: every per-item "Add to workspace" / "from your notes" control is a
+  real focusable button with a clear label (the existing accept-button label
+  helper is the pattern).
 
 ---
 
@@ -268,7 +310,9 @@ actions share. Do **not** spread model calls across the app.
   default `gpt-4.1-mini`), `REQUEST_TIMEOUT_MS = 10000`, abort on timeout.
 - **Response normalization server-side:** parse to the action's schema, clamp
   counts/lengths, strip anything unexpected, stamp `source`, `fallbackReason`,
-  `errorCode`, `correlationId`. The browser receives only the normalized object.
+  `errorCode`, `correlationId`, and the prompt/schema version (§4). Verify any
+  `sourceSpans` against the submitted notes and drop unverifiable ones. The
+  browser receives only the normalized object.
 - **Deterministic fallback in the proxy** for every action (extend
   `CHIEF_ACTIONS[key].fallback`): if the key is missing, the call fails, times
   out, or returns garbage → return the local fallback with
