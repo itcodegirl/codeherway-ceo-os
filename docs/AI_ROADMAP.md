@@ -373,13 +373,37 @@ Rules:
 ## 10. Phase-Based AI Roadmap
 
 ### Phase 0 — Trust & boundaries (prereq, do this first)
-- Add the AI on/off toggle in Settings (`useAiEnabled`).
-- Add the "what we send" disclosure + the privacy/retention paragraph (§6).
-- Audit copy: remove any "your AI Chief of Staff" / magic phrasing; standardize
-  source badges.
-- Document proxy config & guarantees in `docs/CONFIGURATION.md`.
-- **Exit criteria:** every box in the §8 hard gate is checked. *Only then* is a
-  paid model call appropriate in production.
+
+Acceptance criteria (rough sizing: XS ≈ <½ day, S ≈ ~1 day, M ≈ 2–3 days):
+
+- [ ] **AI on/off toggle** in Settings, persisted via the workspace repository;
+  `useAiEnabled` gates all proxy calls; OFF renders offline drafts only with a
+  Settings link. — *S*
+- [ ] **"What we send" disclosure** component: static one-liner + expandable
+  showing the exact `{ action, notes }` payload. — *S*
+- [ ] **Privacy/retention paragraph** in Settings and `docs/CONFIGURATION.md`
+  (per-request send, not training data, outputs saved only on accept, telemetry
+  is content-free). — *XS*
+- [ ] **Source badges everywhere**: every output card shows "AI draft" vs
+  "Offline draft (generated locally)" + `fallbackReason` when present. — *S*
+- [ ] **Copy audit**: remove "your AI Chief of Staff" / "magic" / "automatically"
+  phrasing; standardize on "AI-assisted drafting". — *XS* (partly done)
+- [ ] **Spend ceiling + kill switch** (§13): per-workspace daily soft cap +
+  monthly hard cap, `max_output_tokens` cap, one env var that disables all paid
+  calls. — *M*
+- [ ] **Evaluation gate** (§12): `npm run eval:ai` with ~10–15 fixtures and the
+  heuristic checks; runs the fallback path in CI, the live path when
+  `OPENAI_API_KEY` is set; `docs/AI_EVAL.md` records pass rate. — *M*
+- [ ] **"Forget this" control** (§6/§13): one-click clear of session AI drafts;
+  Settings explains what deletion of an accepted output means. — *XS*
+- [ ] **Proxy config documented** in `docs/CONFIGURATION.md` (token fail-closed,
+  rate-limit default, 10s timeout, fallback-on-failure). — *XS*
+- [ ] **Tests** for the above (toggle gating, disclosure payload, four-state
+  rendering, proxy-without-key returns a fallback not a 500). — *S*
+
+**Exit criteria:** every box above is checked and every row in the §8 hard gate
+/ Appendix checklist is ✅. *Only then* is a paid model call appropriate in
+production. Rough total: ~2 weeks of focused work for one engineer.
 
 ### Phase 1 — Best first feature: hardened "notes → structured plan"
 - Make `plan` the dominant Chief of Staff action; per-item editable + accept via
@@ -418,6 +442,15 @@ Rules:
 ### Explicitly not on the roadmap
 Chat UI, autonomous agents, predictive scores presented as fact, proactive
 notifications, sentiment coaching, client-side keys, model/temperature sliders.
+
+**If conversational UI is ever revisited** (it isn't planned, and founders *will*
+ask): the boundary, decided in advance, is — only ever scoped to a *single
+document the user is already looking at* ("ask about this memo"), never
+workspace-wide; never agentic (it answers and drafts, it never takes actions);
+same provenance, same fallback, same spend ceiling as every other AI surface;
+and it ships only after Phases 0–3 are done and trusted. Anything broader is a
+different product. This statement exists so the "no" is principled, not just a
+current preference.
 
 ---
 
