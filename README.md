@@ -19,7 +19,7 @@ not just feature output. Every UX decision is filtered through one question:
   one-next-thing prompt that can promote straight to a reminder.
 - **Weekly Brief** — priorities, blockers, wins, and a close-of-week reflection
   that feeds Focus Home momentum and the next-move recommendation.
-- **Opportunities + Content OS** — executive-grade pipelines with optimistic
+- **Opportunities** — an executive-grade relationship pipeline with optimistic
   concurrency, stale-record protection, and an offline write queue.
 - **Chief of Staff** — paste founder notes, then pick what to make from a
   grouped output catalogue (decision brief, weekly update, action plan,

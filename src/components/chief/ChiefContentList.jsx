@@ -1,5 +1,9 @@
 import ChiefSectionCard from "./ChiefSectionCard";
 import { getChiefAcceptLabel } from "./chiefAcceptLabel";
+import {
+  getAcceptButtonAriaLabel,
+  getAcceptancePreviewCaption,
+} from "./acceptancePreview";
 
 export default function ChiefContentList({
   items = [],
@@ -28,6 +32,9 @@ export default function ChiefContentList({
               <small>
                 {item.platform} · {statusLabel}
               </small>
+              {caption ? (
+                <small className="chief-item-destination">→ {caption}</small>
+              ) : null}
             </div>
 
             <div className="chief-item-action">

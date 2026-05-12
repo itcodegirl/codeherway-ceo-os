@@ -35,7 +35,13 @@ const routeBudgets = [
   },
   {
     route: 'ContentOS',
-    js: { rawKb: 12, gzipKb: 4 },
+    // Bumped 12 → 14 / gzip 4 → 4.6 for the May 2026 Content OS lifecycle
+    // rebuild: six-stage status model, content-type / publish-date / purpose /
+    // notes fields, the ContentBoard stage filter, richer detail + form
+    // modals, and a four-card pipeline summary with a "next to publish" cue.
+    // Earned — the page now actually answers "what's planned / drafting /
+    // ready / next / shipped" instead of tracking title+platform+status only.
+    js: { rawKb: 14, gzipKb: 4.6 },
     css: { rawKb: 4, gzipKb: 1.5 },
   },
   {

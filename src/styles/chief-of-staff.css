@@ -257,8 +257,7 @@
   background: var(--bg-count-badge);
 }
 
-.chief-empty-state,
-.chief-loading-state {
+.chief-empty-state {
   min-height: 240px;
   display: grid;
   align-content: start;
@@ -321,9 +320,85 @@
 
 .chief-loading-steps {
   margin: 0;
-  padding-left: 1.1rem;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+}
+
+.chief-recent-outputs__item {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.chief-recent-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 9rem;
+  max-width: 14rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--border-chief-soft, var(--border, currentColor));
+  background: var(--surface-chief-card, transparent);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.chief-recent-chip:hover {
+  border-color: var(--border, currentColor);
+}
+
+.chief-recent-chip:focus-visible {
+  outline: 2px solid var(--focus-ring, currentColor);
+  outline-offset: 2px;
+}
+
+.chief-recent-chip[aria-pressed="true"],
+.chief-recent-chip--active {
+  border-color: var(--focus-ring, currentColor);
+  background: var(--surface-overlay-bright, transparent);
+}
+
+.chief-recent-chip__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.chief-recent-chip__meta {
+  font-size: 0.72rem;
+  color: var(--text-muted, currentColor);
+  opacity: 0.85;
+}
+
+/* Calm skeleton: matches the real summary + section card structure so the
+   page does not visually jump when generation completes. */
+.chief-loading-state {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.chief-loading-stack {
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* Honor reduced-motion: the shimmer is decorative — show static bars instead
+   of the animated gradient when the user has asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .chief-loading-state .skeleton-line {
+    animation: none;
+  }
 }
 
 @media (max-width: 980px) {

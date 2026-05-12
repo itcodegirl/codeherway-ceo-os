@@ -1,5 +1,9 @@
 import ChiefSectionCard from "./ChiefSectionCard";
 import { getChiefAcceptLabel } from "./chiefAcceptLabel";
+import {
+  getAcceptButtonAriaLabel,
+  getAcceptancePreviewCaption,
+} from "./acceptancePreview";
 
 export default function ChiefOpportunityList({
   items = [],
@@ -29,6 +33,9 @@ export default function ChiefOpportunityList({
                 {item.priority} priority · {stageLabel}
               </small>
               <p className="chief-next-step">Next step: {item.nextStep}</p>
+              {caption ? (
+                <small className="chief-item-destination">→ {caption}</small>
+              ) : null}
             </div>
 
             <div className="chief-item-action">

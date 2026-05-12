@@ -27,15 +27,46 @@ function expectedUpdatedAtToIso(expectedUpdatedAt) {
 export const CONTENT_ITEMS_UPDATED_EVENT = 'ceo-os:content-items-updated';
 const DEMO_CONTENT_ITEM_IDS = new Set(mockContentItems.map((item) => String(item.id)));
 
+function normalizeDateOnly(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+  // Postgres `date` columns come back as YYYY-MM-DD, but tolerate a full
+  // timestamp just in case the column type changes underneath us.
+  return trimmed.slice(0, 10);
+}
+
 function normalizeContentItem(item) {
   return {
     id: String(item.id),
     title: item.title || '',
     platform: item.platform || '',
-    status: item.status || 'Drafting',
+    contentType: item.contentType || item.content_type || 'Post',
+    status: item.status || 'Idea',
+    purpose: item.purpose || '',
+    scheduledFor: normalizeDateOnly(item.scheduledFor ?? item.scheduled_for),
+    notes: item.notes || '',
     updatedAt: readUpdatedAtMs(item),
   };
 }
+
+function toContentItemRow(normalizedPayload) {
+  return {
+    title: normalizedPayload.title,
+    platform: normalizedPayload.platform,
+    content_type: normalizedPayload.contentType,
+    status: normalizedPayload.status,
+    purpose: normalizedPayload.purpose,
+    scheduled_for: normalizedPayload.scheduledFor || null,
+    notes: normalizedPayload.notes,
+  };
+}
+
+const CONTENT_ITEM_COLUMNS = 'id, title, platform, content_type, status, purpose, scheduled_for, notes, updated_at';
 
 function getSeededLocalItems() {
   if (!isDemoWorkspaceEnabled()) {
@@ -103,7 +134,7 @@ export async function listContentItems() {
     const userId = await supabase.requireSupabaseUserId();
     const { data, error } = await supabaseClient
       .from('content_items')
-      .select('id, title, platform, status, updated_at')
+      .select(CONTENT_ITEM_COLUMNS)
       .eq('user_id', userId);
 
     if (error) {
@@ -132,11 +163,9 @@ export async function createContentItem(payload, options = {}) {
         .from('content_items')
         .insert({
           user_id: userId,
-          title: normalizedPayload.title,
-          platform: normalizedPayload.platform,
-          status: normalizedPayload.status,
+          ...toContentItemRow(normalizedPayload),
         })
-        .select('id, title, platform, status, updated_at')
+        .select(CONTENT_ITEM_COLUMNS)
         .single();
 
       if (error) {
@@ -169,11 +198,7 @@ export async function updateContentItem(id, payload, options = {}) {
       const userId = await supabase.requireSupabaseUserId();
       let query = supabaseClient
         .from('content_items')
-        .update({
-          title: normalizedPayload.title,
-          platform: normalizedPayload.platform,
-          status: normalizedPayload.status,
-        })
+        .update(toContentItemRow(normalizedPayload))
         .eq('id', id)
         .eq('user_id', userId);
 
@@ -184,7 +209,7 @@ export async function updateContentItem(id, payload, options = {}) {
       }
 
       const { data, error } = await query
-        .select('id, title, platform, status, updated_at')
+        .select(CONTENT_ITEM_COLUMNS)
         .maybeSingle();
 
       if (error) {
