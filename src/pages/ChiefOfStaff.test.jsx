@@ -150,6 +150,16 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(screen.getByText(
       "Review before adding. Add all will add 1 priority to Weekly Brief, 1 opportunity to Opportunities, 1 content item to Content OS, and 1 task to Weekly Brief. Exact matches are skipped.",
     )).toBeInTheDocument();
+
+    // Each section explains where accepting routes the item, and each item
+    // shows its specific destination next to the accept button.
+    expect(
+      screen.getByText("Accepting creates a tracked record in your Opportunities pipeline."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("→ Opportunities · New")).toBeInTheDocument();
+    expect(screen.getByText("→ Content OS · Drafting")).toBeInTheDocument();
+    expect(screen.getByText("→ Weekly Brief priority")).toBeInTheDocument();
+    expect(screen.getByText("→ Weekly Brief task")).toBeInTheDocument();
   });
 
   it("labels fallback output and disables add all when no structured actions exist", () => {

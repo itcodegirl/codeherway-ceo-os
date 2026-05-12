@@ -196,6 +196,38 @@
   margin: 0 0 0.35rem;
 }
 
+.chief-item-action {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.chief-item-destination,
+.chief-section-destination {
+  margin: 0;
+  font-size: 0.74rem;
+  opacity: 0.7;
+}
+
+.chief-item-destination {
+  text-align: right;
+}
+
+.chief-section-heading {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.chief-section-heading h3 {
+  margin: 0;
+}
+
+.chief-section-destination {
+  font-size: 0.78rem;
+}
+
 .chief-count-badge {
   display: inline-grid;
   place-items: center;
@@ -238,6 +270,15 @@
   .chief-accept-all-btn,
   .chief-item button {
     width: 100%;
+  }
+
+  .chief-item-action {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .chief-item-destination {
+    text-align: left;
   }
 }
 
