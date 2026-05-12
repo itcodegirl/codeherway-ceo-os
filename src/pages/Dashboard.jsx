@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
@@ -16,10 +16,8 @@ import { useFocusHomeSignals } from '../hooks/useFocusHomeSignals';
 import { usePromotionAction } from '../hooks/usePromotionAction';
 import { useWorkspaceSetup } from '../hooks/useWorkspaceSetup';
 import { useReminderActions } from '../hooks/useReminderActions';
-import {
-  createReminder,
-  getReminderProgress,
-} from '../lib/remindersRepository';
+import { useReminderComposer } from '../hooks/useReminderComposer';
+import { getReminderProgress } from '../lib/remindersRepository';
 import { createWeeklyItem } from '../lib/weeklyRepository';
 import { buildDeterministicSuggestions } from '../lib/suggestions';
 import {
@@ -35,7 +33,6 @@ import {
 import { buildSourceNotice } from '../lib/uiCopy';
 import '../styles/dashboard.css';
 
-const REMINDER_ACTION_SETTLE_DELAY_MS = 160;
 const FOCUS_TOOLS_DRAWER_ID = 'focus-tools-drawer';
 
 function Dashboard() {
@@ -60,11 +57,13 @@ function Dashboard() {
     startBlankWorkspace,
     loadDemoWorkspace,
   } = useWorkspaceSetup();
-  const [reminderDraft, setReminderDraft] = useState('');
-  const [isAddingReminder, setIsAddingReminder] = useState(false);
+  const {
+    reminderDraft,
+    setReminderDraft,
+    isAddingReminder,
+    handleAddReminder,
+  } = useReminderComposer({ showToast });
   const nextMoveCursorRef = useRef(0);
-  const isAddingReminderRef = useRef(false);
-  const addReminderReleaseTimerRef = useRef(null);
 
   const handleDashboardLoadError = useCallback((error) => {
     showToast('Unable to refresh your focus data right now.');
@@ -255,31 +254,6 @@ function Dashboard() {
     // click instead of two.
     setIsFocusToolsExpanded(true);
     showToast('Reset mode enabled. Start small and skip perfection today.');
-  };
-
-  const handleAddReminder = (event) => {
-    event.preventDefault();
-    if (isAddingReminderRef.current) {
-      return;
-    }
-
-    const nextText = reminderDraft.trim();
-    if (!nextText) {
-      showToast('Add reminder text before saving.');
-      return;
-    }
-
-    isAddingReminderRef.current = true;
-    setIsAddingReminder(true);
-
-    try {
-      createReminder({ text: nextText });
-      setReminderDraft('');
-    } catch {
-      showToast('Unable to save reminder right now.');
-    } finally {
-      scheduleReminderFormRelease();
-    }
   };
 
   const reminderActions = useReminderActions({ reminders, showToast });
