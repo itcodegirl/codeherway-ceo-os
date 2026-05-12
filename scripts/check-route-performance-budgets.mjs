@@ -51,8 +51,16 @@ const routeBudgets = [
   },
   {
     route: 'ChiefOfStaff',
-    js: { rawKb: 42, gzipKb: 12.5 },
-    css: { rawKb: 4, gzipKb: 1.5 },
+    // Bumped 42 -> 52 / 12.5 -> 16 for the product-depth pass: a grouped
+    // "Make a…" output-type picker mapped to the full nine-output catalogue,
+    // a "Recent outputs" history panel, a confirm-on-reset dialog, and a
+    // richer shared action config (ten instruction/fallback templates). Real
+    // founder-grade surface area the page name had implied but didn't ship.
+    js: { rawKb: 52, gzipKb: 16 },
+    // Bumped 4 -> 6 raw for the picker, history-list, and route-preview
+    // styles; gzip stays at 1.5 (measured ~1.4 kB) since the new rules
+    // compress well.
+    css: { rawKb: 6, gzipKb: 1.5 },
   },
   {
     route: 'Settings',

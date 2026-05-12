@@ -112,7 +112,14 @@ export function useChiefOfStaff() {
     }
 
     const timer = window.setTimeout(() => {
-      setFeedback('Draft pipeline ready. Continue refining as needed.');
+      // Quietly confirm the autosave without clobbering a generation result
+      // or error message that the user still needs to read.
+      setFeedback((current) => {
+        if (typeof current === 'string' && /^(Created:|AI unavailable|Unable to)/.test(current)) {
+          return current;
+        }
+        return 'Notes saved. Pick an action when you are ready.';
+      });
     }, 2500);
 
     return () => {

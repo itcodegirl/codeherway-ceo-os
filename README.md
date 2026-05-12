@@ -21,10 +21,14 @@ not just feature output. Every UX decision is filtered through one question:
   that feeds Focus Home momentum and the next-move recommendation.
 - **Opportunities + Content OS** — executive-grade pipelines with optimistic
   concurrency, stale-record protection, and an offline write queue.
-- **Chief of Staff** — paste founder notes; the proxy returns a structured
-  action plan (priorities, opportunities, content, tasks). Each item is
-  reviewable and accept-into-system in one click. Deterministic fallback when
-  the AI is unavailable.
+- **Chief of Staff** — paste founder notes, then pick what to make from a
+  grouped output catalogue (decision brief, weekly update, action plan,
+  priority list, meeting summary, founder memo, content idea, opportunity
+  follow-up, blocker analysis, and a 72-hour action list). Action-plan-style
+  outputs come back as structured priorities / opportunities / content / tasks
+  — each reviewable, with its destination shown, and accept-into-system in one
+  click; a "Recent outputs" panel keeps the last 30 generations. Deterministic
+  fallback when the AI is unavailable.
 
 ![Focus Home overview](docs/assets/screenshots/dashboard-overview.png)
 
@@ -76,6 +80,12 @@ Open `http://127.0.0.1:5173/`.
 Run the headline quality checks:
 
 ```bash
+npm run verify   # lint → typecheck → test:run → build
+```
+
+or individually:
+
+```bash
 npm run lint
 npm run typecheck
 npm run test:run
@@ -95,7 +105,9 @@ For portfolio demos or recruiter screenshares:
 4. **Weekly Brief + Opportunities** — add one blocker or in-progress item;
    return to Focus Home and see the recommendation update.
 5. **Chief of Staff** — paste notes, reload once to show local persistence,
-   then generate output and accept at least one structured recommendation.
+   pick an output type from the "Make a…" picker, generate, accept at least
+   one structured recommendation (note the destination shown on each), then
+   open the "Recent outputs" panel to revisit an earlier generation.
 
 ## Project layout
 

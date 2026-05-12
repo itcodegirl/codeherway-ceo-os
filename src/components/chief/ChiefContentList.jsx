@@ -1,4 +1,4 @@
-﻿import ChiefSectionCard from "./ChiefSectionCard";
+import ChiefSectionCard from "./ChiefSectionCard";
 import { getChiefAcceptLabel } from "./chiefAcceptLabel";
 
 export default function ChiefContentList({
@@ -10,10 +10,15 @@ export default function ChiefContentList({
   if (!items.length) return null;
 
   return (
-    <ChiefSectionCard title="Content Ideas" count={items.length}>
+    <ChiefSectionCard
+      title="Content Ideas"
+      count={items.length}
+      destinationNote="Accepting adds a draft to Content OS so you can plan and ship it."
+    >
       {items.map((item, index) => {
         const accepting = Boolean(isAccepting?.(item));
         const accepted = Boolean(isAccepted?.(item));
+        const statusLabel = item.status || "Drafting";
 
         return (
           <div className="chief-item" key={`${item.title}-${index}`}>
@@ -21,17 +26,22 @@ export default function ChiefContentList({
               <h4>{item.title}</h4>
               <p>{item.summary}</p>
               <small>
-                {item.platform} · {item.status}
+                {item.platform} · {statusLabel}
               </small>
             </div>
 
-            <button
-              type="button"
-              disabled={accepting || accepted}
-              onClick={() => onAccept(item)}
-            >
-              {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Content" })}
-            </button>
+            <div className="chief-item-action">
+              <p className="chief-item-destination">
+                {accepted ? "In Content OS" : `→ Content OS · ${statusLabel}`}
+              </p>
+              <button
+                type="button"
+                disabled={accepting || accepted}
+                onClick={() => onAccept(item)}
+              >
+                {getChiefAcceptLabel({ isAccepting: accepting, isAccepted: accepted, readyLabel: "Add to Content" })}
+              </button>
+            </div>
           </div>
         );
       })}
