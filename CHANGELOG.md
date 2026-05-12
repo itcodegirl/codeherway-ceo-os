@@ -23,6 +23,32 @@ UX clarity:
   a "Created: …" or error message 2.5s after a keystroke — it now shows
   a plain "Notes saved. Pick an action when you are ready." and yields to
   result/error messages the user still needs to read.
+- Focus Home no longer renders the full-width **System Pulse** strip — it
+  duplicated the "next move" + open-loops signal already shown by the
+  page's own panels (calmer top fold on the thesis page). System Pulse
+  still renders on the other product surfaces where it's the only
+  cross-system signal.
+
+Accessibility:
+
+- **Modal focus restoration no longer strands focus on `<body>`.** If the
+  element that opened a dialog has unmounted by the time the dialog
+  closes (e.g. a table-row action button whose row re-rendered), focus
+  now falls back to the `#main-content` landmark instead of a detached
+  node. The pending initial-focus animation frame is also cancelled on
+  unmount. Covered by a new regression test.
+
+Hygiene:
+
+- Stripped stray UTF-8 BOMs from ten `chief/*` source files.
+- Relaxed two markdown-lint style rules in `.markdownlint.json`
+  (`MD032` → off, `MD024` → `siblings_only`) and added the missing blank
+  lines after a few `CASE_STUDY.md` sub-headings, so the documented
+  `markdownlint-cli2` quality gate is actually green.
+
+Checks: `npm run lint`, `npm run typecheck`, `npm run build`,
+`npx markdownlint-cli2 "**/*.md" "!node_modules/**"`, and `vitest run`
+(677 passing, 1 skipped) all green.
 
 ## 2026-05-11 - Audit priority fixes (Phases 1–6)
 
