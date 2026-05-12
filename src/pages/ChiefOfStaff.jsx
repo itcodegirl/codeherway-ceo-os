@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
+import ChiefRecentOutputs from "../components/chief/ChiefRecentOutputs";
 import Button from "../components/ui/Button";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import SourceStatusNotice from "../components/ui/SourceStatusNotice";
@@ -71,16 +72,54 @@ export default function ChiefOfStaff() {
   } = useChiefOfStaff();
   const isMetaMode = useMetaMode();
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  // The Recent-outputs pin: stores BOTH the chip id the user clicked AND
+  // the `latestResponseId` at the moment of that click. We compare the
+  // remembered "latest at pin time" against the current latest below and
+  // auto-drop the pin whenever a new generation arrives — which lets us
+  // derive the selected entry purely from props/state without a state-
+  // sync effect (caught by react-hooks/set-state-in-effect).
+  const [pin, setPin] = useState(null);
 
   const handleConfirmReset = useCallback(() => {
     Promise.resolve(clearWorkspace()).finally(() => setIsResetConfirmOpen(false));
   }, [clearWorkspace]);
 
-  const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
+  const responseList = useMemo(
+    () => (Array.isArray(responses) ? responses : []),
+    [responses],
+  );
+  const latestResponseId = responseList[0]?.id ?? null;
+
+  const selectedResponseId = useMemo(() => {
+    if (!latestResponseId) return null;
+    if (pin && pin.latestAtPinTime === latestResponseId) {
+      return pin.id;
+    }
+    return latestResponseId;
+  }, [latestResponseId, pin]);
+
+  const handleSelectRecent = useCallback(
+    (nextId) => {
+      if (!nextId) return;
+      setPin({ id: nextId, latestAtPinTime: latestResponseId });
+    },
+    [latestResponseId],
+  );
+
+  const selectedResponse = useMemo(() => {
+    if (!responseList.length) return null;
+    if (selectedResponseId) {
+      const match = responseList.find((entry) => entry?.id === selectedResponseId);
+      if (match) return match;
+    }
+    return responseList[0];
+  }, [responseList, selectedResponseId]);
+
   // Memoize the parsed/normalized panel result so the structured payload
   // tree (often several KB) is not rebuilt on every notes keystroke. Keyed
-  // on the response identity which only changes after a successful save.
-  const result = useMemo(() => toPanelResult(latestResponse), [latestResponse]);
+  // on the response identity which only changes after a successful save or
+  // a Recent-output selection change.
+  const result = useMemo(() => toPanelResult(selectedResponse), [selectedResponse]);
   const notesLength = typeof notes === "string" ? notes.length : 0;
   const notesLimitReached = notesLength >= MAX_NOTES_LENGTH;
 
@@ -253,6 +292,11 @@ export default function ChiefOfStaff() {
       </div>
 
       <div className="chief-right-column">
+        <ChiefRecentOutputs
+          responses={responseList}
+          selectedId={selectedResponseId || latestResponseId}
+          onSelect={handleSelectRecent}
+        />
         <ChiefOutputPanel
           isGenerating={isGenerating}
           result={result}

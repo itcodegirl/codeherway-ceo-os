@@ -223,6 +223,87 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* "Recent outputs" strip — horizontal scroll of the last ~30 generations.
+   Hidden when there is 0 or 1 entry so the panel stays calm on first run. */
+.chief-recent-outputs {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.chief-recent-outputs__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, currentColor);
+  opacity: 0.85;
+}
+
+.chief-recent-outputs__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+}
+
+.chief-recent-outputs__item {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.chief-recent-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 9rem;
+  max-width: 14rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--border-chief-soft, var(--border, currentColor));
+  background: var(--surface-chief-card, transparent);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.chief-recent-chip:hover {
+  border-color: var(--border, currentColor);
+}
+
+.chief-recent-chip:focus-visible {
+  outline: 2px solid var(--focus-ring, currentColor);
+  outline-offset: 2px;
+}
+
+.chief-recent-chip[aria-pressed="true"],
+.chief-recent-chip--active {
+  border-color: var(--focus-ring, currentColor);
+  background: var(--surface-overlay-bright, transparent);
+}
+
+.chief-recent-chip__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.chief-recent-chip__meta {
+  font-size: 0.72rem;
+  color: var(--text-muted, currentColor);
+  opacity: 0.85;
+}
+
 /* Calm skeleton: matches the real summary + section card structure so the
    page does not visually jump when generation completes. */
 .chief-loading-state {

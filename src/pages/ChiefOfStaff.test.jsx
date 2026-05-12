@@ -285,6 +285,90 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(hookState.clearWorkspace).toHaveBeenCalledTimes(1);
   });
 
+  it("renders the Recent outputs strip when more than one response exists, and clicking a chip swaps the active output", () => {
+    const hookState = createHookState({
+      responses: [
+        {
+          id: "out-newest",
+          title: "Latest plan",
+          content: "Latest content",
+          source: "proxy",
+          structuredPayload: {
+            priorities: [{ title: "Priority Newest", owner: "Jenna", status: "Planned", reason: "Latest" }],
+            opportunities: [],
+            contentItems: [],
+            tasks: [],
+          },
+        },
+        {
+          id: "out-older",
+          title: "Older plan",
+          content: "Older content",
+          source: "proxy",
+          structuredPayload: {
+            priorities: [{ title: "Priority Older", owner: "Jenna", status: "Planned", reason: "Older" }],
+            opportunities: [],
+            contentItems: [],
+            tasks: [],
+          },
+        },
+      ],
+    });
+    useChiefOfStaff.mockReturnValue(hookState);
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    // The strip appears with a Latest chip and an N-back chip.
+    expect(screen.getByRole("navigation", { name: "Recent Chief of Staff outputs" })).toBeInTheDocument();
+    expect(screen.getByText(/Latest · AI generated/)).toBeInTheDocument();
+    expect(screen.getByText(/1 back · AI generated/)).toBeInTheDocument();
+
+    // The freshest output is shown by default. The chip and the summary card
+    // both contain "Latest plan" so match on the role-h2 heading to be
+    // precise about which surface we are checking.
+    expect(screen.getByRole("heading", { level: 2, name: "Latest plan" })).toBeInTheDocument();
+    expect(screen.getByText("Priority Newest")).toBeInTheDocument();
+    expect(screen.queryByText("Priority Older")).not.toBeInTheDocument();
+
+    // Click the older chip — the panel swaps to that output.
+    fireEvent.click(screen.getByRole("button", { name: /Open ai generated output "Older plan"/i }));
+    expect(screen.getByRole("heading", { level: 2, name: "Older plan" })).toBeInTheDocument();
+    expect(screen.getByText("Priority Older")).toBeInTheDocument();
+  });
+
+  it("does not render the Recent outputs strip when there is only one output", () => {
+    useChiefOfStaff.mockReturnValue(
+      createHookState({
+        responses: [
+          {
+            id: "out-only",
+            title: "Only plan",
+            content: "Just one",
+            source: "proxy",
+            structuredPayload: {
+              priorities: [{ title: "Priority A" }],
+              opportunities: [],
+              contentItems: [],
+              tasks: [],
+            },
+          },
+        ],
+      })
+    );
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole("navigation", { name: "Recent Chief of Staff outputs" })).not.toBeInTheDocument();
+  });
+
   it("cancelling the reset confirmation leaves the workspace untouched", () => {
     const hookState = createHookState();
     useChiefOfStaff.mockReturnValue(hookState);
