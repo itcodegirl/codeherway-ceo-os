@@ -87,7 +87,7 @@ describe('ContentCrudPage', () => {
 
     expect(screen.getByText('Workspace sync is active.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load content items right now.');
-    expect(screen.getByText('No content items yet')).toBeInTheDocument();
+    expect(screen.getByText('No content in motion')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /add content/i }).length).toBeGreaterThan(0);
   });
 

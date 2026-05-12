@@ -104,7 +104,7 @@ function WeeklyBrief() {
     <section className="weekly-page">
       <PageHeader
         title="Weekly Brief"
-        description="A weekly planning and review checkpoint to keep momentum explicit."
+        description="Review last week, name 1–3 priorities for this one, then close it out with a short reflection."
       />
 
       <SourceStatusNotice

@@ -345,7 +345,7 @@ function Dashboard() {
     >
       <PageHeader
         title="Focus Home"
-        description="Today / Focus Command Center for clear execution, supportive resets, and daily momentum."
+        description="What matters today, what needs you, and the next small move — so you can hold less in your head."
       />
       <SourceStatusNotice
         source={weeklySource}
@@ -428,10 +428,19 @@ function Dashboard() {
               <Button type="button" onClick={handleTellMeWhatToDoNext} icon={{ name: 'action' }}>
                 Tell me what to do next
               </Button>
-              <Button type="button" variant="ghost" onClick={handleOverwhelmedReset} icon={{ name: 'warning' }}>
+            </div>
+            <p className="focus-home__reset-trigger helper-text">
+              Feeling the pressure spike?{' '}
+              <Button
+                type="button"
+                variant="ghost"
+                size="small"
+                onClick={handleOverwhelmedReset}
+                icon={{ name: 'warning', size: 12 }}
+              >
                 I'm overwhelmed
               </Button>
-            </div>
+            </p>
           </article>
         </ErrorBoundary>
 

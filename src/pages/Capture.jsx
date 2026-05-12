@@ -275,7 +275,7 @@ function Capture() {
           <EmptyState
             icon={<Icon name="capture" size={20} />}
             title="No sticky notes yet"
-            description="Start with one idea or one tiny task to clear mental load."
+            description="Drop the first thing rattling around — an idea, a task, a worry. Keep it messy now; sort it later."
           />
         )}
       </section>

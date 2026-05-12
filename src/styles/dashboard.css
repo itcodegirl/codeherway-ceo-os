@@ -242,6 +242,18 @@
 	gap: 0.65rem;
 }
 
+/* The reset trigger is intentionally quiet: a calm prompt + a small ghost
+   button on its own line, beneath the single primary action, so the
+   top-fold hierarchy is "do the next thing" first and "I'm overwhelmed"
+   second — not two same-weight buttons. */
+.focus-home__reset-trigger {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+	margin: 0.65rem 0 0;
+}
+
 .focus-home__subheading {
 	margin: 0;
 	font-size: 0.78rem;

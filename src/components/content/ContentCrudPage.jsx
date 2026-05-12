@@ -166,8 +166,8 @@ function ContentCrudPage() {
           isEmpty: contentRows.length === 0,
           emptyState: {
             icon: <Icon name="content" size={20} />,
-            title: 'No content items yet',
-            description: 'Add your first draft to begin tracking your publishing pipeline.',
+            title: 'No content in motion',
+            description: 'Add one piece you want to ship — even just a working title — and follow it from drafting to scheduled.',
             action: (
               <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
                 Add Content
