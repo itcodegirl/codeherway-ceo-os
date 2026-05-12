@@ -219,24 +219,6 @@ function Dashboard() {
   const displayedNextMoveReason = nextMoveRecommendations.find((item) => item.text === displayedNextMove)?.reason
     || 'Recommended because: one tiny visible action is the calmest way to restart momentum.';
 
-  useEffect(() => () => {
-    if (addReminderReleaseTimerRef.current !== null) {
-      window.clearTimeout(addReminderReleaseTimerRef.current);
-    }
-  }, []);
-
-  const scheduleReminderFormRelease = useCallback(() => {
-    if (addReminderReleaseTimerRef.current !== null) {
-      window.clearTimeout(addReminderReleaseTimerRef.current);
-    }
-
-    addReminderReleaseTimerRef.current = window.setTimeout(() => {
-      isAddingReminderRef.current = false;
-      setIsAddingReminder(false);
-      addReminderReleaseTimerRef.current = null;
-    }, REMINDER_ACTION_SETTLE_DELAY_MS);
-  }, []);
-
   const handleDoThisNext = () => {
     const move = nextMoveQueue[nextMoveCursorRef.current % nextMoveQueue.length]
       || 'Take one deep breath, choose one action, and complete it before context-switching.';
