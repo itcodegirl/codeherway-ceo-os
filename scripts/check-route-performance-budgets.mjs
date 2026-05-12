@@ -57,8 +57,19 @@ const routeBudgets = [
   },
   {
     route: 'ChiefOfStaff',
-    js: { rawKb: 42, gzipKb: 12.5 },
-    css: { rawKb: 4, gzipKb: 1.5 },
+    // Bumped 42 -> 47 / 12.5 -> 14 for the May 2026 product-readiness
+    // follow-ups: kind-tagged feedback (chiefFeedback module +
+    // pushFeedback plumbing), per-item acceptancePreview helper +
+    // aria-label / caption wiring across the four list components, the
+    // ChiefRecentOutputs strip, and the envelope-based persistence
+    // refactor in chiefRepository. Real product surfaces the feature set
+    // had implied but didn't ship — earning the budget bump.
+    js: { rawKb: 47, gzipKb: 14 },
+    // CSS bumped 4 -> 5.5 / 1.5 -> 1.7 for the same round: chief-recent-*
+    // chip strip styles, .chief-item-destination caption, decomposed
+    // chief-empty / chief-loading states, and prefers-reduced-motion
+    // override for the loading skeleton.
+    css: { rawKb: 5.5, gzipKb: 1.7 },
   },
   {
     route: 'Settings',

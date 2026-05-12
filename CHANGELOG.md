@@ -2,6 +2,73 @@
 
 All notable updates are documented here for portfolio and release-review context.
 
+## 2026-05-12 - Product-readiness follow-ups (round 2)
+
+Additional commits on `improve/ceo-os-product-readiness` covering the
+"deferred follow-up work" the first round listed in its PR description.
+All five follow-ups are now in the branch.
+
+Trust — feedback the founder can rely on:
+
+- **Kind-tagged Chief feedback.** The Chief workspace used to store
+  `feedback` as a bare string and protect the high-value "Created: …" /
+  "AI unavailable: …" / "Unable to generate" messages by regex-matching
+  the prefix in the autosave timer. Brittle: any reword silently broke
+  the guard, and the regex did not cover the "Add all complete" or
+  per-item acceptance results. A small `chiefFeedback` module introduces
+  an `info / progress / result / error` taxonomy; the hook stores a
+  `{ kind, text }` internally, still exposes the bare text on `feedback`
+  (no public-API churn), and the autosave timer skips its info-level
+  "Notes saved" message whenever the current kind is `result` or
+  `error`. Regression test forces a generation failure and asserts the
+  error message survives the 2.5s autosave threshold.
+
+UX clarity — explain what each click will do:
+
+- **Quiet output loading state.** The "Reading your notes / Pulling out
+  priorities / Mapping opportunities / Drafting content ideas" step
+  list read as AI theater (the proxy does not run those stages) and
+  turned the wait into performance art. Replaced with a calm skeleton
+  that mirrors the real summary + section card structure, plus a single
+  sr-only role=status announcement and a `prefers-reduced-motion`
+  override that drops the shimmer animation.
+- **Per-item acceptance previews.** The "Add All" button has explained
+  its effect for a while via `buildAcceptanceSummary`; the four per-item
+  accept buttons did not. Added a shared `acceptancePreview` helper that
+  emits a short caption ("Weekly Brief · priority", "Opportunities ·
+  stage Discovery", "Content OS · LinkedIn", "Weekly Brief · task") and
+  a long aria-label / title sentence ("Add priority 'Ship pricing v2'
+  to this week's Weekly Brief") for every section. The visible button
+  text is unchanged so the layout stays calm; the new information is
+  opt-in via hover or screen reader.
+
+Usefulness — stop hiding work the user has already done:
+
+- **Recent outputs strip.** `chiefRepository` already kept the last 30
+  responses in storage; the UI only rendered `responses[0]`. Now a
+  horizontal "Recent outputs" strip renders one chip per response with
+  the position ("Latest" / "1 back" / "2 back" …) and the source ("AI
+  generated" / "Local fallback"). Clicking a chip swaps the active
+  output panel; a new generation auto-pulls the selection forward. The
+  strip self-hides for 0 or 1 responses to keep the panel calm on the
+  first run.
+
+Reliability — persistence aligned with the rest of the app:
+
+- **Chief workspace on the versioned-envelope pattern.**
+  `chiefRepository` was the only domain writing raw localStorage keys
+  outside the schema registry — `ceo-os-chief-notes` as a bare string,
+  `ceo-os-chief-responses` as a bare JSON array. Both now use
+  `writeVersionedLocalStorage` / `readVersionedLocalStorage` so a future
+  schema bump can land via the central migration registry instead of a
+  point fix. Legacy bare-string chief notes are read correctly (without
+  triggering the storage-corruption preservation banner) and upgraded
+  to an envelope on the next save.
+
+Checks: `npm run lint`, `npm run typecheck`, `npm run build`, and
+`vitest run` (697 passing, 1 skipped — was 678/1 before this round)
+all green.
+
 ## 2026-05-12 - Product-readiness pass
 
 Branch `improve/ceo-os-product-readiness`.
