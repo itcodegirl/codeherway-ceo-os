@@ -263,7 +263,7 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(hookState.acceptAllStructured).toHaveBeenCalledWith(expect.any(Object));
   });
 
-  it("reset button clears workspace", () => {
+  it("reset button confirms before clearing the workspace", () => {
     const hookState = createHookState();
     useChiefOfStaff.mockReturnValue(hookState);
 
@@ -274,8 +274,28 @@ describe("src/pages/ChiefOfStaff", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Reset Workspace" }));
+    // The destructive action waits for confirmation — nothing cleared yet.
+    expect(hookState.clearWorkspace).not.toHaveBeenCalled();
 
+    fireEvent.click(screen.getByRole("button", { name: "Reset the Chief of Staff workspace" }));
     expect(hookState.clearWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancelling the reset confirmation leaves the workspace untouched", () => {
+    const hookState = createHookState();
+    useChiefOfStaff.mockReturnValue(hookState);
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset Workspace" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep the Chief of Staff workspace" }));
+
+    expect(hookState.clearWorkspace).not.toHaveBeenCalled();
+    expect(screen.queryByText("Reset Chief workspace?")).not.toBeInTheDocument();
   });
 
   it("shows notes character counter and max length on textarea", () => {

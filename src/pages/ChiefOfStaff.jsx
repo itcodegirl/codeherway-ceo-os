@@ -1,6 +1,7 @@
-import { lazy, Suspense, useCallback, useMemo } from "react";
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import ChiefOutputPanel from "../components/chief/ChiefOutputPanel";
 import Button from "../components/ui/Button";
+import ConfirmModal from "../components/ui/ConfirmModal";
 import SourceStatusNotice from "../components/ui/SourceStatusNotice";
 import { useChiefOfStaff } from "../hooks/useChiefOfStaff";
 import { useMetaMode } from "../hooks/useMetaMode";
@@ -69,6 +70,11 @@ export default function ChiefOfStaff() {
     refreshWorkspace
   } = useChiefOfStaff();
   const isMetaMode = useMetaMode();
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+
+  const handleConfirmReset = useCallback(() => {
+    Promise.resolve(clearWorkspace()).finally(() => setIsResetConfirmOpen(false));
+  }, [clearWorkspace]);
 
   const latestResponse = Array.isArray(responses) && responses.length ? responses[0] : null;
   // Memoize the parsed/normalized panel result so the structured payload
@@ -114,7 +120,13 @@ export default function ChiefOfStaff() {
               <h2>Turn founder notes into action</h2>
             </div>
 
-            <Button type="button" variant="ghost" size="small" onClick={clearWorkspace} disabled={isGenerating}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="small"
+              onClick={() => setIsResetConfirmOpen(true)}
+              disabled={isGenerating}
+            >
               Reset Workspace
             </Button>
           </div>
@@ -260,6 +272,18 @@ export default function ChiefOfStaff() {
           isTaskAccepting={isTaskAccepting}
         />
       </div>
+
+      <ConfirmModal
+        isOpen={isResetConfirmOpen}
+        title="Reset Chief workspace?"
+        message="This clears your notes and the saved action plans on this device. It can't be undone."
+        cancelLabel="Keep workspace"
+        confirmLabel="Reset workspace"
+        confirmAriaLabel="Reset the Chief of Staff workspace"
+        cancelAriaLabel="Keep the Chief of Staff workspace"
+        onCancel={() => setIsResetConfirmOpen(false)}
+        onConfirm={handleConfirmReset}
+      />
     </section>
   );
 }
