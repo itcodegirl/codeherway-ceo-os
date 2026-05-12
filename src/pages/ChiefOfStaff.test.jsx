@@ -273,7 +273,7 @@ describe("src/pages/ChiefOfStaff", () => {
     expect(hookState.acceptAllStructured).toHaveBeenCalledWith(expect.any(Object));
   });
 
-  it("reset button clears workspace", () => {
+  it("reset button confirms before clearing the workspace", () => {
     const hookState = createHookState();
     useChiefOfStaff.mockReturnValue(hookState);
 
@@ -284,8 +284,40 @@ describe("src/pages/ChiefOfStaff", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Reset Workspace" }));
+    // Opening the confirm dialog must not clear anything on its own.
+    expect(hookState.clearWorkspace).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/This removes your saved notes and every generated output/),
+    ).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: "Clear chief of staff workspace" }));
     expect(hookState.clearWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders recent outputs history and lets the user view an earlier one", () => {
+    const hookState = createHookState({
+      responses: [
+        { id: "out-2", title: "Priority Recommendation", content: "Latest", source: "proxy", structuredPayload: {} },
+        { id: "out-1", title: "Executive Summary", content: "Older summary text", source: "fallback", structuredPayload: {} },
+      ],
+    });
+    useChiefOfStaff.mockReturnValue(hookState);
+
+    render(
+      <MemoryRouter>
+        <ChiefOfStaff />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Recent outputs")).toBeInTheDocument();
+    // Latest is shown by default.
+    expect(screen.queryByText(/You're viewing an earlier output/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Executive Summary/ }));
+    expect(screen.getByText(/You're viewing an earlier output/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to latest" }));
+    expect(screen.queryByText(/You're viewing an earlier output/)).not.toBeInTheDocument();
   });
 
   it("shows notes character counter and max length on textarea", () => {
