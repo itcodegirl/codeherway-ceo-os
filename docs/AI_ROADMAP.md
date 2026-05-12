@@ -190,8 +190,17 @@ What the user must always be able to see and control:
     telemetry design, which is content-free.)
 - **No surprise persistence.** AI drafts that aren't accepted are ephemeral
   (session-only). Don't quietly write them to storage.
+- **A "forget this" path.** The user can clear AI draft history from the current
+  session in one click, and Settings states plainly what happens to an output
+  that was accepted and then deleted (it's removed from workspace storage like
+  any other item; CEO OS holds no separate copy). See §13.
 - **Boundedness made visible.** The action menu *is* the boundary. There is no
   free-text "ask anything" — the user can see the full list of what AI can do.
+- **A spending ceiling, not just a rate limit.** Per-minute throttling protects
+  latency, not cost. A per-workspace daily/monthly action budget protects the
+  bill and is itself a trust signal ("AI won't run away with itself"). When the
+  budget is reached the user gets a calm "you've used your AI drafts for today —
+  here's a local draft" state. See §13.
 - **Fail-closed on the server.** `CHIEF_STAFF_REQUIRE_TOKEN` defaults to on;
   rate limit defaults to 10/min/client; 10s request timeout. Document these in
   `docs/CONFIGURATION.md` (already partly there).
@@ -279,7 +288,9 @@ actions share. Do **not** spread model calls across the app.
 **Hard gate before any of this calls a paid API in production:** env-var
 handling ✅ (exists), error states ✅ (exist), loading states ✅ (exist), privacy
 copy ⬜ (needs the disclosure + retention paragraph from §6), fallback behavior
-✅ (exists). Ship the privacy copy first.
+✅ (exists), an evaluation gate ⬜ (§12), a spend ceiling ⬜ (§13). Ship the
+privacy copy and the spend ceiling first; stand up the evaluation gate before
+turning on a new model or changing a prompt.
 
 ---
 
@@ -475,6 +486,77 @@ auto-apply of AI output, agents, predictive scoring, proactive notifications.
 
 ---
 
+## 12. Evaluation & Quality Gate
+
+"Trustworthy" needs a definition you can test. Right now there is none — this is
+the single biggest gap before enabling a new model or changing a prompt.
+
+**Fixtures.** Keep ~10–15 realistic "scattered notes" inputs in
+`shared/__fixtures__/aiNotes/` (anonymised, hand-written — meeting residue,
+half-thoughts, mixed topics). Each fixture has expected *structure*, not
+expected *exact text*: e.g. "produces ≥1 priority", "every task references
+something present in the notes", "no section is padded past what the notes
+support".
+
+**Checks (the things that actually erode trust):**
+
+- **No invented facts.** Every named person, date, metric, or commitment in the
+  output appears in (or is trivially derivable from) the input. Approximate via
+  substring/entity overlap; flag misses for human review.
+- **No padding.** A thin note → mostly-empty sections, not 12 invented bullets.
+- **Schema conformance.** Output parses to the action's fixed schema; item
+  counts/lengths within `MAX_STRUCTURED_ITEMS_PER_SECTION` /
+  `MAX_STRUCTURED_TEXT_LENGTH`.
+- **Tone.** No "as an AI", no hype words, no flattery (simple word-list check).
+- **Fallback parity.** The offline fallback for each action also passes schema +
+  tone checks, so degrading never produces something embarrassing.
+
+**Where it runs:**
+
+- `npm run eval:ai` — runs fixtures against the *fallback* path always (no
+  network, runs in CI on every PR) and against the *live model* path only when
+  `OPENAI_API_KEY` is present (manual / pre-release).
+- A short `docs/AI_EVAL.md` records the current pass rate and any known-weak
+  fixtures. Treat a regression here like a failing test.
+
+**Versioned together with prompts** (see §4 / §8): when a prompt or model
+changes, re-run the gate; record the result against the new prompt version.
+
+This is cheap to start (a script + fixtures + a couple of heuristics) and is the
+thing that lets you say "we have a regression gate" instead of "we hope it's
+good".
+
+---
+
+## 13. Cost & Abuse Controls
+
+Rate limiting (`CHIEF_STAFF_RATE_LIMIT_PER_MINUTE`, default 10/min/client)
+protects latency. It does **not** protect the bill or bound a single workspace's
+spend. Add, server-side:
+
+- **Per-workspace action budget.** A soft daily cap and a hard monthly cap on AI
+  actions per workspace (env-configurable, sensible defaults). When the soft cap
+  is hit, the proxy returns `{ source: "fallback", fallbackReason: "Daily AI
+  limit reached" }` and the UI shows the calm "you've used your AI drafts for
+  today — here's a local draft" state. The hard monthly cap behaves the same and
+  is logged.
+- **Max output size.** Cap model `max_output_tokens` server-side (in addition to
+  the existing per-section/per-item clamps) so a single call can't balloon.
+- **Idempotent retry only.** The one Retry affordance (§9) must not multiply
+  spend — no auto-retry loops, no retry storms.
+- **Spend observability.** Log per-request: action, latency, model, approx
+  token usage, outcome (`proxy` / `fallback` / error code), workspace id hash.
+  No note content. This feeds a simple daily spend rollup.
+- **A documented kill switch.** A single env var (or the existing
+  `CHIEF_STAFF_REQUIRE_TOKEN` fail-closed behaviour plus an explicit
+  `disable` flag) that turns off all paid model calls instantly and falls the
+  whole app back to offline drafts — no deploy required.
+
+Budgets are also user-facing trust: "AI is bounded and won't run away with
+itself" is part of the calm promise.
+
+---
+
 ### Appendix — current-state checklist (what already exists vs. what Phase 0 adds)
 
 | Requirement before paid API calls | Status |
@@ -490,6 +572,9 @@ auto-apply of AI output, agents, predictive scoring, proactive notifications.
 | "What we send" disclosure | ⬜ Phase 0 |
 | Privacy/retention copy | ⬜ Phase 0 |
 | Copy audit for magic/autonomy phrasing | ⬜ Phase 0 (partly done) |
+| Per-workspace spend ceiling + kill switch (§13) | ⬜ Phase 0 |
+| Evaluation gate (`npm run eval:ai`, fixtures) (§12) | ⬜ Phase 0 |
+| "Forget this" / clear-drafts control (§6, §13) | ⬜ Phase 0 |
 
 When the ⬜ items are done, paid model calls are appropriate to enable in
 production. Until then, the offline fallback is the safe default.
