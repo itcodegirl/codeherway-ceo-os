@@ -23,6 +23,13 @@ export default function ChiefOpportunityList({
         const accepting = Boolean(isAccepting?.(item));
         const accepted = Boolean(isAccepted?.(item));
         const stageLabel = item.stage || "New";
+        const ariaLabel = getAcceptButtonAriaLabel({
+          section: "opportunities",
+          item,
+          isAccepting: accepting,
+          isAccepted: accepted,
+        });
+        const caption = getAcceptancePreviewCaption("opportunities", item);
 
         return (
           <div className="chief-item" key={`${item.name}-${index}`}>
@@ -44,6 +51,8 @@ export default function ChiefOpportunityList({
               </p>
               <button
                 type="button"
+                aria-label={ariaLabel || undefined}
+                title={ariaLabel || undefined}
                 disabled={accepting || accepted}
                 onClick={() => onAccept(item)}
               >

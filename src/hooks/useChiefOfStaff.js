@@ -16,6 +16,10 @@ function getDefaultFeedbackText() {
     : 'Running in local mode. Drafts use a deterministic fallback until an AI proxy is configured.';
 }
 
+function getDefaultFeedback() {
+  return buildFeedback(FEEDBACK_KIND.info, getDefaultFeedbackText());
+}
+
 function resolveNotes(nextNotes) {
   return typeof nextNotes === 'string' ? nextNotes : '';
 }
@@ -133,12 +137,7 @@ export function useChiefOfStaff() {
     const timer = window.setTimeout(() => {
       // Quietly confirm the autosave without clobbering a generation result
       // or error message that the user still needs to read.
-      setFeedback((current) => {
-        if (typeof current === 'string' && /^(Created:|AI unavailable|Unable to)/.test(current)) {
-          return current;
-        }
-        return 'Notes saved. Pick an action when you are ready.';
-      });
+      softUpdateFeedback(FEEDBACK_KIND.info, 'Notes saved. Pick an action when you are ready.');
     }, 2500);
 
     return () => {

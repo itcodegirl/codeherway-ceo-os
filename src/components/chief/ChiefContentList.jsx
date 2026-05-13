@@ -23,6 +23,13 @@ export default function ChiefContentList({
         const accepting = Boolean(isAccepting?.(item));
         const accepted = Boolean(isAccepted?.(item));
         const statusLabel = item.status || "Drafting";
+        const ariaLabel = getAcceptButtonAriaLabel({
+          section: "contentItems",
+          item,
+          isAccepting: accepting,
+          isAccepted: accepted,
+        });
+        const caption = getAcceptancePreviewCaption("contentItems", item);
 
         return (
           <div className="chief-item" key={`${item.title}-${index}`}>
@@ -43,6 +50,8 @@ export default function ChiefContentList({
               </p>
               <button
                 type="button"
+                aria-label={ariaLabel || undefined}
+                title={ariaLabel || undefined}
                 disabled={accepting || accepted}
                 onClick={() => onAccept(item)}
               >

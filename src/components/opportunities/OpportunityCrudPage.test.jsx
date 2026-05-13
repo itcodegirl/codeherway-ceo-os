@@ -87,7 +87,7 @@ describe('OpportunityCrudPage', () => {
 
     renderWithRouter(<OpportunityCrudPage />);
 
-    expect(screen.getByText('Workspace sync is active.')).toBeInTheDocument();
+    expect(screen.getByText('Data source: Offline. No cloud replay queue is active.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load opportunities right now.');
     expect(screen.getByText('No opportunities yet')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /add opportunity/i }).length).toBeGreaterThan(0);

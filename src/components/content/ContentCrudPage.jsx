@@ -21,6 +21,7 @@ import {
   DEFAULT_CONTENT_TYPE,
 } from '../../lib/contentPayloadSchema';
 import { findNextScheduledItem, formatPublishDate } from '../../lib/contentFormatting';
+import { buildContentSignature } from '../../lib/recordIdentity';
 import { buildSourceNotice } from '../../lib/uiCopy';
 import { parseContentPayload } from '../../lib/contentPayloadSchema';
 import { useCrudPage } from '../../hooks/useCrudPage';
@@ -67,6 +68,29 @@ function buildScheduledDescription(items, readyAndScheduledCount) {
   return 'Nothing queued yet';
 }
 
+function hasDuplicateContentPayload(payload, items = [], selectedItem = null) {
+  const nextSignature = buildContentSignature(payload);
+  if (!nextSignature) {
+    return false;
+  }
+
+  return items.some((item) => {
+    if (selectedItem?.id && String(item.id) === String(selectedItem.id)) {
+      return false;
+    }
+
+    return buildContentSignature(item) === nextSignature;
+  });
+}
+
+function validateContentPayload(payload, context = {}) {
+  if (hasDuplicateContentPayload(payload, context.items, context.selectedItem)) {
+    return 'This content item already exists for that platform.';
+  }
+
+  return '';
+}
+
 function ContentCrudPage() {
   const {
     isLoading,
@@ -98,11 +122,15 @@ function ContentCrudPage() {
     updatedEventName: CONTENT_ITEMS_UPDATED_EVENT,
     mapItemToFormValues: mapContentItemToFormValues,
     parsePayload: parseContentPayload,
+    validate: validateContentPayload,
     getDeleteLabel: (item) => item.title,
     messages: {
       load: 'Unable to load content items right now.',
       save: 'Unable to save content item right now. Refresh and try again if this record changed elsewhere.',
       delete: 'Unable to delete content item right now. Refresh and try again if this record changed elsewhere.',
+      createSuccess: 'Content item added to the workflow.',
+      updateSuccess: 'Content item updated.',
+      deleteSuccess: 'Content item deleted.',
     },
     logPrefix: 'content items',
   });
@@ -165,6 +193,7 @@ function ContentCrudPage() {
         description: 'Move founder content from idea to published — capture ideas, draft, review, schedule, and keep a record of what shipped.',
       }}
       status={{
+        source,
         sourceNote: buildSourceNotice(source, { supabasePrefix: '' }),
         sourceNoteClassName: 'content-source-note',
         loadError,
