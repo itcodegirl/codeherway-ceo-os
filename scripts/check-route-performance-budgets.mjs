@@ -35,7 +35,13 @@ const routeBudgets = [
   },
   {
     route: 'ContentOS',
-    js: { rawKb: 12, gzipKb: 4 },
+    // Bumped 12 → 14 / gzip 4 → 4.6 for the May 2026 Content OS lifecycle
+    // rebuild: six-stage status model, content-type / publish-date / purpose /
+    // notes fields, the ContentBoard stage filter, richer detail + form
+    // modals, and a four-card pipeline summary with a "next to publish" cue.
+    // Earned — the page now actually answers "what's planned / drafting /
+    // ready / next / shipped" instead of tracking title+platform+status only.
+    js: { rawKb: 14, gzipKb: 4.6 },
     css: { rawKb: 4, gzipKb: 1.5 },
   },
   {
@@ -51,8 +57,16 @@ const routeBudgets = [
   },
   {
     route: 'ChiefOfStaff',
-    js: { rawKb: 42, gzipKb: 12.5 },
-    css: { rawKb: 4, gzipKb: 1.5 },
+    // Bumped 42 -> 52 / 12.5 -> 16 for the product-depth pass: a grouped
+    // "Make a…" output-type picker mapped to the full nine-output catalogue,
+    // a "Recent outputs" history panel, a confirm-on-reset dialog, and a
+    // richer shared action config (ten instruction/fallback templates). Real
+    // founder-grade surface area the page name had implied but didn't ship.
+    js: { rawKb: 52, gzipKb: 16 },
+    // Bumped 4 -> 6 raw for the picker, history-list, and route-preview
+    // styles; gzip stays at 1.5 (measured ~1.4 kB) since the new rules
+    // compress well.
+    css: { rawKb: 6, gzipKb: 1.5 },
   },
   {
     route: 'Settings',

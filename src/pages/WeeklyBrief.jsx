@@ -149,36 +149,25 @@ function WeeklyBrief() {
         What you log here shapes the next-move recommendations on Focus Home.
       </p>
 
+      <WeeklyBriefSummary
+        priorities={priorityItems}
+        wins={winItems}
+        blockers={blockerItems}
+        reviewNotes={reviewNotesDraft}
+      />
+
       <div className="weekly-grid">
-        <PrioritiesSection
-          items={priorityItems}
-          setItems={setPriorities}
-          defaultItems={defaultPriorities}
-        />
-
-        <WinsSection
-          items={winItems}
-          setItems={setWins}
-          defaultItems={defaultWins}
-        />
-
-        <BlockersSection
-          items={blockerItems}
-          setItems={setBlockers}
-          defaultItems={defaultBlockers}
-        />
-
-        <SectionCard title="Next Review Notes" iconName="weekly">
+        <SectionCard title="Look back" iconName="weekly">
           <Textarea
             id="weekly-review-notes"
-            label="Close-Of-Week Reflection"
+            label="What actually happened this week?"
             className="form-field weekly-review-notes__field"
             labelClassName="form-field__label"
             controlClassName="weekly-review-notes__control"
             value={reviewNotesDraft}
             onChange={handleReviewNotesChange}
             rows={5}
-            placeholder="Capture outcomes at close of week in plain language: what moved, what stalled, and what your next executive move is for the coming seven days."
+            placeholder="Two or three honest sentences: what moved, what stalled, what surprised you. No need to make it tidy."
           />
           {reviewNotesStatusDescriptor.tone !== 'idle' ? (
             <p
@@ -192,7 +181,32 @@ function WeeklyBrief() {
           ) : null}
           <p className="helper-text" aria-live="polite">{reviewNotesHelper}</p>
         </SectionCard>
+
+        <WinsSection
+          items={winItems}
+          setItems={setWins}
+          defaultItems={defaultWins}
+        />
+
+        <BlockersSection
+          items={blockerItems}
+          setItems={setBlockers}
+          defaultItems={defaultBlockers}
+        />
+
+        <PrioritiesSection
+          items={priorityItems}
+          setItems={setPriorities}
+          defaultItems={defaultPriorities}
+        />
       </div>
+
+      <WeeklyBriefSummary
+        priorities={priorityItems}
+        wins={winItems}
+        blockers={blockerItems}
+        reviewNotes={reviewNotesDraft}
+      />
     </section>
   );
 }

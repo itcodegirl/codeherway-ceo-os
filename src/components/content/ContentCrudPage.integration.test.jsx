@@ -64,7 +64,7 @@ describe('ContentCrudPage integration', () => {
       expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create a new content item' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add a content idea or draft' }));
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Founder Strategy Update' } });
     fireEvent.change(screen.getByLabelText('Platform'), { target: { value: 'Newsletter' } });
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'Editing' } });
@@ -109,7 +109,7 @@ describe('ContentCrudPage integration', () => {
       expect(screen.getByText('Founder Weekly Brief')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create a new content item' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add a content idea or draft' }));
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Retry Content Item' } });
     fireEvent.change(screen.getByLabelText('Platform'), { target: { value: 'Newsletter' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create content item' }));
