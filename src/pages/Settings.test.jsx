@@ -112,6 +112,16 @@ describe('src/pages/Settings', () => {
     expect(saveSettings).toHaveBeenCalledTimes(1);
   });
 
+  it('uses confirmed Supabase save copy without implying replay', () => {
+    useSettings.mockReturnValue(createSettingsState({
+      source: 'supabase',
+    }));
+
+    renderSettings();
+
+    expect(screen.getByText('Last save is confirmed in your Supabase profile.')).toBeInTheDocument();
+  });
+
   it('normalizes the timezone field on blur without saving early', () => {
     const normalizeTimezone = vi.fn();
     const saveSettings = vi.fn();

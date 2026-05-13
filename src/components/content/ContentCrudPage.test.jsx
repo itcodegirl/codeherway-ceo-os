@@ -85,7 +85,7 @@ describe('ContentCrudPage', () => {
 
     renderWithRouter(<ContentCrudPage />);
 
-    expect(screen.getByText('Workspace sync is active.')).toBeInTheDocument();
+    expect(screen.getByText('Data source: Offline. No cloud replay queue is active.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load content items right now.');
     expect(screen.getByText('Your content pipeline is empty')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Capture your first idea' })).toBeInTheDocument();

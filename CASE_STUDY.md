@@ -50,7 +50,7 @@ The following assets are referenced for portfolio review and should be kept curr
 - **Goal:** preserve usability even without backend credentials.
 - **Implementation:** repositories first attempt local storage fallback, and prefer Supabase when configured.
 - **Evidence:** source-aware flags (`local` / `supabase`) are surfaced to the UI and tests validate fallback behavior.
-- **Visual tie-in:** settings and dashboard captures should include source-status cues to demonstrate local-first transparency.
+- **Visual tie-in:** settings and dashboard captures should show `Local only`, `Offline`, or `Synced` source-status cues without implying queued replay.
 
 ### Decision: AI through a server proxy
 

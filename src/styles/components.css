@@ -323,6 +323,11 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent 82%);
 }
 
+.source-status--offline .source-status__dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent 82%);
+}
+
 .source-status__recovery-group {
   display: grid;
   gap: 0.2rem;

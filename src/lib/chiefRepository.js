@@ -140,7 +140,19 @@ async function writeLatestSupabaseChiefNotes({
 
   const sessionId = normalizeSupabaseId(latestSession?.id);
   if (!sessionId) {
-    return false;
+    const { error: insertError } = await supabaseClient
+      .from('chief_sessions')
+      .insert({
+        user_id: userId,
+        action_key: 'draft',
+        notes,
+      });
+
+    if (insertError) {
+      throw insertError;
+    }
+
+    return true;
   }
 
   const { error: updateError } = await supabaseClient

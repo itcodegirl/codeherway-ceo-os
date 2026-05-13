@@ -37,50 +37,6 @@ export default function ChiefOfStaff() {
     refreshWorkspace
   } = useChiefOfStaff();
   const isMetaMode = useMetaMode();
-  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
-  // The Recent-outputs pin: stores BOTH the chip id the user clicked AND
-  // the `latestResponseId` at the moment of that click. We compare the
-  // remembered "latest at pin time" against the current latest below and
-  // auto-drop the pin whenever a new generation arrives — which lets us
-  // derive the selected entry purely from props/state without a state-
-  // sync effect (caught by react-hooks/set-state-in-effect).
-  const [pin, setPin] = useState(null);
-
-  const handleConfirmReset = useCallback(() => {
-    Promise.resolve(clearWorkspace()).finally(() => setIsResetConfirmOpen(false));
-  }, [clearWorkspace]);
-
-  const responseList = useMemo(
-    () => (Array.isArray(responses) ? responses : []),
-    [responses],
-  );
-  const latestResponseId = responseList[0]?.id ?? null;
-
-  const selectedResponseId = useMemo(() => {
-    if (!latestResponseId) return null;
-    if (pin && pin.latestAtPinTime === latestResponseId) {
-      return pin.id;
-    }
-    return latestResponseId;
-  }, [latestResponseId, pin]);
-
-  const handleSelectRecent = useCallback(
-    (nextId) => {
-      if (!nextId) return;
-      setPin({ id: nextId, latestAtPinTime: latestResponseId });
-    },
-    [latestResponseId],
-  );
-
-  const selectedResponse = useMemo(() => {
-    if (!responseList.length) return null;
-    if (selectedResponseId) {
-      const match = responseList.find((entry) => entry?.id === selectedResponseId);
-      if (match) return match;
-    }
-    return responseList[0];
-  }, [responseList, selectedResponseId]);
-
   const responseList = useMemo(() => (Array.isArray(responses) ? responses : []), [responses]);
   const latestResponseId = responseList.length ? getChiefResponseId(responseList[0], 0) : null;
 
