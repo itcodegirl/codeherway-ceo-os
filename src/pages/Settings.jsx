@@ -546,7 +546,7 @@ function Settings() {
 
       <div className="helper-text" role="status" aria-live="polite">
         {source === 'supabase'
-          ? 'Settings save to your synced workspace.'
+          ? 'Last save is confirmed in your Supabase profile.'
           : 'Settings are stored on this device.'}
         <LastSavedIndicator savedAt={savedAt} />
       </div>

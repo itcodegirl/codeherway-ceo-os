@@ -6,6 +6,8 @@ import { StaleRecordError, assertRecordIsFresh, readUpdatedAtMs } from './staleR
 import { tryRemoteOrEnqueue } from './offlineWriteQueueIntegration';
 import { isDemoWorkspaceEnabled } from './workspaceSetup';
 import { STORAGE_DOMAINS } from './dataSchema';
+import { buildOpportunitySignature } from './recordIdentity';
+import { createDuplicateRecordError } from './repositoryErrors';
 import {
   readVersionedLocalStorage,
   safeWriteVersionedLocalStorage,
@@ -15,6 +17,7 @@ import {
 export const OPPORTUNITY_QUEUE_KIND_CREATE = 'opportunity:create';
 export const OPPORTUNITY_QUEUE_KIND_UPDATE = 'opportunity:update';
 export const OPPORTUNITY_QUEUE_KIND_DELETE = 'opportunity:delete';
+const DUPLICATE_OPPORTUNITY_MESSAGE = 'This opportunity already exists for that company.';
 
 export const OPPORTUNITIES_UPDATED_EVENT = 'ceo-os:opportunities-updated';
 const DEMO_OPPORTUNITY_IDS = new Set(mockOpportunities.map((item) => String(item.id)));
@@ -109,6 +112,37 @@ function mapSupabaseRows(rows) {
   return rows.map((item) => normalizeOpportunity(item));
 }
 
+function hasDuplicateOpportunity(items, payload, { excludeId = '' } = {}) {
+  const nextSignature = buildOpportunitySignature(payload);
+  if (!nextSignature) {
+    return false;
+  }
+
+  return items.some((item) => {
+    if (excludeId && String(item.id) === String(excludeId)) {
+      return false;
+    }
+
+    return buildOpportunitySignature(item) === nextSignature;
+  });
+}
+
+async function assertNoSupabaseOpportunityDuplicate({ supabaseClient, userId, payload, excludeId = '' }) {
+  const { data, error } = await supabaseClient
+    .from('opportunities')
+    .select('id, name, company')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
+
+  const existingItems = mapSupabaseRows(Array.isArray(data) ? data : []);
+  if (hasDuplicateOpportunity(existingItems, payload, { excludeId })) {
+    throw createDuplicateRecordError(DUPLICATE_OPPORTUNITY_MESSAGE);
+  }
+}
+
 export function getOpportunitiesSource() {
   return isSupabaseRuntimeEnabled ? 'supabase' : 'local';
 }
@@ -145,6 +179,12 @@ export async function createOpportunity(payload, options = {}) {
   if (supabaseClient) {
     const attempt = async () => {
       const userId = await supabase.requireSupabaseUserId();
+      await assertNoSupabaseOpportunityDuplicate({
+        supabaseClient,
+        userId,
+        payload: normalizedPayload,
+      });
+
       const { data, error } = await supabaseClient
         .from('opportunities')
         .insert(formatForSupabase({ ...normalizedPayload, userId }))
@@ -166,6 +206,10 @@ export async function createOpportunity(payload, options = {}) {
   }
 
   const current = readLocalOpportunities();
+  if (hasDuplicateOpportunity(current, normalizedPayload)) {
+    throw createDuplicateRecordError(DUPLICATE_OPPORTUNITY_MESSAGE);
+  }
+
   const next = [normalizedPayload, ...current];
   writeLocalOpportunities(next);
   notifyOpportunitiesUpdated({ source: 'local', type: 'create' });
@@ -179,6 +223,13 @@ export async function updateOpportunity(id, payload, options = {}) {
     const attempt = async () => {
       const normalizedPayload = normalizeOpportunity({ id, ...payload });
       const userId = await supabase.requireSupabaseUserId();
+      await assertNoSupabaseOpportunityDuplicate({
+        supabaseClient,
+        userId,
+        payload: normalizedPayload,
+        excludeId: id,
+      });
+
       let query = supabaseClient
         .from('opportunities')
         .update(formatForSupabase(normalizedPayload))
@@ -231,6 +282,9 @@ export async function updateOpportunity(id, payload, options = {}) {
     options.expectedUpdatedAt,
     'This opportunity was changed in another window. Reload to see the latest version before saving.',
   );
+  if (hasDuplicateOpportunity(current, payload, { excludeId: id })) {
+    throw createDuplicateRecordError(DUPLICATE_OPPORTUNITY_MESSAGE);
+  }
 
   const normalizedPayload = normalizeOpportunity({
     id,

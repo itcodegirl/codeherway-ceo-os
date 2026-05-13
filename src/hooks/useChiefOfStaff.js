@@ -132,6 +132,8 @@ export function useChiefOfStaff() {
     }
 
     const timer = window.setTimeout(() => {
+      // Quietly confirm the autosave without clobbering a generation result
+      // or error message that the user still needs to read.
       softUpdateFeedback(FEEDBACK_KIND.info, 'Notes saved. Pick an action when you are ready.');
     }, 2500);
 

@@ -46,7 +46,8 @@ export default function ChiefTaskList({
               </p>
               <button
                 type="button"
-                aria-label={ariaLabel}
+                aria-label={ariaLabel || undefined}
+                title={ariaLabel || undefined}
                 disabled={accepting || accepted}
                 onClick={() => onAccept(item)}
               >

@@ -115,6 +115,48 @@ describe('chiefRepository', () => {
     expect(session.id).toBeTruthy();
   });
 
+  it('creates a Supabase draft session when notes are saved before generation', async () => {
+    const maybeSingle = vi.fn(async () => ({ data: null, error: null }));
+    const insert = vi.fn(async () => ({ error: null }));
+    const chiefSessionsQuery = {
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          order: vi.fn(() => ({
+            limit: vi.fn(() => ({
+              maybeSingle,
+            })),
+          })),
+        })),
+      })),
+      insert,
+    };
+    const supabaseClient = {
+      from: vi.fn(() => chiefSessionsQuery),
+    };
+
+    const { saveChiefNotes } = await loadChiefRepositoryWithSupabaseMock({
+      isSupabaseConfigured: true,
+      supabaseClient,
+      requireSupabaseUserId: vi.fn(async () => 'user-1'),
+    });
+
+    await expect(saveChiefNotes('Draft strategy notes')).resolves.toBe('Draft strategy notes');
+
+    const persistedNotes = JSON.parse(window.localStorage.getItem('ceo-os-chief-notes'));
+    expect(persistedNotes).toMatchObject({
+      schemaVersion: 1,
+      domain: 'chiefNotes',
+      model: 'ChiefNotes',
+      data: 'Draft strategy notes',
+    });
+    expect(supabaseClient.from).toHaveBeenCalledWith('chief_sessions');
+    expect(insert).toHaveBeenCalledWith({
+      user_id: 'user-1',
+      action_key: 'draft',
+      notes: 'Draft strategy notes',
+    });
+  });
+
   it('saves output to local storage when Supabase auth is required', async () => {
     const authRequiredError = new Error('Auth required');
     authRequiredError.code = 'SUPABASE_AUTH_REQUIRED';

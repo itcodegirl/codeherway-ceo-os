@@ -159,6 +159,6 @@ export const dashboardDemoData = {
   focusScore: {
     demoSuffix: 'Local demo',
   },
-  demoNote: 'Demo data is active on this device. It is not synced.',
+  demoNote: 'Data source: Local only. Sample records stay on this device.',
 };
 
