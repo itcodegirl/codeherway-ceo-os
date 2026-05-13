@@ -301,7 +301,7 @@ function Dashboard() {
     >
       <PageHeader
         title="Focus Home"
-        description="Your one focus today, what needs attention, and the next small step."
+        description="What matters today, what needs you, and the next small move — so you can hold less in your head."
       />
       <SourceStatusNotice
         source={weeklySource}

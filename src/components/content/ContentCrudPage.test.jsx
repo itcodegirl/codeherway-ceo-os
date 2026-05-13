@@ -87,7 +87,7 @@ describe('ContentCrudPage', () => {
 
     expect(screen.getByText('Data source: Offline. No cloud replay queue is active.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load content items right now.');
-    expect(screen.getByText('Your content pipeline is empty')).toBeInTheDocument();
+    expect(screen.getByText('No content in motion')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Capture your first idea' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add a content idea or draft' })).toBeInTheDocument();
   });

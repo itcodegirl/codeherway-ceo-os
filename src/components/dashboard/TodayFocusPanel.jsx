@@ -75,12 +75,15 @@ function TodayFocusPanel({
 
         <div className="focus-home__actions">
           <Button type="button" onClick={onDoThisNext} icon={{ name: 'action' }}>
-            Do this next
-          </Button>
-          <Button type="button" variant="ghost" onClick={onOverwhelmed} icon={{ name: 'warning' }}>
-            I'm overwhelmed
+            Tell me what to do next
           </Button>
         </div>
+        <p className="focus-home__reset-trigger helper-text">
+          Feeling the pressure spike?{' '}
+          <Button type="button" variant="ghost" size="small" onClick={onOverwhelmed} icon={{ name: 'warning', size: 12 }}>
+            I'm overwhelmed
+          </Button>
+        </p>
 
         {isFocusDataLoading ? (
           <p className="helper-text" role="status" aria-live="polite">

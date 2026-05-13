@@ -211,8 +211,8 @@ function OpportunityCrudPage() {
           isEmpty: opportunityItems.length === 0,
           emptyState: {
             icon: <Icon name="opportunities" size={20} />,
-            title: 'No opportunities yet',
-            description: 'Add your first opportunity to start tracking outreach and next steps.',
+            title: 'Nothing in the pipeline yet',
+            description: 'Add the first thing you’re tracking — a partner, a hire, an intro — and the next step stays in front of you.',
             action: (
               <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
                 Add Opportunity

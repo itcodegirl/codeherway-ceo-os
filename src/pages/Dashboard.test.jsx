@@ -134,7 +134,7 @@ describe('src/pages/Dashboard', () => {
       </MemoryRouter>,
     );
 
-    const cta = screen.getByRole('button', { name: 'Do this next' });
+    const cta = screen.getByRole('button', { name: 'Tell me what to do next' });
     fireEvent.click(cta);
 
     const heroPanel = screen.getByRole('heading', { name: "Today's Focus" }).closest('.focus-panel');
@@ -165,7 +165,7 @@ describe('src/pages/Dashboard', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Do this next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tell me what to do next' }));
     const heroPanel = screen.getByRole('heading', { name: "Today's Focus" }).closest('.focus-panel');
     expect(heroPanel).toHaveTextContent('Send one unblock message for "Blocked Launch".');
 

@@ -40,7 +40,7 @@ describe('TodayFocusPanel (hero)', () => {
     expect(screen.getByText('Spend 20 focused minutes on the onboarding copy.')).toBeInTheDocument();
     expect(screen.getByText('Recommended because: this priority is in motion.')).toBeInTheDocument();
     expect(screen.getByText('Nothing else needs attention during this focus block.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Do this next' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tell me what to do next' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: "I'm overwhelmed" })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /chief of staff/i })).not.toBeInTheDocument();
   });

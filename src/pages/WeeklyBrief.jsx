@@ -104,7 +104,7 @@ function WeeklyBrief() {
     <section className="weekly-page">
       <PageHeader
         title="Weekly Brief"
-        description="Your weekly reset: see last week clearly, name what matters, and start the week with one decision already made."
+        description="Review last week, name 1–3 priorities for this one, then close it out with a short reflection."
       />
 
       <SourceStatusNotice

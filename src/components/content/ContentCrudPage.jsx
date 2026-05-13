@@ -235,8 +235,8 @@ function ContentCrudPage() {
           isEmpty: contentRows.length === 0,
           emptyState: {
             icon: <Icon name="content" size={20} />,
-            title: 'Your content pipeline is empty',
-            description: 'Capture an idea, start a draft, or log something you have already published — every piece moves from idea to live right here.',
+            title: 'No content in motion',
+            description: 'Add one piece you want to ship — even just a working title — and follow it from drafting to scheduled.',
             action: (
               <Button onClick={handleOpenCreateModal} icon={{ name: 'add', size: 14 }}>
                 Capture your first idea
