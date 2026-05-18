@@ -5,7 +5,9 @@
   border-radius: var(--radius-action);
   border: 1px solid transparent;
   background: var(--bg-accent-subtle);
-  color: var(--accent-soft);
+  /* --accent-soft-strong inverts per theme (pale cyan on dark, deep blue on
+   * light); --accent-soft does not, and produced ~1.1:1 contrast on light. */
+  color: var(--accent-soft-strong);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -202,7 +204,7 @@
 }
 
 .section-card__title-icon {
-  color: var(--accent-soft);
+  color: var(--accent-soft-strong);
 }
 
 .pill {

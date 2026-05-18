@@ -525,7 +525,7 @@ button.sync-status-pill--retry:focus-visible {
 }
 
 .system-pulse__node--warning .system-pulse__node-value {
-	color: var(--warning-soft);
+	color: var(--warning);
 }
 
 .system-pulse__node--positive .system-pulse__node-value {
