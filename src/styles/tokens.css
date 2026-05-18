@@ -179,6 +179,10 @@
   --glow-secondary: rgba(114, 146, 255, 0.22);
   --glow-soft: rgba(116, 213, 255, 0.14);
 
+  /* Signal-node gradient (the blueprint dot in the system diagram). Kept as
+   * a token so a future brand refresh can update both themes in one place. */
+  --gradient-signal: linear-gradient(180deg, #8de8ff, #35baff);
+
   /* Motion tokens — keep transitions on a calm, consistent rhythm */
   --duration-fast: 120ms;
   --duration-base: 200ms;
@@ -314,5 +318,7 @@
 
   --bg-chief-badge: rgba(31, 127, 198, 0.12);
   --bg-count-badge: rgba(31, 127, 198, 0.18);
+
+  --gradient-signal: linear-gradient(180deg, #5fa8d8, #1f7fc6);
 }
 
