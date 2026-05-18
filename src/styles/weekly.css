@@ -125,7 +125,8 @@
 	border-radius: 999px;
 	background: var(--text-muted);
 	box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
-	transition: background-color 0.2s ease, box-shadow 0.2s ease;
+	transition: background-color var(--duration-base, 200ms) var(--easing-standard, ease),
+		box-shadow var(--duration-base, 200ms) var(--easing-standard, ease);
 }
 
 .weekly-review-notes__status--saving .weekly-review-notes__status-dot {

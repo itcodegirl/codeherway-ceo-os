@@ -171,19 +171,19 @@
 
 .content-status--drafting {
 	background: var(--pill-low-bg);
-	color: var(--info-soft);
+	color: var(--pill-low-text);
 	border-color: var(--border-info-soft);
 }
 
 .content-status--editing {
 	background: var(--pill-medium-bg);
-	color: var(--warning-soft);
+	color: var(--pill-medium-text);
 	border-color: var(--border-warning-soft);
 }
 
 .content-status--scheduled {
 	background: var(--status-scheduled-bg);
-	color: var(--success-soft);
+	color: var(--success);
 	border-color: var(--border-success-soft);
 }
 
