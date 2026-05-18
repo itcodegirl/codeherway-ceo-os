@@ -5,6 +5,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import SourceStatusNotice from '../components/ui/SourceStatusNotice';
 import LastSavedIndicator from '../components/ui/LastSavedIndicator';
+import PageLoading from '../components/ui/PageLoading';
 import SettingsAccountSection from '../components/settings/SettingsAccountSection';
 import SettingsThemeSection from '../components/settings/SettingsThemeSection';
 import SettingsWorkspaceDataSection from '../components/settings/SettingsWorkspaceDataSection';
@@ -89,11 +90,7 @@ function Settings() {
         retryAriaLabel="Retry loading settings"
         retryDisabled={isLoading || isSaving}
       />
-      {isLoading ? (
-        <p className="helper-text" role="status" aria-live="polite">
-          Loading settings...
-        </p>
-      ) : null}
+      <PageLoading visible={isLoading} label="Loading settings" />
 
       <form className="settings-grid" onSubmit={handleSubmit} aria-busy={isSaving || isLoading}>
         <SettingsAccountSection />
