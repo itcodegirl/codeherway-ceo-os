@@ -14,7 +14,10 @@
   gap: 0.45rem;
   line-height: 1;
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  transition: background-color var(--duration-fast, 120ms) var(--easing-standard, ease),
+    color var(--duration-fast, 120ms) var(--easing-standard, ease),
+    border-color var(--duration-fast, 120ms) var(--easing-standard, ease),
+    transform var(--duration-fast, 120ms) var(--easing-standard, ease);
   cursor: pointer;
   white-space: nowrap;
   max-width: 100%;
@@ -114,7 +117,8 @@
   color: inherit;
   padding: var(--space-card-padding);
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color var(--duration-fast, 120ms) var(--easing-standard, ease),
+    border-color var(--duration-fast, 120ms) var(--easing-standard, ease);
 }
 
 .crm-table__row--button:hover,

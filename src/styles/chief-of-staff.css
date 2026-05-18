@@ -347,7 +347,8 @@
   text-align: left;
   cursor: pointer;
   color: inherit;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition: border-color var(--duration-fast, 120ms) var(--easing-standard, ease),
+    background-color var(--duration-fast, 120ms) var(--easing-standard, ease);
 }
 
 .chief-recent-chip:hover {

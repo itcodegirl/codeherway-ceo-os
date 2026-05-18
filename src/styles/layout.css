@@ -601,7 +601,9 @@ button.sync-status-pill--retry:focus-visible {
 		padding-top: 0;
 		border-top: 0;
 		pointer-events: none;
-		transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.2s ease;
+		transition: max-height var(--duration-deliberate, 280ms) var(--easing-standard, ease),
+			opacity var(--duration-base, 200ms) var(--easing-standard, ease),
+			margin-top var(--duration-base, 200ms) var(--easing-standard, ease);
 	}
 
 	.sidebar__nav--open {
