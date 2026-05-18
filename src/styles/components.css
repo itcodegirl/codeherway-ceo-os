@@ -821,6 +821,86 @@ textarea:focus-visible,
   border-color: rgba(204, 130, 28, 0.4);
 }
 
+/* Storage quota banner — distinct from the corruption banner: quota is
+ * "we ran out of room and the last write failed" (more urgent), so it uses
+ * the danger palette and an assertive live region, and points at Settings
+ * → Workspace Data for the recovery path (export backup, clear demo data). */
+.storage-quota-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  margin: 0.6rem 1.25rem 0;
+  background: var(--danger-surface);
+  border: 1px solid var(--border-danger);
+  border-radius: var(--radius-lg, 14px);
+  color: var(--text);
+  box-shadow: var(--shadow-soft);
+}
+
+.storage-quota-banner__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.storage-quota-banner__title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.storage-quota-banner__text {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.storage-quota-banner__text code {
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--text);
+}
+
+.storage-quota-banner__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.storage-quota-banner__action,
+.storage-quota-banner__dismiss {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-action, 12px);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.storage-quota-banner__action {
+  border-color: var(--border-accent);
+  color: var(--accent-soft-strong);
+}
+
+.storage-quota-banner__action:hover,
+.storage-quota-banner__action:focus-visible,
+.storage-quota-banner__dismiss:hover,
+.storage-quota-banner__dismiss:focus-visible {
+  background: var(--bg-accent-soft);
+  border-color: var(--border-accent);
+}
+
 @media (max-width: 540px) {
   .storage-corruption-banner {
     flex-direction: column;
